@@ -85,7 +85,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public ushort NumberOfNamedArguments {
       get {
         if (this.NamedArguments == null) return 0;
-        return (ushort)this.NamedArguments.Count;
+        return (ushort)this.NamedArguments.Count; 
       }
     }
 
@@ -102,14 +102,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<IMetadataExpression> ICustomAttribute.Arguments {
       get {
         if (this.Arguments == null) return Enumerable<IMetadataExpression>.Empty;
-        return this.Arguments.AsReadOnly();
+        return this.Arguments.AsReadOnly(); 
       }
     }
 
     IEnumerable<IMetadataNamedArgument> ICustomAttribute.NamedArguments {
       get {
         if (this.namedArguments == null) return Enumerable<IMetadataNamedArgument>.Empty;
-        return this.NamedArguments.AsReadOnly();
+        return this.NamedArguments.AsReadOnly(); 
       }
     }
 
@@ -767,7 +767,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<ICustomAttribute> IResourceReference.Attributes {
       get {
         if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
-        return this.Attributes.AsReadOnly();
+        return this.Attributes.AsReadOnly(); 
       }
     }
 
@@ -865,7 +865,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<ICustomAttribute> IResourceReference.Attributes {
       get {
         if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
-        return this.Attributes.AsReadOnly();
+        return this.Attributes.AsReadOnly(); 
       }
     }
 
@@ -994,7 +994,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<ICustomAttribute> ISecurityAttribute.Attributes {
       get {
         if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
-        return this.Attributes.AsReadOnly();
+        return this.Attributes.AsReadOnly(); 
       }
     }
 

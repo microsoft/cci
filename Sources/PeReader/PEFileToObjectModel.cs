@@ -585,23 +585,21 @@ namespace Microsoft.Cci.MetadataReader {
     }
 
     //  Caller should lock this.
-    internal Module/*?*/ ResolveModuleRefReference(
-      ModuleReference moduleReference
-    ) {
+    internal IModule/*?*/ ResolveModuleRefReference(ModuleReference moduleReference) {
       //  If this is an assembly try to find in referred modules
       if (this.PEFileReader.IsAssembly) {
         Assembly/*?*/ assem = this.Module as Assembly;
         //^ assert assem != null;
         int moduleKey = moduleReference.ModuleIdentity.Name.UniqueKeyIgnoringCase;
-        Module[] containigModules = assem.MemberModules.RawArray;
-        for (int i = 0; i < containigModules.Length; ++i) {
-          Module mod = containigModules[i];
-          if (mod.ModuleName.UniqueKeyIgnoringCase == moduleKey)
-            return mod;
+        IModule[] containigModules = assem.MemberModules;
+        var n = containigModules == null ? 0 : containigModules.Length;
+        for (int i = 0; i < n; i++) {
+          IModule mod = containigModules[i];
+          if (mod.ModuleName.UniqueKeyIgnoringCase == moduleKey) return mod;
         }
       }
       //  If not found or its not an assembly look else where...
-      Module/*?*/ module = this.ModuleReader.LookupModule(this.Module, moduleReference.ModuleIdentity);
+      var module = this.ModuleReader.LookupModule(this.Module, moduleReference.ModuleIdentity);
       return module;
     }
 
@@ -902,7 +900,7 @@ namespace Microsoft.Cci.MetadataReader {
         FileReference/*?*/ file = this.GetFileReferenceAt(this.PEFileReader.COR20Header.EntryPointTokenOrRVA & TokenTypeIds.RIDMask);
         if (assem == null || file == null)
           return Dummy.MethodReference;
-        Module/*?*/ mod = assem.FindMemberModuleNamed(file.Name);
+        var mod = assem.FindMemberModuleNamed(file.Name) as Module;
         if (mod == null)
           return Dummy.MethodReference;
         return mod.PEFileToObjectModel.GetEntryPointMethod();
@@ -1853,7 +1851,7 @@ namespace Microsoft.Cci.MetadataReader {
         case TokenTypeIds.ModuleRef: {
             ModuleReference/*?*/ modRef = this.GetModuleReferenceAt(rowId);
             if (modRef != null) {
-              Module/*?*/ module = this.ResolveModuleRefReference(modRef);
+              var module = this.ResolveModuleRefReference(modRef) as Module;
               if (module != null) {
                 PEFileToObjectModel modulePEFileToObjectModel = module.PEFileToObjectModel;
                 retModuleType = modulePEFileToObjectModel.ResolveNamespaceTypeDefinition(namespaceName, typeName);
@@ -1961,7 +1959,7 @@ namespace Microsoft.Cci.MetadataReader {
             if (fileRef == null) {
               return null;
             }
-            Module/*?*/ module =thisAssembly.FindMemberModuleNamed(fileRef.Name);
+            var module = thisAssembly.FindMemberModuleNamed(fileRef.Name) as Module;
             if (module == null) {
               return null;
             }
@@ -2974,7 +2972,7 @@ namespace Microsoft.Cci.MetadataReader {
                 //  MDError
                 return null;
               }
-              Module/*?*/ module = this.ResolveModuleRefReference(modRef);
+              var module = this.ResolveModuleRefReference(modRef) as Module;
               if (module == null) {
                 //TODO: MDError...
                 return null;
@@ -3332,8 +3330,7 @@ namespace Microsoft.Cci.MetadataReader {
               this.currentOwningObject = owningObject;
               if (customAttribute.Value == 0) {
                 this.CustomAttributeArray[customAttributeRowId] = 
-                  this.ModuleReader.metadataReaderHost.Rewrite(this.Module,
-                  new CustomAttribute(this, customAttributeRowId, moduleMethodReference, TypeCache.EmptyExpressionList, TypeCache.EmptyNamedArgumentList));
+                  this.ModuleReader.metadataReaderHost.Rewrite(this.Module, new CustomAttribute(this, customAttributeRowId, moduleMethodReference, null, null));
               } else {
                 //  TODO: Check if customAttribute.Value is within the range
                 MemoryBlock signatureMemoryBlock = this.PEFileReader.BlobStream.GetMemoryBlockAt(customAttribute.Value);
@@ -3828,7 +3825,7 @@ namespace Microsoft.Cci.MetadataReader {
         byte currByte = this.SignatureMemoryReader.PeekByte(0);
         if (currByte == ElementType.Sentinel) {
           this.SignatureMemoryReader.SkipBytes(1);
-          if (index+1 < paramCount) Array.Resize(ref parameterTypes, index+1);
+          if (index < paramCount) Array.Resize(ref parameterTypes, index);
           break;
         }
         bool isByReference = false;
@@ -4117,13 +4114,11 @@ namespace Microsoft.Cci.MetadataReader {
     internal readonly IEnumerable<ICustomModifier>/*?*/ ReturnCustomModifiers;
     internal readonly ITypeReference/*?*/ ReturnTypeReference;
     internal readonly bool IsReturnByReference;
-    internal readonly EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> RequiredParameters;
-    internal readonly EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> VarArgParameters;
+    internal readonly IParameterTypeInformation[]/*?*/ RequiredParameters;
+    internal readonly IParameterTypeInformation[]/*?*/ VarArgParameters;
 
     internal MethodRefSignatureConverter(PEFileToObjectModel peFileToObjectModel, MethodReference moduleMethodRef, MemoryReader signatureMemoryReader)
       : base(peFileToObjectModel, signatureMemoryReader, moduleMethodRef) {
-      this.RequiredParameters = TypeCache.EmptyParameterInfoArray;
-      this.VarArgParameters = TypeCache.EmptyParameterInfoArray;
       //  TODO: Check minimum required size of the signature...
       byte firstByte = this.SignatureMemoryReader.ReadByte();
       if (SignatureHeader.IsGeneric(firstByte)) {
@@ -4147,12 +4142,9 @@ namespace Microsoft.Cci.MetadataReader {
         this.ReturnTypeReference = this.GetTypeReference();
       }
       if (paramCount > 0) {
-        IParameterTypeInformation[] reqModuleParamArr = this.GetModuleParameterTypeInformations(moduleMethodRef, paramCount);
-        if (reqModuleParamArr.Length > 0)
-          this.RequiredParameters = new EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>(reqModuleParamArr, Dummy.ParameterTypeInformation);
-        IParameterTypeInformation[] varArgModuleParamArr = this.GetModuleParameterTypeInformations(moduleMethodRef, paramCount - reqModuleParamArr.Length);
-        if (varArgModuleParamArr.Length > 0)
-          this.VarArgParameters = new EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>(varArgModuleParamArr, Dummy.ParameterTypeInformation);
+        this.RequiredParameters = this.GetModuleParameterTypeInformations(moduleMethodRef, paramCount);
+        if (this.RequiredParameters.Length < paramCount)
+          this.VarArgParameters = this.GetModuleParameterTypeInformations(moduleMethodRef, paramCount - this.RequiredParameters.Length);
       }
     }
 

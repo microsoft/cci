@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using Microsoft.Cci.UtilityDataStructures;
+using System.Text;
 
 namespace Microsoft.Cci {
 
@@ -13,12 +14,16 @@ namespace Microsoft.Cci {
     where BasicBlock : Microsoft.Cci.BasicBlock<Instruction>, new ()
     where Instruction : Microsoft.Cci.Instruction, new () {
 
-    internal ControlAndDataFlowGraph(IMethodBody body, List<BasicBlock<Instruction>> rootBlocks, Hashtable<BasicBlock<Instruction>> blockFor) {
+    internal ControlAndDataFlowGraph(IMethodBody body, List<BasicBlock> successorEdges, List<BasicBlock> allBlocks, List<BasicBlock> rootBlocks, Hashtable<BasicBlock> blockFor) {
       Contract.Requires(body != null);
+      Contract.Requires(successorEdges != null);
+      Contract.Requires(allBlocks != null);
       Contract.Requires(rootBlocks != null);
       Contract.Requires(blockFor != null);
 
       this.methodBody = body;
+      this.successorEdges = successorEdges;
+      this.allBlocks = allBlocks;
       this.rootBlocks = rootBlocks;
       this.blockFor = blockFor;
     }
@@ -26,6 +31,8 @@ namespace Microsoft.Cci {
     [ContractInvariantMethod]
     private void ObjectInvariant() {
       Contract.Invariant(this.methodBody != null);
+      Contract.Invariant(this.successorEdges != null);
+      Contract.Invariant(this.allBlocks != null);
       Contract.Invariant(this.rootBlocks != null);
       Contract.Invariant(this.blockFor != null);
     }
@@ -48,9 +55,9 @@ namespace Microsoft.Cci {
     /// <summary>
     /// The first block in the method as well as the first blocks of any exception handlers, fault handlers and finally clauses.
     /// </summary>
-    public List<BasicBlock<Instruction>> RootBlocks {
+    public List<BasicBlock> RootBlocks {
       get {
-        Contract.Ensures(Contract.Result<List<BasicBlock<Instruction>>>() != null);
+        Contract.Ensures(Contract.Result<List<BasicBlock>>() != null);
         return this.rootBlocks; 
       }
       set {
@@ -58,14 +65,30 @@ namespace Microsoft.Cci {
         this.rootBlocks = value; 
       }
     }
-    private List<BasicBlock<Instruction>> rootBlocks;
+    List<BasicBlock> rootBlocks;
+
+    /// <summary>
+    /// A list of all basic blocks in the graph, ordered so that any block that ends on a conditional branch immediately precedes the block
+    /// to which it falls through and so that all blocks that make up a try body or handler are contiguous.
+    /// </summary>
+    public List<BasicBlock> AllBlocks {
+      get {
+        Contract.Ensures(Contract.Result<List<BasicBlock>>() != null);
+        return this.allBlocks;
+      }
+      set {
+        Contract.Requires(value != null);
+        this.allBlocks = value;
+      }
+    }
+    List<BasicBlock> allBlocks;
 
     /// <summary>
     /// A map from IL offset to corresponding basic block.
     /// </summary>
-    public Hashtable<BasicBlock<Instruction>> BlockFor {
+    public Hashtable<BasicBlock> BlockFor {
       get {
-        Contract.Ensures(Contract.Result<Hashtable<BasicBlock<Instruction>>>() != null);
+        Contract.Ensures(Contract.Result<Hashtable<BasicBlock>>() != null);
         return this.blockFor; 
       }
       set {
@@ -73,14 +96,38 @@ namespace Microsoft.Cci {
         this.blockFor = value; 
       }
     }
-    private Hashtable<BasicBlock<Instruction>> blockFor;
+    private Hashtable<BasicBlock> blockFor;
 
     /// <summary>
-    /// 
+    /// The master list of all successor edges. The successor list for each basic block is a sublist of this list.
     /// </summary>
-    /// <param name="host"></param>
-    /// <param name="methodBody"></param>
-    /// <returns></returns>
+    public List<BasicBlock> SuccessorEdges {
+      get {
+        Contract.Ensures(Contract.Result<List<BasicBlock>>() != null);
+        return this.successorEdges;
+      }
+      set {
+        Contract.Requires(value != null);
+        this.successorEdges = value;
+      }
+    }
+    List<BasicBlock> successorEdges;
+
+    /// <summary>
+    /// All basic blocks that can be reached via control flow out of the given basic block.
+    /// </summary>
+    public Sublist<BasicBlock> SuccessorsFor(BasicBlock basicBlock) {
+      Contract.Requires(basicBlock != null);
+      if (basicBlock.firstSuccessorEdge+basicBlock.successorCount > this.SuccessorEdges.Count)
+        throw new InvalidOperationException(); //can only happen if the basic block does not belong to this graph.
+      Contract.Assume(basicBlock.firstSuccessorEdge >= 0);
+      Contract.Assume(basicBlock.successorCount >= 0);
+      return new Sublist<BasicBlock>(this.SuccessorEdges, basicBlock.firstSuccessorEdge, basicBlock.successorCount);
+    }
+
+    /// <summary>
+    /// Constructs a control and data flow graph for the given method body.
+    /// </summary>
     public static ControlAndDataFlowGraph<BasicBlock, Instruction> GetControlAndDataFlowGraphFor(IMetadataHost host, IMethodBody methodBody) {
       Contract.Requires(host != null);
       Contract.Requires(methodBody != null);
@@ -92,8 +139,6 @@ namespace Microsoft.Cci {
       return cdfg;
     }
 
-
-
   }
 
   /// <summary>
@@ -102,9 +147,14 @@ namespace Microsoft.Cci {
   public class BasicBlock<Instruction> {
 
     /// <summary>
-    /// All basic blocks that can be reached via control flow out of this block.
+    /// The first edge in the ControlAndDataFlowGraph that contains the basic block, which represents a control flow from this block to a successor block.
     /// </summary>
-    public Sublist<BasicBlock<Instruction>> Successors;
+    internal int firstSuccessorEdge;
+
+    /// <summary>
+    /// The number of edges that leave this block. The edges are a contiguous sublist of the the SuccessorEdges list of the ControlAndDataFlowGraph that contains this block.
+    /// </summary>
+    internal int successorCount;
 
     /// <summary>
     /// A list of pseudo instructions that initialize the operand stack when the block is entered. No actual code should be generated for these instructions
@@ -165,6 +215,53 @@ namespace Microsoft.Cci {
     /// Could also be an array of instructions if the instruction is n-ary for n > 2.
     /// </summary>
     public object/*?*/ Operand2;
+
+    /// <summary>
+    /// Returns a <see cref="System.String"/> that represents this instance.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="System.String"/> that represents this instance.
+    /// </returns>
+    public override string ToString() {
+      var stringBuilder = new StringBuilder();
+      stringBuilder.Append(this.Operation.Offset.ToString("x4"));
+      stringBuilder.Append(", ");
+      stringBuilder.Append(this.Operation.OperationCode.ToString());
+
+      if (this.Operation.Value is uint)
+        stringBuilder.Append(" "+((uint)this.Operation.Value).ToString("x4"));
+      stringBuilder.Append(", ");
+      stringBuilder.Append(TypeHelper.GetTypeName(this.Type));
+      if (this.Operand1 != null) {
+        stringBuilder.Append(", ");
+        this.AppendFlowFrom(this.Operand1, stringBuilder);
+      }
+      var i2 = this.Operand2 as Instruction;
+      if (i2 != null) {
+        stringBuilder.Append(", ");
+        this.AppendFlowFrom(i2, stringBuilder);
+      } else {
+        var i2a = this.Operand2 as Instruction[];
+        if (i2a != null) {
+          foreach (var i2e in i2a) {
+            Contract.Assume(i2e != null); //Assumed because of the informal specification of the ControlFlowInferencer
+            stringBuilder.Append(", ");
+            this.AppendFlowFrom(i2e, stringBuilder);
+          }
+        }
+      }
+      return stringBuilder.ToString();
+    }
+
+    private void AppendFlowFrom(Instruction instruction, StringBuilder stringBuilder) {
+      Contract.Requires(instruction != null);
+      Contract.Requires(stringBuilder != null);
+
+      if (instruction.Operation == Dummy.Operation)
+        stringBuilder.Append("stack");
+      else
+        stringBuilder.Append(instruction.Operation.Offset.ToString("x4"));
+    }
 
     /// <summary>
     /// The type of the result this instruction pushes onto the stack. Void if none.

@@ -869,7 +869,7 @@ namespace Microsoft.Cci {
 
       StringBuilder sb = new StringBuilder();
       if ((formattingOptions & NameFormattingOptions.Visibility) != 0) {
-        sb.Append(this.GetVisibility(eventDef));
+        sb.Append(this.GetVisibility(eventDef)); 
         sb.Append(' ');
       }
       if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0)
@@ -1122,7 +1122,7 @@ namespace Microsoft.Cci {
       Contract.Requires(sb != null);
 
       if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
-        sb.Append(this.typeNameFormatter.GetTypeName(method.ContainingType,
+        sb.Append(this.typeNameFormatter.GetTypeName(method.ContainingType, 
           formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind|NameFormattingOptions.TypeConstraints)));
         sb.Append('.');
       }

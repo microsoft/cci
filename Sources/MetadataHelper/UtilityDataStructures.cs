@@ -404,9 +404,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
   /// <summary>
   /// Hashtable that can hold only single value per key.
   /// </summary>
-  public sealed class Hashtable<Key, Value>
-    where Key : class
-    where Value : class, new() {
+  public sealed class Hashtable<Key, Value> where Key : class where Value : class, new() {
     static Value dummyObject = new Value();
     struct KeyValuePair {
       internal Key key;
@@ -1599,7 +1597,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
   }
 
   /// <summary>
-  /// Hashtable that can hold only single value per key.
+  /// A hash table used to keep track of a set of objects, providing methods to add objects to the set and to determine if an objet is a member of the set.
   /// </summary>
   public sealed class SetOfObjects { //Provide a Values enumeration
     object[] elements;
@@ -1839,6 +1837,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
   /// A list of elements represented as a sublist of a master list. Use this to avoid allocating lots of little list objects.
   /// </summary>
   [ContractVerification(true)]
+  [DebuggerTypeProxy(typeof(Sublist<>.SublistView))]
   public struct Sublist<T> {
 
     /// <summary>
@@ -1873,6 +1872,22 @@ namespace Microsoft.Cci.UtilityDataStructures {
       Contract.Invariant(this.count <= this.masterList.Count);
       Contract.Invariant(this.offset+this.count >= 0);
       Contract.Invariant(this.offset+this.count <= this.masterList.Count);
+    }
+
+
+    internal class SublistView {
+
+      public SublistView(Sublist<T> list) {
+        var numEntries = list.Count;
+        this.elements = new T[numEntries];
+        for (int i = 0; i < numEntries; i++) {
+          this.elements[i] = list[i];
+        }
+      }
+
+      [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+      public T[] elements;
+
     }
 
     /// <summary>

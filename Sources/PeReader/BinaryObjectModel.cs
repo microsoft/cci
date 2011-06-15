@@ -540,7 +540,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     readonly AssemblyFlags AssemblyFlags;
     readonly byte[] publicKey;
     internal readonly AssemblyIdentity AssemblyIdentity;
-    internal EnumerableArrayWrapper<Module, IModule> MemberModules;
+    internal IModule[]/*?*/ MemberModules;
 
     internal Assembly(
       PEFileToObjectModel peFileToObjectModel,
@@ -559,7 +559,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.AssemblyFlags = assemblyFlags;
       this.publicKey= publicKey;
       this.AssemblyIdentity = assemblyIdentity;
-      this.MemberModules = TypeCache.EmptyModuleArray;
     }
 
     public override void Dispatch(IMetadataVisitor visitor) {
@@ -582,21 +581,17 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return TokenTypeIds.Assembly | (uint)0x00000001; }
     }
 
-    internal Module/*?*/ FindMemberModuleNamed(
-      IName moduleName
-    ) {
-      Module[] memberModuleArray = this.MemberModules.RawArray;
-      for (int i = 0; i < memberModuleArray.Length; ++i) {
-        if (memberModuleArray[i].ModuleName.UniqueKeyIgnoringCase != moduleName.UniqueKeyIgnoringCase)
-          continue;
+    internal IModule/*?*/ FindMemberModuleNamed(IName moduleName) {
+      IModule[]/*?*/ memberModuleArray = this.MemberModules;
+      if (memberModuleArray == null) return null;
+      for (int i = 0, n = memberModuleArray.Length; i < n; i++) {
+        if (memberModuleArray[i].ModuleName.UniqueKeyIgnoringCase != moduleName.UniqueKeyIgnoringCase) continue;
         return memberModuleArray[i];
       }
       return null;
     }
 
-    internal void SetMemberModules(
-      EnumerableArrayWrapper<Module, IModule> memberModules
-    ) {
+    internal void SetMemberModules(IModule[] memberModules) {
       this.MemberModules = memberModules;
     }
 
@@ -627,7 +622,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     IEnumerable<IModule> IAssembly.MemberModules {
-      get { return this.MemberModules; }
+      get { return IteratorHelper.GetReadonly(this.MemberModules)??Enumerable<IModule>.Empty; }
     }
 
     IEnumerable<ISecurityAttribute> IAssembly.SecurityAttributes {
@@ -747,7 +742,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     internal IModule ResolvedModule {
       get {
         if (this.resolvedModule == null) {
-          Module/*?*/ resModule = this.PEFileToObjectModel.ResolveModuleRefReference(this);
+          var resModule = this.PEFileToObjectModel.ResolveModuleRefReference(this);
           if (resModule == null) {
             //  Cant resolve error...
             this.resolvedModule = Dummy.Module;
@@ -2967,16 +2962,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     protected IEnumerable<ICustomModifier>/*?*/ returnCustomModifiers;
     protected ITypeReference/*?*/ returnTypeReference;
     protected bool isReturnByReference;
-    protected EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>/*?*/ requiredParameters;
-    protected EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>/*?*/ varArgParameters;
+    protected IParameterTypeInformation[]/*?*/ requiredParameters;
+    protected IParameterTypeInformation[]/*?*/ varArgParameters;
 
-    internal MethodReference(
-      PEFileToObjectModel peFileToObjectModel,
-      uint memberRefRowId,
-      ITypeReference/*?*/ parentTypeReference,
-      IName name,
-      byte firstByte
-    )
+    internal MethodReference(PEFileToObjectModel peFileToObjectModel, uint memberRefRowId, ITypeReference/*?*/ parentTypeReference, IName name, byte firstByte)
       : base(peFileToObjectModel, memberRefRowId, parentTypeReference, name) {
       this.FirstByte = firstByte;
     }
@@ -3019,7 +3008,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    public EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> RequiredModuleParameterInfos {
+    public IParameterTypeInformation[]/*?*/ RequiredModuleParameterInfos {
       get {
         if (this.returnCustomModifiers == null) {
           this.InitMethodSignature();
@@ -3029,7 +3018,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    public EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> VarArgModuleParameterInfos {
+    public IParameterTypeInformation[]/*?*/ VarArgModuleParameterInfos {
       get {
         if (this.returnCustomModifiers == null) {
           this.InitMethodSignature();
@@ -3097,12 +3086,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (this.returnCustomModifiers == null) {
           return (ushort)this.PEFileToObjectModel.GetMethodRefParameterCount(this);
         }
-        return (ushort)(this.RequiredModuleParameterInfos.RawArray.Length + this.VarArgModuleParameterInfos.RawArray.Length);
+        if (this.RequiredModuleParameterInfos == null) return 0;
+        if (this.VarArgModuleParameterInfos == null) return (ushort)this.RequiredModuleParameterInfos.Length;
+        return (ushort)(this.VarArgModuleParameterInfos.Length+this.RequiredModuleParameterInfos.Length);
       }
     }
 
     public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return this.VarArgModuleParameterInfos; }
+      get { return IteratorHelper.GetReadonly(this.VarArgModuleParameterInfos)??Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     #endregion
@@ -3114,7 +3105,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public IEnumerable<IParameterTypeInformation> Parameters {
-      get { return this.RequiredModuleParameterInfos; }
+      get { return IteratorHelper.GetReadonly(this.RequiredModuleParameterInfos)??Enumerable<IParameterTypeInformation>.Empty; }
     }
 
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {

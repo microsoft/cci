@@ -224,26 +224,26 @@ namespace Microsoft.Cci {
 
     public IMetadataConstant CompileTimeValue {
       get {
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
     public ISectionBlock FieldMapping {
       get {
         Contract.Requires(this.IsMapped);
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
     public bool IsBitField {
-      get {
-        throw new NotImplementedException();
+      get { 
+        throw new NotImplementedException(); 
       }
     }
 
     public bool IsCompileTimeConstant {
-      get {
-        throw new NotImplementedException();
+      get { 
+        throw new NotImplementedException(); 
       }
     }
 
@@ -259,47 +259,47 @@ namespace Microsoft.Cci {
     }
 
     public bool IsNotSerialized {
-      get {
-        throw new NotImplementedException();
+      get { 
+        throw new NotImplementedException(); 
       }
     }
 
     public bool IsReadOnly {
-      get {
-        throw new NotImplementedException();
+      get { 
+        throw new NotImplementedException(); 
       }
     }
 
     public bool IsRuntimeSpecial {
-      get {
-        throw new NotImplementedException();
+      get { 
+        throw new NotImplementedException(); 
       }
     }
 
     public bool IsSpecialName {
-      get {
-        throw new NotImplementedException();
+      get { 
+        throw new NotImplementedException(); 
       }
     }
 
     public IMarshallingInformation MarshallingInformation {
       get {
         Contract.Requires(this.IsMarshalledExplicitly);
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
     public uint Offset {
       get {
         Contract.Requires(this.ContainingTypeDefinition.Layout == LayoutKind.Explicit);
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
     public int SequenceNumber {
       get {
         Contract.Requires(this.ContainingTypeDefinition.Layout == LayoutKind.Sequential);
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
@@ -568,7 +568,7 @@ namespace Microsoft.Cci {
     public ITypeReference ExceptionType {
       get {
         Contract.Ensures(Contract.Result<ITypeReference>() != null);
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
@@ -773,7 +773,7 @@ namespace Microsoft.Cci {
   #region IMethodBody contract binding
   [ContractClass(typeof(IMethodBodyContract))]
   public partial interface IMethodBody {
-
+    
   }
 
   [ContractClassFor(typeof(IMethodBody))]
@@ -789,7 +789,7 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<IOperationExceptionInformation>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IOperationExceptionInformation>>(), x => x != null));
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
@@ -801,14 +801,14 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<ILocalDefinition>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ILocalDefinition>>(), x => x != null));
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
     public IMethodDefinition MethodDefinition {
       get {
         Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
@@ -816,13 +816,13 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<IOperation>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IOperation>>(), x => x != null));
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 
     public ushort MaxStack {
-      get {
-        throw new NotImplementedException();
+      get { 
+        throw new NotImplementedException(); 
       }
     }
 
@@ -830,7 +830,7 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<ITypeDefinition>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ITypeDefinition>>(), x => x != null));
-        throw new NotImplementedException();
+        throw new NotImplementedException(); 
       }
     }
 

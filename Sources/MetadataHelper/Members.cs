@@ -2092,13 +2092,15 @@ namespace Microsoft.Cci.Immutable {
         specialized = TypeHelper.SpecializeTypeReference(typeReference, this.containingMethod, this.internFactory);
       else {
         var fieldReference = unspecialized as IFieldReference;
-        if (fieldReference != null)
-          specialized = new SpecializedFieldReference(this.containingMethod.ContainingType, fieldReference, this.internFactory);
-        else {
+        if (fieldReference != null) {
+          var specializedContainingType = TypeHelper.SpecializeTypeReference(fieldReference.ContainingType, this.containingMethod, this.internFactory);
+          specialized = new SpecializedFieldReference(specializedContainingType, fieldReference, this.internFactory);
+        } else {
           var methodReference = unspecialized as IMethodReference;
-          if (methodReference != null)
-            specialized = new SpecializedMethodReference(this.containingMethod.ContainingType, methodReference, this.internFactory);
-          else
+          if (methodReference != null) {
+            var specializedContainingType = TypeHelper.SpecializeTypeReference(fieldReference.ContainingType, this.containingMethod, this.internFactory);
+            specialized = new SpecializedMethodReference(specializedContainingType, methodReference, this.internFactory);
+          } else
             return unspecialized;
         }
       }
@@ -2165,7 +2167,7 @@ namespace Microsoft.Cci.Immutable {
     /// </summary>
     /// <value></value>
     public IMethodBody Body {
-      get {
+      get { 
         var result = this.body == null ? null : this.body.Target as IMethodBody;
         if (result == null) {
           result = new SpecializedMethodBody(this.UnspecializedVersion.Body, this, this.ContainingGenericTypeInstance.InternFactory);
@@ -2706,8 +2708,11 @@ namespace Microsoft.Cci.Immutable {
       get {
         if (this.implementedMethod == null) {
           var containingTypeForImplemented = 
-            TypeHelper.SpecializeTypeReference(this.unspecializedVersion.ImplementedMethod.ContainingType, this.containingType, this.internFactory);
-          this.implementedMethod = new SpecializedMethodReference(containingTypeForImplemented, this.unspecializedVersion.ImplementedMethod, this.internFactory);
+            TypeHelper.SpecializeTypeReference(this.unspecializedVersion.ImplementedMethod.ContainingType, this.ContainingType, this.internFactory);
+          var unspecializedImplemented = this.unspecializedVersion.ImplementedMethod;
+          var specializedImplemented = unspecializedImplemented as ISpecializedMethodReference;
+          if (specializedImplemented != null) unspecializedImplemented = specializedImplemented.UnspecializedVersion;
+          this.implementedMethod = new SpecializedMethodReference(containingTypeForImplemented, unspecializedImplemented, this.internFactory);
         }
         return this.implementedMethod;
       }
@@ -2720,9 +2725,10 @@ namespace Microsoft.Cci.Immutable {
     public IMethodReference ImplementingMethod {
       get {
         if (this.implementingMethod == null) {
-          var containingTypeForImplementing = 
-            TypeHelper.SpecializeTypeReference(this.unspecializedVersion.ImplementingMethod.ContainingType, this.containingType, this.internFactory);
-          this.implementingMethod = new SpecializedMethodReference(this.ContainingType, this.unspecializedVersion.ImplementingMethod, this.internFactory);
+          var unspecializedImplemented = this.unspecializedVersion.ImplementingMethod;
+          var specializedImplemented = unspecializedImplemented as ISpecializedMethodReference;
+          if (specializedImplemented != null) unspecializedImplemented = specializedImplemented.UnspecializedVersion;
+          this.implementingMethod = new SpecializedMethodReference(this.ContainingType, unspecializedImplemented, this.internFactory);
         }
         return this.implementingMethod;
       }

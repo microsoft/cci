@@ -147,6 +147,7 @@ namespace Microsoft.Cci {
     /// <param name="array">The array to wrap. May be null.</param>
     public static IEnumerable<T>/*?*/ GetReadonly<T>(T[]/*?*/ array) {
       if (array == null) return null;
+      if (array.Length == 1) return IteratorHelper.GetSingletonEnumerable(array[0]);
       return new ReaonlyOnlyArrayWrapper<T>(array);
     }
 

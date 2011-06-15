@@ -122,7 +122,7 @@ namespace Microsoft.Cci {
       }
     }
 
-    #region Interop stuff
+  #region Interop stuff
     private enum PageAccess : int { PAGE_READONLY = 0x02 };
     private enum FileMapAccess : int { FILE_MAP_READ = 0x0004 };
 
@@ -157,7 +157,7 @@ namespace Microsoft.Cci {
       IntPtr hObject  // handle to object
     );
 
-    #endregion Interop stuff
+  #endregion Interop stuff
   }
 #endif
 
@@ -359,17 +359,17 @@ namespace Microsoft.Cci {
     #region IBinaryLocation Members
 
     IBinaryDocument IBinaryLocation.BinaryDocument {
-      get
+      get 
         //^ ensures result == this.binaryDocument;
-      {
-        return this.binaryDocument;
+      { 
+        return this.binaryDocument; 
       }
     }
 
     uint IBinaryLocation.Offset {
-      get {
+      get { 
         //^ assume ((IBinaryLocation)this).BinaryDocument == this.binaryDocument; //see above
-        return this.offset;
+        return this.offset; 
       }
     }
 

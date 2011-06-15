@@ -128,7 +128,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     IEnumerable<ICustomModifier> ILocalDefinition.CustomModifiers {
       get {
         if (this.customModifiers == null) return Enumerable<ICustomModifier>.Empty;
-        return this.customModifiers;
+        return this.customModifiers; 
       }
     }
 

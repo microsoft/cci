@@ -12,7 +12,7 @@ namespace Microsoft.Cci {
     where BasicBlock : Microsoft.Cci.BasicBlock<Instruction>, new ()
     where Instruction : Microsoft.Cci.Instruction, new () {
 
-    private TypeInferencer(IMetadataHost host, ControlAndDataFlowGraph<BasicBlock, Instruction> cfg, Stack<Instruction> stack, Queue<BasicBlock<Instruction>> blocksToVisit, SetOfObjects blocksAlreadyVisited) {
+    private TypeInferencer(IMetadataHost host, ControlAndDataFlowGraph<BasicBlock, Instruction> cfg, Stack<Instruction> stack, Queue<BasicBlock> blocksToVisit, SetOfObjects blocksAlreadyVisited) {
       Contract.Requires(host != null);
       Contract.Requires(cfg != null);
       Contract.Requires(stack != null);
@@ -30,7 +30,7 @@ namespace Microsoft.Cci {
     IPlatformType platformType;
     ControlAndDataFlowGraph<BasicBlock, Instruction> cfg;
     Stack<Instruction> stack;
-    Queue<BasicBlock<Instruction>> blocksToVisit;
+    Queue<BasicBlock> blocksToVisit;
     SetOfObjects blocksAlreadyVisited;
     IInternFactory internFactory;
 
@@ -52,7 +52,7 @@ namespace Microsoft.Cci {
       Contract.Requires(cfg != null);
       var stack = new Stack<Instruction>(cfg.MethodBody.MaxStack, new List<Instruction>(0));
       var numberOfBlocks = cfg.BlockFor.Count;
-      var blocksToVisit = new Queue<BasicBlock<Instruction>>((int)numberOfBlocks);
+      var blocksToVisit = new Queue<BasicBlock>((int)numberOfBlocks);
       var blocksAlreadyVisited = new SetOfObjects(numberOfBlocks);
       var inferencer = new TypeInferencer<BasicBlock, Instruction>(host, cfg, stack, blocksToVisit, blocksAlreadyVisited);
 
@@ -66,7 +66,7 @@ namespace Microsoft.Cci {
     private void DequeueBlockAndFillInItsTypes() {
       var block = this.blocksToVisit.Dequeue();
       Contract.Assume(block != null); //this.blocksToVisit only has non null elements, but we can't put that in a contract that satisfies the checker
-      this.blocksAlreadyVisited.Add(block);
+      if (!this.blocksAlreadyVisited.Add(block)) return; //The same block can be added multiple times to the queue.
 
       //The block either has no operand stack setup instructions, or we presume that a predecessor block has already assigned types to them.
       foreach (var stackSetupInstruction in block.OperandStack) {
@@ -79,17 +79,17 @@ namespace Microsoft.Cci {
         this.InferTypeAndUpdateStack(instruction);
       }
 
-      foreach (var successor in block.Successors) {
+      foreach (var successor in this.cfg.SuccessorsFor(block)) {
         Contract.Assume(successor != null); //block.Successors only has non null elements, but we can't put that in a contract that satisfies the checker
         this.TransferTypesFromStackTo(successor);
         if (blocksAlreadyVisited.Contains(successor)) continue;
-        blocksToVisit.Enqueue(successor);
+        blocksToVisit.Enqueue(successor); //The block might already be in the queue, but we can deal with this more efficiently by checking blocksAlreadyVisited when dequeueing.
       }
 
       this.stack.Clear();
     }
 
-    private void TransferTypesFromStackTo(BasicBlock<Instruction> successor) {
+    private void TransferTypesFromStackTo(BasicBlock successor) {
       Contract.Requires(successor != null);
       Contract.Assume(this.stack.Top+1 == successor.OperandStack.Count); //We assume that the DataFlowInferencer sets things up this way.
       for (int i = 0, n = this.stack.Top; i <= n; i++) {

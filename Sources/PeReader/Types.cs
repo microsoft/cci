@@ -1018,7 +1018,11 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #region INamedTypeReference Members
 
     INamedTypeDefinition INamedTypeReference.ResolvedType {
-      get { return this.ResolvedType; }
+      get { 
+        var result = this.ResolvedType;
+        if (result == Dummy.NamespaceTypeDefinition) return Dummy.NamedTypeDefinition;
+        return result;
+      }
     }
 
     #endregion
@@ -3704,7 +3708,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   internal abstract class Parameter : MetadataDefinitionObject, IParameterDefinition {
 
-    internal Parameter(PEFileToObjectModel peFileToObjectModel, int index, IEnumerable<ICustomModifier>/*?*/ customModifiers,
+    internal Parameter(PEFileToObjectModel peFileToObjectModel, int index, IEnumerable<ICustomModifier>/*?*/ customModifiers, 
       ITypeReference/*?*/ type, ISignature containingSignature)
       : base(peFileToObjectModel) {
       this.index = (ushort)index;
@@ -3863,7 +3867,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     internal ParameterWithMetadata(PEFileToObjectModel peFileToObjectModel, int parameterIndex, IEnumerable<ICustomModifier>/*?*/ moduleCustomModifiers,
       ITypeReference/*?*/ typeReference, ISignature containingSignatureDefinition, bool isByReference, bool possibleParamArray,  //  Means that this is last parameter && type is array...
-      uint paramRowId, IName parameterName, ParamFlags parameterFlags)
+      uint paramRowId,IName parameterName, ParamFlags parameterFlags)
       : base(peFileToObjectModel, parameterIndex, moduleCustomModifiers, typeReference, containingSignatureDefinition) {
       this.ParameterName = parameterName;
       if (isByReference) {
@@ -4179,15 +4183,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal sealed class TypeCache {
-    internal readonly static EnumerableArrayWrapper<Module, IModule> EmptyModuleArray = new EnumerableArrayWrapper<Module, IModule>(new Module[0], Dummy.Module);
-    internal static readonly EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition> EmptyParameterArray = new EnumerableArrayWrapper<IParameterDefinition, IParameterDefinition>(new IParameterDefinition[0], Dummy.ParameterDefinition);
-    internal static readonly EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation> EmptyParameterInfoArray = new EnumerableArrayWrapper<IParameterTypeInformation, IParameterTypeInformation>(new IParameterTypeInformation[0], Dummy.ParameterTypeInformation);
-    internal static readonly EnumerableArrayWrapper<ITypeReference/*?*/, ITypeReference> EmptyTypeArray = new EnumerableArrayWrapper<ITypeReference/*?*/, ITypeReference>(new ITypeReference/*?*/[0], Dummy.TypeReference);
-    internal static readonly EnumerableArrayWrapper<IGenericTypeParameter, IGenericTypeParameter> EmptyGenericTypeParameters = new EnumerableArrayWrapper<IGenericTypeParameter, IGenericTypeParameter>(new IGenericTypeParameter[0], Dummy.GenericTypeParameter);
-    internal static readonly EnumerableArrayWrapper<IGenericMethodParameter, IGenericMethodParameter> EmptyGenericMethodParameters = new EnumerableArrayWrapper<IGenericMethodParameter, IGenericMethodParameter>(new IGenericMethodParameter[0], Dummy.GenericMethodParameter);
-    internal static readonly EnumerableArrayWrapper<SecurityCustomAttribute, ICustomAttribute> EmptySecurityAttributes = new EnumerableArrayWrapper<SecurityCustomAttribute, ICustomAttribute>(new SecurityCustomAttribute[0], Dummy.CustomAttribute);
-    internal static readonly EnumerableArrayWrapper<ExpressionBase, IMetadataExpression> EmptyExpressionList = new EnumerableArrayWrapper<ExpressionBase, IMetadataExpression>(new ExpressionBase[0], Dummy.Expression);
-    internal static readonly EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument> EmptyNamedArgumentList = new EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument>(new FieldOrPropertyNamedArgumentExpression[0], Dummy.NamedArgument);
     internal static readonly byte[] EmptyByteArray = new byte[0];
     internal static PrimitiveTypeCode[] PrimitiveTypeCodeConv = {
       PrimitiveTypeCode.Int8,     //SByte,

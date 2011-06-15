@@ -18,7 +18,7 @@ namespace Microsoft.Cci {
       this.cdfg = cdfg;
       this.operandStackSetupInstructions = new List<Instruction>(cdfg.MethodBody.MaxStack);
       this.stack = new Stack<Instruction>(cdfg.MethodBody.MaxStack, this.operandStackSetupInstructions);
-      this.blocksToVisit = new Queue<BasicBlock<Instruction>>((int)numberOfBlocks);
+      this.blocksToVisit = new Queue<BasicBlock>((int)numberOfBlocks);
       this.blocksAlreadyVisited = new SetOfObjects(numberOfBlocks); ;
       this.internFactory = host.InternFactory;
     }
@@ -27,7 +27,7 @@ namespace Microsoft.Cci {
     ControlAndDataFlowGraph<BasicBlock, Instruction> cdfg;
     Stack<Instruction> stack;
     List<Instruction> operandStackSetupInstructions;
-    Queue<BasicBlock<Instruction>> blocksToVisit;
+    Queue<BasicBlock> blocksToVisit;
     SetOfObjects blocksAlreadyVisited;
     IInternFactory internFactory;
 
@@ -83,7 +83,7 @@ namespace Microsoft.Cci {
       }
     }
 
-    private void AddStackSetup(BasicBlock<Instruction> block, ITypeReference operandType) {
+    private void AddStackSetup(BasicBlock block, ITypeReference operandType) {
       Contract.Requires(block != null);
       Contract.Requires(operandType != null);
 
@@ -94,7 +94,7 @@ namespace Microsoft.Cci {
     private void DequeueBlockAndSetupDataFlow() {
       var block = this.blocksToVisit.Dequeue();
       Contract.Assume(block != null); //this.blocksToVisit only has non null elements, but we can't put that in a contract that satisfies the checker
-      this.blocksAlreadyVisited.Add(block);
+      if (!this.blocksAlreadyVisited.Add(block)) return; //The same block can be added multiple times to the queue.
 
       foreach (var instruction in block.OperandStack) {
         Contract.Assume(instruction != null); //block.OperandStack only has non null elements, but we can't put that in a contract that satisfies the checker
@@ -106,18 +106,18 @@ namespace Microsoft.Cci {
         this.SetupDataFlowFor(instruction);
       }
 
-      foreach (var successor in block.Successors) {
+      foreach (var successor in this.cdfg.SuccessorsFor(block)) {
         Contract.Assume(successor != null); //block.Successors only has non null elements, but we can't put that in a contract that satisfies the checker
         this.SetupStackFor(successor);
         if (blocksAlreadyVisited.Contains(successor)) continue;
-        blocksToVisit.Enqueue(successor);
+        blocksToVisit.Enqueue(successor); //The block might already be in the queue, but we can deal with this more efficiently by checking blocksAlreadyVisited when dequeueing.
       }
 
       this.stack.Clear();
 
     }
 
-    private void SetupStackFor(BasicBlock<Instruction> successor) {
+    private void SetupStackFor(BasicBlock successor) {
       Contract.Requires(successor != null);
 
       if (successor.OperandStack.Count == 0) {

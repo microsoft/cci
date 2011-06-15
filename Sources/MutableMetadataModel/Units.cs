@@ -243,7 +243,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           this.flags &= ~0x0001u;
         else
           this.flags |= 0x0001u;
-        this.publicKey = value;
+        this.publicKey = value; 
         this.assemblyIdentity = null;
         this.publicKeyToken = null;
       }
@@ -285,42 +285,42 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<ICustomAttribute> IAssembly.AssemblyAttributes {
       get {
         if (this.AssemblyAttributes == null) return Enumerable<ICustomAttribute>.Empty;
-        return this.AssemblyAttributes.AsReadOnly();
+        return this.AssemblyAttributes.AsReadOnly(); 
       }
     }
 
     IEnumerable<IAliasForType> IAssembly.ExportedTypes {
       get {
         if (this.ExportedTypes == null) return Enumerable<IAliasForType>.Empty;
-        return this.ExportedTypes.AsReadOnly();
+        return this.ExportedTypes.AsReadOnly(); 
       }
     }
 
     IEnumerable<IResourceReference> IAssembly.Resources {
       get {
         if (this.Resources == null) return Enumerable<IResourceReference>.Empty;
-        return this.resources.AsReadOnly();
+        return this.resources.AsReadOnly(); 
       }
     }
 
     IEnumerable<IFileReference> IAssembly.Files {
       get {
         if (this.Files == null) return Enumerable<IFileReference>.Empty;
-        return this.Files.AsReadOnly();
+        return this.Files.AsReadOnly(); 
       }
     }
 
     IEnumerable<IModule> IAssembly.MemberModules {
       get {
         if (this.MemberModules == null) return Enumerable<IModule>.Empty;
-        return this.MemberModules.AsReadOnly();
+        return this.MemberModules.AsReadOnly(); 
       }
     }
 
     IEnumerable<ISecurityAttribute> IAssembly.SecurityAttributes {
       get {
         if (this.SecurityAttributes == null) return Enumerable<ISecurityAttribute>.Empty;
-        return this.SecurityAttributes.AsReadOnly();
+        return this.SecurityAttributes.AsReadOnly(); 
       }
     }
 
@@ -471,7 +471,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.aliases; }
       set {
         Contract.Requires(!this.IsFrozen);
-        this.aliases = value;
+        this.aliases = value; 
       }
     }
     List<IName>/*?*/ aliases;
@@ -492,7 +492,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       var result = this.Host.FindAssembly(unifiedIdentity);
       if (result != Dummy.Assembly) return result;
       if (this.ReferringUnit != null && (String.IsNullOrEmpty(unifiedIdentity.Location) || unifiedIdentity.Location.Equals("unknown://location")))
-        unifiedIdentity = this.Host.ProbeAssemblyReference(this.ReferringUnit, unifiedIdentity);
+          unifiedIdentity = this.Host.ProbeAssemblyReference(this.ReferringUnit, unifiedIdentity);
       return this.Host.LoadAssembly(unifiedIdentity);
     }
 
@@ -504,7 +504,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get {
         if (this.resolvedAssembly == null)
           this.resolvedAssembly = this.ResolveAssembly();
-        return this.resolvedAssembly;
+        return this.resolvedAssembly; 
       }
       set {
         Contract.Requires(!this.IsFrozen);
@@ -522,7 +522,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.culture; }
       set {
         Contract.Requires(!this.IsFrozen);
-        this.culture = value;
+        this.culture = value; 
       }
     }
     string culture;
@@ -534,7 +534,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.isRetargetable; }
       set {
         Contract.Requires(!this.IsFrozen);
-        this.isRetargetable = value;
+        this.isRetargetable = value; 
       }
     }
     bool isRetargetable;
@@ -547,7 +547,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.containsForeignTypes; }
       set {
         Contract.Requires(!this.IsFrozen);
-        this.containsForeignTypes = value;
+        this.containsForeignTypes = value; 
       }
     }
     bool containsForeignTypes;
@@ -567,8 +567,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// integrity of the assembly.
     /// </summary>
     public IEnumerable<byte> PublicKey {
-      get {
-        return this.publicKey??Enumerable<byte>.Empty;
+      get { 
+        return this.publicKey??Enumerable<byte>.Empty; 
       }
       set {
         Contract.Requires(!this.IsFrozen);
@@ -618,7 +618,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.location; }
       set {
         Contract.Requires(!this.IsFrozen);
-        this.location = value;
+        this.location = value; 
       }
     }
     string location;
@@ -673,14 +673,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<IName> IAssemblyReference.Aliases {
       get {
         if (this.Aliases == null) return Enumerable<IName>.Empty;
-        return this.Aliases.AsReadOnly();
+        return this.Aliases.AsReadOnly(); 
       }
     }
 
     IEnumerable<byte> IAssemblyReference.PublicKeyToken {
       get {
         if (this.PublicKeyToken == null) return Enumerable<byte>.Empty;
-        return this.PublicKeyToken.AsReadOnly();
+        return this.PublicKeyToken.AsReadOnly(); 
       }
     }
 
@@ -713,7 +713,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.moduleAttributes = null;
       this.moduleReferences = null;
       this.persistentIdentifier = Guid.NewGuid();
-      this.machine = Machine.Unknown;
+      this.machine = Machine.Unknown; 
       this.requiresAmdInstructionSet = false;
       this.requiresStartupStub = false;
       this.requires32bits = false;
@@ -806,7 +806,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public List<INamedTypeDefinition> AllTypes {
       get {
         if (this.allTypes == null) this.allTypes = new List<INamedTypeDefinition>();
-        return this.allTypes;
+        return this.allTypes; 
       }
       set { this.allTypes = value; }
     }
@@ -819,7 +819,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public List<IAssemblyReference> AssemblyReferences {
       get {
         if (this.assemblyReferences == null) this.assemblyReferences = new List<IAssemblyReference>();
-        return this.assemblyReferences;
+        return this.assemblyReferences; 
       }
       set { this.assemblyReferences = value; }
     }
@@ -1199,7 +1199,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<IAssemblyReference> IModule.AssemblyReferences {
       get {
         if (this.assemblyReferences == null) return Enumerable<IAssemblyReference>.Empty;
-        return this.assemblyReferences.AsReadOnly();
+        return this.assemblyReferences.AsReadOnly(); 
       }
     }
 
@@ -1226,21 +1226,21 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<ICustomAttribute> IModule.ModuleAttributes {
       get {
         if (this.ModuleAttributes == null) return Enumerable<ICustomAttribute>.Empty;
-        return this.ModuleAttributes.AsReadOnly();
+        return this.ModuleAttributes.AsReadOnly(); 
       }
     }
 
     IEnumerable<IModuleReference> IModule.ModuleReferences {
       get {
         if (this.ModuleReferences == null) return Enumerable<IModuleReference>.Empty;
-        return this.ModuleReferences.AsReadOnly();
+        return this.ModuleReferences.AsReadOnly(); 
       }
     }
 
     IEnumerable<IWin32Resource> IModule.Win32Resources {
       get {
         if (this.Win32Resources == null) return Enumerable<IWin32Resource>.Empty;
-        return this.Win32Resources.AsReadOnly();
+        return this.Win32Resources.AsReadOnly(); 
       }
     }
 
@@ -1331,7 +1331,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.containingAssembly; }
       set {
         Contract.Requires(!this.IsFrozen);
-        this.containingAssembly = value;
+        this.containingAssembly = value; 
       }
     }
     IAssemblyReference containingAssembly;
@@ -1350,7 +1350,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.host; }
       set {
         Contract.Requires(!this.IsFrozen);
-        this.host = value;
+        this.host = value; 
       }
     }
     IMetadataHost host;
@@ -1398,7 +1398,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       var identity = this.ModuleIdentity;
       var result = this.Host.FindModule(identity);
       if (result != Dummy.Module) return result;
-      if (identity.Location == null && this.ReferringUnit != null)
+      if (identity.Location == null && this.ReferringUnit != null) 
         identity = this.Host.ProbeModuleReference(this.ReferringUnit, identity);
       return this.Host.LoadModule(identity);
     }
@@ -1411,7 +1411,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get {
         if (this.resolvedModule == null)
           this.resolvedModule = this.Resolve();
-        return this.resolvedModule;
+        return this.resolvedModule; 
       }
       set {
         this.resolvedModule = value;
@@ -1585,7 +1585,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.attributes; }
       set {
         Contract.Requires(!this.IsFrozen);
-        this.attributes = value;
+        this.attributes = value; 
       }
     }
     List<ICustomAttribute>/*?*/ attributes;
@@ -1634,7 +1634,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.locations; }
       set {
         Contract.Requires(!this.IsFrozen);
-        this.locations = value;
+        this.locations = value; 
       }
     }
     List<ILocation>/*?*/ locations;
@@ -1647,7 +1647,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.name; }
       set {
         Contract.Requires(!this.IsFrozen);
-        this.name = value;
+        this.name = value; 
       }
     }
     IName name;
@@ -1674,14 +1674,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<ICustomAttribute> IReference.Attributes {
       get {
         if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
-        return this.Attributes.AsReadOnly();
+        return this.Attributes.AsReadOnly(); 
       }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
       get {
         if (this.Locations == null) return Enumerable<ILocation>.Empty;
-        return this.Locations.AsReadOnly();
+        return this.Locations.AsReadOnly(); 
       }
     }
 

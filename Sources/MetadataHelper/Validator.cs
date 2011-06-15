@@ -306,8 +306,8 @@ namespace Microsoft.Cci {
           if (fieldDefinition.MarshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.LPArray ||
             fieldDefinition.MarshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.ByValArray ||
             fieldDefinition.MarshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.ByValTStr) {
-            if (fieldDefinition.MarshallingInformation.NumberOfElements == 0)
-              this.ReportError(MetadataError.MarshalledArraysMustHaveSizeKnownAtCompileTime, fieldDefinition.MarshallingInformation, fieldDefinition);
+              if (fieldDefinition.MarshallingInformation.NumberOfElements == 0)
+                this.ReportError(MetadataError.MarshalledArraysMustHaveSizeKnownAtCompileTime, fieldDefinition.MarshallingInformation, fieldDefinition);
           }
 
 
@@ -797,7 +797,7 @@ namespace Microsoft.Cci {
       /// </summary>
       public void Visit(INamespaceAliasForType namespaceAliasForType) {
         this.Visit((IAliasForType)namespaceAliasForType);
-        if (!namespaceAliasForType.IsPublic && !(TypeHelper.GetDefiningUnitReference(namespaceAliasForType.AliasedType) is IAssemblyReference))
+        if (!namespaceAliasForType.IsPublic && !(TypeHelper.GetDefiningUnitReference(namespaceAliasForType.AliasedType) is IAssemblyReference))          
           this.ReportError(MetadataError.NonPublicTypeAlias, namespaceAliasForType);
       }
 

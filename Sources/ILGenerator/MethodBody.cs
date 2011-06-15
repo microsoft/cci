@@ -24,17 +24,35 @@ namespace Microsoft.Cci {
     /// be completed by the time the generator is passed to this constructor. The generator is not referenced by the resulting method body.</param>
     /// <param name="localsAreZeroed">True if the locals are initialized by zeroeing the stack upon method entry.</param>
     /// <param name="maxStack">The maximum number of elements on the evaluation stack during the execution of the method.</param>
-    public ILGeneratorMethodBody(ILGenerator generator, bool localsAreZeroed, ushort maxStack) {
+    public ILGeneratorMethodBody(ILGenerator generator, bool localsAreZeroed, ushort maxStack)
+      : this (generator, localsAreZeroed, maxStack, Dummy.Method, Enumerable<ITypeDefinition>.Empty) {
+    }
+
+    /// <summary>
+    /// Allocates an object that is the metadata (IL) level represetation of the body of a method or of a property/event accessor.
+    /// </summary>
+    /// <param name="generator">An object that provides a way to construct the information needed by a method body. Construction should
+    /// be completed by the time the generator is passed to this constructor. The generator is not referenced by the resulting method body.</param>
+    /// <param name="localsAreZeroed">True if the locals are initialized by zeroeing the stack upon method entry.</param>
+    /// <param name="maxStack">The maximum number of elements on the evaluation stack during the execution of the method.</param>
+    /// <param name="methodDefinition">The definition of the method whose body this is.
+    /// If this is the body of an event or property accessor, this will hold the corresponding adder/remover/setter or getter method.</param>
+    /// <param name="privateHelperTypes">Any types that are implicitly defined in order to implement the body semantics.
+    /// In case of AST to instructions conversion this lists the types produced.
+    /// In case of instructions to AST decompilation this should ideally be list of all types
+    /// which are local to method.</param>
+    public ILGeneratorMethodBody(ILGenerator generator, bool localsAreZeroed, ushort maxStack, IMethodDefinition methodDefinition, IEnumerable<ITypeDefinition> privateHelperTypes) {
       this.localsAreZeroed = localsAreZeroed;
       this.operationExceptionInformation = generator.GetOperationExceptionInformation();
       this.operations = generator.GetOperations();
-      this.privateHelperTypes = Enumerable<ITypeDefinition>.Empty;
+      this.privateHelperTypes = privateHelperTypes;
       this.generatorScopes = generator.GetLocalScopes();
       List<ILocalDefinition> locals = new List<ILocalDefinition>();
       foreach (var localScope in this.generatorScopes)
         locals.AddRange(localScope.Locals);
       this.localVariables = locals.AsReadOnly();
       this.maxStack = maxStack;
+      this.methodDefinition = methodDefinition;
     }
 
     /// <summary>

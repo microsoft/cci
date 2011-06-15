@@ -246,17 +246,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   internal sealed class CustomAttribute : MetadataObject, ICustomAttribute {
     internal readonly IMethodReference Constructor;
-    internal readonly EnumerableArrayWrapper<ExpressionBase, IMetadataExpression> Arguments;
-    internal EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument> NamedArguments;
+    internal readonly IMetadataExpression[]/*?*/ Arguments;
+    internal IMetadataNamedArgument[]/*?*/ NamedArguments;
     internal readonly uint AttributeRowId;
 
-    internal CustomAttribute(
-      PEFileToObjectModel peFileToObjectModel,
-      uint attributeRowId,
-      IMethodReference constructor,
-      EnumerableArrayWrapper<ExpressionBase, IMetadataExpression> arguments,
-      EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument> namedArguments
-    )
+    internal CustomAttribute(PEFileToObjectModel peFileToObjectModel, uint attributeRowId, IMethodReference constructor,
+      IMetadataExpression[]/*?*/ arguments, IMetadataNamedArgument[]/*?*/ namedArguments)
       : base(peFileToObjectModel) {
       this.AttributeRowId = attributeRowId;
       this.Constructor = constructor;
@@ -279,7 +274,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #region ICustomAttribute Members
 
     IEnumerable<IMetadataExpression> ICustomAttribute.Arguments {
-      get { return this.Arguments; }
+      get { return IteratorHelper.GetReadonly(this.Arguments)??Enumerable<IMetadataExpression>.Empty; }
     }
 
     IMethodReference ICustomAttribute.Constructor {
@@ -287,11 +282,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     IEnumerable<IMetadataNamedArgument> ICustomAttribute.NamedArguments {
-      get { return this.NamedArguments; }
+      get { return IteratorHelper.GetReadonly(this.NamedArguments)??Enumerable<IMetadataNamedArgument>.Empty; }
     }
 
     ushort ICustomAttribute.NumberOfNamedArguments {
-      get { return (ushort)this.NamedArguments.RawArray.Length; }
+      get {
+        if (this.NamedArguments == null) return 0;
+        return (ushort)this.NamedArguments.Length; 
+      }
     }
 
     public ITypeReference Type {
@@ -309,18 +307,13 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   internal sealed class SecurityCustomAttribute : ICustomAttribute {
     internal readonly SecurityAttribute ContainingSecurityAttribute;
     internal readonly IMethodReference ConstructorReference;
-    internal readonly EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument> NamedArguments;
+    internal readonly IMetadataNamedArgument[]/*?*/ NamedArguments;
 
-    internal SecurityCustomAttribute(
-      SecurityAttribute containingSecurityAttribute,
-      IMethodReference constructorReference,
-      EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument> namedArguments
-    ) {
+    internal SecurityCustomAttribute(SecurityAttribute containingSecurityAttribute, IMethodReference constructorReference, IMetadataNamedArgument[]/*?*/ namedArguments) {
       this.ContainingSecurityAttribute = containingSecurityAttribute;
       this.ConstructorReference = constructorReference;
       this.NamedArguments = namedArguments;
     }
-
 
     #region ICustomAttribute Members
 
@@ -333,11 +326,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     IEnumerable<IMetadataNamedArgument> ICustomAttribute.NamedArguments {
-      get { return this.NamedArguments; }
+      get { return IteratorHelper.GetReadonly(this.NamedArguments)??Enumerable<IMetadataNamedArgument>.Empty; }
     }
 
     ushort ICustomAttribute.NumberOfNamedArguments {
-      get { return (ushort)this.NamedArguments.RawArray.Length; }
+      get {
+        if (this.NamedArguments == null) return 0;
+        return (ushort)this.NamedArguments.Length; 
+      }
     }
 
     public ITypeReference Type {
@@ -1387,14 +1383,14 @@ namespace Microsoft.Cci.MetadataReader {
 
   internal sealed class CustomAttributeDecoder : AttributeDecoder {
     internal readonly ICustomAttribute CustomAttribute;
-    internal CustomAttributeDecoder(PEFileToObjectModel peFileToObjectModel, MemoryReader signatureMemoryReader, uint customAttributeRowId,
+    internal CustomAttributeDecoder(PEFileToObjectModel peFileToObjectModel, MemoryReader signatureMemoryReader, uint customAttributeRowId, 
       IMethodReference attributeConstructor)
       : base(peFileToObjectModel, signatureMemoryReader) {
       this.CustomAttribute = Dummy.CustomAttribute;
       ushort prolog = this.SignatureMemoryReader.ReadUInt16();
       if (prolog != SerializationType.CustomAttributeStart) return;
       int len = attributeConstructor.ParameterCount;
-      ExpressionBase[]/*?*/ exprList = len == 0 ? null : new ExpressionBase[len];
+      IMetadataExpression[]/*?*/ exprList = len == 0 ? null : new IMetadataExpression[len];
       int i = 0;
       foreach (var parameter in attributeConstructor.Parameters) {
         var parameterType = parameter.Type;
@@ -1411,9 +1407,9 @@ namespace Microsoft.Cci.MetadataReader {
         exprList[i++] = argument;
       }
       ushort numOfNamedArgs = this.SignatureMemoryReader.ReadUInt16();
-      FieldOrPropertyNamedArgumentExpression[]/*?*/ namedArgumentArray = null;
+      IMetadataNamedArgument[]/*?*/ namedArgumentArray = null;
       if (numOfNamedArgs > 0) {
-        namedArgumentArray = new FieldOrPropertyNamedArgumentExpression[numOfNamedArgs];
+        namedArgumentArray = new IMetadataNamedArgument[numOfNamedArgs];
         for (i = 0; i < numOfNamedArgs; ++i) {
           bool isField = this.SignatureMemoryReader.ReadByte() == SerializationType.Field;
           ITypeReference/*?*/ memberType = this.GetFieldOrPropType();
@@ -1439,14 +1435,8 @@ namespace Microsoft.Cci.MetadataReader {
           namedArgumentArray[i] = namedArg;
         }
       }
-      EnumerableArrayWrapper<ExpressionBase, IMetadataExpression> arguments = TypeCache.EmptyExpressionList;
-      if (exprList != null)
-        arguments = new EnumerableArrayWrapper<ExpressionBase, IMetadataExpression>(exprList, Dummy.Expression);
-      EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument> namedArguments = TypeCache.EmptyNamedArgumentList;
-      if (namedArgumentArray != null)
-        namedArguments = new EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument>(namedArgumentArray, Dummy.NamedArgument);
       this.CustomAttribute = peFileToObjectModel.ModuleReader.metadataReaderHost.Rewrite(peFileToObjectModel.Module,
-        new CustomAttribute(peFileToObjectModel, customAttributeRowId, attributeConstructor, arguments, namedArguments));
+        new CustomAttribute(peFileToObjectModel, customAttributeRowId, attributeConstructor, exprList, namedArgumentArray));
     }
   }
 
@@ -1509,10 +1499,7 @@ namespace Microsoft.Cci.MetadataReader {
           namedArgumentArray[i] = new FieldOrPropertyNamedArgumentExpression(memberName, moduleTypeReference, isField, memberType, value);
         }
       }
-      EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument> namedArguments = TypeCache.EmptyNamedArgumentList;
-      if (namedArgumentArray != null)
-        namedArguments = new EnumerableArrayWrapper<FieldOrPropertyNamedArgumentExpression, IMetadataNamedArgument>(namedArgumentArray, Dummy.NamedArgument);
-      return new SecurityCustomAttribute(securityAttribute, ctorReference, namedArguments);
+      return new SecurityCustomAttribute(securityAttribute, ctorReference, namedArgumentArray);
     }
 
     internal SecurityAttributeDecoder20(PEFileToObjectModel peFileToObjectModel, MemoryReader signatureMemoryReader, SecurityAttribute securityAttribute)

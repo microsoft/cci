@@ -20,10 +20,11 @@ namespace Microsoft.Cci {
       int size = 1024;
       var ops = methodBody.Operations as ICollection<IOperation>;
       if (ops != null) size = ops.Count;
-      Hashtable<BasicBlock<Instruction>> blockFor = new Hashtable<BasicBlock<Instruction>>((uint)size);
-      List<BasicBlock<Instruction>> rootBlocks = new List<BasicBlock<Instruction>>(1+(int)IteratorHelper.EnumerableCount(methodBody.OperationExceptionInformation));
-      this.cdfg = new ControlAndDataFlowGraph<BasicBlock, Instruction>(methodBody, rootBlocks, blockFor);
-      this.edges = new List<BasicBlock<Instruction>>(size);
+      Hashtable<BasicBlock> blockFor = new Hashtable<BasicBlock>((uint)size);
+      List<BasicBlock> allBlocks = new List<BasicBlock>(size);
+      List<BasicBlock> rootBlocks = new List<BasicBlock>(1+(int)IteratorHelper.EnumerableCount(methodBody.OperationExceptionInformation));
+      this.edges = new List<BasicBlock>(size);
+      this.cdfg = new ControlAndDataFlowGraph<BasicBlock, Instruction>(methodBody, this.edges, allBlocks, rootBlocks, blockFor);
       this.instructions = new List<Instruction>(size);
     }
 
@@ -31,7 +32,7 @@ namespace Microsoft.Cci {
     IInternFactory internFactory;
     IMethodBody methodBody;
     ControlAndDataFlowGraph<BasicBlock, Instruction> cdfg;
-    List<BasicBlock<Instruction>> edges;
+    List<BasicBlock> edges;
     List<Instruction> instructions;
 
     [ContractInvariantMethod]
@@ -59,22 +60,27 @@ namespace Microsoft.Cci {
     private ControlAndDataFlowGraph<BasicBlock, Instruction> CreateBlocksAndEdges() {
       Contract.Ensures(Contract.Result<ControlAndDataFlowGraph<BasicBlock, Instruction>>() != null);
 
-      var firstBlock = new BasicBlock<Instruction>();
+      var firstBlock = new BasicBlock();
       this.cdfg.BlockFor[0] = firstBlock;
       this.cdfg.RootBlocks.Add(firstBlock);
-      this.CreateBlocksForBranchTargets();
+      this.CreateBlocksForBranchTargetsAndFallthroughs();
       this.CreateBlocksForExceptionHandlers();
       this.CreateEdges(firstBlock);
 
       this.edges.TrimExcess();
       this.instructions.TrimExcess();
+      this.cdfg.AllBlocks.TrimExcess();
       this.cdfg.RootBlocks.TrimExcess();
       return this.cdfg;
     }
 
-    private void CreateBlocksForBranchTargets() {
+    private void CreateBlocksForBranchTargetsAndFallthroughs() {
       bool lastInstructionWasBranch = false;
       foreach (var ilOperation in this.methodBody.Operations) {
+        if (lastInstructionWasBranch) {
+          this.CreateBlock(ilOperation.Offset);
+          lastInstructionWasBranch = false;
+        }
         switch (ilOperation.OperationCode) {
           case OperationCode.Beq:
           case OperationCode.Beq_S:
@@ -117,10 +123,6 @@ namespace Microsoft.Cci {
             lastInstructionWasBranch = true;
             break;
           default:
-            if (lastInstructionWasBranch) {
-              this.CreateBlock(ilOperation.Offset);
-              lastInstructionWasBranch = false;
-            }
             break;
         }
       }
@@ -139,18 +141,19 @@ namespace Microsoft.Cci {
       }
     }
 
-    private BasicBlock<Instruction> CreateBlock(uint targetAddress) {
+    private BasicBlock CreateBlock(uint targetAddress) {
       var result = this.cdfg.BlockFor[targetAddress];
       if (result == null) {
-        result = new BasicBlock<Instruction>();
+        result = new BasicBlock();
         this.cdfg.BlockFor[targetAddress] = result;
       }
       return result;
     }
 
-    private void CreateEdges(BasicBlock<Instruction> currentBlock) {
+    private void CreateEdges(BasicBlock currentBlock) {
       Contract.Requires(currentBlock != null);
 
+      this.cdfg.AllBlocks.Add(currentBlock);
       int startingEdge = 0;
       int startingInstruction = 0;
       bool lastInstructionWasUnconditionalTransfer = false;
@@ -160,10 +163,12 @@ namespace Microsoft.Cci {
         Contract.Assume(startingEdge <= edges.Count); //due to the limitations of the contract language and checker
         var newBlock = this.cdfg.BlockFor.Find(ilOperation.Offset);
         if (newBlock != null && currentBlock != newBlock) {
+          this.cdfg.AllBlocks.Add(newBlock);
           currentBlock.Instructions = new Sublist<Instruction>(instructions, startingInstruction, instructions.Count-startingInstruction);
           if (!lastInstructionWasUnconditionalTransfer)
             AddToSuccessorListIfNotAlreadyInIt(edges, startingEdge, newBlock);
-          currentBlock.Successors = new Sublist<BasicBlock<Instruction>>(edges, startingEdge, edges.Count-startingEdge);
+          currentBlock.firstSuccessorEdge = startingEdge;
+          currentBlock.successorCount = edges.Count-startingEdge;
           startingEdge = edges.Count;
           startingInstruction = instructions.Count;
           currentBlock = newBlock;
@@ -172,11 +177,13 @@ namespace Microsoft.Cci {
       }
       if (instructions.Count > startingInstruction)
         currentBlock.Instructions = new Sublist<Instruction>(instructions, startingInstruction, instructions.Count-startingInstruction);
-      if (edges.Count > startingEdge)
-        currentBlock.Successors = new Sublist<BasicBlock<Instruction>>(edges, startingEdge, edges.Count-startingEdge);
+      if (edges.Count > startingEdge) {
+        currentBlock.firstSuccessorEdge = startingEdge;
+        currentBlock.successorCount = edges.Count-startingEdge;
+      }
     }
 
-    private static void AddToSuccessorListIfNotAlreadyInIt(List<BasicBlock<Instruction>> edges, int startingEdge, BasicBlock<Instruction> target) {
+    private static void AddToSuccessorListIfNotAlreadyInIt(List<BasicBlock> edges, int startingEdge, BasicBlock target) {
       Contract.Requires(edges != null);
       Contract.Requires(startingEdge >= 0);
       Contract.Requires(target != null);
@@ -188,7 +195,7 @@ namespace Microsoft.Cci {
       edges.Add(target);
     }
 
-    private Instruction GetInstruction(IOperation ilOperation, List<BasicBlock<Instruction>> edges, out bool isUnconditionalTransfer) {
+    private Instruction GetInstruction(IOperation ilOperation, List<BasicBlock> edges, out bool isUnconditionalTransfer) {
       Contract.Requires(ilOperation != null);
       Contract.Requires(edges != null);
 
@@ -252,7 +259,7 @@ namespace Microsoft.Cci {
       return instruction;
     }
 
-    private void AddEdgesForSwitch(IOperation ilOperation, List<BasicBlock<Instruction>> edges, Instruction instruction) {
+    private void AddEdgesForSwitch(IOperation ilOperation, List<BasicBlock> edges, Instruction instruction) {
       Contract.Requires(ilOperation != null);
       Contract.Requires(ilOperation.OperationCode == OperationCode.Switch);
       Contract.Requires(edges != null);

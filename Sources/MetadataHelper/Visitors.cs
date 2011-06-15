@@ -3041,7 +3041,7 @@ namespace Microsoft.Cci {
     /// A table in which we record the traversal of objects that can be reached several times (because they are references or can be referred to)
     /// so that we can avoid traversing them more than once.
     /// </summary>
-    protected SetOfObjects objectsThatHaveAlreadyBeenTraversed = new SetOfObjects(1024*4);
+    protected SetOfObjects objectsThatHaveAlreadyBeenTraversed = new SetOfObjects(1024*4);    
 
     IMetadataVisitor/*?*/ preorderVisitor;
     IMetadataVisitor/*?*/ postorderVisitor;
