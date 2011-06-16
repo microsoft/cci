@@ -92,9 +92,9 @@
       <Project>{47D44A88-A9EE-46E9-8781-5B42A503A493}</Project>
       <Name>PeToPeViaCodeModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Samples\PeToText\PeToText.csproj">
+    <ProjectReference Include="..\..\Samples\PeToText\PeToTextViaCodeModel.csproj">
       <Project>{DDB020B7-6B28-40E8-B3D6-FD998EBDD552}</Project>
-      <Name>PeToText</Name>
+      <Name>PeToTextViaCodeModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Sources\AssertionAdder\AssertionAdder.csproj">
       <Project>{402F6E0A-9762-400D-94F9-BA5D48A538CD}</Project>

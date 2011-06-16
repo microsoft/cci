@@ -45,11 +45,11 @@
     </ProjectReference>
     <ProjectReference Include="..\..\Metadata\Sources\PeReader\PeReader.csproj">
       <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
-      <Name>PEReader</Name>
+      <Name>PeReader</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Metadata\Sources\PeWriter\PeWriter.csproj">
       <Project>{304A8B0B-851B-4AA6-A17D-5F87F39C5E5C}</Project>
-      <Name>PEWriter</Name>
+      <Name>PeWriter</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Metadata\Sources\MutableMetadataModel\MutableMetadataModel.csproj">
       <Project>{319E151C-8F33-49E7-81C9-30F02F9BA90A}</Project>

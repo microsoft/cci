@@ -111,9 +111,9 @@
       <Project>{27F2A417-B6ED-43AD-A38E-A0B6142216F6}</Project>
       <Name>ILToCodeModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Samples\PeToText\PeToText.csproj">
+    <ProjectReference Include="..\..\Samples\PeToText\PeToTextViaCodeModel.csproj">
       <Project>{DDB020B7-6B28-40E8-B3D6-FD998EBDD552}</Project>
-      <Name>PeToText</Name>
+      <Name>PeToTextViaCodeModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\CSharpSourceEmitter\CSharpSourceEmitter.csproj">
       <Project>{A9103DDA-3A93-441A-8326-6EB20518C251}</Project>
