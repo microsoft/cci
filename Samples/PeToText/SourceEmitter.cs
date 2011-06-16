@@ -63,7 +63,7 @@ namespace PeToText {
     }
 
     private void PrintScopes(ILocalScope scope) {
-      this.writer.Write(string.Format("IL_{0} ... IL_{1} ", scope.Offset.ToString("x4"), scope.Length.ToString("x4")), true);
+      this.writer.Write(string.Format("IL_{0} ... IL_{1} ", scope.Offset.ToString("x4"), (scope.Offset+scope.Length).ToString("x4")), true);
       this.writer.WriteLine("{");
       this.PrintConstants(this.pdbReader.GetConstantsInScope(scope));
       this.PrintLocals(this.pdbReader.GetVariablesInScope(scope));
