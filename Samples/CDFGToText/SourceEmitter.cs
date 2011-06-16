@@ -18,17 +18,23 @@ using Microsoft.Cci.UtilityDataStructures;
 namespace CdfgToText {
   public class SourceEmitter : MetadataTraverser {
 
-    public SourceEmitter(TextWriter sourceEmitterOutput, IMetadataHost host, PdbReader/*?*/ pdbReader) {
+    public SourceEmitter(TextWriter sourceEmitterOutput, IMetadataHost host, PdbReader/*?*/ pdbReader, FileStream/*?*/ profileReader) {
       this.sourceEmitterOutput = sourceEmitterOutput;
       this.host = host;
       this.pdbReader = pdbReader;
+      this.profileReader = profileReader;
     }
 
     IMetadataHost host;
     PdbReader/*?*/ pdbReader;
+    FileStream/*?*/ profileReader;
     TextWriter sourceEmitterOutput;
 
     ControlAndDataFlowGraph<BasicBlock<Instruction>, Instruction> cdfg;
+
+    public override void TraverseChildren(IAssembly assembly) {
+      foreach (var t in assembly.GetAllTypes()) this.Traverse(t);
+    }
 
     public override void Traverse(IMethodBody methodBody) {
       sourceEmitterOutput.WriteLine(MemberHelper.GetMethodSignature(methodBody.MethodDefinition, NameFormattingOptions.Signature));
@@ -55,17 +61,29 @@ namespace CdfgToText {
       sourceEmitterOutput.WriteLine("  Initial stack:");
       foreach (var instruction in block.OperandStack)
         sourceEmitterOutput.WriteLine("    "+TypeHelper.GetTypeName(instruction.Type));
-      sourceEmitterOutput.WriteLine("");
+      sourceEmitterOutput.WriteLine();
 
       sourceEmitterOutput.WriteLine("  Instructions: offset, opcode, type, instructions that flow into this");
       foreach (var instruction in block.Instructions)
         this.PrintInstruction(instruction);
 
-      foreach (var successor in this.cdfg.SuccessorsFor(block))
-        sourceEmitterOutput.WriteLine("  successor block "+successor.Instructions[0].Operation.Offset.ToString("x4"));
+      foreach (var successor in this.cdfg.SuccessorsFor(block)) {
+        sourceEmitterOutput.Write("  successor block "+successor.Instructions[0].Operation.Offset.ToString("x4"));
+        if (this.profileReader != null) {
+          uint count = this.ReadCountFromProfile();
+          sourceEmitterOutput.Write(" traversed "+count+" times");
+        }
+        sourceEmitterOutput.WriteLine();
+      }
       sourceEmitterOutput.WriteLine("end of basic block");
-      sourceEmitterOutput.WriteLine("");
+      sourceEmitterOutput.WriteLine();
     }
+
+    private uint ReadCountFromProfile() {
+      this.profileReader.Read(this.buffer, 0, 4);
+      return (uint)((this.buffer[3] << 24) | (this.buffer[2] << 16) | (this.buffer[1] << 8) | this.buffer[0]);
+    }
+    byte[] buffer = new byte[4];
 
     private void PrintInstruction(Instruction instruction) {
       if (this.pdbReader != null) {
@@ -116,11 +134,11 @@ namespace CdfgToText {
     }
 
     private void PrintScopes(ILocalScope scope) {
-      sourceEmitterOutput.Write(string.Format("IL_{0} ... IL_{1} ", scope.Offset.ToString("x4"), scope.Length.ToString("x4")));
+      sourceEmitterOutput.Write(string.Format("IL_{0} ... IL_{1} ", scope.Offset.ToString("x4"), (scope.Offset+scope.Length).ToString("x4")));
       sourceEmitterOutput.WriteLine("{");
       PrintConstants(this.pdbReader.GetConstantsInScope(scope));
       PrintLocals(this.pdbReader.GetVariablesInScope(scope));
-      sourceEmitterOutput.WriteLine("}", true);
+      sourceEmitterOutput.WriteLine("}");
     }
 
     private void PrintConstants(IEnumerable<ILocalDefinition> locals) {
@@ -140,7 +158,7 @@ namespace CdfgToText {
     }
 
     private void PrintOperation(IOperation operation) {
-      sourceEmitterOutput.Write("IL_" + operation.Offset.ToString("x4") + ": ", true);
+      sourceEmitterOutput.Write("IL_" + operation.Offset.ToString("x4") + ": ");
       sourceEmitterOutput.Write(operation.OperationCode.ToString());
       ILocalDefinition/*?*/ local = operation.Value as ILocalDefinition;
       if (local != null)
@@ -174,7 +192,7 @@ namespace CdfgToText {
 
     private void PrintSourceLocation(IPrimarySourceLocation psloc) {
       sourceEmitterOutput.WriteLine("");
-      sourceEmitterOutput.Write(psloc.Document.Name.Value+"("+psloc.StartLine+":"+psloc.StartColumn+")-("+psloc.EndLine+":"+psloc.EndColumn+"): ", true);
+      sourceEmitterOutput.Write(psloc.Document.Name.Value+"("+psloc.StartLine+":"+psloc.StartColumn+")-("+psloc.EndLine+":"+psloc.EndColumn+"): ");
       var source = psloc.Source;
       var newLinePos = source.IndexOf('\n');
       if (newLinePos > 0) source = source.Substring(0, newLinePos);

@@ -7,16 +7,16 @@ using System.Collections.Generic;
 namespace HelloCodeModel {
   class Program {
     static void Main(string[] args) {
-      using (var host = new PeReader.DefaultHost()) {
-        var nameTable = host.NameTable;
+      var nameTable = new NameTable();
+      using (var host = new PeReader.DefaultHost(nameTable)) {
         var coreAssembly = host.LoadAssembly(host.CoreAssemblySymbolicIdentity);
 
         var assembly = new Assembly() {
           Name = nameTable.GetNameFor("hello"),
           ModuleName = nameTable.GetNameFor("hello.exe"),
           Kind = ModuleKind.ConsoleApplication,
+          RequiresStartupStub = host.PointerSize == 4,
           TargetRuntimeVersion = coreAssembly.TargetRuntimeVersion,
-          RequiresStartupStub = true,
         };
         assembly.AssemblyReferences.Add(coreAssembly);
 
@@ -57,9 +57,6 @@ namespace HelloCodeModel {
         testClass.Methods.Add(mainMethod);
 
         var ilGenerator = new ILGenerator(host, mainMethod);
-        var body = new ILGeneratorMethodBody(ilGenerator, true, 1);
-        body.MethodDefinition = mainMethod;
-        mainMethod.Body = body;
 
         var systemConsole = UnitHelper.FindType(nameTable, coreAssembly, "System.Console");
         var writeLine = TypeHelper.GetMethod(systemConsole, nameTable.GetNameFor("WriteLine"), host.PlatformType.SystemString);
@@ -67,6 +64,9 @@ namespace HelloCodeModel {
         ilGenerator.Emit(OperationCode.Ldstr, "hello");
         ilGenerator.Emit(OperationCode.Call, writeLine);
         ilGenerator.Emit(OperationCode.Ret);
+
+        var body = new ILGeneratorMethodBody(ilGenerator, true, 1, mainMethod, Enumerable<ILocalDefinition>.Empty, Enumerable<ITypeDefinition>.Empty);
+        mainMethod.Body = body;
 
         Stream peStream = File.Create("hello.exe");
         PeWriter.WritePeToStream(assembly, host, peStream);

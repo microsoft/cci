@@ -25,16 +25,20 @@ namespace CdfgToText {
           }
         }
 
+        FileStream profileReader = null;
+        string proFile = Path.ChangeExtension(module.Location, "profile");
+        if (File.Exists(proFile))
+          profileReader = File.OpenRead(proFile);
+
         using (pdbReader) {
           string txtFile = Path.ChangeExtension(pdbFile, "txt");
           var writer = new StreamWriter(txtFile);
-          SourceEmitter csSourceEmitter = new SourceEmitter(writer, host, pdbReader);
+          SourceEmitter csSourceEmitter = new SourceEmitter(writer, host, pdbReader, profileReader);
+
           csSourceEmitter.Traverse(module.UnitNamespaceRoot);
           writer.Close();
         }
       }
     }
   }
-
-
 }

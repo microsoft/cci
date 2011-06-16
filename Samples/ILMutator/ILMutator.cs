@@ -106,8 +106,8 @@ namespace ILMutator {
 
     public override IMethodBody Rewrite(IMethodBody methodBody) {
       base.Rewrite(methodBody);
-      var newBody = new ILGeneratorMethodBody(this.currentGenerator, methodBody.LocalsAreZeroed, (ushort)(methodBody.MaxStack+1));
-      newBody.MethodDefinition = methodBody.MethodDefinition;
+      var newBody = new ILGeneratorMethodBody(this.currentGenerator, methodBody.LocalsAreZeroed, (ushort)(methodBody.MaxStack+1),
+        methodBody.MethodDefinition, this.currentLocals, Enumerable<ITypeDefinition>.Empty);
       return newBody;
     }
 
