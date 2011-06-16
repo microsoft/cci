@@ -98,6 +98,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILMutator", "Metadata\Sampl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeToText", "Metadata\Samples\PeToText\PeToText.csproj", "{84EF1733-24F1-4BC2-AD02-8D097740EE0A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EdgeProfiler", "Metadata\Samples\EdgeProfiler\EdgeProfiler.csproj", "{B759005D-2315-4B81-86D0-15B21DCA2415}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1057,6 +1059,31 @@ Global
 		{84EF1733-24F1-4BC2-AD02-8D097740EE0A}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{84EF1733-24F1-4BC2-AD02-8D097740EE0A}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{84EF1733-24F1-4BC2-AD02-8D097740EE0A}.Release|x86.ActiveCfg = Release|Any CPU
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.Debug|x86.ActiveCfg = Debug|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.Debug|x86.Build.0 = Debug|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.FastpathSim|Any CPU.ActiveCfg = Release|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.FastpathSim|Mixed Platforms.ActiveCfg = Release|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.FastpathSim|Mixed Platforms.Build.0 = Release|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.FastpathSim|x86.ActiveCfg = Release|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.FastpathSim|x86.Build.0 = Release|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.NightlyDebug|Any CPU.ActiveCfg = Debug|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.NightlyDebug|Mixed Platforms.ActiveCfg = Debug|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.NightlyDebug|Mixed Platforms.Build.0 = Debug|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.NightlyDebug|x86.ActiveCfg = Debug|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.NightlyDebug|x86.Build.0 = Debug|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.NightlyRelease|Any CPU.ActiveCfg = Release|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.NightlyRelease|Mixed Platforms.ActiveCfg = Release|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.NightlyRelease|Mixed Platforms.Build.0 = Release|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.NightlyRelease|x86.ActiveCfg = Release|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.NightlyRelease|x86.Build.0 = Release|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.Release|Any CPU.ActiveCfg = Release|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.Release|Mixed Platforms.Build.0 = Release|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.Release|x86.ActiveCfg = Release|x86
+		{B759005D-2315-4B81-86D0-15B21DCA2415}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1095,5 +1122,6 @@ Global
 		{DA095D70-B99F-4703-BCDF-B1E133DF685D} = {FB45CD9D-9EDD-4C87-9EB1-C15E72119812}
 		{2356E316-4127-475C-BAF2-29F443985EB4} = {FB45CD9D-9EDD-4C87-9EB1-C15E72119812}
 		{84EF1733-24F1-4BC2-AD02-8D097740EE0A} = {FB45CD9D-9EDD-4C87-9EB1-C15E72119812}
+		{B759005D-2315-4B81-86D0-15B21DCA2415} = {FB45CD9D-9EDD-4C87-9EB1-C15E72119812}
 	EndGlobalSection
 EndGlobal
