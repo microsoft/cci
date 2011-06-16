@@ -48,7 +48,7 @@
     </ProjectReference>
     <ProjectReference Include="..\..\Sources\PeReader\PeReader.csproj">
       <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
-      <Name>PEReader</Name>
+      <Name>PeReader</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Sources\MetadataHelper\MetadataHelper.csproj">
       <Project>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</Project>

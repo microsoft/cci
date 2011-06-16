@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{DDB020B7-6B28-40E8-B3D6-FD998EBDD552}</ProjectGuid>
+    <ProjectGuid>{84EF1733-24F1-4BC2-AD02-8D097740EE0A}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>PeToText</RootNamespace>
