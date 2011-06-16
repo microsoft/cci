@@ -73,7 +73,7 @@ namespace PeToText {
     }
 
     private void PrintScopes(ILocalScope scope) {
-      sourceEmitterOutput.Write(string.Format("IL_{0} ... IL_{1} ", scope.Offset.ToString("x4"), scope.Length.ToString("x4")), true);
+      sourceEmitterOutput.Write(string.Format("IL_{0} ... IL_{1} ", scope.Offset.ToString("x4"), (scope.Offset+scope.Length).ToString("x4")), true);
       sourceEmitterOutput.WriteLine("{");
       sourceEmitterOutput.IncreaseIndent();
       PrintConstants(this.pdbReader.GetConstantsInScope(scope));
