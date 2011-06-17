@@ -273,6 +273,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
+    private ITypeReference GetBitwiseOperationType(IBinaryOperation binaryOperation) {
+      if (binaryOperation.LeftOperand.Type.TypeCode == PrimitiveTypeCode.Boolean && binaryOperation.RightOperand.Type.TypeCode == PrimitiveTypeCode.Boolean)
+        return this.platformType.SystemBoolean;
+      return this.GetBinaryNumericOperationType(binaryOperation);
+    }
+
     public override void TraverseChildren(IAddition addition) {
       base.TraverseChildren(addition);
       ((Addition)addition).Type = this.GetBinaryNumericOperationType(addition, addition.TreatOperandsAsUnsignedIntegers);
@@ -387,12 +393,12 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void TraverseChildren(IBitwiseAnd bitwiseAnd) {
       base.TraverseChildren(bitwiseAnd);
-      ((BitwiseAnd)bitwiseAnd).Type = this.GetBinaryNumericOperationType(bitwiseAnd);
+      ((BitwiseAnd)bitwiseAnd).Type = this.GetBitwiseOperationType(bitwiseAnd);
     }
 
     public override void TraverseChildren(IBitwiseOr bitwiseOr) {
       base.TraverseChildren(bitwiseOr);
-      ((BitwiseOr)bitwiseOr).Type = this.GetBinaryNumericOperationType(bitwiseOr);
+      ((BitwiseOr)bitwiseOr).Type = this.GetBitwiseOperationType(bitwiseOr);
     }
 
     public override void TraverseChildren(IBlockExpression blockExpression) {
@@ -566,7 +572,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void TraverseChildren(IExclusiveOr exclusiveOr) {
       base.TraverseChildren(exclusiveOr);
-      ((ExclusiveOr)exclusiveOr).Type = this.GetBinaryNumericOperationType(exclusiveOr);
+      ((ExclusiveOr)exclusiveOr).Type = this.GetBitwiseOperationType(exclusiveOr);
     }
 
     public override void TraverseChildren(IGetTypeOfTypedReference getTypeOfTypedReference) {
