@@ -326,18 +326,20 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void TraverseChildren(IAddressDereference addressDereference) {
       base.TraverseChildren(addressDereference);
-      if (addressDereference.Type != Dummy.TypeReference) return;
       IPointerTypeReference/*?*/ pointerTypeReference = addressDereference.Address.Type as IPointerTypeReference;
       if (pointerTypeReference != null) {
-        ((AddressDereference)addressDereference).Type = pointerTypeReference.TargetType;
-        return;
+        if (pointerTypeReference.TargetType != Dummy.TypeReference) {
+          ((AddressDereference)addressDereference).Type = pointerTypeReference.TargetType;
+          return;
+        }
       }
       IManagedPointerTypeReference/*?*/ managedPointerTypeReference = addressDereference.Address.Type as IManagedPointerTypeReference;
       if (managedPointerTypeReference != null) {
-        ((AddressDereference)addressDereference).Type = managedPointerTypeReference.TargetType;
-        return;
+        if (managedPointerTypeReference.TargetType != Dummy.TypeReference) {
+          ((AddressDereference)addressDereference).Type = managedPointerTypeReference.TargetType;
+          return;
+        }
       }
-      Debug.Assert(addressDereference.Address.Type == Dummy.TypeReference);
     }
 
     public override void TraverseChildren(IArrayIndexer arrayIndexer) {
