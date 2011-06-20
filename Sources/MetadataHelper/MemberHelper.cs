@@ -869,7 +869,7 @@ namespace Microsoft.Cci {
 
       StringBuilder sb = new StringBuilder();
       if ((formattingOptions & NameFormattingOptions.Visibility) != 0) {
-        sb.Append(this.GetVisibility(eventDef)); 
+        sb.Append(this.GetVisibility(eventDef));
         sb.Append(' ');
       }
       if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0)
@@ -1122,7 +1122,7 @@ namespace Microsoft.Cci {
       Contract.Requires(sb != null);
 
       if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
-        sb.Append(this.typeNameFormatter.GetTypeName(method.ContainingType, 
+        sb.Append(this.typeNameFormatter.GetTypeName(method.ContainingType,
           formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind|NameFormattingOptions.TypeConstraints)));
         sb.Append('.');
       }
@@ -1158,14 +1158,18 @@ namespace Microsoft.Cci {
       Contract.Requires(sb != null);
 
       IParameterDefinition def = param as IParameterDefinition;
-      if (def != null && (formattingOptions & NameFormattingOptions.ParameterModifiers) != 0) {
-        if (def.IsOut) sb.Append("out ");
-        else if (def.IsParameterArray) sb.Append("params ");
-        else if (def.IsByReference) sb.Append("ref ");
+      if ((formattingOptions & NameFormattingOptions.ParameterModifiers) != 0) {
+        if (def != null) {
+          if (def.IsOut) sb.Append("out ");
+          else if (def.IsParameterArray) sb.Append("params ");
+          else if (def.IsByReference) sb.Append("ref ");
+        } else {
+          if (param.IsByReference) sb.Append("ref ");
+        }
       }
       sb.Append(this.typeNameFormatter.GetTypeName(param.Type, formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind)));
-      if (def != null && (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) {
-        if (def.IsByReference) sb.Append("@");
+      if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) {
+        if (param.IsByReference) sb.Append("@");
       }
       if (def != null && (formattingOptions & NameFormattingOptions.ParameterName) != 0) {
         sb.Append(" ");
