@@ -644,7 +644,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IExpression Expression {
       get { return this.expression; }
-      set { this.expression = value; }
+      set { this.expression = value; this.Type = value.Type; }
     }
     IExpression expression;
 
