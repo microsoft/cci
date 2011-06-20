@@ -736,7 +736,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Rewrites the given namespace type reference.
     /// </summary>
-    private INestedTypeReference RewriteUnspecialized(INestedTypeReference nestedTypeReference) {
+    public virtual INestedTypeReference RewriteUnspecialized(INestedTypeReference nestedTypeReference) {
       Contract.Requires(!(nestedTypeReference is ISpecializedNestedTypeReference));
       var mutableNestedTypeReference = nestedTypeReference as NestedTypeReference;
       if (mutableNestedTypeReference == null || mutableNestedTypeReference.IsFrozen) return nestedTypeReference;
