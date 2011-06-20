@@ -1247,6 +1247,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public ManagedPointerTypeReference() {
       this.targetType = Dummy.TypeReference;
+      this.TypeCode = PrimitiveTypeCode.Reference;
     }
 
     [ContractInvariantMethod]
@@ -2336,6 +2337,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public PointerTypeReference() {
       this.targetType = Dummy.TypeReference;
+      this.TypeCode = PrimitiveTypeCode.Pointer;
     }
 
     [ContractInvariantMethod]
