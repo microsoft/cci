@@ -29,9 +29,17 @@ namespace HelloAST {
         var sources = IteratorHelper.GetSingletonEnumerable<HelloSourceDocument>(source);
 
         var helloAssembly = new HelloAssembly(aname, host, mname, arefs, sources);
+        var sourceLocationProvider = helloAssembly.Compilation.SourceLocationProvider;
+        var localScopeProvider = helloAssembly.Compilation.LocalScopeProvider;
 
-        Stream peStream = File.Create("hello.exe");
-        PeWriter.WritePeToStream(helloAssembly, host, peStream);
+        using (var sourceFile = File.CreateText("hello.cs")) {
+          sourceFile.WriteLine("hello");
+        }
+        using (var peStream = File.Create("hello.exe")) {
+          using (var pdbWriter = new PdbWriter("hello.pdb", sourceLocationProvider)) {
+            PeWriter.WritePeToStream(helloAssembly, host, peStream, helloAssembly.Compilation.SourceLocationProvider, helloAssembly.Compilation.LocalScopeProvider, pdbWriter);
+          }
+        }
       }
     }
 
@@ -54,7 +62,7 @@ namespace HelloAST {
       /// <param name="programSources">A singleton collection whose member is a dummy source document.</param>
       internal HelloAssembly(IName name, ISourceEditHost host, IName moduleName,
         IEnumerable<IAssemblyReference> assemblyReferences, IEnumerable<HelloSourceDocument> programSources)
-        : base(name, "unknown://location", moduleName, assemblyReferences, Enumerable<IModuleReference>.Empty,
+        : base(name, "hello.exe", moduleName, assemblyReferences, Enumerable<IModuleReference>.Empty,
         Enumerable<IResourceReference>.Empty, Enumerable<IFileReference>.Empty) {
         this.host = host;
         this.programSources = programSources;
@@ -215,7 +223,7 @@ namespace HelloAST {
         var arguments = new List<Expression>(1);
         arguments.Add(new CompileTimeConstant("hello", this.sourceLocation));
         var methodCall = new MethodCall(methodToCall, arguments, this.sourceLocation);
-        var callStatement = new ExpressionStatement(methodCall);
+        var callStatement = new ExpressionStatement(methodCall, this.sourceLocation.SourceDocument.GetSourceLocation(0, 5));
         statements.Add(callStatement);
 
         //The statements above do only the first phase initialization of the AST. The second phase
@@ -257,108 +265,34 @@ namespace HelloAST {
     /// <summary>
     /// A dummy source document from which we obtain a dummy source location to use as the SourceLocation property values of our AST nodes.
     /// </summary>
-    class HelloSourceDocument : SourceDocument {
+    class HelloSourceDocument : PrimarySourceDocument {
 
       /// <summary>
       /// Allocates a dummy source document from which we obtain a dummy source location to use as the SourceLocation property values of our AST nodes.
       /// </summary>
       /// <param name="name">The name of the document. Used to identify the document in user interaction.</param>
       internal HelloSourceDocument(IName name)
-        : base(name) {
-      }
-
-      /// <summary>
-      /// Obtains a source location instance that corresponds to the substring of the document specified by the given start position and length.
-      /// </summary>
-      public override ISourceLocation GetSourceLocation(int position, int length) {
-        return SourceDummy.SourceLocation;
-      }
-
-      /// <summary>
-      /// The length of the source string.
-      /// </summary>
-      public override int Length {
-        get { return 0; }
-      }
-
-      /// <summary>
-      /// The location where this document was found, or where it should be stored.
-      /// </summary>
-      public override string Location {
-        get { return ""; }
+        : base(name, Directory.GetCurrentDirectory() + "\\hello.cs", "hello\n") {
       }
 
       /// <summary>
       /// The language that determines how the document is parsed and what it means.
       /// </summary>
       public override string SourceLanguage {
-        get { return "hello"; }
+        get { return "C#"; }
       }
 
-      /// <summary>
-      /// A source location corresponding to the entire document.
-      /// </summary>
-      public override SourceLocation SourceLocation {
-        get { return new HelloSourceLocation(this, 0, 0); }
+      public override Guid DocumentType {
+        get { return System.Diagnostics.SymbolStore.SymDocumentType.Text; }
       }
 
-      /// <summary>
-      /// Copies no more than the specified number of characters to the destination character array, starting at the specified position in the source document.
-      /// Returns the actual number of characters that were copied. This number will be greater than zero as long as position is less than this.Length.
-      /// The number will be precisely the number asked for unless there are not enough characters left in the document.
-      /// </summary>
-      /// <param name="position">The starting index to copy from. Must be greater than or equal to zero and position+length must be less than or equal to this.Length;</param>
-      /// <param name="destination">The destination array.</param>
-      /// <param name="destinationOffset">The starting index where the characters must be copied to in the destination array.</param>
-      /// <param name="length">The maximum number of characters to copy. Must be greater than 0 and less than or equal to the number elements of the destination array.</param>
-      public override int CopyTo(int position, char[] destination, int destinationOffset, int length) {
-        return 0;
+      public override Guid Language {
+        get { return System.Diagnostics.SymbolStore.SymLanguageType.CSharp; }
       }
 
-      /// <summary>
-      /// Returns the source text of the document in string form. Each call may do significant work, so be sure to cache this.
-      /// </summary>
-      /// <returns></returns>
-      public override string GetText() {
-        return "";
+      public override Guid LanguageVendor {
+        get { return System.Diagnostics.SymbolStore.SymLanguageVendor.Microsoft; }
       }
-
-      /// <summary>
-      /// Maps the given (zero based) source position to a (one based) line and column, by scanning the source character by character, counting
-      /// new lines until the given source position is reached. The source position and corresponding line+column are remembered and scanning carries
-      /// on where it left off when this routine is called next. If the given position precedes the last given position, scanning restarts from the start.
-      /// Optimal use of this method requires the client to sort calls in order of position.
-      /// </summary>
-      public override void ToLineColumn(int position, out int line, out int column) {
-        line = 0;
-        column = 0;
-      }
-    }
-
-    /// <summary>
-    /// A range of source text that corresponds to an identifiable entity.
-    /// </summary>
-    class HelloSourceLocation : SourceLocation {
-
-      /// <summary>
-      /// Allocates a range of source text that corresponds to an identifiable entity.
-      /// </summary>
-      /// <param name="startIndex">The character index of the first character of this location, when treating the source document as a single string.</param>
-      /// <param name="length">The number of characters in this source location.</param>
-      internal HelloSourceLocation(HelloSourceDocument sourceDocument, int startIndex, int length)
-        : base(startIndex, length) {
-        this.sourceDocument = sourceDocument;
-      }
-
-      /// <summary>
-      /// The document containing the source text of which this location is a subrange.
-      /// </summary>
-      /// <value></value>
-      public override ISourceDocument SourceDocument {
-        get { return this.sourceDocument; }
-      }
-      HelloSourceDocument sourceDocument;
-
     }
 
     /// <summary>

@@ -35,6 +35,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Metadata\Sources\PdbWriter\PdbWriter.csproj">
+      <Project>{6D83F687-ABB5-40B3-915E-CA53DA0EB7F3}</Project>
+      <Name>PdbWriter</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Sources\CodeModelToIL\CodeModelToIL.csproj">
       <Project>{CEB76EA1-A168-49B0-A410-2C4195FEE86F}</Project>
       <Name>CodeModelToIL</Name>
