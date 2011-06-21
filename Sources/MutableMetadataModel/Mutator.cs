@@ -1583,7 +1583,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       method.InternFactory = this.internFactory;
       method.Parameters = this.Rewrite(method.Parameters);
       if (method.IsPlatformInvoke)
-        method.PlatformInvokeData = this.Rewrite((PlatformInvokeInformation)method.PlatformInvokeData);
+        method.PlatformInvokeData = this.Rewrite(method.PlatformInvokeData);
       method.ReturnValueAttributes = this.Rewrite(method.ReturnValueAttributes);
       if (method.ReturnValueIsModified)
         method.ReturnValueCustomModifiers = this.Rewrite(method.ReturnValueCustomModifiers);
