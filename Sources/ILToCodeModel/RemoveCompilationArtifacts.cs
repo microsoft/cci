@@ -267,7 +267,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             continue;
           }
           var unspecializedClosureField = UnspecializedMethods.UnspecializedFieldReference(closureField);
-          var closureFieldContainingType = UnspecializedMethods.AsUnspecializedNestedTypeReference(assignment.Target.Instance.Type);
+          var closureFieldContainingType = UnspecializedMethods.AsUnspecializedNestedTypeReference(closureField.ContainingType);
           if (closureFieldContainingType == null) continue;
           if (!TypeHelper.TypesAreEquivalent(closureFieldContainingType, closureType)) continue;
           if (this.remover.capturedBinding.ContainsKey(unspecializedClosureField.InternedKey)) continue;
