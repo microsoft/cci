@@ -805,6 +805,7 @@ namespace Microsoft.Cci {
         this.VisitAssignmentTo(catchClause.ExceptionContainer);
       } else
         this.generator.Emit(OperationCode.Pop);
+      this.lastStatementWasUnconditionalTransfer = false;
       this.Traverse(catchClause.Body);
       if (!this.lastStatementWasUnconditionalTransfer)
         this.generator.Emit(OperationCode.Leave, this.currentTryCatchFinallyEnd);
