@@ -149,11 +149,16 @@ namespace Microsoft.Cci {
       if (this.unitCache.Count > 0) {
         AssemblyIdentity/*?*/ result = null;
         IUnit referringUnit = Dummy.Unit;
+        var dummyVersion = new Version(255, 255, 255, 255);
         lock (GlobalLock.LockingObject) {
           foreach (IUnit unit in this.unitCache.Values) {
             AssemblyIdentity coreId = unit.CoreAssemblySymbolicIdentity;
             if (coreId.Name.Value.Length == 0) continue;
-            if (result == null || result.Version < coreId.Version) { result = coreId; referringUnit = unit; }
+            if (result == null || result.Version == dummyVersion ||
+               (result.Version < coreId.Version && coreId.Version != dummyVersion)) {
+              result = coreId;
+              referringUnit = unit;
+            }
           }
         }
         if (result != null) {
