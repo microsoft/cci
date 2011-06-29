@@ -217,7 +217,7 @@ namespace CSharpSourceEmitter {
       this.sourceEmitterOutput.IncreaseIndent();
       this.Traverse(switchStatement.Cases);
       this.sourceEmitterOutput.DecreaseIndent();
-      
+
       this.sourceEmitterOutput.WriteLine("}", true);
     }
 
@@ -269,7 +269,10 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(IWhileDoStatement whileDoStatement) {
-      base.TraverseChildren(whileDoStatement);
+      this.sourceEmitterOutput.Write("while (", true);
+      this.Traverse(whileDoStatement.Condition);
+      this.sourceEmitterOutput.WriteLine(")");
+      this.Traverse(whileDoStatement.Body);
     }
 
     public override void TraverseChildren(IWin32Resource win32Resource) {

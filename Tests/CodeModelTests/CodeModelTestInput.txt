@@ -430,22 +430,20 @@ namespace CodeModelTestInput
                 goto IL_0036;
                 {
                     System.Action t;
-                IL_0012:
-                    t = delegate () {
-                        i.Equals(i);
-                        return;
-
-                    };
+                    while ((i < 1))
                     {
-                        i = (i + 1);
-                    IL_0036:
-                        if ((i < 1))
-                        {
-                            goto IL_0012;
-                        }
-                        return;
+                        t = delegate () {
+                            i.Equals(i);
+                            return;
 
+                        };
+                        {
+                            i = (i + 1);
+                        IL_0036:
+                        }
                     }
+                    return;
+
                 }
             }
         }
@@ -587,14 +585,12 @@ namespace CodeModelTestInput
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>(), (T s1) => (((object)s1) != null)));
                 System.Collections.Generic.IEnumerator<T> <>7__wrapf = input.GetEnumerator();
                 goto IL_00c4;
-            IL_0095:
-                T <t>5__e = <>7__wrapf.Current.get();
-                yield return <t>5__e;
-
-            IL_00c4:
-                if (<>7__wrapf.MoveNext())
+                while (<>7__wrapf.MoveNext())
                 {
-                    goto IL_0095;
+                    T <t>5__e = <>7__wrapf.Current.get();
+                    yield return <t>5__e;
+
+                IL_00c4:
                 }
                 yield break;
 
@@ -605,14 +601,12 @@ namespace CodeModelTestInput
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(input, (T s) => (((object)s) != null)));
                 System.Collections.Generic.IEnumerator<T> <>7__wrap16 = input.GetEnumerator();
                 goto IL_0095;
-            IL_0064:
-                T <t>5__15 = <>7__wrap16.Current.get();
-                yield return <t>5__15;
-
-            IL_0095:
-                if (<>7__wrap16.MoveNext())
+                while (<>7__wrap16.MoveNext())
                 {
-                    goto IL_0064;
+                    T <t>5__15 = <>7__wrap16.Current.get();
+                    yield return <t>5__15;
+
+                IL_0095:
                 }
                 yield break;
 
@@ -626,14 +620,12 @@ namespace CodeModelTestInput
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<int>(__temp_3, (int y) => (y > 0)));
                 System.Collections.Generic.IEnumerator<int> <>7__wrap21 = inputArray.GetEnumerator();
                 goto IL_00f6;
-            IL_00b7:
-                int <i>5__20 = <>7__wrap21.Current.get();
-                yield return ((max - <i>5__20) - 1);
-
-            IL_00f6:
-                if (<>7__wrap21.MoveNext())
+                while (<>7__wrap21.MoveNext())
                 {
-                    goto IL_00b7;
+                    int <i>5__20 = <>7__wrap21.Current.get();
+                    yield return ((max - <i>5__20) - 1);
+
+                IL_00f6:
                 }
                 yield break;
 
@@ -662,15 +654,13 @@ namespace CodeModelTestInput
                 System.Collections.Generic.IEnumerator<T> <>7__wrap31 = input.GetEnumerator();
                 goto IL_0104;
                 {
-                IL_00ba:
-                    T <t>5__30 = <>7__wrap31.Current.get();
-                    local_2 = <t>5__30;
-                    yield return local_2.IncrementBy(y);
-
-                IL_0104:
-                    if (<>7__wrap31.MoveNext())
+                    while (<>7__wrap31.MoveNext())
                     {
-                        goto IL_00ba;
+                        T <t>5__30 = <>7__wrap31.Current.get();
+                        local_2 = <t>5__30;
+                        yield return local_2.IncrementBy(y);
+
+                    IL_0104:
                     }
                     yield break;
 
@@ -731,14 +721,12 @@ namespace CodeModelTestInput
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(__temp_4, (T s1) => (((object)s1) != null)));
                 System.Collections.Generic.IEnumerator<T> <>7__wrap43 = input.GetEnumerator();
                 goto IL_00ea;
-            IL_00bb:
-                T <t>5__42 = <>7__wrap43.Current.get();
-                yield return <t>5__42;
-
-            IL_00ea:
-                if (<>7__wrap43.MoveNext())
+                while (<>7__wrap43.MoveNext())
                 {
-                    goto IL_00bb;
+                    T <t>5__42 = <>7__wrap43.Current.get();
+                    yield return <t>5__42;
+
+                IL_00ea:
                 }
                 yield break;
 
@@ -758,14 +746,12 @@ namespace CodeModelTestInput
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T1>(ts, (T1 y) => this.foo<T1>(((object)y), x)));
                 System.Collections.Generic.IEnumerator<T1> <>7__wrap52 = ts.GetEnumerator();
                 goto IL_00c8;
-            IL_0099:
-                T1 <t1>5__51 = <>7__wrap52.Current.get();
-                yield return <t1>5__51;
-
-            IL_00c8:
-                if (<>7__wrap52.MoveNext())
+                while (<>7__wrap52.MoveNext())
                 {
-                    goto IL_0099;
+                    T1 <t1>5__51 = <>7__wrap52.Current.get();
+                    yield return <t1>5__51;
+
+                IL_00c8:
                 }
                 yield break;
 

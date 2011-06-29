@@ -14,6 +14,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using Microsoft.Cci.UtilityDataStructures;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
@@ -129,19 +130,19 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
-    protected BasicBlock ExtractBasicBlockUpto(BasicBlock b, int i, ILabeledStatement label) {
+    protected BasicBlock ExtractBasicBlockUpto(BasicBlock b, int i, IStatement statement) {
       List<IStatement> statements = b.Statements;
       int n = statements.Count;
       if (i == n-1) {
         var bb = statements[i] as BasicBlock;
-        if (bb != null) return this.ExtractBasicBlockUpto(bb, 0, label);
+        if (bb != null) return this.ExtractBasicBlockUpto(bb, 0, statement);
       }
       BasicBlock result = new BasicBlock(0);
       if (b.LocalVariables != null)
         result.LocalVariables = new List<ILocalDefinition>(b.LocalVariables);
       for (int j = i; j < n; j++) {
         IStatement s = statements[j];
-        if (s == label) {
+        if (s == statement) {
           statements.RemoveRange(i, j-i);
           return result;
         }
@@ -151,7 +152,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           result.Statements.Add(s);
           continue;
         }
-        BasicBlock bb2 = this.ExtractBasicBlockUpto(bb, 0, label);
+        BasicBlock bb2 = this.ExtractBasicBlockUpto(bb, 0, statement);
         if (bb2.Statements.Count > 0)
           result.Statements.Add(bb2);
         statements.RemoveRange(i, j-i);
@@ -160,12 +161,25 @@ namespace Microsoft.Cci.ILToCodeModel {
       return result;
     }
 
+    protected static void RemoveStatement(BasicBlock block, IStatement statement) {
+      while (block != null) {
+        for (int i = 0, n = block.Statements.Count; i < n; i++) {
+          if (block.Statements[i] == statement) {
+            block.Statements.RemoveAt(i);
+            return;
+          } else if (i == n-1) {
+            block = block.Statements[i] as BasicBlock;
+          }
+        }
+      }
+    }
+
   }
 
   internal class IfThenElseDecompiler : ControlFlowDecompiler {
 
     internal IfThenElseDecompiler(IPlatformType platformType, Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors)
-      : base(platformType, predecessors){
+      : base(platformType, predecessors) {
     }
 
     protected override void Traverse(BasicBlock b) {
@@ -398,6 +412,87 @@ namespace Microsoft.Cci.ILToCodeModel {
           nbb.LocalVariables.Remove(result);
       }
       return result;
+    }
+
+  }
+
+  internal class WhileLoopDecompiler : ControlFlowDecompiler {
+
+    internal WhileLoopDecompiler(IPlatformType platformType, Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors)
+      : base(platformType, predecessors) {
+    }
+
+    SetOfObjects gotosAlreadyTraversed = new SetOfObjects();
+    BasicBlock currentBlock;
+    IConditionalStatement currentIf;
+    BasicBlock blockContainingCurrentIf;
+    BasicBlock blockContainingLoopHeader;
+    ILabeledStatement loopHeader;
+    IGotoStatement backwardsBranch;
+    IConditionalStatement ifContainingBackwardsBranch;
+    BasicBlock blockContainingIfContainingBackwardsBranch;
+
+    public override void TraverseChildren(IBlockStatement block) {
+      var savedCurrentBlock = this.currentBlock;
+      var bb = (BasicBlock)block;
+      this.currentBlock = bb;
+      while (true) {
+        var n = bb.Statements.Count;
+        if (n == 0) break;
+        for (int i = 0; i < n-1; i++)
+          this.Traverse(bb.Statements[i]);
+        var bbb = bb.Statements[n-1] as BasicBlock;
+        if (bbb == null || this.loopHeader == null) {
+          this.Traverse(bb.Statements[n-1]);
+          break;
+        }
+        bb = bbb;
+      }
+      this.Traverse(this.currentBlock);
+      this.currentBlock = savedCurrentBlock;
+    }
+
+    protected override void Traverse(BasicBlock b) {
+      if (b == this.blockContainingLoopHeader && this.ifContainingBackwardsBranch != null && this.blockContainingIfContainingBackwardsBranch == b) {
+        int i = 0;
+        while (b.Statements[i] != this.loopHeader) i++;
+        var loopBody = this.ExtractBasicBlockUpto(b, i+1, this.ifContainingBackwardsBranch);
+        b.Statements[i] = new WhileDoStatement() { Body = loopBody, Condition = this.ifContainingBackwardsBranch.Condition };
+        RemoveStatement(b, this.ifContainingBackwardsBranch);
+        new WhileLoopDecompiler(this.platformType, this.predecessors).Traverse(loopBody);
+      }
+    }
+
+    public override void TraverseChildren(IConditionalStatement conditionalStatement) {
+      this.currentIf = conditionalStatement;
+      this.blockContainingCurrentIf = this.currentBlock;
+      base.TraverseChildren(conditionalStatement);
+    }
+
+    public override void TraverseChildren(IGotoStatement gotoStatement) {
+      if (gotoStatement == this.backwardsBranch) {
+        if (this.currentIf != null && this.currentIf.TrueBranch == this.currentBlock && this.currentIf.FalseBranch is EmptyStatement) {
+          this.ifContainingBackwardsBranch = this.currentIf;
+          this.blockContainingIfContainingBackwardsBranch = this.blockContainingCurrentIf;
+        }
+      }
+      this.gotosAlreadyTraversed.Add(gotoStatement);
+      base.TraverseChildren(gotoStatement);
+    }
+
+    public override void TraverseChildren(ILabeledStatement labeledStatement) {
+      if (this.loopHeader == null) {
+        List<IGotoStatement> predecessors;
+        if (this.predecessors.TryGetValue(labeledStatement, out predecessors)) {
+          if (predecessors.Count == 1 && !this.gotosAlreadyTraversed.Contains(predecessors[0])) {
+            this.blockContainingLoopHeader = this.currentBlock;
+            this.loopHeader = labeledStatement;
+            this.backwardsBranch = predecessors[0];
+            this.ifContainingBackwardsBranch = null;
+          }
+        }
+      }
+      base.TraverseChildren(labeledStatement);
     }
 
   }
