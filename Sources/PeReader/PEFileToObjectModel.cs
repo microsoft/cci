@@ -58,60 +58,6 @@ namespace Microsoft.Cci.MetadataReader {
     }
     CoreTypes/*?*/ coreTypes;
 
-    internal IMetadataReaderNamedTypeReference SystemVoid {
-      get { return this.CoreTypes.SystemVoid; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemBoolean {
-      get { return this.CoreTypes.SystemBoolean; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemChar {
-      get { return this.CoreTypes.SystemChar; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemByte {
-      get { return this.CoreTypes.SystemByte; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemSByte {
-      get { return this.CoreTypes.SystemSByte; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemInt16 {
-      get { return this.CoreTypes.SystemInt16; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemUInt16 {
-      get { return this.CoreTypes.SystemUInt16; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemInt32 {
-      get { return this.CoreTypes.SystemInt32; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemUInt32 {
-      get { return this.CoreTypes.SystemUInt32; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemInt64 {
-      get { return this.CoreTypes.SystemInt64; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemUInt64 {
-      get { return this.CoreTypes.SystemUInt64; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemString {
-      get { return this.CoreTypes.SystemString; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemIntPtr {
-      get { return this.CoreTypes.SystemIntPtr; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemUIntPtr {
-      get { return this.CoreTypes.SystemUIntPtr; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemObject {
-      get { return this.CoreTypes.SystemObject; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemSingle {
-      get { return this.CoreTypes.SystemSingle; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemDouble {
-      get { return this.CoreTypes.SystemDouble; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemTypedReference {
-      get { return this.CoreTypes.SystemTypedReference; }
-    }
     internal IMetadataReaderNamedTypeReference SystemEnum {
       get { return this.CoreTypes.SystemEnum; }
     }
@@ -123,9 +69,6 @@ namespace Microsoft.Cci.MetadataReader {
     }
     internal IMetadataReaderNamedTypeReference SystemType {
       get { return this.CoreTypes.SystemType; }
-    }
-    internal IMetadataReaderNamedTypeReference SystemArray {
-      get { return this.CoreTypes.SystemArray; }
     }
     internal IMetadataReaderNamedTypeReference SystemParamArrayAttribute {
       get { return this.CoreTypes.SystemParamArrayAttribute; }
@@ -609,12 +552,13 @@ namespace Microsoft.Cci.MetadataReader {
     /// <param name="assemblyIdentity"></param>
     /// <returns></returns>
     internal AssemblyReference/*?*/ FindAssemblyReference(AssemblyIdentity assemblyIdentity) {
-      uint assemblyInteredId = (uint)this.ModuleReader.metadataReaderHost.InternFactory.GetAssemblyInternedKey(assemblyIdentity);
+      uint assemblyInternedId = (uint)this.ModuleReader.metadataReaderHost.InternFactory.GetAssemblyInternedKey(assemblyIdentity);
       AssemblyReference[] assemblyRefList = this.AssemblyReferenceArray;
       int numberOfAssemblyReferences = assemblyRefList.Length;
       for (int i = 1; i < numberOfAssemblyReferences; ++i) {
         AssemblyReference assemblyRef = assemblyRefList[i];
-        if (assemblyRef.InternedId == assemblyInteredId) {
+        uint refInternedId = (uint)this.ModuleReader.metadataReaderHost.InternFactory.GetAssemblyInternedKey(assemblyRef.AssemblyIdentity);
+        if (refInternedId == assemblyInternedId) {
           return assemblyRef;
         }
       }
@@ -2786,30 +2730,30 @@ namespace Microsoft.Cci.MetadataReader {
       switch (constRow.Type) {
         case ElementType.Boolean: {
             byte val = memoryReader.ReadByte();
-            return new ConstantExpression(this.SystemBoolean, val != 0);
+            return new ConstantExpression(this.PlatformType.SystemBoolean, val != 0);
           }
         case ElementType.Char:
-          return new ConstantExpression(this.SystemChar, memoryReader.ReadChar());
+          return new ConstantExpression(this.PlatformType.SystemChar, memoryReader.ReadChar());
         case ElementType.Int8:
-          return new ConstantExpression(this.SystemSByte, memoryReader.ReadSByte());
+          return new ConstantExpression(this.PlatformType.SystemInt8, memoryReader.ReadSByte());
         case ElementType.Int16:
-          return new ConstantExpression(this.SystemInt16, memoryReader.ReadInt16());
+          return new ConstantExpression(this.PlatformType.SystemInt16, memoryReader.ReadInt16());
         case ElementType.Int32:
-          return new ConstantExpression(this.SystemInt32, memoryReader.ReadInt32());
+          return new ConstantExpression(this.PlatformType.SystemInt32, memoryReader.ReadInt32());
         case ElementType.Int64:
-          return new ConstantExpression(this.SystemInt64, memoryReader.ReadInt64());
+          return new ConstantExpression(this.PlatformType.SystemInt64, memoryReader.ReadInt64());
         case ElementType.UInt8:
-          return new ConstantExpression(this.SystemByte, memoryReader.ReadByte());
+          return new ConstantExpression(this.PlatformType.SystemUInt8, memoryReader.ReadByte());
         case ElementType.UInt16:
-          return new ConstantExpression(this.SystemUInt16, memoryReader.ReadUInt16());
+          return new ConstantExpression(this.PlatformType.SystemUInt16, memoryReader.ReadUInt16());
         case ElementType.UInt32:
-          return new ConstantExpression(this.SystemUInt32, memoryReader.ReadUInt32());
+          return new ConstantExpression(this.PlatformType.SystemUInt32, memoryReader.ReadUInt32());
         case ElementType.UInt64:
-          return new ConstantExpression(this.SystemUInt64, memoryReader.ReadUInt64());
+          return new ConstantExpression(this.PlatformType.SystemUInt64, memoryReader.ReadUInt64());
         case ElementType.Single:
-          return new ConstantExpression(this.SystemSingle, memoryReader.ReadSingle());
+          return new ConstantExpression(this.PlatformType.SystemFloat32, memoryReader.ReadSingle());
         case ElementType.Double:
-          return new ConstantExpression(this.SystemDouble, memoryReader.ReadDouble());
+          return new ConstantExpression(this.PlatformType.SystemFloat64, memoryReader.ReadDouble());
         case ElementType.String: {
             int byteLen = memoryReader.Length;
             string/*?*/ value;
@@ -2820,10 +2764,10 @@ namespace Microsoft.Cci.MetadataReader {
             } else {
               value = memoryReader.ReadUTF16WithSize(byteLen);
             }
-            return new ConstantExpression(this.SystemString, value);
+            return new ConstantExpression(this.PlatformType.SystemString, value);
           }
         case ElementType.Class:
-          return new ConstantExpression(this.SystemObject, null);
+          return new ConstantExpression(this.PlatformType.SystemObject, null);
       }
       //  MDError...
       return Dummy.Constant;
@@ -3622,10 +3566,10 @@ namespace Microsoft.Cci.MetadataReader {
       bool isReturnByReference = false;
       byte retByte = this.SignatureMemoryReader.PeekByte(0);
       if (retByte == ElementType.Void) {
-        returnTypeReference = this.PEFileToObjectModel.SystemVoid;
+        returnTypeReference = this.PEFileToObjectModel.PlatformType.SystemVoid;
         this.SignatureMemoryReader.SkipBytes(1);
       } else if (retByte == ElementType.TypedReference) {
-        returnTypeReference = this.PEFileToObjectModel.SystemTypedReference;
+        returnTypeReference = this.PEFileToObjectModel.PlatformType.SystemTypedReference;
         this.SignatureMemoryReader.SkipBytes(1);
       } else {
         if (retByte == ElementType.ByReference) {
@@ -3655,39 +3599,39 @@ namespace Microsoft.Cci.MetadataReader {
       byte headByte = this.SignatureMemoryReader.ReadByte();
       switch (headByte) {
         case ElementType.Void:
-          return this.PEFileToObjectModel.SystemVoid;
+          return this.PEFileToObjectModel.PlatformType.SystemVoid;
         case ElementType.Boolean:
-          return this.PEFileToObjectModel.SystemBoolean;
+          return this.PEFileToObjectModel.PlatformType.SystemBoolean;
         case ElementType.Char:
-          return this.PEFileToObjectModel.SystemChar;
+          return this.PEFileToObjectModel.PlatformType.SystemChar;
         case ElementType.Int8:
-          return this.PEFileToObjectModel.SystemSByte;
+          return this.PEFileToObjectModel.PlatformType.SystemInt8;
         case ElementType.Int16:
-          return this.PEFileToObjectModel.SystemInt16;
+          return this.PEFileToObjectModel.PlatformType.SystemInt16;
         case ElementType.Int32:
-          return this.PEFileToObjectModel.SystemInt32;
+          return this.PEFileToObjectModel.PlatformType.SystemInt32;
         case ElementType.Int64:
-          return this.PEFileToObjectModel.SystemInt64;
+          return this.PEFileToObjectModel.PlatformType.SystemInt64;
         case ElementType.UInt8:
-          return this.PEFileToObjectModel.SystemByte;
+          return this.PEFileToObjectModel.PlatformType.SystemUInt8;
         case ElementType.UInt16:
-          return this.PEFileToObjectModel.SystemUInt16;
+          return this.PEFileToObjectModel.PlatformType.SystemUInt16;
         case ElementType.UInt32:
-          return this.PEFileToObjectModel.SystemUInt32;
+          return this.PEFileToObjectModel.PlatformType.SystemUInt32;
         case ElementType.UInt64:
-          return this.PEFileToObjectModel.SystemUInt64;
+          return this.PEFileToObjectModel.PlatformType.SystemUInt64;
         case ElementType.Single:
-          return this.PEFileToObjectModel.SystemSingle;
+          return this.PEFileToObjectModel.PlatformType.SystemFloat32;
         case ElementType.Double:
-          return this.PEFileToObjectModel.SystemDouble;
+          return this.PEFileToObjectModel.PlatformType.SystemFloat64;
         case ElementType.IntPtr:
-          return this.PEFileToObjectModel.SystemIntPtr;
+          return this.PEFileToObjectModel.PlatformType.SystemIntPtr;
         case ElementType.UIntPtr:
-          return this.PEFileToObjectModel.SystemUIntPtr;
+          return this.PEFileToObjectModel.PlatformType.SystemUIntPtr;
         case ElementType.Object:
-          return this.PEFileToObjectModel.SystemObject;
+          return this.PEFileToObjectModel.PlatformType.SystemObject;
         case ElementType.String:
-          return this.PEFileToObjectModel.SystemString;
+          return this.PEFileToObjectModel.PlatformType.SystemString;
         case ElementType.ByReference:
           return this.GetModuleManagedPointerType(0xFFFFFFFF);
         case ElementType.Pointer:
@@ -3796,7 +3740,7 @@ namespace Microsoft.Cci.MetadataReader {
         ITypeReference/*?*/ typeReference;
         if (currByte == ElementType.TypedReference) {
           this.SignatureMemoryReader.SkipBytes(1);
-          typeReference = this.PEFileToObjectModel.SystemTypedReference;
+          typeReference = this.PEFileToObjectModel.PlatformType.SystemTypedReference;
         } else {
           if (currByte == ElementType.ByReference) {
             this.SignatureMemoryReader.SkipBytes(1);
@@ -3832,7 +3776,7 @@ namespace Microsoft.Cci.MetadataReader {
         ITypeReference/*?*/ typeReference;
         if (currByte == ElementType.TypedReference) {
           this.SignatureMemoryReader.SkipBytes(1);
-          typeReference = this.PEFileToObjectModel.SystemTypedReference;
+          typeReference = this.PEFileToObjectModel.PlatformType.SystemTypedReference;
         } else {
           if (currByte == ElementType.ByReference) {
             this.SignatureMemoryReader.SkipBytes(1);
@@ -3923,10 +3867,10 @@ namespace Microsoft.Cci.MetadataReader {
       byte retByte = this.SignatureMemoryReader.PeekByte(0);
       bool isReturnByReference = false;
       if (retByte == ElementType.Void) {
-        this.ReturnTypeReference = peFileToObjectModel.SystemVoid;
+        this.ReturnTypeReference = peFileToObjectModel.PlatformType.SystemVoid;
         this.SignatureMemoryReader.SkipBytes(1);
       } else if (retByte == ElementType.TypedReference) {
-        this.ReturnTypeReference = peFileToObjectModel.SystemTypedReference;
+        this.ReturnTypeReference = peFileToObjectModel.PlatformType.SystemTypedReference;
         this.SignatureMemoryReader.SkipBytes(1);
       } else {
         if (retByte == ElementType.ByReference) {
@@ -4051,55 +3995,55 @@ namespace Microsoft.Cci.MetadataReader {
             break;
           }
         case ElementType.Boolean:
-          this.TypeReference = this.PEFileToObjectModel.SystemBoolean;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemBoolean;
           break;
         case ElementType.Char:
-          this.TypeReference = this.PEFileToObjectModel.SystemChar;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemChar;
           break;
         case ElementType.Double:
-          this.TypeReference = this.PEFileToObjectModel.SystemDouble;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemFloat64;
           break;
         case ElementType.Int16:
-          this.TypeReference = this.PEFileToObjectModel.SystemInt16;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemInt16;
           break;
         case ElementType.Int32:
-          this.TypeReference = this.PEFileToObjectModel.SystemInt32;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemInt32;
           break;
         case ElementType.Int64:
-          this.TypeReference = this.PEFileToObjectModel.SystemInt64;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemInt64;
           break;
         case ElementType.Int8:
-          this.TypeReference = this.PEFileToObjectModel.SystemSByte;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemInt8;
           break;
         case ElementType.IntPtr:
-          this.TypeReference = this.PEFileToObjectModel.SystemIntPtr;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemIntPtr;
           break;
         case ElementType.Object:
-          this.TypeReference = this.PEFileToObjectModel.SystemObject;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemObject;
           break;
         case ElementType.Single:
-          this.TypeReference = this.PEFileToObjectModel.SystemSingle;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemFloat32;
           break;
         case ElementType.String:
-          this.TypeReference = this.PEFileToObjectModel.SystemString;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemString;
           break;
         case ElementType.UInt16:
-          this.TypeReference = this.PEFileToObjectModel.SystemUInt16;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemUInt16;
           break;
         case ElementType.UInt32:
-          this.TypeReference = this.PEFileToObjectModel.SystemUInt32;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemUInt32;
           break;
         case ElementType.UInt64:
-          this.TypeReference = this.PEFileToObjectModel.SystemUInt64;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemUInt64;
           break;
         case ElementType.UInt8:
-          this.TypeReference = this.PEFileToObjectModel.SystemByte;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemUInt8;
           break;
         case ElementType.UIntPtr:
-          this.TypeReference = this.PEFileToObjectModel.SystemUIntPtr;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemUIntPtr;
           break;
         case ElementType.Void:
-          this.TypeReference = this.PEFileToObjectModel.SystemVoid;
+          this.TypeReference = this.PEFileToObjectModel.PlatformType.SystemVoid;
           break;
         default:
           //  Error...
@@ -4129,10 +4073,10 @@ namespace Microsoft.Cci.MetadataReader {
       this.ReturnCustomModifiers = this.GetCustomModifiers(out dummyPinned);
       byte retByte = this.SignatureMemoryReader.PeekByte(0);
       if (retByte == ElementType.Void) {
-        this.ReturnTypeReference = peFileToObjectModel.SystemVoid;
+        this.ReturnTypeReference = peFileToObjectModel.PlatformType.SystemVoid;
         this.SignatureMemoryReader.SkipBytes(1);
       } else if (retByte == ElementType.TypedReference) {
-        this.ReturnTypeReference = peFileToObjectModel.SystemTypedReference;
+        this.ReturnTypeReference = peFileToObjectModel.PlatformType.SystemTypedReference;
         this.SignatureMemoryReader.SkipBytes(1);
       } else {
         if (retByte == ElementType.ByReference) {

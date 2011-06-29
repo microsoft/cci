@@ -598,26 +598,26 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       var ns = this.ContainingUnitNamespace as INestedUnitNamespaceReference;
       if (ns == null) return PrimitiveTypeCode.NotPrimitive;
       var pe = this.PEFileToObjectModel;
-      if (ns.Name.UniqueKey != pe.SystemChar.NamespaceFullName.UniqueKey) return PrimitiveTypeCode.NotPrimitive;
+      if (ns.Name.UniqueKey != pe.NameTable.System.UniqueKey) return PrimitiveTypeCode.NotPrimitive;
       var rs = ns.ContainingUnitNamespace as IRootUnitNamespaceReference;
       if (rs == null) return PrimitiveTypeCode.NotPrimitive;
       var key = this.Name.UniqueKey;
-      if (key == pe.SystemBoolean.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Boolean;
-      if (key == pe.SystemByte.MangledTypeName.UniqueKey) return PrimitiveTypeCode.UInt8;
-      if (key == pe.SystemChar.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Char;
-      if (key == pe.SystemDouble.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Float64;
-      if (key == pe.SystemInt16.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Int16;
-      if (key == pe.SystemInt32.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Int32;
-      if (key == pe.SystemInt64.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Int64;
-      if (key == pe.SystemSByte.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Int8;
-      if (key == pe.SystemIntPtr.MangledTypeName.UniqueKey) return PrimitiveTypeCode.IntPtr;
-      if (key == pe.SystemSingle.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Float32;
-      if (key == pe.SystemString.MangledTypeName.UniqueKey) return PrimitiveTypeCode.String;
-      if (key == pe.SystemUInt16.MangledTypeName.UniqueKey) return PrimitiveTypeCode.UInt16;
-      if (key == pe.SystemUInt32.MangledTypeName.UniqueKey) return PrimitiveTypeCode.UInt32;
-      if (key == pe.SystemUInt64.MangledTypeName.UniqueKey) return PrimitiveTypeCode.UInt64;
-      if (key == pe.SystemUIntPtr.MangledTypeName.UniqueKey) return PrimitiveTypeCode.UIntPtr;
-      if (key == pe.SystemVoid.MangledTypeName.UniqueKey) return PrimitiveTypeCode.Void;
+      if (key == pe.PlatformType.SystemBoolean.Name.UniqueKey) return PrimitiveTypeCode.Boolean;
+      if (key == pe.PlatformType.SystemInt8.Name.UniqueKey) return PrimitiveTypeCode.UInt8;
+      if (key == pe.PlatformType.SystemChar.Name.UniqueKey) return PrimitiveTypeCode.Char;
+      if (key == pe.PlatformType.SystemFloat64.Name.UniqueKey) return PrimitiveTypeCode.Float64;
+      if (key == pe.PlatformType.SystemInt16.Name.UniqueKey) return PrimitiveTypeCode.Int16;
+      if (key == pe.PlatformType.SystemInt32.Name.UniqueKey) return PrimitiveTypeCode.Int32;
+      if (key == pe.PlatformType.SystemInt64.Name.UniqueKey) return PrimitiveTypeCode.Int64;
+      if (key == pe.PlatformType.SystemInt8.Name.UniqueKey) return PrimitiveTypeCode.Int8;
+      if (key == pe.PlatformType.SystemIntPtr.Name.UniqueKey) return PrimitiveTypeCode.IntPtr;
+      if (key == pe.PlatformType.SystemFloat32.Name.UniqueKey) return PrimitiveTypeCode.Float32;
+      if (key == pe.PlatformType.SystemString.Name.UniqueKey) return PrimitiveTypeCode.String;
+      if (key == pe.PlatformType.SystemUInt16.Name.UniqueKey) return PrimitiveTypeCode.UInt16;
+      if (key == pe.PlatformType.SystemUInt32.Name.UniqueKey) return PrimitiveTypeCode.UInt32;
+      if (key == pe.PlatformType.SystemUInt64.Name.UniqueKey) return PrimitiveTypeCode.UInt64;
+      if (key == pe.PlatformType.SystemUIntPtr.Name.UniqueKey) return PrimitiveTypeCode.UIntPtr;
+      if (key == pe.PlatformType.SystemVoid.Name.UniqueKey) return PrimitiveTypeCode.Void;
       return PrimitiveTypeCode.NotPrimitive;
     }
 
@@ -1018,7 +1018,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #region INamedTypeReference Members
 
     INamedTypeDefinition INamedTypeReference.ResolvedType {
-      get { 
+      get {
         var result = this.ResolvedType;
         if (result == Dummy.NamespaceTypeDefinition) return Dummy.NamedTypeDefinition;
         return result;
@@ -1580,13 +1580,13 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public bool IsDelegate {
       get {
-        return this.BaseTypeReference == this.PEFileToObjectModel.SystemMulticastDelegate;
+        return TypeHelper.TypesAreEquivalent(this.BaseTypeReference, this.PEFileToObjectModel.SystemMulticastDelegate);
       }
     }
 
     public bool IsEnum {
       get {
-        return this.BaseTypeReference == this.PEFileToObjectModel.SystemEnum && this.IsSealed && !this.IsGeneric;
+        return TypeHelper.TypesAreEquivalent(this.BaseTypeReference, this.PEFileToObjectModel.SystemEnum) && this.IsSealed && !this.IsGeneric;
       }
     }
 
@@ -1610,14 +1610,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public bool IsValueType {
       get {
-        return (this.BaseTypeReference == this.PEFileToObjectModel.SystemValueType
-            || this.BaseTypeReference == this.PEFileToObjectModel.SystemEnum)
+        return (TypeHelper.TypesAreEquivalent(this.BaseTypeReference, this.PEFileToObjectModel.SystemValueType)
+            || TypeHelper.TypesAreEquivalent(this.BaseTypeReference, this.PEFileToObjectModel.SystemEnum))
           && this.IsSealed;
       }
     }
 
     public bool IsStruct {
-      get { return this.BaseTypeReference == this.PEFileToObjectModel.SystemValueType && this.IsSealed; }
+      get { return TypeHelper.TypesAreEquivalent(this.BaseTypeReference, this.PEFileToObjectModel.SystemValueType) && this.IsSealed; }
     }
 
     public uint SizeOf {
@@ -1937,7 +1937,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
             }
             if (this.enumUnderlyingType == null) {
               //TODO: emit error. The module is invalid.
-              this.enumUnderlyingType = this.PEFileToObjectModel.SystemInt32;
+              this.enumUnderlyingType = this.PEFileToObjectModel.PlatformType.SystemInt32;
             }
           } else
             this.enumUnderlyingType = Dummy.TypeReference;
@@ -2180,7 +2180,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
             }
             if (this.enumUnderlyingType == null) {
               //TODO: emit error. The module is invalid.
-              this.enumUnderlyingType = this.PEFileToObjectModel.SystemInt32;
+              this.enumUnderlyingType = this.PEFileToObjectModel.PlatformType.SystemInt32;
             }
           } else
             this.enumUnderlyingType = Dummy.TypeReference;
@@ -3227,9 +3227,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
           ITypeReference/*?*/ modTypeRef = this.PEFileToObjectModel.GetTypeReferenceForGenericConstraintRowId(this, genParamIter);
           if (
             modTypeRef == null
-            || modTypeRef == this.PEFileToObjectModel.SystemEnum
-            || modTypeRef == this.PEFileToObjectModel.SystemObject
-            || modTypeRef == this.PEFileToObjectModel.SystemValueType
+            || TypeHelper.TypesAreEquivalent(modTypeRef, this.PEFileToObjectModel.SystemEnum)
+            || TypeHelper.TypesAreEquivalent(modTypeRef, this.PEFileToObjectModel.PlatformType.SystemObject)
+            || TypeHelper.TypesAreEquivalent(modTypeRef, this.PEFileToObjectModel.SystemValueType)
             || modTypeRef.ResolvedType.IsInterface
           ) {
             continue;
@@ -3708,7 +3708,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   internal abstract class Parameter : MetadataDefinitionObject, IParameterDefinition {
 
-    internal Parameter(PEFileToObjectModel peFileToObjectModel, int index, IEnumerable<ICustomModifier>/*?*/ customModifiers, 
+    internal Parameter(PEFileToObjectModel peFileToObjectModel, int index, IEnumerable<ICustomModifier>/*?*/ customModifiers,
       ITypeReference/*?*/ type, ISignature containingSignature)
       : base(peFileToObjectModel) {
       this.index = (ushort)index;
@@ -3867,7 +3867,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     internal ParameterWithMetadata(PEFileToObjectModel peFileToObjectModel, int parameterIndex, IEnumerable<ICustomModifier>/*?*/ moduleCustomModifiers,
       ITypeReference/*?*/ typeReference, ISignature containingSignatureDefinition, bool isByReference, bool possibleParamArray,  //  Means that this is last parameter && type is array...
-      uint paramRowId,IName parameterName, ParamFlags parameterFlags)
+      uint paramRowId, IName parameterName, ParamFlags parameterFlags)
       : base(peFileToObjectModel, parameterIndex, moduleCustomModifiers, typeReference, containingSignatureDefinition) {
       this.ParameterName = parameterName;
       if (isByReference) {
