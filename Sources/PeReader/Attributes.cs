@@ -135,7 +135,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
 
     internal override ITypeReference/*?*/ ModuleTypeReference {
-      get { return this.PEFileToObjectModel.SystemType; }
+      get { return this.PEFileToObjectModel.PlatformType.SystemType; }
     }
 
     public override void Dispatch(IMetadataVisitor visitor) {
@@ -288,7 +288,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     ushort ICustomAttribute.NumberOfNamedArguments {
       get {
         if (this.NamedArguments == null) return 0;
-        return (ushort)this.NamedArguments.Length; 
+        return (ushort)this.NamedArguments.Length;
       }
     }
 
@@ -332,7 +332,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     ushort ICustomAttribute.NumberOfNamedArguments {
       get {
         if (this.NamedArguments == null) return 0;
-        return (ushort)this.NamedArguments.Length; 
+        return (ushort)this.NamedArguments.Length;
       }
     }
 
@@ -1245,40 +1245,40 @@ namespace Microsoft.Cci.MetadataReader {
       byte elementByte = this.SignatureMemoryReader.ReadByte();
       switch (elementByte) {
         case SerializationType.Boolean:
-          return this.PEFileToObjectModel.SystemBoolean;
+          return this.PEFileToObjectModel.PlatformType.SystemBoolean;
         case SerializationType.Char:
-          return this.PEFileToObjectModel.SystemChar;
+          return this.PEFileToObjectModel.PlatformType.SystemChar;
         case SerializationType.Int8:
-          return this.PEFileToObjectModel.SystemSByte;
+          return this.PEFileToObjectModel.PlatformType.SystemInt8;
         case SerializationType.UInt8:
-          return this.PEFileToObjectModel.SystemByte;
+          return this.PEFileToObjectModel.PlatformType.SystemUInt8;
         case SerializationType.Int16:
-          return this.PEFileToObjectModel.SystemInt16;
+          return this.PEFileToObjectModel.PlatformType.SystemInt16;
         case SerializationType.UInt16:
-          return this.PEFileToObjectModel.SystemUInt16;
+          return this.PEFileToObjectModel.PlatformType.SystemUInt16;
         case SerializationType.Int32:
-          return this.PEFileToObjectModel.SystemInt32;
+          return this.PEFileToObjectModel.PlatformType.SystemInt32;
         case SerializationType.UInt32:
-          return this.PEFileToObjectModel.SystemUInt32;
+          return this.PEFileToObjectModel.PlatformType.SystemUInt32;
         case SerializationType.Int64:
-          return this.PEFileToObjectModel.SystemInt64;
+          return this.PEFileToObjectModel.PlatformType.SystemInt64;
         case SerializationType.UInt64:
-          return this.PEFileToObjectModel.SystemUInt64;
+          return this.PEFileToObjectModel.PlatformType.SystemUInt64;
         case SerializationType.Single:
-          return this.PEFileToObjectModel.SystemSingle;
+          return this.PEFileToObjectModel.PlatformType.SystemFloat32;
         case SerializationType.Double:
-          return this.PEFileToObjectModel.SystemDouble;
+          return this.PEFileToObjectModel.PlatformType.SystemFloat64;
         case SerializationType.String:
-          return this.PEFileToObjectModel.SystemString;
+          return this.PEFileToObjectModel.PlatformType.SystemString;
         case SerializationType.SZArray: {
             ITypeReference/*?*/ elementType = this.GetFieldOrPropType();
             if (elementType == null) return null;
             return Vector.GetVector(elementType, this.PEFileToObjectModel.InternFactory);
           }
         case SerializationType.Type:
-          return this.PEFileToObjectModel.SystemType;
+          return this.PEFileToObjectModel.PlatformType.SystemType;
         case SerializationType.TaggedObject:
-          return this.PEFileToObjectModel.SystemObject;
+          return this.PEFileToObjectModel.PlatformType.SystemObject;
         case SerializationType.Enum: {
             string/*?*/ typeName = this.GetSerializedString();
             if (typeName == null)
@@ -1317,7 +1317,13 @@ namespace Microsoft.Cci.MetadataReader {
         case PrimitiveTypeCode.String:
           return new ConstantExpression(type, this.GetSerializedString());
         default:
-          if (TypeHelper.TypesAreEquivalent(type, this.PEFileToObjectModel.SystemObject)) {
+          var typeDef = type.ResolvedType;
+          if (typeDef != Dummy.Type) {
+            if (typeDef.IsEnum)
+              return new ConstantExpression(type, this.GetPrimitiveValue(typeDef.UnderlyingType));
+            type = typeDef;
+          }
+          if (TypeHelper.TypesAreEquivalent(type, this.PEFileToObjectModel.PlatformType.SystemObject)) {
             ITypeReference/*?*/ underlyingType = this.GetFieldOrPropType();
             if (underlyingType == null) return null;
             return this.ReadSerializedValue(underlyingType);
@@ -1325,13 +1331,10 @@ namespace Microsoft.Cci.MetadataReader {
           if (TypeHelper.TypesAreEquivalent(type, this.PEFileToObjectModel.SystemType)) {
             string/*?*/ typeNameStr = this.GetSerializedString();
             if (typeNameStr == null) {
-              return new ConstantExpression(this.PEFileToObjectModel.SystemType, null);
+              return new ConstantExpression(this.PEFileToObjectModel.PlatformType.SystemType, null);
             }
             return new TypeOfExpression(this.PEFileToObjectModel, this.PEFileToObjectModel.GetSerializedTypeNameAsTypeReference(typeNameStr));
           }
-          var typeDef = type.ResolvedType;
-          if (typeDef != Dummy.Type && typeDef.IsEnum)
-            return new ConstantExpression(type, this.GetPrimitiveValue(typeDef.UnderlyingType));
           var vectorType = type as IArrayTypeReference;
           if (vectorType != null) {
             ITypeReference/*?*/ elementType = vectorType.ElementType;
@@ -1357,12 +1360,12 @@ namespace Microsoft.Cci.MetadataReader {
             // If the metadata is correct, type must be a reference to an enum type.
             // Problem is, that without resolving this reference, it is not possible to know how many bytes to consume for the enum value
             // We'll let the host deal with this by guessing
-            IMetadataReaderNamedTypeReference underlyingType;
+            ITypeReference underlyingType;
             switch (this.PEFileToObjectModel.ModuleReader.metadataReaderHost.GuessUnderlyingTypeSizeOfUnresolvableReferenceToEnum(type)) {
-              case 1: underlyingType = this.PEFileToObjectModel.SystemByte; break;
-              case 2: underlyingType = this.PEFileToObjectModel.SystemInt16; break;
-              case 4: underlyingType = this.PEFileToObjectModel.SystemInt32; break;
-              case 8: underlyingType = this.PEFileToObjectModel.SystemInt64; break;
+              case 1: underlyingType = this.PEFileToObjectModel.PlatformType.SystemInt8; break;
+              case 2: underlyingType = this.PEFileToObjectModel.PlatformType.SystemInt16; break;
+              case 4: underlyingType = this.PEFileToObjectModel.PlatformType.SystemInt32; break;
+              case 8: underlyingType = this.PEFileToObjectModel.PlatformType.SystemInt64; break;
               default:
                 this.decodeFailed = true; this.morePermutationsArePossible = false;
                 return new ConstantExpression(type, 0);
@@ -1383,7 +1386,7 @@ namespace Microsoft.Cci.MetadataReader {
 
   internal sealed class CustomAttributeDecoder : AttributeDecoder {
     internal readonly ICustomAttribute CustomAttribute;
-    internal CustomAttributeDecoder(PEFileToObjectModel peFileToObjectModel, MemoryReader signatureMemoryReader, uint customAttributeRowId, 
+    internal CustomAttributeDecoder(PEFileToObjectModel peFileToObjectModel, MemoryReader signatureMemoryReader, uint customAttributeRowId,
       IMethodReference attributeConstructor)
       : base(peFileToObjectModel, signatureMemoryReader) {
       this.CustomAttribute = Dummy.CustomAttribute;

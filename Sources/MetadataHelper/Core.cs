@@ -155,7 +155,8 @@ namespace Microsoft.Cci {
             AssemblyIdentity coreId = unit.CoreAssemblySymbolicIdentity;
             if (coreId.Name.Value.Length == 0) continue;
             if (result == null || result.Version == dummyVersion ||
-               (result.Version < coreId.Version && coreId.Version != dummyVersion)) {
+               (result.Version < coreId.Version && coreId.Version != dummyVersion) ||
+                result.Version == coreId.Version && unit.UnitIdentity.Equals(coreId)) {
               result = coreId;
               referringUnit = unit;
             }
@@ -604,6 +605,8 @@ namespace Microsoft.Cci {
       if (assemblyIdentity.Name.UniqueKeyIgnoringCase == this.CoreAssemblySymbolicIdentity.Name.UniqueKeyIgnoringCase &&
         assemblyIdentity.Culture == this.CoreAssemblySymbolicIdentity.Culture && 
         IteratorHelper.EnumerablesAreEqual(assemblyIdentity.PublicKeyToken, this.CoreAssemblySymbolicIdentity.PublicKeyToken))
+        return this.CoreAssemblySymbolicIdentity;
+      if (string.Equals(assemblyIdentity.Name.Value, "mscorlib", StringComparison.OrdinalIgnoreCase) && assemblyIdentity.Version == new Version(255, 255, 255, 255))
         return this.CoreAssemblySymbolicIdentity;
       return assemblyIdentity;
     }

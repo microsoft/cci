@@ -2933,7 +2933,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get {
         var parent = this.ParentTypeReference;
         if (parent == null) return Dummy.Field;
-        return TypeHelper.GetField(parent.ResolvedType, this);
+        return TypeHelper.GetField(parent.ResolvedType, this, true);
       }
     }
 
@@ -3077,7 +3077,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get {
         ITypeReference/*?*/moduleTypeRef = this.OwningTypeReference;
         if (moduleTypeRef == null) return Dummy.Method;
-        return TypeHelper.GetMethod(moduleTypeRef.ResolvedType, this);
+        return TypeHelper.GetMethod(moduleTypeRef.ResolvedType, this, true);
       }
     }
 

@@ -1618,7 +1618,7 @@ namespace Microsoft.Cci.Immutable {
     public IFieldDefinition ResolvedField {
       get {
         if (this.resolvedField == null)
-          this.resolvedField = TypeHelper.GetField(this.ContainingType.ResolvedType, this);
+          this.resolvedField = TypeHelper.GetField(this.ContainingType.ResolvedType, this, true);
         return this.resolvedField;
       }
     }
@@ -2167,7 +2167,7 @@ namespace Microsoft.Cci.Immutable {
     /// </summary>
     /// <value></value>
     public IMethodBody Body {
-      get { 
+      get {
         var result = this.body == null ? null : this.body.Target as IMethodBody;
         if (result == null) {
           result = new SpecializedMethodBody(this.UnspecializedVersion.Body, this, this.ContainingGenericTypeInstance.InternFactory);
@@ -2839,7 +2839,7 @@ namespace Microsoft.Cci.Immutable {
     public IMethodDefinition ResolvedMethod {
       get {
         if (this.resolvedMethod == null)
-          this.resolvedMethod = TypeHelper.GetMethod(this.ContainingType.ResolvedType, this);
+          this.resolvedMethod = TypeHelper.GetMethod(this.ContainingType.ResolvedType, this, true);
         return this.resolvedMethod;
       }
     }

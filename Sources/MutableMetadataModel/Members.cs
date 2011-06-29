@@ -679,7 +679,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public IFieldDefinition ResolvedField {
       get {
         if (this.resolvedField == null) {
-          this.resolvedField = TypeHelper.GetField(this.ContainingType.ResolvedType, this);
+          this.resolvedField = TypeHelper.GetField(this.ContainingType.ResolvedType, this, true);
           this.isFrozen = true;
         }
         return this.resolvedField;
@@ -2380,7 +2380,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Resolves the reference to find the method being referred to.
     /// </summary>
     protected virtual IMethodDefinition Resolve() {
-      return TypeHelper.GetMethod(this.ContainingType.ResolvedType, this);
+      return TypeHelper.GetMethod(this.ContainingType.ResolvedType, this, true);
     }
 
     /// <summary>
