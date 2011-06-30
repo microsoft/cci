@@ -190,7 +190,6 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private void DecompileIfThenElseStatement(BasicBlock b, int i) {
       List<IStatement> statements = b.Statements;
-      if (i >= statements.Count) return;
       ConditionalStatement/*?*/ conditionalStatement = statements[i++] as ConditionalStatement;
       if (conditionalStatement == null) return;
       IExpression condition;
@@ -494,6 +493,82 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       base.TraverseChildren(labeledStatement);
     }
+
+  }
+
+  internal class ForLoopDecompiler : ControlFlowDecompiler {
+
+    internal ForLoopDecompiler(IPlatformType platformType, Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors)
+      : base(platformType, predecessors) {
+    }
+
+    protected override void Traverse(BasicBlock b) {
+      for (int i = 0; i < b.Statements.Count; i++) {
+        this.DecompileForStatement(b, i);
+      }
+    }
+
+    private void DecompileForStatement(BasicBlock b, int i) {
+      List<IStatement> statements = b.Statements;
+      if (i > b.Statements.Count-2) return;
+      var gotoStatement = statements[i++] as GotoStatement;
+      if (gotoStatement == null) return;
+      var blockStatement = statements[i++] as BlockStatement;
+      if (blockStatement == null) return;
+      var n = blockStatement.Statements.Count;
+      if (n == 0) return;
+      var whileLoop = blockStatement.Statements[0] as WhileDoStatement;
+      if (whileLoop == null) return;
+      if (whileLoop.Condition is IMethodCall) return;
+      var loopBody = (BasicBlock)whileLoop.Body;
+      if (RemoveLastStatement(loopBody, gotoStatement.TargetStatement)) {
+        var forLoop = new ForStatement() { Condition = whileLoop.Condition, Body = loopBody };
+        if (i > 2) {
+          var initializer = statements[i-3];
+          forLoop.InitStatements.Add(initializer);
+          statements.RemoveAt(i-3);
+          i--;
+        }
+        var incrementer = FindLastStatement(loopBody) as ExpressionStatement;
+        if (incrementer != null) {
+          var assign = incrementer.Expression as Assignment;
+          if (assign != null && (assign.Source is Addition || assign.Source is Subtraction)) {
+            RemoveStatement(loopBody, incrementer);
+            forLoop.IncrementStatements.Add(incrementer);
+          }
+        }
+        statements[i-2] = forLoop;
+        blockStatement.Statements.RemoveAt(0);
+        new ForLoopDecompiler(this.platformType, this.predecessors).Traverse(loopBody);
+      }
+    }
+
+    static bool RemoveLastStatement(BasicBlock block, IStatement statement) {
+      while (block != null) {
+        var i = block.Statements.Count-1;
+        if (i < 0) return false;
+        if (block.Statements[i] == statement) {
+          block.Statements.RemoveAt(i);
+          return true;
+        }
+        block = block.Statements[i] as BasicBlock;
+      }
+      return false;
+    }
+
+    static IStatement FindLastStatement(BasicBlock block) {
+      IStatement result = null;
+      while (block != null) {
+        var i = block.Statements.Count-1;
+        if (i < 0) return result;
+        var nextBlock = block.Statements[i] as BasicBlock;
+        if (nextBlock == null) return block.Statements[i];
+        if (i > 0) result = block.Statements[i-1];
+        block = nextBlock;
+      }
+      return null;
+    }
+
 
   }
 

@@ -426,25 +426,20 @@ namespace CodeModelTestInput
         public void Method21()
         {
             {
-                int i = 0;
-                goto IL_0036;
+                int i;
+                for (i = 0; (i < 1); i = (i + 1))
                 {
                     System.Action t;
-                    while ((i < 1))
+                    t = delegate () {
+                        i.Equals(i);
+                        return;
+
+                    };
                     {
-                        t = delegate () {
-                            i.Equals(i);
-                            return;
-
-                        };
-                        {
-                            i = (i + 1);
-                        IL_0036:
-                        }
                     }
-                    return;
-
                 }
+                return;
+
             }
         }
 

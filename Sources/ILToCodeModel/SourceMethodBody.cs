@@ -310,6 +310,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       new IfThenElseDecompiler(this.host.PlatformType, this.predecessors).Traverse(rootBlock);
       new SwitchDecompiler(this.host.PlatformType, this.predecessors).Traverse(rootBlock);
       new WhileLoopDecompiler(this.host.PlatformType, this.predecessors).Traverse(rootBlock);
+      new ForLoopDecompiler(this.host.PlatformType, this.predecessors).Traverse(rootBlock);
       new BlockRemover().Traverse(rootBlock);
       new DeclarationAdder().Traverse(this, rootBlock);
       new EmptyStatementRemover().Traverse(rootBlock);

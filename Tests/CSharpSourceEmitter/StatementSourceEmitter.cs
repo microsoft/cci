@@ -107,7 +107,37 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(IForStatement forStatement) {
-      base.TraverseChildren(forStatement);
+      this.sourceEmitterOutput.Write("for (", true);
+      this.TraverseInitializersOrIncrementers(forStatement.InitStatements);
+      this.sourceEmitterOutput.Write("; ");
+      this.Traverse(forStatement.Condition);
+      this.sourceEmitterOutput.Write("; ");
+      this.TraverseInitializersOrIncrementers(forStatement.IncrementStatements);
+      this.sourceEmitterOutput.WriteLine(")");
+      this.Traverse(forStatement.Body);
+    }
+
+    private void TraverseInitializersOrIncrementers(IEnumerable<IStatement> statements) {
+      bool first = true;
+      foreach (var statement in statements) {
+        if (!first) this.sourceEmitterOutput.Write(", ");
+        var expressionStatement = statement as IExpressionStatement;
+        if (expressionStatement != null)
+          this.Traverse(expressionStatement.Expression);
+        else {
+          var localDeclarationStatement = statement as ILocalDeclarationStatement;
+          if (localDeclarationStatement != null) {
+            if (first) {
+              this.PrintTypeReference(localDeclarationStatement.LocalVariable.Type);
+            } else {
+              this.sourceEmitterOutput.Write(", ");
+            }
+            this.sourceEmitterOutput.Write(localDeclarationStatement.LocalVariable.Name.Value);
+          } else
+            this.Traverse(statement);
+        }
+        first = false;
+      }
     }
 
     public override void TraverseChildren(IFunctionPointerTypeReference functionPointerTypeReference) {
