@@ -227,7 +227,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual IAliasForType Rewrite(IAliasForType aliasForType) {
       aliasForType.Dispatch(this.dispatchingVisitor);
-      return (IAliasForType)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as IAliasForType)??aliasForType;
     }
 
     /// <summary>
@@ -235,7 +235,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual IAliasMember Rewrite(IAliasMember aliasMember) {
       aliasMember.Dispatch(this.dispatchingVisitor);
-      return (IAliasMember)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as IAliasMember)??aliasMember;
     }
 
     /// <summary>
@@ -321,7 +321,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual IFieldReference Rewrite(IFieldReference fieldReference) {
       fieldReference.Dispatch(this.dispatchingVisitor);
-      return (IFieldReference)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as IFieldReference)??fieldReference;
     }
 
 
@@ -526,7 +526,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual IMetadataExpression Rewrite(IMetadataExpression metadataExpression) {
       metadataExpression.Dispatch(this.dispatchingVisitor);
-      return (IMetadataExpression)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as IMetadataExpression)??metadataExpression;
     }
 
     /// <summary>
@@ -585,7 +585,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual IMethodReference Rewrite(IMethodReference methodReference) {
       methodReference.DispatchAsReference(this.dispatchingVisitor);
-      return (IMethodReference)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as IMethodReference)??methodReference;
     }
 
     /// <summary>
@@ -645,7 +645,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual INamedTypeDefinition Rewrite(INamedTypeDefinition namedTypeDefinition) {
       namedTypeDefinition.Dispatch(this.dispatchingVisitor);
-      return (INamedTypeDefinition)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as INamedTypeDefinition)??namedTypeDefinition;
     }
 
     /// <summary>
@@ -653,7 +653,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual INamedTypeReference Rewrite(INamedTypeReference typeReference) {
       typeReference.DispatchAsReference(this.dispatchingVisitor);
-      return (INamedTypeReference)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as INamedTypeReference)??typeReference;
     }
 
     /// <summary>
@@ -671,7 +671,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual INamespaceDefinition Rewrite(INamespaceDefinition namespaceDefinition) {
       namespaceDefinition.Dispatch(this.dispatchingVisitor);
-      return (INamespaceDefinition)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as INamespaceDefinition)??namespaceDefinition;
     }
 
     /// <summary>
@@ -679,7 +679,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual INamespaceMember Rewrite(INamespaceMember namespaceMember) {
       namespaceMember.Dispatch(this.dispatchingVisitor);
-      return (INamespaceMember)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as INamespaceMember)??namespaceMember;
     }
 
     /// <summary>
@@ -730,7 +730,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual INestedTypeReference Rewrite(INestedTypeReference nestedTypeReference) {
       nestedTypeReference.DispatchAsReference(this.dispatchingVisitor);
-      return (INestedTypeReference)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as INestedTypeReference)??nestedTypeReference;
     }
 
     /// <summary>
@@ -932,7 +932,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual ITypeDefinition Rewrite(ITypeDefinition typeDefinition) {
       Contract.Requires(!(typeDefinition is IGenericTypeInstance), "Generic type instances should be reconstructed, not rewritten.");
       typeDefinition.Dispatch(this.dispatchingVisitor);
-      return (ITypeDefinition)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as ITypeDefinition)??typeDefinition;
     }
 
     /// <summary>
@@ -940,7 +940,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual ITypeDefinitionMember Rewrite(ITypeDefinitionMember typeMember) {
       typeMember.Dispatch(this.dispatchingVisitor);
-      return (ITypeDefinitionMember)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as ITypeDefinitionMember)??typeMember;
     }
 
     /// <summary>
@@ -948,7 +948,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual ITypeReference Rewrite(ITypeReference typeReference) {
       typeReference.DispatchAsReference(this.dispatchingVisitor);
-      return (ITypeReference)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as ITypeReference)??typeReference;
     }
 
     /// <summary>
@@ -956,7 +956,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual IUnit Rewrite(IUnit unit) {
       unit.Dispatch(this.dispatchingVisitor);
-      return (IUnit)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as IUnit)??unit;
     }
 
     /// <summary>
@@ -964,7 +964,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual IUnitNamespace Rewrite(IUnitNamespace unitNamespace) {
       unitNamespace.Dispatch(this.dispatchingVisitor);
-      return (IUnitNamespace)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as IUnitNamespace)??unitNamespace;
     }
 
     /// <summary>
@@ -972,7 +972,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual IUnitNamespaceReference Rewrite(IUnitNamespaceReference unitNamespaceReference) {
       unitNamespaceReference.DispatchAsReference(this.dispatchingVisitor);
-      return (IUnitNamespaceReference)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as IUnitNamespaceReference)??unitNamespaceReference;
     }
 
     /// <summary>
@@ -980,7 +980,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public virtual IUnitReference Rewrite(IUnitReference unitReference) {
       unitReference.DispatchAsReference(this.dispatchingVisitor);
-      return (IUnitReference)this.dispatchingVisitor.result;
+      return (this.dispatchingVisitor.result as IUnitReference)??unitReference;
     }
 
     /// <summary>
