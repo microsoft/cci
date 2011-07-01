@@ -875,7 +875,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     ITypeDefinition ITypeReference.ResolvedType {
       get {
         var resolvedTypeDefRef = this.ResolvedType;
-        if (resolvedTypeDefRef == null) return Dummy.Type;
+        if (resolvedTypeDefRef == Dummy.NamedTypeDefinition) return Dummy.Type;
         return resolvedTypeDefRef;
       }
     }
