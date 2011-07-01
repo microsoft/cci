@@ -237,7 +237,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         // They were introduced by the compiler because the closure reads their value.
         // That is, such assignments are of the form:
         //  closureLocal.f := e
-        // where "e" is either "this", a local, a parameter, (corner case) a constant,
+        // where "e" is either "this", a local, a parameter, (corner case) a value not held in a local of the original program,
         // or another closureLocal (because sometimes the compiler generates code so
         // that one closure class has access to another one).
         // When the RHS expression is a local/parameter, then rely on a naming
@@ -248,6 +248,13 @@ namespace Microsoft.Cci.ILToCodeModel {
         // For each such assignment statement, delete it from the list of statements and
         // add "e" to the remover's table as the expression to replace all occurrences of
         // "closureLocal.f" throughout the method body.
+        //
+        // [Note on corner case: this seems to arise when a value occurs in an anonymous delegate that
+        // isn't used outside of the anonymous delegate.
+        // For instance: { ... var x = new Object(); M((args for lambda) => ... body of lambda contains a reference to x ...) ... }
+        // where there are no occurrences of x in the rest of the method body. The compiler plays it safe and still treats x as a
+        // captured local.]
+        //
         for (int j = i - 1; j < statements.Count; j++) {
           if (statements[j] is IEmptyStatement) continue;
           IExpressionStatement/*?*/ es = statements[j] as IExpressionStatement;
@@ -313,7 +320,7 @@ namespace Microsoft.Cci.ILToCodeModel {
                   this.remover.capturedBinding[unspecializedClosureField.InternedKey] = binding;
                 }
               }
-            } else if (fieldRef != null) {
+            } else if (binding != null && fieldRef != null) {
               //In this case the closure is inside an iterator and its closure fields get their values from iterator state class fields or expressions.
               //In the former case, arrange for all references to the closure field to become references to the corresponding iterator state field.
               //In the latter case, the loop below will introduce a local to hold the value of the expression and arrange for references to the closure
@@ -331,24 +338,20 @@ namespace Microsoft.Cci.ILToCodeModel {
               } else
                 continue;
             } else {
-              // Corner case: csc generated closure class captures a local that does not appear in the original method.
-              // Assume this local is always holding a constant;
-              ICompileTimeConstant ctc = assignment.Source as ICompileTimeConstant;
-              if (ctc != null) {
-                LocalDefinition localDefinition = new LocalDefinition() {
-                  Name = closureField.ResolvedField.Name,
-                  Type = this.remover.genericParameterMapper == null ? closureField.Type : this.remover.genericParameterMapper.Visit(closureField.Type),
-                };
-                LocalDeclarationStatement localDeclStatement = new LocalDeclarationStatement() {
-                  LocalVariable = localDefinition,
-                  InitialValue = ctc
-                };
-                statements.Insert(j, localDeclStatement); j++;
-                this.remover.capturedBinding[unspecializedClosureField.InternedKey] = new BoundExpression() { Definition = localDefinition };
-                if (this.remover.sourceMethodBody.privateHelperFieldsToRemove == null)
-                  this.remover.sourceMethodBody.privateHelperFieldsToRemove = new Dictionary<IFieldDefinition, IFieldDefinition>();
-                this.remover.sourceMethodBody.privateHelperFieldsToRemove[closureField.ResolvedField] = closureField.ResolvedField;
-              } else continue;
+              // Corner case: see note above
+              LocalDefinition localDefinition = new LocalDefinition() {
+                Name = closureField.ResolvedField.Name,
+                Type = this.remover.genericParameterMapper == null ? closureField.Type : this.remover.genericParameterMapper.Visit(closureField.Type),
+              };
+              LocalDeclarationStatement localDeclStatement = new LocalDeclarationStatement() {
+                LocalVariable = localDefinition,
+                InitialValue = assignment.Source,
+              };
+              statements.Insert(j, localDeclStatement); j++;
+              this.remover.capturedBinding[unspecializedClosureField.InternedKey] = new BoundExpression() { Definition = localDefinition };
+              if (this.remover.sourceMethodBody.privateHelperFieldsToRemove == null)
+                this.remover.sourceMethodBody.privateHelperFieldsToRemove = new Dictionary<IFieldDefinition, IFieldDefinition>();
+              this.remover.sourceMethodBody.privateHelperFieldsToRemove[closureField.ResolvedField] = closureField.ResolvedField;
             }
           } else {
             this.remover.capturedBinding[unspecializedClosureField.InternedKey] = new BoundExpression() { Instance = thisReference };

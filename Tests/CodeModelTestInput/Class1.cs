@@ -1118,5 +1118,27 @@ namespace CodeModelTestInput {
     }
   }
 
+  public class UnusedCapturedLocal {
+    public static IAsyncResult foo(Object o, AsyncCallback callback, object state) {
+      return null;
+    }
+
+    public IAsyncResult BeginTask(Func<AsyncCallback, object, IAsyncResult> task) {
+      return null;
+    }
+
+    public IEnumerator<IAsyncResult> Execute() {
+      Object svc = new Object();
+      IAsyncResult asyncResult =
+           BeginTask((c, s) => foo(svc, c, s));
+      yield return asyncResult;
+    }
+    public IEnumerator<IAsyncResult> Execute2() {
+      IAsyncResult asyncResult =
+           BeginTask((c, s) => foo(new Object(), c, s));
+      yield return asyncResult;
+    }
+  }
+
   #endregion 
 }

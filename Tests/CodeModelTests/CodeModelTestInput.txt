@@ -1497,11 +1497,10 @@ namespace CodeModelTestInput
             this.name = "";
             this.object();
             {
-                string nullEncoder;
                 System.Collections.Generic.List<int> xs = new System.Collections.Generic.List<int>();
                 __temp_4 = xs;
                 __temp_4.TrueForAll((int i) => string.op_Equality(data[i], this.name));
-                nullEncoder = (encoder as string);
+                string nullEncoder = (encoder as string);
                 this.name = nullEncoder;
                 this.ValueToString = (object obj) => ((obj != default(object)) ? encoder.ToString() : nullEncoder);
                 return;
@@ -1541,5 +1540,47 @@ namespace CodeModelTestInput
         }
 
         private int x;
+    }
+
+    public class UnusedCapturedLocal
+    {
+        public static System.IAsyncResult foo(object o, System.AsyncCallback callback, object state)
+        {
+            return null;
+
+        }
+
+        public System.IAsyncResult BeginTask(System.Func<System.AsyncCallback, object, System.IAsyncResult> task)
+        {
+            return null;
+
+        }
+
+        public System.Collections.Generic.IEnumerator<System.IAsyncResult> Execute()
+        {
+            object svc = new object();
+            System.IAsyncResult <asyncResult>5__4 = this.BeginTask((System.AsyncCallback c, object s) => CodeModelTestInput.UnusedCapturedLocal.foo(svc, c, s));
+            yield return <asyncResult>5__4;
+
+            yield break;
+
+        }
+
+        public System.Collections.Generic.IEnumerator<System.IAsyncResult> Execute2()
+        {
+            CodeModelTestInput.UnusedCapturedLocal __temp_3 = this;
+            System.IAsyncResult <asyncResult>5__9 = __temp_3.BeginTask((System.AsyncCallback c, object s) => CodeModelTestInput.UnusedCapturedLocal.foo(new object(), c, s));
+            yield return <asyncResult>5__9;
+
+            yield break;
+
+        }
+
+        public UnusedCapturedLocal()
+        {
+            this.object();
+            return;
+
+        }
     }
 }
