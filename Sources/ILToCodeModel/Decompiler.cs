@@ -12,8 +12,32 @@ using System.Collections.Generic;
 using Microsoft.Cci.MutableCodeModel;
 using System.IO;
 using System.Diagnostics;
+using System;
 
 namespace Microsoft.Cci.ILToCodeModel {
+
+  /// <summary>
+  /// Options that are used to control how much decompilation happens.
+  /// </summary>
+  [Flags]
+  public enum DecompilerOptions {
+    /// <summary>
+    /// Default value: all flags are false.
+    /// </summary>
+    None = 0,
+    /// <summary>
+    /// True if display classes should be decompiled into anonymous delegates.
+    /// </summary>
+    AnonymousDelegates = 1,
+    /// <summary>
+    /// True if iterator classes should be decompiled into iterator methods.
+    /// </summary>
+    Iterators = AnonymousDelegates << 1,
+    /// <summary>
+    /// True if loop structures should be decompiled into high-level loops (for-statements, while-statements, etc.)
+    /// </summary>
+    Loops = Iterators << 1,
+  }
 
   /// <summary>
   /// Provides methods that convert a given Metadata Model into an equivalent Code Model. 
@@ -28,9 +52,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="assembly">The root of the Metadata Model to be converted to a Code Model.</param>
     /// <param name="pdbReader">An object that can map offsets in an IL stream to source locations and block scopes. May be null.</param>
-    /// <param name="decompileIterators">True if iterator classes should be decompiled into iterator methods.</param>
-    public static Assembly GetCodeModelFromMetadataModel(IMetadataHost host, IAssembly assembly, PdbReader/*?*/ pdbReader, bool decompileIterators = false) {
-      return (Assembly)GetCodeModelFromMetadataModelHelper(host, assembly, pdbReader, pdbReader, decompileIterators);
+    /// <param name="options">Set of options that control decompilation.</param>
+    public static Assembly GetCodeModelFromMetadataModel(IMetadataHost host, IAssembly assembly, PdbReader/*?*/ pdbReader, DecompilerOptions options = DecompilerOptions.None) {
+      return (Assembly)GetCodeModelFromMetadataModelHelper(host, assembly, pdbReader, pdbReader, options);
     }
 
     /// <summary>
@@ -41,9 +65,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="module">The root of the Metadata Model to be converted to a Code Model.</param>
     /// <param name="pdbReader">An object that can map offsets in an IL stream to source locations and block scopes. May be null.</param>
-    /// <param name="decompileIterators">True if iterator classes should be decompiled into iterator methods.</param>
-    public static Module GetCodeModelFromMetadataModel(IMetadataHost host, IModule module, PdbReader/*?*/ pdbReader, bool decompileIterators = false) {
-      return GetCodeModelFromMetadataModelHelper(host, module, pdbReader, pdbReader, decompileIterators);
+    /// <param name="options">Set of options that control decompilation.</param>
+    public static Module GetCodeModelFromMetadataModel(IMetadataHost host, IModule module, PdbReader/*?*/ pdbReader, DecompilerOptions options = DecompilerOptions.None) {
+      return GetCodeModelFromMetadataModelHelper(host, module, pdbReader, pdbReader, options);
     }
 
     /// <summary>
@@ -54,9 +78,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="methodBody">The Metadata Model method body that is to be decompiled.</param>
     /// <param name="pdbReader">An object that can map offsets in an IL stream to source locations and block scopes. May be null.</param>
-    /// <param name="decompileIterators">True if iterator classes should be decompiled into iterator methods.</param>
-    public static ISourceMethodBody GetCodeModelFromMetadataModel(IMetadataHost host, IMethodBody methodBody, PdbReader/*?*/ pdbReader, bool decompileIterators = false) {
-      return new Microsoft.Cci.ILToCodeModel.SourceMethodBody(methodBody, host, pdbReader, pdbReader, decompileIterators);
+    /// <param name="options">Set of options that control decompilation.</param>
+    public static ISourceMethodBody GetCodeModelFromMetadataModel(IMetadataHost host, IMethodBody methodBody, PdbReader/*?*/ pdbReader, DecompilerOptions options = DecompilerOptions.None) {
+      return new Microsoft.Cci.ILToCodeModel.SourceMethodBody(methodBody, host, pdbReader, pdbReader, options);
     }
 
     /// <summary>
@@ -68,11 +92,11 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="module">The root of the Metadata Model to be converted to a Code Model.</param>
     /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method. May be null.</param>
-    /// <param name="decompileIterators">True if iterator classes should be decompiled into iterator methods.</param>
+    /// <param name="options">Set of options that control decompilation.</param>
     private static Module GetCodeModelFromMetadataModelHelper(IMetadataHost host, IModule module,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, bool decompileIterators) {
+      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, DecompilerOptions options) {
       var result = new MetadataDeepCopier(host).Copy(module);
-      var replacer = new ReplaceMetadataMethodBodiesWithDecompiledMethodBodies(host, module, sourceLocationProvider, localScopeProvider, decompileIterators);
+      var replacer = new ReplaceMetadataMethodBodiesWithDecompiledMethodBodies(host, module, sourceLocationProvider, localScopeProvider, options);
       replacer.Traverse(result);
       var finder = new HelperTypeFinder(host, sourceLocationProvider);
       finder.Traverse(result);
@@ -201,9 +225,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     IMetadataHost host;
 
     /// <summary>
-    /// True if iterator classes should be decompiled into iterator methods.
+    /// Decompiler options needed at the point that new source method bodies are created for each method definition.
     /// </summary>
-    bool decompileIterators;
+    DecompilerOptions options;
 
     /// <summary>
     /// Allocates a mutator that copies metadata models into mutable code models by using the base MetadataMutator class to make a mutable copy
@@ -215,13 +239,13 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="unit">The unit of metadata that will be mutated.</param>
     /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method. May be null.</param>
-    /// <param name="decompileIterators">True if iterator classes should be decompiled into iterator methods.</param>
+    /// <param name="options">Set of options that control decompilation.</param>
     internal ReplaceMetadataMethodBodiesWithDecompiledMethodBodies(IMetadataHost host, IUnit unit,
-      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, bool decompileIterators) {
+      ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, DecompilerOptions options) {
       this.localScopeProvider = localScopeProvider;
       this.sourceLocationProvider = sourceLocationProvider;
       this.host = host;
-      this.decompileIterators = decompileIterators;
+      this.options = options;
     }
 
     /// <summary>
@@ -230,7 +254,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     public override void TraverseChildren(IMethodDefinition method) {
       if (method.IsExternal || method.IsAbstract) return;
-      ((MethodDefinition)method).Body = new SourceMethodBody(method.Body, this.host, this.sourceLocationProvider, this.localScopeProvider, this.decompileIterators);
+      ((MethodDefinition)method).Body = new SourceMethodBody(method.Body, this.host, this.sourceLocationProvider, this.localScopeProvider, this.options);
     }
 
   }

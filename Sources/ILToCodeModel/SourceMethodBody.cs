@@ -26,7 +26,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal readonly INameTable nameTable;
     internal readonly ISourceLocationProvider/*?*/ sourceLocationProvider;
     internal readonly ILocalScopeProvider/*?*/ localScopeProvider;
-    internal readonly bool decompileIterators;
+    internal readonly DecompilerOptions options;
     private readonly PdbReader/*?*/ pdbReader;
     internal readonly IPlatformType platformType;
     internal List<ILocalDefinition> localVariablesAndTemporaries;
@@ -49,9 +49,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
-    /// <param name="decompileIterators">True if iterator classes should be decompiled into iterator methods.</param>
+    /// <param name="options">Set of options that control decompilation.</param>
     public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider,
-      ILocalScopeProvider/*?*/ localScopeProvider, bool decompileIterators = false)
+      ILocalScopeProvider/*?*/ localScopeProvider, DecompilerOptions options = DecompilerOptions.None)
       : base(host, sourceLocationProvider) {
       this.ilMethodBody = ilMethodBody;
       this.host = host;
@@ -59,7 +59,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.sourceLocationProvider = sourceLocationProvider;
       this.pdbReader = sourceLocationProvider as PdbReader;
       this.localScopeProvider = localScopeProvider;
-      this.decompileIterators = decompileIterators;
+      this.options = options;
       this.platformType = ilMethodBody.MethodDefinition.ContainingTypeDefinition.PlatformType;
       this.operationEnumerator = ilMethodBody.Operations.GetEnumerator();
       if (IteratorHelper.EnumerableIsNotEmpty(ilMethodBody.LocalVariables))
@@ -309,22 +309,24 @@ namespace Microsoft.Cci.ILToCodeModel {
       new TryCatchDecompiler(this.host.PlatformType, this.predecessors).Traverse(rootBlock);
       new IfThenElseDecompiler(this.host.PlatformType, this.predecessors).Traverse(rootBlock);
       new SwitchDecompiler(this.host.PlatformType, this.predecessors).Traverse(rootBlock);
-      new WhileLoopDecompiler(this.host.PlatformType, this.predecessors).Traverse(rootBlock);
-      new ForLoopDecompiler(this.host.PlatformType, this.predecessors).Traverse(rootBlock);
+      if ((this.options & DecompilerOptions.Loops) != 0) {
+        new WhileLoopDecompiler(this.host.PlatformType, this.predecessors).Traverse(rootBlock);
+        new ForLoopDecompiler(this.host.PlatformType, this.predecessors).Traverse(rootBlock);
+      }
       new BlockRemover().Traverse(rootBlock);
       new DeclarationAdder().Traverse(this, rootBlock);
       new EmptyStatementRemover().Traverse(rootBlock);
       IBlockStatement result = rootBlock;
-      if (this.decompileIterators) {
+      if ((this.options & DecompilerOptions.Iterators) != 0) {
         IMethodBody moveNextILBody = this.FindClosureMoveNext(rootBlock);
         if (moveNextILBody != Dummy.MethodBody) {
           if (this.privateHelperTypesToRemove == null) this.privateHelperTypesToRemove = new List<ITypeDefinition>(1);
           this.privateHelperTypesToRemove.Add(moveNextILBody.MethodDefinition.ContainingTypeDefinition);
-          var moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.sourceLocationProvider, this.localScopeProvider);
+          var moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.sourceLocationProvider, this.localScopeProvider, this.options);
           result = moveNextBody.TransformedBlock;
         }
       }
-      result = new CompilationArtifactRemover(this).RemoveCompilationArtifacts((BlockStatement)result);
+      result = new CompilationArtifactRemover(this, (this.options & DecompilerOptions.AnonymousDelegates) != 0).RemoveCompilationArtifacts((BlockStatement)result);
       var bb = result as BasicBlock;
       if (bb != null) {
         new UnreferencedLabelRemover(this).Traverse(bb);
@@ -1586,8 +1588,9 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
-    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider)
-      : base(ilMethodBody, host, sourceLocationProvider, localScopeProvider) {
+    /// <param name="options">Set of options that control decompilation.</param>
+    public MoveNextSourceMethodBody(IMethodBody iteratorMethodBody, IMethodBody ilMethodBody, IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, DecompilerOptions options = DecompilerOptions.None)
+      : base(ilMethodBody, host, sourceLocationProvider, localScopeProvider, options) {
       this.iteratorMethodBody = iteratorMethodBody;
     }
 

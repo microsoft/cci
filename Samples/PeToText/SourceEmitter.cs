@@ -37,8 +37,12 @@ namespace PeToText {
       PrintToken(CSharpToken.LeftCurly);
 
       ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
-      if (sourceMethodBody == null)
-        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader, !this.printCompilerGeneratedMembers);
+      if (sourceMethodBody == null) {
+        var options = DecompilerOptions.Loops;
+        if (!this.printCompilerGeneratedMembers)
+          options |= (DecompilerOptions.AnonymousDelegates | DecompilerOptions.Iterators);
+        sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader, options);
+      }
       if (this.noIL)
         this.Traverse(sourceMethodBody.Block.Statements);
       else {

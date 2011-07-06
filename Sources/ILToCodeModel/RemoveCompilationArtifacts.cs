@@ -20,10 +20,11 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// </summary>
   internal class CompilationArtifactRemover : MethodBodyCodeMutator {
 
-    internal CompilationArtifactRemover(SourceMethodBody sourceMethodBody)
+    internal CompilationArtifactRemover(SourceMethodBody sourceMethodBody, bool restoreAnonymousDelegates)
       : base(sourceMethodBody.host, true) {
       this.containingType = sourceMethodBody.ilMethodBody.MethodDefinition.ContainingTypeDefinition;
       this.sourceMethodBody = sourceMethodBody;
+      this.restoreAnonymousDelegates = restoreAnonymousDelegates;
     }
 
     internal Dictionary<uint, IBoundExpression> capturedBinding = new Dictionary<uint, IBoundExpression>();
@@ -34,6 +35,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     Dictionary<IParameterDefinition, IParameterDefinition> parameterMap = new Dictionary<IParameterDefinition, IParameterDefinition>();
     internal Dictionary<int, bool>/*?*/ referencedLabels;
     GenericMethodParameterMapper/*?*/ genericParameterMapper = null;
+    private bool restoreAnonymousDelegates = false;
 
     public IBlockStatement RemoveCompilationArtifacts(BlockStatement blockStatement) {
       if (this.referencedLabels == null) {
@@ -41,9 +43,13 @@ namespace Microsoft.Cci.ILToCodeModel {
         finder.Traverse(blockStatement.Statements);
         this.referencedLabels = finder.referencedLabels;
       }
-      this.RecursivelyFindCapturedLocals(blockStatement);
+      if (this.restoreAnonymousDelegates) {
+        this.RecursivelyFindCapturedLocals(blockStatement);
+      }
       IBlockStatement result = this.Visit(blockStatement);
-      result = CachedDelegateRemover.RemoveCachedDelegates(this.host, result, sourceMethodBody);
+      if (this.restoreAnonymousDelegates) {
+        result = CachedDelegateRemover.RemoveCachedDelegates(this.host, result, sourceMethodBody);
+      }
       return result;
     }
 
@@ -431,12 +437,13 @@ namespace Microsoft.Cci.ILToCodeModel {
       delegateContainingType = UnspecializedMethods.AsUnspecializedTypeReference(delegateContainingType);
       INestedTypeDefinition/*?*/ dctnt = delegateContainingType.ResolvedType as INestedTypeDefinition;
       ITypeDefinition/*?*/ dctct = dctnt == null ? null : dctnt.ContainingTypeDefinition;
-      if ((TypeHelper.TypesAreEquivalent(delegateContainingType.ResolvedType, this.containingType) || TypeHelper.TypesAreEquivalent(dctct, this.containingType)) &&
+      if (this.restoreAnonymousDelegates &&
+        (TypeHelper.TypesAreEquivalent(delegateContainingType.ResolvedType, this.containingType) || TypeHelper.TypesAreEquivalent(dctct, this.containingType)) &&
         UnspecializedMethods.IsCompilerGenerated(delegateMethodDefinition))
         return ConvertToAnonymousDelegate(createDelegateInstance, iteratorsHaveNotBeenDecompiled: false);
       // REVIEW: This is needed only when iterators are *not* decompiled. When they are, then that happens before this phase and the create delegate instances
       // have been moved into the iterator method (from the MoveNext method) so the above pattern catches everything.
-      if (UnspecializedMethods.IsCompilerGenerated(delegateMethodDefinition)) {
+      if (this.restoreAnonymousDelegates && UnspecializedMethods.IsCompilerGenerated(delegateMethodDefinition)) {
         var containingTypeAsNestedType = this.containingType as INestedTypeDefinition;
         if (containingTypeAsNestedType != null && dctnt != null && TypeHelper.TypesAreEquivalent(dctnt.ContainingType, containingTypeAsNestedType.ContainingType)) {
           return ConvertToAnonymousDelegate(createDelegateInstance, iteratorsHaveNotBeenDecompiled: true);
@@ -468,7 +475,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         var alreadyDecompiledBody2 = closureMethodBody as Microsoft.Cci.MutableCodeModel.SourceMethodBody;
         if (alreadyDecompiledBody2 == null) {
           var smb = new SourceMethodBody(closureMethodBody, this.sourceMethodBody.host,
-            this.sourceMethodBody.sourceLocationProvider, this.sourceMethodBody.localScopeProvider, this.sourceMethodBody.decompileIterators);
+            this.sourceMethodBody.sourceLocationProvider, this.sourceMethodBody.localScopeProvider, this.sourceMethodBody.options);
           anonDelSourceMethodBody = smb;
           anonDel.Body = smb.Block;
         } else {
