@@ -1001,6 +1001,14 @@ namespace Microsoft.Cci.Ast {
       get;
     }
 
+    /// <summary>
+    /// A sequence of PE sections that are not well known to PE readers and thus have not been decompiled into 
+    /// other parts of the Metadata Model. These sections may have meaning to other tools. 
+    /// </summary>
+    public IEnumerable<IPESection> UninterpretedSections {
+      get { return Enumerable<IPESection>.Empty; }
+    }
+
     #region IUnit Members
 
     IRootUnitNamespace IUnit.UnitNamespaceRoot {
