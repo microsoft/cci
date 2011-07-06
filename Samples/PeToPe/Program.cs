@@ -23,7 +23,7 @@ namespace PeToPe {
 
       using (var host = new PeReader.DefaultHost()) {
         var module = host.LoadUnitFrom(args[0]) as IModule;
-        if (module == null) {
+        if (module == null || module is Dummy) {
           Console.WriteLine(args[0]+" is not a PE file containing a CLR module or assembly.");
           return;
         }

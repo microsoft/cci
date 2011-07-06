@@ -309,6 +309,10 @@ namespace Microsoft.Cci {
       get { throw new NotImplementedException(); }
     }
 
+    public IEnumerable<IPESection> UninterpretedSections {
+      get { throw new NotImplementedException(); }
+    }
+
     public IRootUnitNamespace UnitNamespaceRoot {
       get { throw new NotImplementedException(); }
     }
@@ -975,6 +979,12 @@ namespace Microsoft.Cci {
     string Location { get; }
 
     /// <summary>
+    /// A sequence of PE sections that are not well known to PE readers and thus have not been decompiled into 
+    /// other parts of the Metadata Model. These sections may have meaning to other tools. 
+    /// </summary>
+    IEnumerable<IPESection> UninterpretedSections { get; }
+
+    /// <summary>
     /// A root namespace that contains nested namespaces as well as top level types and anything else that implements INamespaceMember.
     /// </summary>
     IRootUnitNamespace UnitNamespaceRoot { get; }
@@ -1012,6 +1022,13 @@ namespace Microsoft.Cci {
     public string Location {
       get {
         Contract.Ensures(Contract.Result<string>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IPESection> UninterpretedSections {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IPESection>>() != null);
         throw new NotImplementedException();
       }
     }

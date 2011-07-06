@@ -897,6 +897,10 @@ namespace Microsoft.Cci {
       get { return string.Empty; }
     }
 
+    public IEnumerable<IPESection> UninterpretedSections {
+      get { return Enumerable<IPESection>.Empty; }
+    }
+
     public new IName Name {
       get { return Dummy.Name; }
     }
@@ -2956,6 +2960,10 @@ namespace Microsoft.Cci {
 
     public new string Location {
       get { return string.Empty; }
+    }
+
+    public IEnumerable<IPESection> UninterpretedSections {
+      get { return Enumerable<IPESection>.Empty; }
     }
 
     public new IName Name {
@@ -5448,6 +5456,10 @@ namespace Microsoft.Cci {
 
     public new string Location {
       get { return string.Empty; }
+    }
+
+    public IEnumerable<IPESection> UninterpretedSections {
+      get { return Enumerable<IPESection>.Empty; }
     }
 
     public new IName Name {

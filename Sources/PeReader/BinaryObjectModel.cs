@@ -15,6 +15,7 @@ using System.Diagnostics.Contracts;
 using Microsoft.Cci.Immutable;
 using Microsoft.Cci.MetadataReader.PEFileFlags;
 using Microsoft.Cci.UtilityDataStructures;
+using Microsoft.Cci.MetadataReader.PEFile;
 
 namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
@@ -453,6 +454,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     string IUnit.Location {
       get { return this.ModuleIdentity.Location; }
+    }
+
+    IEnumerable<IPESection> IUnit.UninterpretedSections {
+      get { return this.PEFileToObjectModel.GetUninterpretedPESections(); }
     }
 
     IRootUnitNamespace IUnit.UnitNamespaceRoot {
@@ -1677,6 +1682,57 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public IName Name {
       get { return this.name; }
     }
+  }
+
+  internal sealed class PESection : IPESection {
+
+    SectionHeader[] sectionHeaders;
+    int index;
+    IName sectionName;
+    PEFileToObjectModel peFileToObjectModel;
+
+    internal PESection(SectionHeader[] sectionHeaders, int index, IName sectionName, PEFileToObjectModel peFileToObjectModel) {
+      this.sectionHeaders = sectionHeaders;
+      this.index = index;
+      this.sectionName = sectionName;
+      this.peFileToObjectModel = peFileToObjectModel;
+    }
+
+    #region IPESection Members
+
+    public IName SectionName {
+      get { return this.sectionName; }
+    }
+
+    public PESectionCharacteristics Characteristics {
+      get { return (PESectionCharacteristics)this.sectionHeaders[this.index].SectionCharacteristics; }
+    }
+
+    public int VirtualAddress {
+      get { return this.sectionHeaders[this.index].VirtualAddress; }
+    }
+
+    public int VirtualSize {
+      get { return this.sectionHeaders[this.index].VirtualSize; }
+    }
+
+    public int SizeOfRawData {
+      get { return this.sectionHeaders[this.index].SizeOfRawData; }
+    }
+
+    public IEnumerable<byte> Rawdata {
+      get {
+        unsafe {
+          MemoryBlock block =
+            new MemoryBlock(
+              this.peFileToObjectModel.PEFileReader.BinaryDocumentMemoryBlock.Pointer + this.sectionHeaders[this.index].OffsetToRawData + 0, 
+              this.sectionHeaders[this.index].VirtualSize);
+          return new EnumberableMemoryBlockWrapper(block);
+        }
+      }
+    }
+
+    #endregion
   }
 
   internal sealed class PlatformInvokeInformation : IPlatformInvokeInformation {

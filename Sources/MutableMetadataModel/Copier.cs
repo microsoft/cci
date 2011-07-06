@@ -725,6 +725,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Returns a shallow copy of the given parameter type information.
+    /// </summary>
+    public PESection Copy(IPESection peSection) {
+      var copy = new PESection();
+      copy.Copy(peSection, this.internFactory);
+      return copy;
+    }
+
+    /// <summary>
     /// Returns a shallow copy of the specified platform invoke information.
     /// </summary>
     public PlatformInvokeInformation Copy(IPlatformInvokeInformation platformInvokeInformation) {
@@ -1304,6 +1313,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
 
       public void Visit(IParameterTypeInformation parameterTypeInformation) {
+      }
+
+      public void Visit(IPESection peSection) {
       }
 
       public void Visit(IPlatformInvokeInformation platformInvokeInformation) {
@@ -2094,6 +2106,12 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (mutableCopy.IsModified)
           this.SubstituteElements(mutableCopy.CustomModifiers);
         mutableCopy.Type = this.SubstituteViaDispatcher(mutableCopy.Type);
+        return mutableCopy;
+      }
+
+      internal IPESection Substitute(IPESection peSection) {
+        if (peSection is Dummy) return peSection;
+        var mutableCopy = this.shallowCopier.Copy(peSection);
         return mutableCopy;
       }
 
@@ -3110,6 +3128,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Returns a deep copy of the given PE section.
+    /// </summary>
+    public PESection Copy(IPESection peSection) {
+      Contract.Requires(!(peSection is Dummy));
+      return (PESection)this.SubstituteCopiesForOriginals.Substitute(peSection);
+    }
+
+    /// <summary>
     /// Returns a deep copy of the specified platform invoke information.
     /// </summary>
     public PlatformInvokeInformation Copy(IPlatformInvokeInformation platformInvokeInformation) {
@@ -4073,6 +4099,18 @@ namespace Microsoft.Cci.MutableCodeModel {
       ParameterTypeInformation result = null;
       result = new ParameterTypeInformation();
       result.Copy(parameterTypeInformation, this.host.InternFactory);
+      return result;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="peSection"></param>
+    /// <returns></returns>
+    private PESection GetMutableShallowCopy(IPESection peSection) {
+      PESection result = null;
+      result = new PESection();
+      result.Copy(peSection, this.host.InternFactory);
       return result;
     }
 

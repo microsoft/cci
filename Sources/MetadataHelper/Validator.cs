@@ -953,6 +953,12 @@ namespace Microsoft.Cci {
       }
 
       /// <summary>
+      /// Performs some compuation with the given PE section.
+      /// </summary>
+      public void Visit(IPESection peSection) {
+      }
+
+      /// <summary>
       /// Performs some compuation with the given platoform invoke information.
       /// </summary>
       public void Visit(IPlatformInvokeInformation platformInvokeInformation) {

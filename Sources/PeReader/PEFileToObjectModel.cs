@@ -579,6 +579,17 @@ namespace Microsoft.Cci.MetadataReader {
     /// </summary>
     ResourceReference[]/*?*/ ResourceReferenceArray;
 
+    internal IEnumerable<IPESection> GetUninterpretedPESections() {
+      for (int i = 0, n = this.PEFileReader.SectionHeaders.Length; i < n; i++) {
+        var nameStr = this.PEFileReader.SectionHeaders[i].Name;
+        switch (nameStr) {
+          case ".text":  case ".sdata": case ".tls":  case ".rdata":  case ".cover": case ".rsrc": case ".reloc": continue;
+        }
+        var name = this.ModuleReader.metadataReaderHost.NameTable.GetNameFor(nameStr);
+        yield return new PESection(this.PEFileReader.SectionHeaders, i, name, this);
+      }
+    }
+
     internal string GetWin32ResourceName(
       int idOrName
     ) {
@@ -3375,6 +3386,7 @@ namespace Microsoft.Cci.MetadataReader {
       return securityAttrDecoder.SecurityAttributes;
     }
     #endregion Attribute Information
+
 
   }
 

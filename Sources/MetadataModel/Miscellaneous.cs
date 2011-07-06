@@ -3689,6 +3689,81 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
+  /// A section of the PE file that does not contain any objects that can be referenced in another way
+  /// using this object model. The data of such a section is not decompiled by metadata reader and 
+  /// is written out unchanged by metadata writers. Presumably it is meaningful in some way and is 
+  /// thus exposed for use by other tools.
+  /// </summary>
+  public interface IPESection {
+
+    /// <summary>
+    /// The name of the section. Should be exactly eight characters long.
+    /// </summary>
+    IName SectionName { get; }
+
+    /// <summary>
+    /// A set of bits that describes the purpose of a section and how it behaves when loaded.
+    /// </summary>
+    PESectionCharacteristics Characteristics { get; }
+
+    /// <summary>
+    /// For executable images this is the address of the first byte of the section, when loaded into memory, relative to the image base. 
+    /// </summary>
+    int VirtualAddress { get; }
+
+    /// <summary>
+    /// Total size of the section in bytes. If this value is greater than SizeOfRawData, the section is zero-padded.
+    /// </summary>
+    int VirtualSize { get; }
+
+    /// <summary>
+    /// Size of the initialized data on disk in bytes, shall be a multiple of FileAlignment from the PE header.
+    /// If this is less than VirtualSize the remainder of the section is zero filled.
+    /// Because this field is rounded while the VirtualSize field is not it is possible for this to be greater than VirtualSize as well. 
+    /// When a section contains only uninitialized data, this field should be 0.
+    /// </summary>
+    int SizeOfRawData { get; }
+
+    /// <summary>
+    /// The data, if any, with which the section will be initialized when loaded.
+    /// </summary>
+    IEnumerable<byte> Rawdata { get; }
+
+
+  }
+
+  /// <summary>
+  /// A set of bits that describes the purpose of a section and how it behaves when loaded.
+  /// </summary>
+  [Flags]
+  public enum PESectionCharacteristics {
+    /// <summary>
+    /// Indicates this section contains machine instructions.
+    /// </summary>
+    ContainsExecutableCode = 0x00000020,
+    /// <summary>
+    /// Indicates this section will be initialized from the contents of the PE file when loaded.
+    /// </summary>
+    ContainsInitializedData = 0x00000040,
+    /// <summary>
+    /// Indicates this section simply reserves an uninitialized address space in the loaded image of the PE file.
+    /// </summary>
+    ContainsUninitializedData = 0x00000080,
+    /// <summary>
+    /// Indicates the part of the loaded PE file image that corresponds to this section will marked as being executable.
+    /// </summary>
+    IsExecutable = 0x20000000,
+    /// <summary>
+    /// Indicates the part of the loaded PE file image that corresponds to this section will marked as being readable.
+    /// </summary>
+    IsReadable = 0x40000000,
+    /// <summary>
+    /// Indicates the part of the loaded PE file image that corresponds to this section will marked as being writable.
+    /// </summary>
+    IsWritable = unchecked((int)0x80000000),
+  }
+
+  /// <summary>
   /// An enumeration indicating the section inside the PE File
   /// </summary>
   public enum PESectionKind {

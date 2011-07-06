@@ -102,6 +102,7 @@ namespace Microsoft.Cci {
     BinaryWriter sdataWriter = new BinaryWriter(new MemoryStream());
     SectionHeader rdataSection = new SectionHeader();
     SectionHeader sdataSection = new SectionHeader();
+    SectionHeader[] uninterpretedSections;
     HashtableForUintValues<ISignature> signatureIndex = new HashtableForUintValues<ISignature>();
     Hashtable signatureStructuralIndex = new Hashtable();
     uint sizeOfImportAddressTable;
@@ -251,6 +252,7 @@ namespace Microsoft.Cci {
       writer.WriteTlsSection();
       writer.WriteResourceSection();
       writer.WriteRelocSection();
+      writer.WriteUninterpretedSections();
 
       if (pdbWriter != null) {
         if (module.EntryPoint != Dummy.MethodReference)
@@ -777,6 +779,30 @@ namespace Microsoft.Cci {
         this.relocSection.SizeOfRawData = this.module.FileAlignment;
         this.relocSection.VirtualSize = this.module.Requires64bits && !this.module.RequiresAmdInstructionSet ? 14u : 12u;
       }
+
+      uint pointerToRawData = this.relocSection.PointerToRawData+this.relocSection.SizeOfRawData;
+      uint rva = Aligned(this.relocSection.RelativeVirtualAddress+this.relocSection.VirtualSize, 0x2000);
+      List<SectionHeader> uninterpretedSections = null;
+      foreach (var peSection in this.module.UninterpretedSections) {
+        if (uninterpretedSections == null) uninterpretedSections = new List<SectionHeader>();
+        uninterpretedSections.Add(new SectionHeader() {
+          Name = peSection.SectionName.Value,
+          Characteristics = (uint)peSection.Characteristics,
+          NumberOfLinenumbers = 0,
+          NumberOfRelocations = 0,
+          PointerToLinenumbers = 0,
+          PointerToRawData = pointerToRawData,
+          PointerToRelocations = 0,
+          RawData = peSection.Rawdata,
+          RelativeVirtualAddress = rva,
+          SizeOfRawData = (uint)peSection.SizeOfRawData,
+          VirtualSize = (uint)peSection.VirtualSize
+        });
+        pointerToRawData += (uint)peSection.SizeOfRawData;
+        rva = Aligned(rva+(uint)peSection.VirtualSize, 0x2000);
+      }
+      if (uninterpretedSections != null)
+        this.uninterpretedSections = uninterpretedSections.ToArray();
     }
 
     internal uint GetAssemblyRefIndex(IAssemblyReference assemblyReference) {
@@ -996,6 +1022,7 @@ namespace Microsoft.Cci {
       Debug.Assert(!this.streamsAreComplete);
       if (resourceReference.Resource.IsInExternalFile) return 0;
       uint result = this.resourceWriter.BaseStream.Position;
+      //TODO: avoid this allocation. Expose a Length property on IResourceReference and pull the iterator explicitly.
       byte[] resourceData = new List<byte>(resourceReference.Resource.Data).ToArray();
       this.resourceWriter.WriteUint((uint)resourceData.Length);
       this.resourceWriter.WriteBytes(resourceData);
@@ -4490,6 +4517,15 @@ namespace Microsoft.Cci {
       this.tlsDataWriter.BaseStream.WriteTo(this.peStream);
     }
 
+    private void WriteUninterpretedSections() {
+      if (this.uninterpretedSections == null) return;
+      foreach (var uninterpretedSection in this.uninterpretedSections) {
+        this.peStream.Position = uninterpretedSection.PointerToRawData;
+        foreach (var b in uninterpretedSection.RawData)
+          this.peStream.WriteByte(b);
+      }
+    }
+
   }
 
   internal class ByteArrayComparer : IEqualityComparer<byte[]> {
@@ -5501,6 +5537,7 @@ namespace Microsoft.Cci {
     internal ushort NumberOfRelocations;
     internal ushort NumberOfLinenumbers;
     internal uint Characteristics;
+    internal IEnumerable<byte> RawData;
   }
 
   internal enum TableIndices : byte {

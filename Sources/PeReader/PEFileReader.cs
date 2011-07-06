@@ -2547,7 +2547,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
     OptionalHeaderStandardFields OptionalHeaderStandardFields;
     OptionalHeaderNTAdditionalFields OptionalHeaderNTAdditionalFields;
     OptionalHeaderDirectoryEntries OptionalHeaderDirectoryEntries;
-    SectionHeader[] SectionHeaders;
+    internal SectionHeader[] SectionHeaders;
     internal MemoryReader Win32ResourceMemoryReader;
     internal DllCharacteristics DllCharacteristics {
       get

@@ -1469,6 +1469,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.contractAssemblySymbolicIdentity = unit.ContractAssemblySymbolicIdentity;
       this.coreAssemblySymbolicIdentity = unit.CoreAssemblySymbolicIdentity;
       this.location = unit.Location;
+      if (IteratorHelper.EnumerableIsNotEmpty(unit.UninterpretedSections))
+        this.uninterpretedSections = new List<IPESection>(unit.UninterpretedSections);
+      else
+        this.uninterpretedSections = null;
       this.platformType = unit.PlatformType;
       this.unitNamespaceRoot = unit.UnitNamespaceRoot;
     }
@@ -1509,6 +1513,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     string location;
 
     /// <summary>
+    /// A sequence of PE sections that are not well known to PE readers and thus have not been decompiled into 
+    /// other parts of the Metadata Model. These sections may have meaning to other tools. 
+    /// </summary>
+    public virtual List<IPESection> UninterpretedSections {
+      get { return this.uninterpretedSections; }
+      set { this.uninterpretedSections = value; }
+    }
+    List<IPESection> uninterpretedSections;
+
+    /// <summary>
     /// A collection of well known types that must be part of every target platform and that are fundamental to modeling compiled code.
     /// The types are obtained by querying the unit set of the compilation and thus can include types that are defined by the compilation itself.
     /// </summary>
@@ -1537,6 +1551,18 @@ namespace Microsoft.Cci.MutableCodeModel {
       get;
     }
 
+    #region IUnit Members
+
+    IEnumerable<IPESection> IUnit.UninterpretedSections {
+      get {
+        if (this.UninterpretedSections == null)
+          return Enumerable<IPESection>.Empty;
+        else
+          return this.UninterpretedSections.AsReadOnly();
+      }
+    }
+
+    #endregion
     #region INamespaceRootOwner Members
 
     /// <summary>

@@ -811,6 +811,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Rewrites the given PE section.
+    /// </summary>
+    public virtual IPESection Rewrite(IPESection peSection) {
+      var mutablePESection = peSection as PESection;
+      if (mutablePESection == null) return peSection;
+      this.RewriteChildren(mutablePESection);
+      return mutablePESection;
+    }
+
+    /// <summary>
     /// Rewrites the specified platform invoke information.
     /// </summary>
     public virtual IPlatformInvokeInformation Rewrite(IPlatformInvokeInformation platformInvokeInformation) {
@@ -1240,6 +1250,16 @@ namespace Microsoft.Cci.MutableCodeModel {
       for (int i = 0, n = parameterTypeInformations.Count; i < n; i++)
         parameterTypeInformations[i] = this.Rewrite(parameterTypeInformations[i]);
       return parameterTypeInformations;
+    }
+
+    /// <summary>
+    /// Rewrites the specified PE sections.
+    /// </summary>
+    public virtual List<IPESection>/*?*/ Rewrite(List<IPESection>/*?*/ peSections) {
+      if (peSections == null) return null;
+      for (int i = 0, n = peSections.Count; i < n; i++)
+        peSections[i] = this.Rewrite(peSections[i]);
+      return peSections;
     }
 
     /// <summary>
@@ -1775,6 +1795,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Rewrites the given PE section.
+    /// </summary>
+    /// <param name="peSection"></param>
+    public virtual void RewriteChildren(PESection peSection) {
+    }
+
+    /// <summary>
     /// Rewrites the children of the specified platform invoke information.
     /// </summary>
     public virtual void RewriteChildren(PlatformInvokeInformation platformInvokeInformation) {
@@ -1912,6 +1939,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual void RewriteChildren(Unit unit) {
       this.RewriteChildren((UnitReference)unit);
       unit.PlatformType = this.host.PlatformType;
+      unit.UninterpretedSections = this.Rewrite(unit.UninterpretedSections);
     }
 
     /// <summary>
@@ -2977,6 +3005,22 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       result = new ParameterTypeInformation();
       result.Copy(parameterTypeInformation, this.host.InternFactory);
+      return result;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="peSection"></param>
+    /// <returns></returns>
+    public virtual PESection GetMutableCopy(IPESection peSection) {
+      PESection result = null;
+      if (this.copyOnlyIfNotAlreadyMutable) {
+        result = peSection as PESection;
+        if (result != null) return result;
+      }
+      result = new PESection();
+      result.Copy(peSection, this.host.InternFactory);
       return result;
     }
 
@@ -4242,6 +4286,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.path.Push(module);
       module.AssemblyReferences = this.Visit(module.AssemblyReferences);
       module.Locations = this.Visit(module.Locations);
+      module.UninterpretedSections = this.Visit(module.UninterpretedSections);
       module.ModuleAttributes = this.Visit(module.ModuleAttributes);
       module.ModuleReferences = this.Visit(module.ModuleReferences);
       module.Win32Resources = this.Visit(module.Win32Resources);
@@ -5124,6 +5169,26 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Visits the specified PE sections.
+    /// </summary>
+    /// <param name="peSections">The PE section.</param>
+    public virtual List<IPESection>/*?*/ Visit(List<IPESection>/*?*/ peSections) {
+      if (this.stopTraversal || peSections == null) return peSections;
+      for (int i = 0, n = peSections.Count; i < n; i++)
+        peSections[i] = this.Visit(this.GetMutableCopy(peSections[i]));
+      return peSections;
+    }
+
+    /// <summary>
+    /// Visits the specifed PE section.
+    /// </summary>
+    /// <param name="peSection">The PE section</param>
+    /// <returns></returns>
+    public virtual PESection Visit(PESection peSection) {
+      return peSection;
+    }
+
+    /// <summary>
     /// Visits the specified unit.
     /// </summary>
     /// <param name="unit">The unit.</param>
@@ -5133,6 +5198,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.path.Push(unit);
       unit.Attributes = this.Visit(unit.Attributes);
       unit.Locations = this.Visit(unit.Locations);
+      unit.UninterpretedSections = this.Visit(unit.UninterpretedSections);
       unit.UnitNamespaceRoot = this.Visit(this.GetMutableCopy((IRootUnitNamespace)unit.UnitNamespaceRoot));
       this.path.Pop();
       return unit;
@@ -6972,6 +7038,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.path.Push(module);
       module.AssemblyReferences = this.Mutate(module.AssemblyReferences);
       module.Locations = this.Mutate(module.Locations);
+      module.UninterpretedSections = this.Mutate(module.UninterpretedSections);
       module.ModuleAttributes = this.Mutate(module.ModuleAttributes);
       module.ModuleReferences = this.Mutate(module.ModuleReferences);
       module.Win32Resources = this.Mutate(module.Win32Resources);
@@ -7343,6 +7410,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Visits the specified PE sections.
+    /// </summary>
+    /// <param name="peSections">The PE sections.</param>
+    /// <returns></returns>
+    public virtual List<IPESection>/*?*/ Mutate(List<IPESection>/*?*/ peSections) {
+      if (this.stopTraversal || peSections == null) return peSections;
+      for (int i = 0, n = peSections.Count; i < n; i++)
+        peSections[i] = this.Visit(peSections[i]);
+      return peSections;
+    }
+
+    /// <summary>
     /// Visits the specified type definition members.
     /// </summary>
     /// <param name="typeDefinitionMembers">The type definition members.</param>
@@ -7473,7 +7552,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (specializedNestedTypeReference != null)
         return this.Visit(specializedNestedTypeReference);
       // no matter whether this nestedTypeReference is a nested type definition or not, mutate and cache it. 
-      var result =  this.Mutate(nestedTypeReference);
+      var result = this.Mutate(nestedTypeReference);
       this.referenceCache.Add(nestedTypeReference, result);
       if (nestedTypeReference != result)
         this.referenceCache.Add(result, result);
@@ -8252,6 +8331,28 @@ namespace Microsoft.Cci.MutableCodeModel {
       parameterTypeInformation.Type = this.Visit(parameterTypeInformation.Type);
       this.path.Pop();
       return parameterTypeInformation;
+    }
+
+    /// <summary>
+    /// Visits the (interface) IPESection. We first see if it is a mutable model node, if so, we 
+    /// visit the mutable node. If not, we just return the section.
+    /// </summary>
+    /// <param name="peSection"></param>
+    /// <returns></returns>
+    public virtual IPESection Visit(IPESection peSection) {
+      if (this.stopTraversal) return peSection;
+      var mutable = peSection as PESection;
+      if (mutable != null) return this.Mutate(mutable);
+      return peSection;
+    }
+
+    /// <summary>
+    /// Visits a mutable PE section.
+    /// </summary>
+    /// <param name="peSection">The PE section.</param>
+    /// <returns></returns>
+    public virtual PESection Mutate(PESection peSection) {
+      return peSection;
     }
 
     /// <summary>

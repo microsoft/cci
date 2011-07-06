@@ -1018,6 +1018,10 @@ namespace Microsoft.Cci {
     /// </summary>
     void Visit(IParameterTypeInformation parameterTypeInformation);
     /// <summary>
+    /// Performs some computation with the given PE section.
+    /// </summary>
+    void Visit(IPESection peSection);
+    /// <summary>
     /// Performs some compuation with the given platoform invoke information.
     /// </summary>
     void Visit(IPlatformInvokeInformation platformInvokeInformation);

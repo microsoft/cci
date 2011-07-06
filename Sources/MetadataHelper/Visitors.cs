@@ -773,6 +773,7 @@ namespace Microsoft.Cci {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
       this.path.Push(module);
+      this.Visit(module.UninterpretedSections);
       this.Visit(module.ModuleAttributes);
       this.Visit(module.AssemblyReferences);
       this.Visit(module.NamespaceRoot);
@@ -1151,6 +1152,29 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Visits the specified PE sections.
+    /// </summary>
+    /// <param name="peSections">The PE sections.</param>
+    public virtual void Visit(IEnumerable<IPESection> peSections)
+      //^ ensures this.path.Count == old(this.path.Count);
+    {
+      if (this.stopTraversal) return;
+      //^ int oldCount = this.path.Count;
+      foreach (IPESection peSection in peSections) {
+        this.Visit(peSection);
+        if (this.stopTraversal) break;
+      }
+      //^ assume this.path.Count == oldCount; //True because all of the virtual methods of this class promise not decrease this.path.Count.
+    }
+
+    /// <summary>
+    /// Visits the specified PE section.
+    /// </summary>
+    /// <param name="peSection">The PE section.</param>
+    public virtual void Visit(IPESection peSection) {
+    }
+
+    /// <summary>
     /// Visits the specified platform invoke information.
     /// </summary>
     /// <param name="platformInvokeInformation">The platform invoke information.</param>
@@ -1520,6 +1544,7 @@ namespace Microsoft.Cci {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
       this.path.Push(unit);
+      this.Visit(unit.UninterpretedSections);
       this.Visit(unit.NamespaceRoot);
       this.Visit(unit.UnitReferences);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
@@ -2017,6 +2042,12 @@ namespace Microsoft.Cci {
     /// Performs some computation with the given parameter type information.
     /// </summary>
     public virtual void Visit(IParameterTypeInformation parameterTypeInformation) {
+    }
+
+    /// <summary>
+    /// Performs some computation with the given PE section.
+    /// </summary>
+    public virtual void Visit(IPESection peSection) {
     }
 
     /// <summary>
@@ -2568,6 +2599,12 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Performs some compuation with the given PE section.
+    /// </summary>
+    public virtual void Visit(IPESection peSection) {
+    }
+
+    /// <summary>
     /// Performs some compuation with the given platoform invoke information.
     /// </summary>
     public virtual void Visit(IPlatformInvokeInformation platformInvokeInformation) {
@@ -3011,6 +3048,10 @@ namespace Microsoft.Cci {
       }
 
       public void Visit(IParameterTypeInformation parameterTypeInformation) {
+        Contract.Assume(false);
+      }
+
+      public void Visit(IPESection peSection) {
         Contract.Assume(false);
       }
 
@@ -3668,6 +3709,18 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Traverses the PE section;
+    /// </summary>
+    /// <param name="peSection"></param>
+    public void Traverse(IPESection peSection) {
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(peSection);
+      if (this.stopTraversal) return;
+      this.TraverseChildren(peSection);
+      if (this.stopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(peSection);
+    }
+
+    /// <summary>
     /// Traverses the specified platform invoke information.
     /// </summary>
     public void Traverse(IPlatformInvokeInformation platformInvokeInformation) {
@@ -4093,6 +4146,16 @@ namespace Microsoft.Cci {
     public void Traverse(IEnumerable<IParameterTypeInformation> parameterTypeInformations) {
       foreach (IParameterTypeInformation parameterTypeInformation in parameterTypeInformations) {
         this.Traverse(parameterTypeInformation);
+        if (this.stopTraversal) break;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the specified PE sections.
+    /// </summary>
+    public void Traverse(IEnumerable<IPESection> peSections) {
+      foreach (IPESection peSection in peSections) {
+        this.Traverse(peSection);
         if (this.stopTraversal) break;
       }
     }
@@ -4556,6 +4619,8 @@ namespace Microsoft.Cci {
     /// Traverses the children of the module.
     /// </summary>
     public virtual void TraverseChildren(IModule module) {
+      this.Traverse(module.UninterpretedSections);
+      if (this.stopTraversal) return;
       this.Traverse(module.ModuleAttributes);
       if (this.stopTraversal) return;
       this.Traverse(module.AssemblyReferences);
@@ -4723,6 +4788,12 @@ namespace Microsoft.Cci {
         if (this.stopTraversal) return;
       }
       this.Traverse(parameterTypeInformation.Type);
+    }
+
+    /// <summary>
+    /// Traverses the children of the PE section.
+    /// </summary>
+    public virtual void TraverseChildren(IPESection peSection) {
     }
 
     /// <summary>
