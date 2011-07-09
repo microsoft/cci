@@ -639,7 +639,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
             if (parDef.HasDefaultValue || parDef.IsOptional || parDef.IsOut || parDef.IsMarshalledExplicitly ||
             IteratorHelper.EnumerableIsNotEmpty(parDef.Attributes) || parDef.Name.Value != string.Empty) {
               var parameterAttributes = GetAttributes(parDef);
-              var parameterBuilder = constructorBuilder.DefineParameter(parDef.Index, parameterAttributes, parDef.Name.Value);
+              var parameterBuilder = constructorBuilder.DefineParameter(parDef.Index+1, parameterAttributes, parDef.Name.Value);
               this.Visit(parDef, parameterBuilder);
             }
           }
@@ -663,7 +663,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
           foreach (var parDef in method.Parameters) {
             if (parDef.HasDefaultValue || parDef.IsOptional || parDef.IsOut || parDef.IsMarshalledExplicitly ||
             IteratorHelper.EnumerableIsNotEmpty(parDef.Attributes) || parDef.Name.Value != string.Empty) {
-              var parameterBuilder = methodBuilder.DefineParameter(parDef.Index, GetAttributes(parDef), parDef.Name.Value);
+              var parameterBuilder = methodBuilder.DefineParameter(parDef.Index+1, GetAttributes(parDef), parDef.Name.Value);
               this.Visit(parDef, parameterBuilder);
             }
           }
