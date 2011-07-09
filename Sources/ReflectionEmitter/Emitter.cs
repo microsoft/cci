@@ -673,7 +673,10 @@ namespace Microsoft.Cci.ReflectionEmitter {
             methodBuilder.SetCustomAttribute(customAttributeBuilder);
           }
           if (method.ReturnValueIsMarshalledExplicitly) {
-            methodBuilder.SetCustomAttribute(GetMarshalAsAttribute(method.ReturnValueMarshallingInformation));
+            string returnValueName = null;
+            if (method.ReturnValueName != Dummy.Name) returnValueName = method.ReturnValueName.Value;
+            var returnValue = methodBuilder.DefineParameter(0, ParameterAttributes.Retval|ParameterAttributes.HasFieldMarshal, returnValueName);
+            returnValue.SetCustomAttribute(GetMarshalAsAttribute(method.ReturnValueMarshallingInformation));
           }
           if (!method.IsAbstract && !method.IsExternal) {
             methodBuilder.InitLocals = method.Body.LocalsAreZeroed;
