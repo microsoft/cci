@@ -611,7 +611,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public IEnumerable<byte> HashValue {
-      get { return new EnumberableMemoryBlockWrapper(this.PEFileToObjectModel.PEFileReader.StrongNameSignature); }
+      get { return new EnumerableMemoryBlockWrapper(this.PEFileToObjectModel.PEFileReader.StrongNameSignature); }
     }
 
     IEnumerable<IResourceReference> IAssembly.Resources {
@@ -1639,7 +1639,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     IEnumerable<byte> ISectionBlock.Data {
-      get { return new EnumberableMemoryBlockWrapper(this.MemoryBlock); }
+      get { return new EnumerableMemoryBlockWrapper(this.MemoryBlock); }
     }
 
     #endregion
@@ -1727,7 +1727,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
             new MemoryBlock(
               this.peFileToObjectModel.PEFileReader.BinaryDocumentMemoryBlock.Pointer + this.sectionHeaders[this.index].OffsetToRawData + 0, 
               this.sectionHeaders[this.index].VirtualSize);
-          return new EnumberableMemoryBlockWrapper(block);
+          return new EnumerableMemoryBlockWrapper(block);
         }
       }
     }

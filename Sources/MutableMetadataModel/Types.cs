@@ -699,23 +699,22 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     ushort index;
 
-    private IGenericMethodParameter Resolve() {
+    private void Resolve() {
       Contract.Ensures(this.IsFrozen);
       this.isFrozen = true;
-      IMethodDefinition definingMethod = this.definingMethod.ResolvedMethod;
-      if (definingMethod.IsGeneric && definingMethod.GenericParameterCount > this.index) {
-        foreach (IGenericMethodParameter par in definingMethod.GenericParameters) {
-          if (par.Index == this.index) return par;
-        }
+      this.resolvedType = Dummy.GenericMethodParameter;
+      var definingMethod = this.definingMethod.ResolvedMethod;
+      if (!definingMethod.IsGeneric || this.index >= definingMethod.GenericParameterCount) return;
+      foreach (var par in definingMethod.GenericParameters) {
+        if (par.Index == this.index) { this.resolvedType = par; return; }
       }
-      return Dummy.GenericMethodParameter;
     }
 
     IGenericMethodParameter IGenericMethodParameterReference.ResolvedType {
       get {
         Contract.Ensures(this.IsFrozen);
         if (this.resolvedType == null)
-          this.resolvedType = this.Resolve();
+          this.Resolve();
         return this.resolvedType;
       }
     }

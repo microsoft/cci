@@ -16,6 +16,7 @@ using System.Configuration.Assemblies;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using Microsoft.Cci.UtilityDataStructures;
+using Microsoft.Cci.WriterUtilities;
 
 //^ using Microsoft.Contracts;
 
@@ -996,7 +997,7 @@ namespace Microsoft.Cci {
       return result;
     }
 
-    private static ushort GetGenericParamFlags(IGenericParameter genPar) {
+    public static ushort GetGenericParamFlags(IGenericParameter genPar) {
       ushort result = 0;
       switch (genPar.Variance) {
         case TypeParameterVariance.Covariant: result |= 0x0001; break;
@@ -1402,7 +1403,7 @@ namespace Microsoft.Cci {
       return 0;
     }
 
-    internal static uint GetTypeDefFlags(ITypeDefinition typeDef) {
+    public static uint GetTypeDefFlags(ITypeDefinition typeDef) {
       uint result = 0;
       switch (typeDef.Layout) {
         case LayoutKind.Sequential: result |= 0x00000008; break;

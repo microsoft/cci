@@ -949,12 +949,19 @@ namespace Microsoft.Cci.Immutable {
     /// <value></value>
     public IGenericMethodParameter ResolvedType {
       get {
-        IMethodDefinition definingMethodDef = this.DefiningMethod.ResolvedMethod;
-        if (!definingMethodDef.IsGeneric) return Dummy.GenericMethodParameter;
-        foreach (IGenericMethodParameter genericParameter in definingMethodDef.GenericParameters) {
-          if (genericParameter.Index == this.index) return genericParameter;
-        }
-        return Dummy.GenericMethodParameter;
+        if (this.resolvedType == null)
+          this.Resolve();
+        return this.resolvedType;
+      }
+    }
+    IGenericMethodParameter/*?*/ resolvedType;
+
+    private void Resolve() {
+      this.resolvedType = Dummy.GenericMethodParameter;
+      var definingMethodDefinition = this.DefiningMethod.ResolvedMethod;
+      if (!definingMethodDefinition.IsGeneric || this.index >= definingMethodDefinition.GenericParameterCount) return;
+      foreach (var genericParameter in definingMethodDefinition.GenericParameters) {
+        if (genericParameter.Index == this.index) { this.resolvedType = genericParameter; return; }
       }
     }
 
@@ -1817,22 +1824,21 @@ namespace Microsoft.Cci.Immutable {
     public IGenericMethodParameter ResolvedType {
       get {
         if (this.resolvedType == null)
-          this.resolvedType = this.Resolve();
+          this.Resolve();
         return this.resolvedType;
       }
     }
     IGenericMethodParameter/*?*/ resolvedType;
 
-    IGenericMethodParameter Resolve() {
+    private void Resolve() {
+      this.resolvedType = Dummy.GenericMethodParameter;
       var definingMethodDefinition = this.DefiningMethod.ResolvedMethod;
-      if (definingMethodDefinition.IsGeneric) {
-        int index = this.Index;
-        int i = 0;
-        foreach (var parameter in definingMethodDefinition.GenericParameters)
-          if (index == i++) return parameter;
+      var definingMethodDef = this.DefiningMethod.ResolvedMethod;
+      int index = this.Index;
+      if (!definingMethodDef.IsGeneric || index >= definingMethodDef.GenericParameterCount) return;
+      foreach (IGenericMethodParameter genericParameter in definingMethodDef.GenericParameters) {
+        if (genericParameter.Index == index) { this.resolvedType = genericParameter; return; }
       }
-      return Dummy.GenericMethodParameter;
-
     }
 
     #endregion

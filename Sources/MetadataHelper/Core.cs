@@ -291,7 +291,7 @@ namespace Microsoft.Cci {
       if (unit != null)
         result = unit as IAssembly;
       else {
-        if (assemblyIdentity.Location == "" || assemblyIdentity.Location == "unknown://location") {
+        if (string.IsNullOrEmpty(assemblyIdentity.Location) || string.Equals(assemblyIdentity.Location, "unknown://location", StringComparison.OrdinalIgnoreCase)) {
           result = Dummy.Assembly;
           lock (GlobalLock.LockingObject) {
             this.unitCache.Add(assemblyIdentity, result);
@@ -1150,7 +1150,8 @@ namespace Microsoft.Cci {
     readonly Hashtable ManagedPointerTypeHashTable;
     readonly MultiHashtable<MatrixTypeStore> MatrixTypeHashtable;
     readonly DoubleHashtable TypeListHashtable;
-    readonly DoubleHashtable GenericInstanceHashtable;
+    readonly DoubleHashtable GenericTypeInstanceHashtable;
+    readonly DoubleHashtable GenericMethodInstanceHashtable;
     readonly DoubleHashtable GenericTypeParameterHashtable;
     readonly DoubleHashtable GenericMethodTypeParameterHashTable;
     readonly DoubleHashtable CustomModifierHashTable;
@@ -1190,7 +1191,8 @@ namespace Microsoft.Cci {
       this.ManagedPointerTypeHashTable = new Hashtable();
       this.MatrixTypeHashtable = new MultiHashtable<MatrixTypeStore>();
       this.TypeListHashtable = new DoubleHashtable();
-      this.GenericInstanceHashtable = new DoubleHashtable();
+      this.GenericTypeInstanceHashtable = new DoubleHashtable();
+      this.GenericMethodInstanceHashtable = new DoubleHashtable();
       this.GenericTypeParameterHashtable = new DoubleHashtable();
       this.GenericMethodTypeParameterHashTable = new DoubleHashtable();
       this.CustomModifierHashTable = new DoubleHashtable();
@@ -1364,10 +1366,10 @@ namespace Microsoft.Cci {
     ) {
       uint genericTypeInternedId = this.GetTypeReferenceInternId(genericTypeReference);
       uint genericArgumentsInternedId = this.GetTypeReferenceListInternedId(genericArguments.GetEnumerator());
-      uint value = this.GenericInstanceHashtable.Find(genericTypeInternedId, genericArgumentsInternedId);
+      uint value = this.GenericTypeInstanceHashtable.Find(genericTypeInternedId, genericArgumentsInternedId);
       if (value == 0) {
         value = this.CurrentTypeInternValue++;
-        this.GenericInstanceHashtable.Add(genericTypeInternedId, genericArgumentsInternedId, value);
+        this.GenericTypeInstanceHashtable.Add(genericTypeInternedId, genericArgumentsInternedId, value);
       }
       return value;
     }
@@ -1547,10 +1549,10 @@ namespace Microsoft.Cci {
     ) {
       var genericMethodInternedId = genericMethodInstanceReference.GenericMethod.InternedKey;
       uint genericArgumentsInternedId = this.GetTypeReferenceListInternedId(genericMethodInstanceReference.GenericArguments.GetEnumerator());
-      uint value = this.GenericInstanceHashtable.Find(genericMethodInternedId, genericArgumentsInternedId);
+      uint value = this.GenericMethodInstanceHashtable.Find(genericMethodInternedId, genericArgumentsInternedId);
       if (value == 0) {
         value = this.CurrentMethodReferenceInternValue++;
-        this.GenericInstanceHashtable.Add(genericMethodInternedId, genericArgumentsInternedId, value);
+        this.GenericMethodInstanceHashtable.Add(genericMethodInternedId, genericArgumentsInternedId, value);
       }
       return value;
     }

@@ -573,7 +573,9 @@ namespace Microsoft.Cci.Immutable {
       //^^ ensures this.IsAlias ==> result == this.AliasForType.AliasedType.ResolvedType;
       //^^ ensures (this is ITypeDefinition) ==> result == this;
     {
-      return this.ResolvedType;
+      var rt = this.ResolvedType;
+      if (rt == Dummy.NamespaceTypeDefinition) return Dummy.Type;
+      return rt;
     }
 
     /// <summary>

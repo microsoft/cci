@@ -599,18 +599,18 @@ namespace Microsoft.Cci.MetadataReader {
       return this.PEFileReader.Win32ResourceMemoryReader.PeekUTF16WithShortSize(idOrName & 0x7FFFFFFF, out numBytes);
     }
 
-    internal EnumberableMemoryBlockWrapper GetWin32ResourceBytes(
+    internal EnumerableMemoryBlockWrapper GetWin32ResourceBytes(
       int dataRVA,
       int size
     ) {
-      return new EnumberableMemoryBlockWrapper(this.PEFileReader.RVAToMemoryBlockWithSize(dataRVA, size));
+      return new EnumerableMemoryBlockWrapper(this.PEFileReader.RVAToMemoryBlockWithSize(dataRVA, size));
     }
 
-    internal EnumberableMemoryBlockWrapper GetWin32ResourceBytes(
+    internal EnumerableMemoryBlockWrapper GetWin32ResourceBytes(
       uint dataRVA,
       uint size
     ) {
-      return new EnumberableMemoryBlockWrapper(this.PEFileReader.RVAToMemoryBlockWithSize((int)dataRVA, (int)size));
+      return new EnumerableMemoryBlockWrapper(this.PEFileReader.RVAToMemoryBlockWithSize((int)dataRVA, (int)size));
     }
 
     internal IEnumerable<IWin32Resource> GetWin32Resources() {
@@ -656,11 +656,11 @@ namespace Microsoft.Cci.MetadataReader {
       }
     }
 
-    internal EnumberableMemoryBlockWrapper GetFileHash(
+    internal EnumerableMemoryBlockWrapper GetFileHash(
       uint fileRowId
     ) {
       uint blobOffset = this.PEFileReader.FileTable.GetHashValue(fileRowId);
-      return new EnumberableMemoryBlockWrapper(this.PEFileReader.BlobStream.GetMemoryBlockAt(blobOffset));
+      return new EnumerableMemoryBlockWrapper(this.PEFileReader.BlobStream.GetMemoryBlockAt(blobOffset));
     }
 
     /// <summary>
@@ -826,7 +826,7 @@ namespace Microsoft.Cci.MetadataReader {
           //  MDError:
           return TypeCache.EmptyByteArray;
         }
-        return new EnumberableMemoryBlockWrapper(this.PEFileReader.ResourceMemoryReader.GetMemoryBlockAt(resOffset + sizeof(Int32), len));
+        return new EnumerableMemoryBlockWrapper(this.PEFileReader.ResourceMemoryReader.GetMemoryBlockAt(resOffset + sizeof(Int32), len));
       }
     }
 

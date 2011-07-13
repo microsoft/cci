@@ -1318,7 +1318,7 @@ namespace Microsoft.Cci.MetadataReader {
           return new ConstantExpression(type, this.GetSerializedString());
         default:
           var typeDef = type.ResolvedType;
-          if (typeDef != Dummy.Type) {
+          if (!(typeDef is Dummy)) {
             if (typeDef.IsEnum)
               return new ConstantExpression(type, this.GetPrimitiveValue(typeDef.UnderlyingType));
             type = typeDef;

@@ -2880,22 +2880,20 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public override ITypeDefinition ResolvedType {
       get {
         if (this.resolvedType == null)
-          this.resolvedType = this.Resolve();
+          this.Resolve();
         if (this.resolvedType == Dummy.GenericMethodParameter) return Dummy.Type;
         return this.resolvedType;
       }
     }
     IGenericMethodParameter resolvedType;
 
-    IGenericMethodParameter Resolve() {
+    void Resolve() {
+      this.resolvedType = Dummy.GenericMethodParameter;
       var definingMethod = this.DefiningMethod;
-      if (definingMethod.IsGeneric) {
-        ushort index = 0;
-        foreach (IGenericMethodParameter genMethPar in definingMethod.GenericParameters) {
-          if (index++ == this.Index) return genMethPar;
-        }
+      if (!definingMethod.IsGeneric || this.Index >= definingMethod.GenericParameterCount) return;
+      foreach (var genMethPar in definingMethod.GenericParameters) {
+        if (genMethPar.Index == this.Index) { this.resolvedType = genMethPar; return; }
       }
-      return Dummy.GenericMethodParameter;
     }
 
     #region IGenericMethodParameter Members
@@ -2915,7 +2913,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     IGenericMethodParameter IGenericMethodParameterReference.ResolvedType {
       get {
         if (this.resolvedType == null)
-          this.resolvedType = this.Resolve();
+          this.Resolve();
         return this.resolvedType;
       }
     }
