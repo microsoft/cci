@@ -1141,4 +1141,20 @@ namespace CodeModelTestInput {
   }
 
   #endregion 
+
+  public class DecompilingFinallyHandlers {
+    /// <summary>
+    /// Generates a finally block that does not have any following block
+    /// </summary>
+    public static void TerminalFinallyBlock() {
+      int i = 0;
+      try {
+        throw new Exception();
+      } finally {
+        i += 2;
+      }
+    }
+
+  }
+
 }

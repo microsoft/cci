@@ -1583,4 +1583,27 @@ namespace CodeModelTestInput
 
         }
     }
+
+    public class DecompilingFinallyHandlers
+    {
+        public static void TerminalFinallyBlock()
+        {
+            int i = 0;
+            try
+            {
+                throw new System.Exception();
+            }
+            finally
+            {
+                i = (i + 2);
+            }
+        }
+
+        public DecompilingFinallyHandlers()
+        {
+            this.object();
+            return;
+
+        }
+    }
 }

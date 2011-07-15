@@ -59,7 +59,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     protected static BasicBlock GetBasicBlockStartingAt(BasicBlock bb, uint offset) {
       while (bb.StartOffset < offset && bb.Statements.Count > 0) {
         BasicBlock bbb = bb.Statements[bb.Statements.Count-1] as BasicBlock;
-        if (bbb == null) break;
+        if (bbb == null) return new BasicBlock(offset);
         if (bbb.StartOffset == offset) {
           bb.Statements.RemoveAt(bb.Statements.Count-1);
           return bbb;
@@ -179,7 +179,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   internal class IfThenElseDecompiler : ControlFlowDecompiler {
 
     internal IfThenElseDecompiler(IPlatformType platformType, Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors)
-      : base(platformType, predecessors) {
+      : base(platformType, predecessors){
     }
 
     protected override void Traverse(BasicBlock b) {
@@ -418,7 +418,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   internal class WhileLoopDecompiler : ControlFlowDecompiler {
 
     internal WhileLoopDecompiler(IPlatformType platformType, Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors)
-      : base(platformType, predecessors) {
+      : base(platformType, predecessors){
     }
 
     SetOfObjects gotosAlreadyTraversed = new SetOfObjects();
@@ -456,7 +456,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         int i = 0;
         while (b.Statements[i] != this.loopHeader) i++;
         var loopBody = this.ExtractBasicBlockUpto(b, i+1, this.ifContainingBackwardsBranch);
-        b.Statements[i] = new WhileDoStatement() { Body = loopBody, Condition = this.ifContainingBackwardsBranch.Condition };
+        b.Statements[i] = new WhileDoStatement() { Body = loopBody, Condition = this.ifContainingBackwardsBranch.Condition};
         RemoveStatement(b, this.ifContainingBackwardsBranch);
         new WhileLoopDecompiler(this.platformType, this.predecessors).Traverse(loopBody);
       }
@@ -499,7 +499,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   internal class ForLoopDecompiler : ControlFlowDecompiler {
 
     internal ForLoopDecompiler(IPlatformType platformType, Dictionary<ILabeledStatement, List<IGotoStatement>> predecessors)
-      : base(platformType, predecessors) {
+      : base(platformType, predecessors){
     }
 
     protected override void Traverse(BasicBlock b) {
@@ -547,7 +547,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       while (block != null) {
         var i = block.Statements.Count-1;
         if (i < 0) return false;
-        if (block.Statements[i] == statement) {
+        if ( block.Statements[i] == statement) {
           block.Statements.RemoveAt(i);
           return true;
         }
