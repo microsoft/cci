@@ -46,7 +46,7 @@ namespace Microsoft.Cci {
       this.sizeOfImportAddressTable = this.emitRuntimeStartupStub ? (!this.module.Requires64bits ? 8u : 16u) : 0;
     }
 
-    HashtableForUintValues<AssemblyIdentity> assemblyRefIndex = new HashtableForUintValues<AssemblyIdentity>();
+    Dictionary<AssemblyIdentity, uint> assemblyRefIndex = new Dictionary<AssemblyIdentity, uint>();
     List<IAssemblyReference> assemblyRefList = new List<IAssemblyReference>();
     Dictionary<byte[], uint> blobIndex = new Dictionary<byte[], uint>(new ByteArrayComparer());
     BinaryWriter blobWriter = new BinaryWriter(new MemoryStream(1024), true);
@@ -1148,7 +1148,7 @@ namespace Microsoft.Cci {
         return (this.GetMemberRefIndex(methodReference) << 1)|1;
     }
 
-    private static ushort GetMethodFlags(IMethodDefinition methodDef) {
+    public static ushort GetMethodFlags(IMethodDefinition methodDef) {
       ushort result = GetTypeMemberVisibilityFlags(methodDef);
       if (methodDef.IsStatic) result |= 0x0010;
       if (methodDef.IsSealed) result |= 0x0020;
@@ -1165,7 +1165,7 @@ namespace Microsoft.Cci {
       return result;
     }
 
-    private static ushort GetMethodImplementationFlags(IMethodDefinition methodDef) {
+    public static ushort GetMethodImplementationFlags(IMethodDefinition methodDef) {
       ushort result = 0;
       if (methodDef.IsNativeCode) result |= 0x0001;
       else if (methodDef.IsRuntimeImplemented) result |= 0x0003;
