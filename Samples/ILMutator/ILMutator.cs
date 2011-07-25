@@ -105,10 +105,14 @@ namespace ILMutator {
     Stack<ILocalScope> scopeStack = new Stack<ILocalScope>();
 
     public override IMethodBody Rewrite(IMethodBody methodBody) {
-      base.Rewrite(methodBody);
-      var newBody = new ILGeneratorMethodBody(this.currentGenerator, methodBody.LocalsAreZeroed, (ushort)(methodBody.MaxStack+1),
-        methodBody.MethodDefinition, this.currentLocals, Enumerable<ITypeDefinition>.Empty);
-      return newBody;
+      try {
+        base.Rewrite(methodBody);
+        var newBody = new ILGeneratorMethodBody(this.currentGenerator, methodBody.LocalsAreZeroed, (ushort)(methodBody.MaxStack + 1),
+          methodBody.MethodDefinition, this.currentLocals ?? new List<ILocalDefinition>(), Enumerable<ITypeDefinition>.Empty);
+        return newBody;
+      } finally {
+        this.currentLocals = null;
+      }
     }
 
     public override void RewriteChildren(MethodBody methodBody) {
@@ -119,10 +123,7 @@ namespace ILMutator {
       } catch (ILMutatorException) {
         Console.WriteLine("Internal error during IL mutation for the method '{0}'.",
           MemberHelper.GetMemberSignature(methodBody.MethodDefinition, NameFormattingOptions.SmartTypeName));
-      } finally {
-        this.currentLocals = null;
       }
-
     }
 
     private void ProcessOperations(MethodBody methodBody) {
