@@ -29,10 +29,10 @@ namespace CciSharp.Framework
             string attributeName,
             out ICustomAttribute attribute)
         {
-            Contract.Requires(attributes != null);
             Contract.Requires(!String.IsNullOrEmpty(attributeName));
             Contract.Ensures(!Contract.Result<bool>() || Contract.ValueAtReturn(out attribute) != null);
 
+            if (attributes == null) { attribute = null; return false; }
             foreach (var a in attributes)
             {
                 if (AttributeMatchesByName(a, attributeName))

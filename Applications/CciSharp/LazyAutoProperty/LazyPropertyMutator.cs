@@ -32,7 +32,7 @@ namespace CciSharp.Mutators
             this.nonSerializedAttribute = types.SystemNonSerializedAttribute;
         }
 
-        class NetTypes : PlatformType
+        class NetTypes : Microsoft.Cci.Immutable.PlatformType
         {
             public NetTypes(IMetadataHost host)
                 : base(host) { }
@@ -95,7 +95,7 @@ namespace CciSharp.Mutators
                 }
                 if (getter == null)
                 {
-                    this.Owner.Error(propertyDefinition, "must have a getter to be lazy");
+                    //this.Owner.Error(propertyDefinition, "must have a getter to be lazy");
                     return propertyDefinition;
                 }
                 if (getter.IsStatic)
@@ -116,7 +116,7 @@ namespace CciSharp.Mutators
 
                 // ok we're good,
                 // 1# add a field for the result and to check if the value was set
-                var declaringType = (TypeDefinition)propertyDefinition.ContainingTypeDefinition;
+                var declaringType = (NamedTypeDefinition)propertyDefinition.ContainingTypeDefinition;
                 FieldDefinition resultFieldDefinition;
                 FieldDefinition resultInitializedFieldDefinition;
                 this.DefineFields(declaringType, propertyDefinition, out resultFieldDefinition, out resultInitializedFieldDefinition);
@@ -134,7 +134,7 @@ namespace CciSharp.Mutators
             }
 
             private void DefineUncachedGetter(
-                TypeDefinition declaringType,
+                NamedTypeDefinition declaringType,
                 PropertyDefinition propertyDefinition, 
                 MethodDefinition getter, 
                 FieldDefinition resultFieldDefinition, 
@@ -250,7 +250,7 @@ namespace CciSharp.Mutators
             }
 
             private void DefineFields(
-                TypeDefinition declaringType,
+                NamedTypeDefinition declaringType,
                 PropertyDefinition propertyDefinition, 
                 out FieldDefinition resultFieldDefinition, 
                 out FieldDefinition resultInitializedFieldDefinition)

@@ -97,7 +97,7 @@ namespace CciSharp.Framework
     }
 
     [ContractClassFor(typeof(ICcsHost))]
-    class ICcsHostContract : ICcsHost
+    abstract class ICcsHostContract : ICcsHost
     {
         #region ICcsHost Members
         bool ICcsHost.TryGetPdbReader(IAssembly assembly, out PdbReader reader)

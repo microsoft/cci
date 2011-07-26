@@ -88,7 +88,7 @@ namespace CciSharp.Test
         [Fact]
         public void Simple()
         {
-            Assert.True(1 != null);
+            Assert.True(1 != 2);
         }
 
         [Fact]
@@ -96,7 +96,7 @@ namespace CciSharp.Test
         {
             try
             {
-                Assert.True(1 == null);
+                Assert.True(1 == 0);
                 throw new Exception();
             }
             catch (Exception ex)

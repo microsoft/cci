@@ -98,7 +98,7 @@ namespace CciSharp.Mutators
                 return false;
             }
 
-            private bool TryGetEvent(TypeDefinition typeDefinition, out IEventDefinition @event, out IFieldReference field)
+            private bool TryGetEvent(NamedTypeDefinition typeDefinition, out IEventDefinition @event, out IFieldReference field)
             {
                 Contract.Requires(typeDefinition != null);
 
@@ -128,13 +128,11 @@ namespace CciSharp.Mutators
         }
 
         class TestType
-            : PlatformType
+            : Microsoft.Cci.Immutable.PlatformType
         {
-            readonly IMetadataHost host;
             public TestType(IMetadataHost host)
                 : base(host)
             {
-                this.host = host;
             }
 
             IAssemblyReference _systemAssemblyRef;
@@ -153,7 +151,7 @@ namespace CciSharp.Mutators
                         if (location != null)
                             location = Path.Combine(Path.GetDirectoryName(location), "System.dll");
                         var version = core.Version;
-                        this._systemAssemblyRef = new Microsoft.Cci.AssemblyReference(this.host, new AssemblyIdentity(name, core.Culture, version, core.PublicKeyToken, location));
+                        this._systemAssemblyRef = new Microsoft.Cci.Immutable.AssemblyReference(this.host, new AssemblyIdentity(name, core.Culture, version, core.PublicKeyToken, location));
                     }
                     return this._systemAssemblyRef;
                 }

@@ -62,7 +62,7 @@ namespace CciSharp
                 pdbReader = null;
             
             var decompiled = Decompiler.GetCodeModelFromMetadataModel(this, assembly, pdbReader);
-            return CodeCopier.DeepCopy(this, decompiled, pdbReader);
+            return CodeCopier.DeepCopy(this, decompiled);
         }
            
         public bool TryGetPdbReader(IAssembly assembly, out PdbReader reader)
@@ -108,7 +108,7 @@ namespace CciSharp
 
         public void Event(CcsEventLevel level, string format, params object[] args)
         {
-            Contract.Requires(!String.IsNullOrEmpty(format));
+            //Contract.Requires(!String.IsNullOrEmpty(format));
             this.Event(level, String.Format(format, args));
         }
 
@@ -120,8 +120,8 @@ namespace CciSharp
 
         public void Event(CcsEventLevel level, IPrimarySourceLocation location, string format, params object[] args)
         {
-            Contract.Requires(location != null);
-            Contract.Requires(!String.IsNullOrEmpty(format));
+            //Contract.Requires(location != null);
+            //Contract.Requires(!String.IsNullOrEmpty(format));
 
             this.Event(level, location, String.Format(format, args));
         }

@@ -67,7 +67,7 @@ namespace CciSharp.Mutators
                 var newContract = new MethodContract
                 {
                     Postconditions = new List<IPostcondition> {
-                        new PostCondition {
+                        new Postcondition {
                           // !=
                           Condition = new NotEquality {
                             // result

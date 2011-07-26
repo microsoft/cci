@@ -40,13 +40,13 @@ namespace CciSharp.Mutators
             return mutator.MutationCount > 0;
         }
 
-        class NetTypes : PlatformType
+        class NetTypes : Microsoft.Cci.Immutable.PlatformType
         {
             public readonly INamespaceTypeReference DefaultAttribute;
             public NetTypes(IMetadataHost host)
                 : base(host)
             {
-                var systemAssembly = new Microsoft.Cci.AssemblyReference(host, new AssemblyIdentity(
+                var systemAssembly = new Microsoft.Cci.Immutable.AssemblyReference(host, new AssemblyIdentity(
                     host.NameTable.System,
                     this.CoreAssemblyRef.Culture,
                     this.CoreAssemblyRef.Version,
@@ -92,7 +92,7 @@ namespace CciSharp.Mutators
                 return base.Mutate(nestedTypeDefinition);
             }
 
-            private void AddCodeToSetDefaultValues(TypeDefinition typeDefinition)
+            private void AddCodeToSetDefaultValues(NamedTypeDefinition typeDefinition)
             {
                 // find the properties that need a default value
                 var properties = new List<KeyValuePair<IPropertyDefinition, IMetadataConstant>>();

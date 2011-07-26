@@ -34,7 +34,7 @@ namespace CciSharp.Mutators
             this.weakReferenceType = types.SystemWeakReference;
         }
 
-        class NetTypes : PlatformType
+        class NetTypes : Microsoft.Cci.Immutable.PlatformType
         {
             public NetTypes(IMetadataHost host)
                 : base(host) { }
@@ -133,7 +133,7 @@ namespace CciSharp.Mutators
 
                 // ok we're good,
                 // 1# add a field for the result and to check if the value was set
-                var declaringType = (TypeDefinition)propertyDefinition.ContainingTypeDefinition;
+                var declaringType = (NamedTypeDefinition)propertyDefinition.ContainingTypeDefinition;
 
                 var resultFieldDefinition =
                     this.DefineField(declaringType, propertyDefinition);
@@ -150,7 +150,7 @@ namespace CciSharp.Mutators
             }
 
             private void DefineUncachedGetter(
-                TypeDefinition declaringType,
+                NamedTypeDefinition declaringType,
                 PropertyDefinition propertyDefinition, 
                 MethodDefinition getter, 
                 FieldDefinition resultFieldDefinition)
@@ -301,7 +301,7 @@ namespace CciSharp.Mutators
             }
 
             private FieldDefinition DefineField(
-                TypeDefinition declaringType,
+                NamedTypeDefinition declaringType,
                 PropertyDefinition propertyDefinition)
             {
                 Contract.Requires(declaringType != null);

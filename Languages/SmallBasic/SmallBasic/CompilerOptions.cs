@@ -42,7 +42,7 @@ namespace Microsoft.Cci.SmallBasic {
     public bool CompileAndExecute;
     public object/*?*/ UserLocaleId; //must be an int if not null
     public string/*?*/ StandardLibraryLocation;
-    public PlatformType/*?*/ TargetPlatform; //TODO: rename this to TargetRuntime
+    public IPlatformType/*?*/ TargetPlatform; //TODO: rename this to TargetRuntime
     //public ProcessorType TargetProcessor;
     public string/*?*/ TargetPlatformLocation;
     public string/*?*/ AssemblyKeyFile;

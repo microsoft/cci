@@ -42,7 +42,7 @@ namespace CciSharp.Mutators {
       readonly Stack<bool> notNullsContext = new Stack<bool>();
       readonly INamespaceTypeReference booleanType;
       readonly INamespaceTypeReference voidType;
-      readonly IMethodReference contractRequiresMethod;
+      //readonly IMethodReference contractRequiresMethod;
 
       public Mutator(
           NotNullMutator owner,
@@ -112,37 +112,39 @@ namespace CciSharp.Mutators {
         bool isOverride = methodDefinition.IsVirtual &&
           MemberHelper.GetImplicitlyOverriddenBaseClassMethod(methodDefinition) != Dummy.Method;
 
-        foreach (var parameter in methodDefinition.Parameters) {
-          if (CcsHelper.TryGetAttributeByName(parameter.Attributes, "MaybeNullAttribute", out attribute))
-            continue;
-          var type = parameter.Type;
-          hasAttribute = CcsHelper.TryGetAttributeByName(parameter.Attributes, "NotNullAttribute", out attribute);
-          // validate
-          if (hasAttribute) {
-            if (type.IsValueType) {
-              this.Host.Event(CcsEventLevel.Error, "[NotNull] may only be applied to reference types");
+        if (methodDefinition.ParameterCount > 0) {
+          foreach (var parameter in methodDefinition.Parameters) {
+            if (CcsHelper.TryGetAttributeByName(parameter.Attributes, "MaybeNullAttribute", out attribute))
               continue;
+            var type = parameter.Type;
+            hasAttribute = CcsHelper.TryGetAttributeByName(parameter.Attributes, "NotNullAttribute", out attribute);
+            // validate
+            if (hasAttribute) {
+              if (type.IsValueType) {
+                this.Host.Event(CcsEventLevel.Error, "[NotNull] may only be applied to reference types");
+                continue;
+              }
+              if (isOverride) {
+                this.Host.Event(CcsEventLevel.Error, "[NotNull] may not be applied on parameters in method overrides");
+                continue;
+              }
             }
-            if (isOverride) {
-              this.Host.Event(CcsEventLevel.Error, "[NotNull] may not be applied on parameters in method overrides");
-              continue;
+            if (hasAttribute || this.notNullsContext.Peek()) {
+              // skip
+              if (type.IsValueType)
+                continue;
+              preconditions.Add(
+                new Precondition {
+                  Condition = new NotEquality {
+                    LeftOperand = new BoundExpression { Definition = parameter },
+                    RightOperand = new CompileTimeConstant { Value = null, Type = parameter.Type },
+                    Type = this.booleanType,
+                  },
+                  // description
+                  OriginalSource = parameter.Name.Value + " != null",
+                });
+              this.MutationCount++;
             }
-          }
-          if (hasAttribute || this.notNullsContext.Peek()) {
-            // skip
-            if (type.IsValueType)
-              continue;
-            preconditions.Add(
-              new Precondition {
-                Condition = new NotEquality {
-                  LeftOperand = new BoundExpression { Definition = parameter },
-                  RightOperand = new CompileTimeConstant { Value = null, Type = parameter.Type },
-                  Type = this.booleanType,
-                },
-                // description
-                OriginalSource = parameter.Name.Value + " != null",
-              });
-            this.MutationCount++;
           }
         }
         
@@ -157,7 +159,7 @@ namespace CciSharp.Mutators {
             if (hasAttribute || this.notNullsContext.Peek()) {
               if (!returnType.IsValueType) {
                 postconditions.Add(
-                  new PostCondition {
+                  new Postcondition {
                     Condition = new NotEquality {
                       LeftOperand = new ReturnValue { Type = returnType, },
                       RightOperand = new CompileTimeConstant { Value = null, Type = returnType },
@@ -193,6 +195,7 @@ namespace CciSharp.Mutators {
       }
 
       public override List<ICustomAttribute> Mutate(List<ICustomAttribute> customAttributes) {
+        if (customAttributes == null) return null;
         customAttributes.RemoveAll(a => 
           CcsHelper.AttributeMatchesByName(a, "NotNullAttribute")
           ||

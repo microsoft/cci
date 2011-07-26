@@ -232,7 +232,7 @@ namespace CciSharp.Mutators
               this.DeleteMethods(nestedTypeDefinition);
               return base.Mutate(nestedTypeDefinition);
             }
-            protected void DeleteMethods(TypeDefinition typeDefinition)
+            protected void DeleteMethods(NamedTypeDefinition typeDefinition)
             {
                 var methods = new List<IMethodDefinition>();
                 foreach (var method in typeDefinition.Methods)

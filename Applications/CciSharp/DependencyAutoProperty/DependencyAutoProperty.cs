@@ -19,7 +19,7 @@ namespace CciSharp.Mutators
             :base(host, "Dependency Auto Property", 20, typeof(DependencyAutoPropertyResources))
         {}
 
-        class WindowsBaseTypes : PlatformType
+        class WindowsBaseTypes : Microsoft.Cci.Immutable.PlatformType
         {
             public readonly ITypeReference DependencyObjectType;
             public readonly ITypeReference DependencyPropertyType;
@@ -38,7 +38,7 @@ namespace CciSharp.Mutators
                     this.CreateReference(windowsBaseAssembly, "System", "Windows", "PropertyMetadata");
                 this.ValidateValueCallbackType =
                     this.CreateReference(windowsBaseAssembly, "System", "Windows", "ValidateValueCallback");
-                var systemAssembly = new Microsoft.Cci.AssemblyReference(host, new AssemblyIdentity(
+                var systemAssembly = new Microsoft.Cci.Immutable.AssemblyReference(host, new AssemblyIdentity(
                     host.NameTable.System,
                     this.CoreAssemblyRef.Culture,
                     this.CoreAssemblyRef.Version,
@@ -259,7 +259,7 @@ namespace CciSharp.Mutators
                 }
 
                 // we're good, we can start implement the property
-                var declaringType = (TypeDefinition)propertyDefinition.ContainingTypeDefinition;
+                var declaringType = (NamedTypeDefinition)propertyDefinition.ContainingTypeDefinition;
                 if (!TypeHelper.Type1DerivesFromType2(declaringType, this.dependencyObjectType))
                 {
                     this.Owner.Error(propertyDefinition, "must be declared in a type inheriting from System.Windows.DependencyObject");
@@ -293,7 +293,7 @@ namespace CciSharp.Mutators
                 return propertyDefinition;
             }
 
-            private void ReplaceGetter(TypeDefinition declaringType, MethodDefinition getter, FieldDefinition propertyField)
+            private void ReplaceGetter(NamedTypeDefinition declaringType, MethodDefinition getter, FieldDefinition propertyField)
             {
                 Contract.Requires(declaringType != null);
                 Contract.Requires(getter != null);
@@ -333,7 +333,7 @@ namespace CciSharp.Mutators
                     });
             }
 
-            private void ReplaceSetter(TypeDefinition declaringType, MethodDefinition setter, FieldDefinition propertyField)
+            private void ReplaceSetter(NamedTypeDefinition declaringType, MethodDefinition setter, FieldDefinition propertyField)
             {
                 Contract.Requires(declaringType != null);
                 Contract.Requires(setter != null);
@@ -365,7 +365,7 @@ namespace CciSharp.Mutators
             }
 
             private bool TryRegisterProperty(
-                TypeDefinition declaringType,
+                NamedTypeDefinition declaringType,
                 PropertyDefinition propertyDefinition, 
                 FieldDefinition propertyField,
                 ICustomAttribute attribute)
@@ -437,7 +437,7 @@ namespace CciSharp.Mutators
             }
 
             private bool TryCreateValidationMethod(
-                TypeDefinition declaringType, 
+                NamedTypeDefinition declaringType, 
                 PropertyDefinition propertyDefinition,
                 out IMethodReference validateCallback)
             {
@@ -504,7 +504,7 @@ namespace CciSharp.Mutators
             }
 
             private bool TryGetValidationMethod(
-                TypeDefinition declaringType, 
+                NamedTypeDefinition declaringType, 
                 PropertyDefinition propertyDefinition, 
                 out MethodDefinition validationMethod)
             {
@@ -592,7 +592,7 @@ namespace CciSharp.Mutators
                 return true;
             }
 
-            private BlockStatement GetOrCreateStaticCtorBody(TypeDefinition typeDefinition)
+            private BlockStatement GetOrCreateStaticCtorBody(NamedTypeDefinition typeDefinition)
             {
                 if (this._cctorBody == null)
                 {
@@ -612,7 +612,7 @@ namespace CciSharp.Mutators
                 return this._cctorBody;
             }
 
-            private MethodDefinition GetOrCreateStaticCtor(TypeDefinition typeDefinition)
+            private MethodDefinition GetOrCreateStaticCtor(NamedTypeDefinition typeDefinition)
             {
                 Contract.Requires(typeDefinition != null);
 

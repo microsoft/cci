@@ -72,7 +72,7 @@ namespace CciSharp.Mutators
                         host.PlatformType.SystemString,
                         this.Host.NameTable.GetNameFor("Format"), 0,
                         this.Host.PlatformType.SystemString,
-                        Vector.GetVector(this.Host.PlatformType.SystemObject, this.Host.InternFactory)
+                        Microsoft.Cci.Immutable.Vector.GetVector(this.Host.PlatformType.SystemObject, this.Host.InternFactory)
                         );
             }
 
@@ -294,14 +294,12 @@ namespace CciSharp.Mutators
         }
 
         // TODO: why do I need a platform type here?
-        class TestType : PlatformType
+        class TestType : Microsoft.Cci.Immutable.PlatformType
         {
             public readonly Dictionary<uint, AssertMethods> Methods;
-            readonly IMetadataHost host;
             public TestType(IMetadataHost host)
                 : base(host)
             {
-                this.host = host;
                 this.Methods = new Dictionary<uint, AssertMethods>();
             }
 
@@ -358,7 +356,8 @@ namespace CciSharp.Mutators
                     new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, name, 0, booleanType, stringType);
                 var stringFormatMethod =
                     hasFormatOverload
-                    ? new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, name, 0, booleanType, stringType, Vector.GetVector(objectType, host.InternFactory))
+                    ? new Microsoft.Cci.MethodReference(host, assertType, CallingConvention.Default, host.PlatformType.SystemVoid, name, 0, booleanType, stringType,
+                      Microsoft.Cci.Immutable.Vector.GetVector(objectType, host.InternFactory))
                     : null;
 
                 this.Methods.Add(
