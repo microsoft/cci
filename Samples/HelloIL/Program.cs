@@ -42,7 +42,7 @@ namespace HelloCodeModel {
         };
         rootUnitNamespace.Members.Add(testClass);
         assembly.AllTypes.Add(testClass);
-        testClass.BaseClasses.Add(host.PlatformType.SystemObject);
+        testClass.BaseClasses = new List<ITypeReference>() { host.PlatformType.SystemObject };
 
         var mainMethod = new MethodDefinition() {
           ContainingTypeDefinition = testClass,
