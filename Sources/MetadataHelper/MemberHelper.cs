@@ -203,6 +203,7 @@ namespace Microsoft.Cci {
       Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IMethodDefinition>>(), x => x != null));
 
       if (!implementingMethod.IsVirtual) yield break;
+      if (implementingMethod.Visibility != TypeMemberVisibility.Public) yield break;
       if (implementingMethod.ContainingTypeDefinition.IsInterface) yield break;
       List<uint> explicitImplementations = null;
       foreach (IMethodImplementation methodImplementation in implementingMethod.ContainingTypeDefinition.ExplicitImplementationOverrides) {

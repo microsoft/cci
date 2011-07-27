@@ -299,7 +299,7 @@ namespace Microsoft.Cci {
         } else {
           unit = this.LoadUnitFrom(assemblyIdentity.Location);
           result = unit as IAssembly;
-          if (result != null && this.UnifyAssembly(result.AssemblyIdentity).Equals(assemblyIdentity))
+          if (result != null && this.UnifyAssembly(result).Equals(assemblyIdentity))
             lock (GlobalLock.LockingObject) {
               this.unitCache[assemblyIdentity] = result;
             }
@@ -599,7 +599,7 @@ namespace Microsoft.Cci {
     readonly Dictionary<UnitIdentity, IUnit> unitCache = new Dictionary<UnitIdentity, IUnit>();
 
     /// <summary>
-    /// Default implementation of UnifyAssembly. Override this method to change the behaviour.
+    /// Default implementation of UnifyAssembly. Override this method to change the behavior.
     /// </summary>
     public virtual AssemblyIdentity UnifyAssembly(AssemblyIdentity assemblyIdentity) {
       if (assemblyIdentity.Name.UniqueKeyIgnoringCase == this.CoreAssemblySymbolicIdentity.Name.UniqueKeyIgnoringCase &&
@@ -609,6 +609,13 @@ namespace Microsoft.Cci {
       if (string.Equals(assemblyIdentity.Name.Value, "mscorlib", StringComparison.OrdinalIgnoreCase) && assemblyIdentity.Version == new Version(255, 255, 255, 255))
         return this.CoreAssemblySymbolicIdentity;
       return assemblyIdentity;
+    }
+
+    /// <summary>
+    /// Default implementation of UnifyAssembly. Override this method to change the behavior.
+    /// </summary>
+    public virtual AssemblyIdentity UnifyAssembly(IAssemblyReference assemblyReference) {
+      return this.UnifyAssembly(assemblyReference.AssemblyIdentity);
     }
 
     /// <summary>
@@ -1979,6 +1986,15 @@ namespace Microsoft.Cci {
     }
     IName/*?*/ allowMultiple;
 
+    IName INameTable.BeginInvoke {
+      get {
+        if (this.beginInvoke == null)
+          this.beginInvoke = this.GetNameFor("BeginInvoke");
+        return this.beginInvoke;
+      }
+    }
+    IName/*?*/ beginInvoke;
+
     IName INameTable.BoolOpBool {
       get {
         if (this.boolOpBool == null)
@@ -2005,6 +2021,15 @@ namespace Microsoft.Cci {
       }
     }
     IName/*?*/ delegateOpAddition;
+
+    IName INameTable.EndInvoke {
+      get {
+        if (this.endInvoke == null)
+          this.endInvoke = this.GetNameFor("EndInvoke");
+        return this.endInvoke;
+      }
+    }
+    IName/*?*/ endInvoke;
 
     IName INameTable.EnumOpEnum {
       get {

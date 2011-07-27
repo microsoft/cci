@@ -946,6 +946,11 @@ namespace Microsoft.Cci {
     IName AllowMultiple { get; }
 
     /// <summary>
+    /// "BeginInvoke"
+    /// </summary>
+    IName BeginInvoke { get; }
+
+    /// <summary>
     /// "bool op bool"
     /// </summary>
     IName BoolOpBool { get; }
@@ -969,6 +974,11 @@ namespace Microsoft.Cci {
     /// "delegate op delegate"
     /// </summary>
     IName DelegateOpDelegate { get; }
+
+    /// <summary>
+    /// "EndInvoke"
+    /// </summary>
+    IName EndInvoke { get; }
 
     /// <summary>
     /// "enum op enum"
@@ -1593,6 +1603,13 @@ namespace Microsoft.Cci {
       }
     }
 
+    public IName BeginInvoke {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
     public IName BoolOpBool {
       get {
         Contract.Ensures(Contract.Result<IName>() != null);
@@ -1622,6 +1639,13 @@ namespace Microsoft.Cci {
     }
 
     public IName DelegateOpDelegate {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName EndInvoke {
       get {
         Contract.Ensures(Contract.Result<IName>() != null);
         throw new NotImplementedException();

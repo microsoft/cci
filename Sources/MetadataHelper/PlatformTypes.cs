@@ -195,7 +195,7 @@ namespace Microsoft.Cci.Immutable {
     /// Returns the identity of the assembly reference to which this assembly reference has been unified.
     /// </summary>
     public AssemblyIdentity UnifiedAssemblyIdentity {
-      get { return this.host.UnifyAssembly(this.AssemblyIdentity); }
+      get { return this.host.UnifyAssembly(this); }
     }
 
     /// <summary>
@@ -1069,6 +1069,19 @@ namespace Microsoft.Cci.Immutable {
     INamespaceTypeReference/*?*/ systemCollectionsIStructuralEquatable;
 
     /// <summary>
+    /// System.ContextStaticAttribute
+    /// </summary>
+    public INamespaceTypeReference SystemContextStaticAttribute {
+      get {
+        if (this.systemContextStaticAttribute == null) {
+          this.systemContextStaticAttribute = this.CreateReference(this.CoreAssemblyRef, "System", "ContextStaticAttribute");
+        }
+        return this.systemContextStaticAttribute;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemContextStaticAttribute;
+
+    /// <summary>
     /// System.DateTime
     /// </summary>
     public INamespaceTypeReference SystemDateTime {
@@ -1080,6 +1093,19 @@ namespace Microsoft.Cci.Immutable {
       }
     }
     INamespaceTypeReference/*?*/ systemDateTime;
+
+    /// <summary>
+    /// System.DateTimeOffset
+    /// </summary>
+    public INamespaceTypeReference SystemDateTimeOffset {
+      get {
+        if (this.systemDateTimeOffset == null) {
+          this.systemDateTimeOffset = this.CreateReference(this.CoreAssemblyRef, true, "System", "DateTimeOffset");
+        }
+        return this.systemDateTimeOffset;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemDateTimeOffset;
 
     /// <summary>
     /// System.Decimal
@@ -1134,6 +1160,19 @@ namespace Microsoft.Cci.Immutable {
     INamespaceTypeReference/*?*/ systemEnum;
 
     /// <summary>
+    /// System.Exception
+    /// </summary>
+    public INamespaceTypeReference SystemException {
+      get {
+        if (this.systemException == null) {
+          this.systemException = this.CreateReference(this.CoreAssemblyRef, "System", "Exception");
+        }
+        return this.systemException;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemException;
+
+    /// <summary>
     /// System.Float32
     /// </summary>
     public INamespaceTypeReference SystemFloat32 {
@@ -1158,6 +1197,19 @@ namespace Microsoft.Cci.Immutable {
       }
     }
     INamespaceTypeReference/*?*/ systemFloat64;
+
+    /// <summary>
+    /// System.Globalization.CultureInfo
+    /// </summary>
+    public INamespaceTypeReference SystemGlobalizationCultureInfo {
+      get {
+        if (this.systemGlobalizationCultureInfo == null) {
+          this.systemGlobalizationCultureInfo = this.CreateReference(this.CoreAssemblyRef, "System", "Globalization", "CultureInfo");
+        }
+        return this.systemGlobalizationCultureInfo;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemGlobalizationCultureInfo;
 
     /// <summary>
     /// System.IAsyncResult
@@ -1521,6 +1573,19 @@ namespace Microsoft.Cci.Immutable {
       }
     }
     INamespaceTypeReference/*?*/ systemString;
+
+    /// <summary>
+    /// System.ThreadStaticAttribute
+    /// </summary>
+    public INamespaceTypeReference SystemThreadStaticAttribute {
+      get {
+        if (this.systemThreadStaticAttribute == null) {
+          this.systemThreadStaticAttribute = this.CreateReference(this.CoreAssemblyRef, "System", "ThreadStaticAttribute");
+        }
+        return this.systemThreadStaticAttribute;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemThreadStaticAttribute;
 
     /// <summary>
     /// System.Type

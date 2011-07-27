@@ -874,7 +874,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     internal AssemblyIdentity UnifiedAssemblyIdentity {
       get {
         if (this.unifiedAssemblyIdentity == null)
-          this.unifiedAssemblyIdentity = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.UnifyAssembly(this.AssemblyIdentity);
+          this.unifiedAssemblyIdentity = this.PEFileToObjectModel.ModuleReader.metadataReaderHost.UnifyAssembly(this);
         return this.unifiedAssemblyIdentity;
       }
     }

@@ -279,6 +279,19 @@ namespace Microsoft.Cci {
     AssemblyIdentity UnifyAssembly(AssemblyIdentity assemblyIdentity);
 
     /// <summary>
+    /// Returns an assembly identifier of an assembly that is the same, or a later (compatible) version of the given referenced assembly.
+    /// </summary>
+    /// <param name="assemblyReference">A reference to the assembly that needs to be unified.</param>
+    /// <returns>The identity of the unified assembly.</returns>
+    /// <remarks>If an assembly A references assembly B as well as version 2 of assembly C, and assembly B references version 1 of assembly C then any
+    /// reference to type C.T that is obtained from assembly A will resolve to a different type definition from a reference to type C.T that is obtained
+    /// from assembly B, unless the host declares that any reference to version 1 of assembly should be treated as if it were a reference to 
+    /// version 2 of assembly C. This call is how the host gets to make this declaration.
+    /// </remarks>
+    [Pure]
+    AssemblyIdentity UnifyAssembly(IAssemblyReference assemblyReference);
+
+    /// <summary>
     /// True if IL locations should be preserved up into the code model by decompilers using this host.
     /// </summary>
     bool PreserveILLocations { get; }
@@ -415,6 +428,12 @@ namespace Microsoft.Cci {
 
     public AssemblyIdentity UnifyAssembly(AssemblyIdentity assemblyIdentity) {
       Contract.Requires(assemblyIdentity != null);
+      Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
+      throw new NotImplementedException();
+    }
+
+    public AssemblyIdentity UnifyAssembly(IAssemblyReference assemblyReference) {
+      Contract.Requires(assemblyReference != null);
       Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
       throw new NotImplementedException();
     }

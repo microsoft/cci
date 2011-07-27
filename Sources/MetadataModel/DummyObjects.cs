@@ -1089,6 +1089,11 @@ namespace Microsoft.Cci {
       return assemblyIdentity;
     }
 
+    [Pure]
+    public AssemblyIdentity UnifyAssembly(IAssemblyReference assemblyReference) {
+      return assemblyReference.AssemblyIdentity;
+    }
+
     public IEnumerable<IUnit> LoadedUnits {
       get { return Enumerable<IUnit>.Empty; }
     }
@@ -3931,6 +3936,10 @@ namespace Microsoft.Cci {
       get { return Dummy.Name; }
     }
 
+    public IName BeginInvoke {
+      get { return Dummy.Name; }
+    }
+
     public IName BoolOpBool {
       get { return Dummy.Name; }
     }
@@ -3952,6 +3961,10 @@ namespace Microsoft.Cci {
     }
 
     public IName EmptyName {
+      get { return Dummy.Name; }
+    }
+
+    public IName EndInvoke {
       get { return Dummy.Name; }
     }
 
@@ -4813,6 +4826,10 @@ namespace Microsoft.Cci {
       get { return Dummy.NamespaceTypeReference; }
     }
 
+    public INamespaceTypeReference SystemContextStaticAttribute {
+      get { return Dummy.NamespaceTypeReference; }
+    }
+
     public INamespaceTypeReference SystemIAsyncResult {
       get { return Dummy.NamespaceTypeReference; }
     }
@@ -4822,6 +4839,10 @@ namespace Microsoft.Cci {
     }
 
     public INamespaceTypeReference SystemDateTime {
+      get { return Dummy.NamespaceTypeReference; }
+    }
+
+    public INamespaceTypeReference SystemDateTimeOffset {
       get { return Dummy.NamespaceTypeReference; }
     }
 
@@ -4841,11 +4862,19 @@ namespace Microsoft.Cci {
       get { return Dummy.NamespaceTypeReference; }
     }
 
+    public INamespaceTypeReference SystemException {
+      get { return Dummy.NamespaceTypeReference; }
+    }
+
     public INamespaceTypeReference SystemFloat32 {
       get { return Dummy.NamespaceTypeReference; }
     }
 
     public INamespaceTypeReference SystemFloat64 {
+      get { return Dummy.NamespaceTypeReference; }
+    }
+
+    public INamespaceTypeReference SystemGlobalizationCultureInfo {
       get { return Dummy.NamespaceTypeReference; }
     }
 
@@ -4949,6 +4978,10 @@ namespace Microsoft.Cci {
       get { return Dummy.NamespaceTypeReference; }
     }
 
+    public INamespaceTypeReference SystemThreadStaticAttribute {
+      get { return Dummy.NamespaceTypeReference; }
+    }
+
     public INamespaceTypeReference SystemType {
       get { return Dummy.NamespaceTypeReference; }
     }
@@ -4990,6 +5023,8 @@ namespace Microsoft.Cci {
     }
 
     #endregion
+
+
   }
 
   [ContractVerification(false)]

@@ -661,7 +661,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get {
         if (this.unifiedAssemblyIdentity == null) {
           this.isFrozen = true;
-          this.unifiedAssemblyIdentity = this.Host.UnifyAssembly(this.AssemblyIdentity);
+          this.unifiedAssemblyIdentity = this.Host.UnifyAssembly(this);
         }
         return this.unifiedAssemblyIdentity;
       }
