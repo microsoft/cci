@@ -19,39 +19,39 @@ namespace CodeModelTestInput
 
         public void Method2()
         {
-            byte[] local_11 = new byte[1];
-            local_11[0] = 255;
-            byte[] Bytes = local_11;
-            ushort[] local_12 = new ushort[1];
-            local_12[0] = 65535;
-            ushort[] UShorts = local_12;
-            uint[] local_13 = new uint[1];
-            local_13[0] = -1;
-            uint[] UInts = local_13;
-            ulong[] local_14 = new ulong[1];
-            local_14[0] = ((long)-1);
-            ulong[] ULongs = local_14;
-            sbyte[] local_15 = new sbyte[1];
-            local_15[0] = -128;
-            sbyte[] SBytes = local_15;
-            short[] local_16 = new short[1];
-            local_16[0] = -32768;
-            short[] Shorts = local_16;
-            int[] local_17 = new int[1];
-            local_17[0] = -2147483648;
-            int[] Ints = local_17;
-            long[] local_18 = new long[1];
-            local_18[0] = -9223372036854775808;
-            long[] Longs = local_18;
-            char[] local_19 = new char[1];
-            local_19[0] = 97;
-            char[] Chars = local_19;
-            bool[] local_20 = new bool[1];
-            local_20[0] = true;
-            bool[] Bools = local_20;
-            decimal[] local_21 = new decimal[1];
-            local_21[0] = new decimal(11, 0, 0, false, 1);
-            decimal[] Decimals = local_21;
+            byte[] CS$0$0000 = new byte[1];
+            CS$0$0000[0] = 255;
+            byte[] Bytes = CS$0$0000;
+            ushort[] CS$0$0001 = new ushort[1];
+            CS$0$0001[0] = 65535;
+            ushort[] UShorts = CS$0$0001;
+            uint[] CS$0$0002 = new uint[1];
+            CS$0$0002[0] = -1;
+            uint[] UInts = CS$0$0002;
+            ulong[] CS$0$0003 = new ulong[1];
+            CS$0$0003[0] = ((long)-1);
+            ulong[] ULongs = CS$0$0003;
+            sbyte[] CS$0$0004 = new sbyte[1];
+            CS$0$0004[0] = -128;
+            sbyte[] SBytes = CS$0$0004;
+            short[] CS$0$0005 = new short[1];
+            CS$0$0005[0] = -32768;
+            short[] Shorts = CS$0$0005;
+            int[] CS$0$0006 = new int[1];
+            CS$0$0006[0] = -2147483648;
+            int[] Ints = CS$0$0006;
+            long[] CS$0$0007 = new long[1];
+            CS$0$0007[0] = -9223372036854775808;
+            long[] Longs = CS$0$0007;
+            char[] CS$0$0008 = new char[1];
+            CS$0$0008[0] = 97;
+            char[] Chars = CS$0$0008;
+            bool[] CS$0$0009 = new bool[1];
+            CS$0$0009[0] = true;
+            bool[] Bools = CS$0$0009;
+            decimal[] CS$0$0010 = new decimal[1];
+            CS$0$0010[0] = new decimal(11, 0, 0, false, 1);
+            decimal[] Decimals = CS$0$0010;
             return;
 
         }
@@ -170,9 +170,9 @@ namespace CodeModelTestInput
 
         private static bool Method12(int x)
         {
-            bool local_0;
-            int local_1 = x;
-            switch((local_1 - 1)){
+            bool CS$1$0000;
+            int CS$4$0001 = x;
+            switch((CS$4$0001 - 1)){
                 case 0:
                     goto IL_001d;
                 case 1:
@@ -183,28 +183,28 @@ namespace CodeModelTestInput
                     goto IL_0025;
             }
         IL_001d:
-            local_0 = false;
+            CS$1$0000 = false;
             goto IL_0029;
         IL_0021:
-            local_0 = true;
+            CS$1$0000 = true;
             goto IL_0029;
         IL_0025:
-            local_0 = false;
+            CS$1$0000 = false;
         IL_0029:
-            return local_0;
+            return CS$1$0000;
 
         }
 
         private string Method13()
         {
-            string local_1;
-            int local_2;
+            string CS$1$0000;
+            int CS$4$0001;
             try
             {
                 {
                     int x;
-                    local_2 = this.c;
-                    switch(local_2){
+                    CS$4$0001 = this.c;
+                    switch(CS$4$0001){
                         case 0:
                             goto IL_0019;
                         case 1:
@@ -213,25 +213,25 @@ namespace CodeModelTestInput
                             goto IL_0034;
                     }
                 IL_0019:
-                    local_1 = "1";
+                    CS$1$0000 = "1";
                     goto IL_007c;
                 IL_0021:
                     try
                     {
-                        local_1 = "2";
+                        CS$1$0000 = "2";
                         goto IL_007c;
                     }
                     catch(object)
                     {
-                        local_1 = "3";
+                        CS$1$0000 = "3";
                         goto IL_007c;
                     }
                 IL_0034:
                     x = 0;
                     try
                     {
-                        local_2 = (x + this.c);
-                        switch(local_2){
+                        CS$4$0001 = (x + this.c);
+                        switch(CS$4$0001){
                             case 0:
                                 goto IL_0050;
                             case 1:
@@ -240,28 +240,28 @@ namespace CodeModelTestInput
                                 goto IL_0060;
                         }
                     IL_0050:
-                        local_1 = "4";
+                        CS$1$0000 = "4";
                         goto IL_007c;
                     IL_0058:
-                        local_1 = "5";
+                        CS$1$0000 = "5";
                         goto IL_007c;
                     IL_0060:
-                        local_1 = "6";
+                        CS$1$0000 = "6";
                         goto IL_007c;
                     }
                     catch(object)
                     {
-                        local_1 = "7";
+                        CS$1$0000 = "7";
                         goto IL_007c;
                     }
                 }
             }
             catch(object)
             {
-                local_1 = "8";
+                CS$1$0000 = "8";
             }
         IL_007c:
-            return local_1;
+            return CS$1$0000;
 
         }
 
@@ -319,7 +319,7 @@ namespace CodeModelTestInput
         private bool Method17(bool A, bool B, bool C, bool D)
         {
             int __temp_1;
-            bool local_0;
+            bool CS$1$0000;
             if (!(A && B))
             {
                 __temp_1 = ((int)(C && D));
@@ -328,14 +328,14 @@ namespace CodeModelTestInput
             {
                 __temp_1 = 1;
             }
-            local_0 = ((bool)__temp_1);
-            return local_0;
+            CS$1$0000 = ((bool)__temp_1);
+            return CS$1$0000;
 
         }
 
         private int Method18(int x, int y, int z)
         {
-            int local_1;
+            int CS$1$0000;
             int midVal = z;
             if ((y < z))
             {
@@ -351,8 +351,8 @@ namespace CodeModelTestInput
                     }
                 }
             }
-            local_1 = midVal;
-            return local_1;
+            CS$1$0000 = midVal;
+            return CS$1$0000;
 
         }
 
@@ -445,14 +445,14 @@ namespace CodeModelTestInput
 
         public System.Collections.Generic.IEnumerable<int> Method22()
         {
-            int local_2;
+            int CS$0$0002;
             {
                 int <flags>5__f = 1;
                 int __temp_6 = (<flags>5__f & 2);
                 int __temp_7 = __temp_6;
-                local_2 = __temp_7;
+                CS$0$0002 = __temp_7;
                 <flags>5__f = __temp_6;
-                yield return local_2;
+                yield return CS$0$0002;
 
                 yield break;
 
@@ -479,14 +479,14 @@ namespace CodeModelTestInput
 
         public int Method25(object o)
         {
-            int local_1;
+            int CS$1$0000;
             int x = 3;
             if (!(!(o is CodeModelTestInput.Class3) && !(o is CodeModelTestInput.Class1)))
             {
                 x = 27;
             }
-            local_1 = x;
-            return local_1;
+            CS$1$0000 = x;
+            return CS$1$0000;
 
         }
 
@@ -559,10 +559,10 @@ namespace CodeModelTestInput
 
             public System.Collections.Generic.IEnumerable<T> Test1c<T>(T t, System.Collections.Generic.IEnumerable<T> ts)
             {
-                T local_2;
+                T CS$0$0002;
                 push &t;
-                local_2 = default(T);
-                if (pop.Equals(((object)local_2)))
+                CS$0$0002 = default(T);
+                if (pop.Equals(((object)CS$0$0002)))
                 {
                     throw new System.ArgumentException("");
                 }
@@ -643,7 +643,7 @@ namespace CodeModelTestInput
 
             public System.Collections.Generic.IEnumerable<T> Test1h<T>(System.Collections.Generic.IEnumerable<T> input, int x, int y)
             {
-                T local_2;
+                T CS$0$0002;
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(input, (T t) => (t.Value() > x)));
                 Microsoft.Contracts.Contract.Ensures(Microsoft.Contracts.Contract.ForAll<T>(Microsoft.Contracts.Contract.Result<System.Collections.Generic.IEnumerable<T>>(), (T t) => (t.Value() > (x + y))));
                 System.Collections.Generic.IEnumerator<T> <>7__wrap31 = input.GetEnumerator();
@@ -652,8 +652,8 @@ namespace CodeModelTestInput
                     while (<>7__wrap31.MoveNext())
                     {
                         T <t>5__30 = <>7__wrap31.Current.get();
-                        local_2 = <t>5__30;
-                        yield return local_2.IncrementBy(y);
+                        CS$0$0002 = <t>5__30;
+                        yield return CS$0$0002.IncrementBy(y);
 
                     IL_0104:
                     }
@@ -775,10 +775,10 @@ namespace CodeModelTestInput
     {
         public string M()
         {
-            T local_1;
-            local_1 = default(T);
-            local_1 = local_1;
-            return local_1.ToString();
+            T CS$0$0001;
+            CS$0$0001 = default(T);
+            CS$0$0001 = CS$0$0001;
+            return CS$0$0001.ToString();
 
         }
 

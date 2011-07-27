@@ -20,7 +20,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal RemoveBranchConditionLocals(SourceMethodBody sourceMethodBody) {
       this.sourceMethodBody = sourceMethodBody;
       var ops = new List<IOperation>(sourceMethodBody.ilMethodBody.Operations);
-      foreach (var local in sourceMethodBody.ilMethodBody.LocalVariables) {
+      foreach (var local in sourceMethodBody.localVariablesAndTemporaries) {
         if (local.Type.TypeCode != PrimitiveTypeCode.Boolean) continue;
         int i = 0;
         int n = ops.Count;

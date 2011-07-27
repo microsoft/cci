@@ -492,8 +492,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       anonDel.ReturnType = closureMethod.Type;
       anonDel.Type = createDelegateInstance.Type;
 
-      if (iteratorsHaveNotBeenDecompiled && unspecializedClosureMethod.ContainingTypeDefinition.IsGeneric && 
-        unspecializedClosureMethod.ContainingTypeDefinition.GenericParameterCount == 
+      if (iteratorsHaveNotBeenDecompiled && unspecializedClosureMethod.ContainingTypeDefinition.IsGeneric &&
+        unspecializedClosureMethod.ContainingTypeDefinition.GenericParameterCount ==
         this.sourceMethodBody.MethodDefinition.ContainingTypeDefinition.GenericParameterCount) {
         var mapper = new GenericTypeParameterMapper(this.host, this.sourceMethodBody.MethodDefinition.ContainingTypeDefinition,
           unspecializedClosureMethod.ContainingTypeDefinition);
@@ -580,8 +580,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         var compileTimeConstant = greaterThan.RightOperand as ICompileTimeConstant;
         if (compileTimeConstant != null && compileTimeConstant.Value == null) {
           return this.Visit(new CheckIfInstance() {
-            Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
-            Type = greaterThan.Type, Locations = greaterThan.Locations
+            Operand = castIfPossible.ValueToCast,
+            TypeToCheck = castIfPossible.TargetType,
+            Type = greaterThan.Type,
+            Locations = greaterThan.Locations
           });
         }
       }
@@ -590,8 +592,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         var compileTimeConstant = greaterThan.LeftOperand as ICompileTimeConstant;
         if (compileTimeConstant != null && compileTimeConstant.Value == null) {
           return this.Visit(new CheckIfInstance() {
-            Operand = castIfPossible.ValueToCast, TypeToCheck = castIfPossible.TargetType,
-            Type = greaterThan.Type, Locations = greaterThan.Locations
+            Operand = castIfPossible.ValueToCast,
+            TypeToCheck = castIfPossible.TargetType,
+            Type = greaterThan.Type,
+            Locations = greaterThan.Locations
           });
         }
       }

@@ -487,6 +487,13 @@ namespace Microsoft.Cci.ILToCodeModel {
         cc.Type = platformType.SystemBoolean;
         return cc;
       }
+      var conditional = expression as Conditional;
+      if (conditional != null) {
+        conditional.ResultIfTrue = ConvertToBoolean(conditional.ResultIfTrue);
+        conditional.ResultIfFalse = ConvertToBoolean(conditional.ResultIfFalse);
+        conditional.Type = platformType.SystemBoolean;
+        return conditional;
+      }
       object/*?*/ val = null;
       ITypeReference type = platformType.SystemObject;
       ITypeReference expressionType = expression.Type;
@@ -651,14 +658,13 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override void TraverseChildren(IMethodCall methodCall) {
       base.TraverseChildren(methodCall);
       var ps = new List<IParameterTypeInformation>(methodCall.MethodToCall.Parameters);
-      int i = 0;
-      foreach (var a in methodCall.Arguments) {
-        var p = ps[i++];
-        var ctc = a as ICompileTimeConstant;
-        if (ctc == null) continue;
-        if (p.Type.TypeCode == PrimitiveTypeCode.Boolean && ctc.Type.TypeCode == PrimitiveTypeCode.Int32) {
-          ((CompileTimeConstant)ctc).Value = ((int)ctc.Value) == 0 ? false : true;
-          ((CompileTimeConstant)ctc).Type = this.host.PlatformType.SystemBoolean;
+      var args = new List<IExpression>(methodCall.Arguments);
+      for (int i = 0, n = args.Count; i < n; i++) {
+        var p = ps[i];
+        var a = args[i];
+        if (p.Type.TypeCode == PrimitiveTypeCode.Boolean && a.Type.TypeCode == PrimitiveTypeCode.Int32) {
+          args[i] = ConvertToBoolean(a);
+          ((MethodCall)methodCall).Arguments = args;
         }
       }
       ((MethodCall)methodCall).Type = methodCall.MethodToCall.Type;

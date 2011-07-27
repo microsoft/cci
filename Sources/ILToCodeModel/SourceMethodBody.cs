@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using Microsoft.Cci.MutableCodeModel;
+using Microsoft.Cci.UtilityDataStructures;
 
 namespace Microsoft.Cci.ILToCodeModel {
   /// <summary>
@@ -199,7 +200,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       foreach (ILocalScope localScope in this.pdbReader.GetLocalScopes(this.ilMethodBody)) {
         BasicBlock block = this.GetOrCreateBlock(localScope.Offset, false);
         block.LocalVariables = new List<ILocalDefinition>(this.pdbReader.GetVariablesInScope(localScope));
-        block.EndOffset = localScope.Offset+localScope.Length;
+        for (int i = 0, n = block.LocalVariables.Count; i < n; i++) {
+          block.LocalVariables[i] = this.GetLocalWithSourceName(block.LocalVariables[i]);
+        }
+        block.EndOffset = localScope.Offset + localScope.Length;
         this.GetOrCreateBlock(block.EndOffset, false);
       }
     }
@@ -224,6 +228,9 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.ParseInstruction(currentBlock);
       }
       this.TurnOperandStackIntoPushStatements(currentBlock);
+      this.localVariablesAndTemporaries = new List<ILocalDefinition>(this.ilMethodBody.LocalVariables);
+      for (int i = 0, n = this.localVariablesAndTemporaries.Count; i < n; i++)
+        this.localVariablesAndTemporaries[i] = this.GetLocalWithSourceName(this.localVariablesAndTemporaries[i]);
       return this.Transform(result);
     }
 
@@ -241,6 +248,26 @@ namespace Microsoft.Cci.ILToCodeModel {
         return createObjectInstance;
       }
       return null;
+    }
+
+    Hashtable<ILocalDefinition, LocalDefinition> localMap = new Hashtable<ILocalDefinition, LocalDefinition>();
+
+    private ILocalDefinition GetLocalWithSourceName(ILocalDefinition localDef) {
+      if (this.sourceLocationProvider == null) return localDef;
+      var mutableLocal = this.localMap[localDef];
+      if (mutableLocal != null) return mutableLocal;
+      mutableLocal = localDef as LocalDefinition;
+      if (mutableLocal == null) {
+        mutableLocal = new LocalDefinition();
+        mutableLocal.Copy(localDef, this.host.InternFactory);
+      }
+      this.localMap.Add(localDef, mutableLocal);
+      bool isCompilerGenerated;
+      var sourceName = this.sourceLocationProvider.GetSourceNameFor(localDef, out isCompilerGenerated);
+      if (sourceName != localDef.Name.Value) {
+        mutableLocal.Name = this.host.NameTable.GetNameFor(sourceName);
+      }
+      return mutableLocal;
     }
 
     /// <summary>
@@ -366,7 +393,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       if (addLabel && result.Statements.Count == 0) {
         LabeledStatement label = new LabeledStatement();
-        label.Label = this.nameTable.GetNameFor("IL_"+offset.ToString("x4"));
+        label.Label = this.nameTable.GetNameFor("IL_" + offset.ToString("x4"));
         label.Statement = new EmptyStatement();
         result.Statements.Add(label);
         this.targetStatementFor.Add(offset, label);
@@ -415,7 +442,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (currentOperation.OperationCode == OperationCode.Ldflda || currentOperation.OperationCode == OperationCode.Ldvirtftn)
         addressableExpression.Instance = this.PopOperandStack();
       if (currentOperation.OperationCode == OperationCode.Ldloca || currentOperation.OperationCode == OperationCode.Ldloca_S) {
-        var local = (ILocalDefinition)currentOperation.Value;
+        var local = this.GetLocalWithSourceName((ILocalDefinition)currentOperation.Value);
+        addressableExpression.Definition = local;
         this.numberOfReferences[local] = this.numberOfReferences.ContainsKey(local) ? this.numberOfReferences[local] + 1 : 1;
         //Treat this as an assignment as well, so that the local does not get deleted because it contains a constant and has only one assignment to it.
         this.numberOfAssignments[local] = this.numberOfAssignments.ContainsKey(local) ? this.numberOfAssignments[local] + 1 : 1;
@@ -567,9 +595,11 @@ namespace Microsoft.Cci.ILToCodeModel {
         case OperationCode.Stloc_2:
         case OperationCode.Stloc_3:
         case OperationCode.Stloc_S:
-          this.numberOfAssignments[(ILocalDefinition)assignment.Target.Definition] =
-            this.numberOfAssignments.ContainsKey((ILocalDefinition)assignment.Target.Definition) ?
-            this.numberOfAssignments[(ILocalDefinition)assignment.Target.Definition] + 1 :
+          var local = this.GetLocalWithSourceName((ILocalDefinition)target.Definition);
+          target.Definition = local;
+          this.numberOfAssignments[local] =
+            this.numberOfAssignments.ContainsKey(local) ?
+            this.numberOfAssignments[local] + 1 :
             1;
           break;
       }
@@ -718,6 +748,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       } else {
         var local = result.Definition as ILocalDefinition;
         if (local != null) {
+          result.Definition = this.GetLocalWithSourceName(local);
           result.Type = local.Type;
           if (local.IsReference) result.Type = Immutable.ManagedPointerType.GetManagedPointerType(result.Type, this.host.InternFactory);
         } else {
@@ -952,7 +983,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private Expression ParseMakeTypedReference(IOperation currentOperation) {
       MakeTypedReference result = new MakeTypedReference();
-      Expression operand  = this.PopOperandStack();
+      Expression operand = this.PopOperandStack();
       var type = (ITypeReference)currentOperation.Value;
       if (type.IsValueType)
         type = Immutable.ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory);
