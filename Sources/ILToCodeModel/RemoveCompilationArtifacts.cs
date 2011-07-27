@@ -94,9 +94,10 @@ namespace Microsoft.Cci.ILToCodeModel {
             return cc;
           }
           if (conversion.TypeAfterConversion.TypeCode == PrimitiveTypeCode.Boolean && conversion.ValueToConvert.Type.TypeCode == PrimitiveTypeCode.Int32 && cc.Value is int) {
-            cc.Value = ((int)cc.Value) != 0;
-            cc.Type = conversion.TypeAfterConversion;
-            return cc;
+            var bcc = new CompileTimeConstant();
+            bcc.Value = ((int)cc.Value) != 0;
+            bcc.Type = conversion.TypeAfterConversion;
+            return bcc;
           }
         } else if (conversion.TypeAfterConversion.TypeCode == PrimitiveTypeCode.Boolean) {
           var conditional = conversion.ValueToConvert as Conditional;
@@ -697,6 +698,17 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
       }
       return base.Visit(methodCall);
+    }
+
+    public override IExpression Visit(NotEquality notEquality) {
+      base.Visit(notEquality);
+      var cc1 = notEquality.LeftOperand as CompileTimeConstant;
+      var cc2 = notEquality.RightOperand as CompileTimeConstant;
+      if (cc1 != null && cc2 != null) {
+        if (cc1.Type.TypeCode == PrimitiveTypeCode.Int32 && cc2.Type.TypeCode == PrimitiveTypeCode.Int32)
+          return new CompileTimeConstant() { Value = ((int)cc1.Value) != ((int)cc2.Value), Type = notEquality.Type };
+      }
+      return notEquality;
     }
 
     /// <summary>
