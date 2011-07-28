@@ -97,7 +97,7 @@ namespace CciSharp.Mutators
                 var getter = propertyDefinition.Getter as MethodDefinition;
                 var setter = propertyDefinition.Setter as MethodDefinition;
                 ICustomAttribute lazyAttribute;
-                if (!CcsHelper.TryGetAttributeByName(propertyDefinition.Attributes, "WeakLazyAttribute", out lazyAttribute)) // [ReadOnly]
+                if (!CcsHelper.TryGetAttributeByName(propertyDefinition.Attributes, "WeakLazyAttribute", out lazyAttribute)) // [WeakLazy]
                     return propertyDefinition;
 
                 if (setter != null)
@@ -173,6 +173,8 @@ namespace CciSharp.Mutators
                 {
                     MethodDefinition = uncachedGetter
                 };
+                if (getter.Attributes == null)
+                    getter.Attributes = new List<ICustomAttribute>();
                 getter.Attributes.Add(this.CompilerGeneratedAttribute);
                 getter.Body = body;
                 getter.Locations.Clear();
@@ -314,9 +316,10 @@ namespace CciSharp.Mutators
                     Visibility = TypeMemberVisibility.Private,
                     Name = this.Host.NameTable.GetNameFor("_" + propertyDefinition.Name + "$Weak"),
                     InternFactory = this.Host.InternFactory,
+                    Attributes = new List<ICustomAttribute> { this.CompilerGeneratedAttribute, this.NonSerializedAttribute },
                 };
-                resultFieldDefinition.Attributes.Add(this.CompilerGeneratedAttribute);
-                resultFieldDefinition.Attributes.Add(this.NonSerializedAttribute);
+                if (declaringType.Fields == null)
+                    declaringType.Fields = new List<IFieldDefinition>();
                 declaringType.Fields.Add(resultFieldDefinition);
 
                 return resultFieldDefinition;

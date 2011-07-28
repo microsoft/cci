@@ -96,12 +96,13 @@ namespace CciSharp.Mutators
             {
                 // find the properties that need a default value
                 var properties = new List<KeyValuePair<IPropertyDefinition, IMetadataConstant>>();
-                foreach (var property in typeDefinition.Properties)
-                {
-                    IMetadataConstant value;
-                    if (this.TryGetDefaultValue(property, out value))
-                        properties.Add(new KeyValuePair<IPropertyDefinition, IMetadataConstant>(property, value));
-                }
+                if (typeDefinition.Properties != null)
+                    foreach (var property in typeDefinition.Properties)
+                    {
+                        IMetadataConstant value;
+                        if (this.TryGetDefaultValue(property, out value))
+                            properties.Add(new KeyValuePair<IPropertyDefinition, IMetadataConstant>(property, value));
+                    }
 
                 if (properties.Count > 0)
                 {
@@ -151,7 +152,7 @@ namespace CciSharp.Mutators
                         return false;
                     }
 
-                    IMetadataExpression valueExpression = new List<IMetadataExpression>(attribute.Arguments)[0];
+                    var valueExpression = new List<IMetadataExpression>(attribute.Arguments)[0];
                     value = valueExpression as IMetadataConstant;
                     // good candidate
                     return value != null;
