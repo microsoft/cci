@@ -62,7 +62,7 @@ namespace CciSharp
                 pdbReader = null;
             
             var decompiled = Decompiler.GetCodeModelFromMetadataModel(this, assembly, pdbReader);
-            return CodeCopier.DeepCopy(this, decompiled);
+            return new CodeDeepCopier(this, pdbReader).Copy(decompiled);
         }
            
         public bool TryGetPdbReader(IAssembly assembly, out PdbReader reader)
