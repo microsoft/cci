@@ -200,14 +200,12 @@
   <PropertyGroup>
     <CcsPath>..\CciSharp\bin\$(Configuration)\</CcsPath>
   </PropertyGroup>
-  <ItemGroup>    
+  <ItemGroup>
     <CcsMutatorAssemblies Include="..\NotNull\bin\$(Configuration)\CciSharp.NotNull.dll" />
     <CcsMutatorAssemblies Include="..\EnsuresNotNull\bin\$(Configuration)\CciSharp.EnsuresNotNull.dll" />
-    <CcsMutatorAssemblies Include="..\AssertMessage\bin\$(Configuration)\CciSharp.AssertMessage.dll" />    
-    <CcsMutatorAssemblies Include="..\ReadOnlyAutoProperty\bin\$(Configuration)\CciSharp.ReadOnlyAutoProperty.dll" />
-    <CcsMutatorAssemblies Include="..\LazyAutoProperty\bin\$(Configuration)\CciSharp.LazyProperty.dll" /> 
-<!--    <CcsMutatorAssemblies Include="..\WeakLazyProperty\bin\$(Configuration)\CciSharp.WeakLazyProperty.dll" /> -->
-    <CcsMutatorAssemblies Include="..\DefaultPropertyValue\bin\$(Configuration)\CciSharp.DefaultPropertyValue.dll" />
+    <CcsMutatorAssemblies Include="..\AssertMessage\bin\$(Configuration)\CciSharp.AssertMessage.dll" />
+    <CcsMutatorAssemblies Include="..\LazyAutoProperty\bin\$(Configuration)\CciSharp.LazyProperty.dll" />
+    <!--    <CcsMutatorAssemblies Include="..\WeakLazyProperty\bin\$(Configuration)\CciSharp.WeakLazyProperty.dll" /> -->
     <CcsMutatorAssemblies Include="..\DependencyAutoProperty\bin\$(Configuration)\CciSharp.DependencyAutoProperty.dll" />
   </ItemGroup>
   <ItemGroup>

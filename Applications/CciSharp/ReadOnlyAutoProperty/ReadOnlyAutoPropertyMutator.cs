@@ -142,14 +142,14 @@ namespace CciSharp.Mutators
 
             private static bool ContainsReadOnly(IEnumerable<ICustomAttribute> attributes)
             {
-                Contract.Requires(attributes != null);
-                foreach (var attribute in attributes)
-                {
-                    var type = attribute.Type as INamedEntity;
-                    if (type != null &&
-                        type.Name.Value == "ReadOnlyAttribute")
-                        return true;
-                }
+                if (attributes != null)
+                    foreach (var attribute in attributes)
+                    {
+                        var type = attribute.Type as INamedEntity;
+                        if (type != null &&
+                            type.Name.Value == "ReadOnlyAttribute")
+                            return true;
+                    }
                 return false;
             }
         }
