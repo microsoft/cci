@@ -86,6 +86,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContractExtractor", "..\..\Ast\Sources\ContractExtractor\ContractExtractor.csproj", "{0703D916-A881-45E6-A5CD-6BC50E2E30E2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo", "Demo\Demo.csproj", "{3E3DE566-BDCD-4EC9-BA7B-704DA504A796}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5B994274-CEBB-429F-A9B6-612117C872ED} = {5B994274-CEBB-429F-A9B6-612117C872ED}
+		{4F93DC7A-D7F4-47DD-946A-D53D10AB7200} = {4F93DC7A-D7F4-47DD-946A-D53D10AB7200}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Contracts", "..\..\Ast\Metadata\Sources\Microsoft.Contracts\Microsoft.Contracts.csproj", "{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}"
 EndProject

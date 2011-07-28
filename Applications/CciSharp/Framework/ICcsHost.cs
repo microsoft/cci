@@ -245,6 +245,11 @@ namespace CciSharp.Framework
             throw new NotImplementedException();
         }
 
+        AssemblyIdentity IMetadataHost.UnifyAssembly(IAssemblyReference assemblyReference)
+        {
+            throw new NotImplementedException();
+        }
+
         bool IMetadataHost.PreserveILLocations { get { throw new NotImplementedException(); } }
 
         #endregion
