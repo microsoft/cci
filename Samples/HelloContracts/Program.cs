@@ -109,12 +109,13 @@ namespace HelloContracts {
 
             // Write out the resulting module. Each method's corresponding IL is produced
             // lazily using CodeModelToILConverter via the delegate that the mutator stored in the method bodies.
-            Stream peStream = File.Create(mutableModule.Location + ".pe");
-            if (pdbReader == null) {
-              PeWriter.WritePeToStream(mutableModule, host, peStream);
-            } else {
-              using (var pdbWriter = new PdbWriter(mutableModule.Location + ".pdb", sourceLocationProvider)) {
-                PeWriter.WritePeToStream(mutableModule, host, peStream, sourceLocationProvider, localScopeProvider, pdbWriter);
+            using (var peStream = File.Create(mutableModule.Location + ".pe")) {
+              if (pdbReader == null) {
+                PeWriter.WritePeToStream(mutableModule, host, peStream);
+              } else {
+                using (var pdbWriter = new PdbWriter(mutableModule.Location + ".pdb", sourceLocationProvider)) {
+                  PeWriter.WritePeToStream(mutableModule, host, peStream, sourceLocationProvider, localScopeProvider, pdbWriter);
+                }
               }
             }
           }

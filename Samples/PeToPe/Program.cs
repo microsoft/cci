@@ -61,12 +61,13 @@ namespace PeToPe {
           var rewrittenModule = rewriter.Rewrite(mutableModule);
 
           //Write out the Code Model by traversing it as the Metadata Model that it also is.
-          Stream peStream = File.Create(rewrittenModule.Location + ".pe");
-          if (pdbReader == null) {
-            PeWriter.WritePeToStream(rewrittenModule, host, peStream);
-          } else {
-            using (var pdbWriter = new PdbWriter(rewrittenModule.Location + ".pdb", pdbReader)) {
-              PeWriter.WritePeToStream(rewrittenModule, host, peStream, sourceLocationProvider, localScopeProvider, pdbWriter);
+          using (var peStream = File.Create(rewrittenModule.Location + ".pe")) {
+            if (pdbReader == null) {
+              PeWriter.WritePeToStream(rewrittenModule, host, peStream);
+            } else {
+              using (var pdbWriter = new PdbWriter(rewrittenModule.Location + ".pdb", pdbReader)) {
+                PeWriter.WritePeToStream(rewrittenModule, host, peStream, sourceLocationProvider, localScopeProvider, pdbWriter);
+              }
             }
           }
         }

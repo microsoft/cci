@@ -84,8 +84,9 @@ namespace HelloCodeModel {
         block.Statements.Add(new ExpressionStatement() { Expression = call });
         block.Statements.Add(new ReturnStatement());
 
-        Stream peStream = File.Create("hello.exe");
-        PeWriter.WritePeToStream(assembly, host, peStream);
+        using (var peStream = File.Create("hello.exe")) {
+          PeWriter.WritePeToStream(assembly, host, peStream);
+        }
       }
     }
 
