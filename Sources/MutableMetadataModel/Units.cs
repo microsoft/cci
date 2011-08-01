@@ -805,6 +805,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value>All types.</value>
     public List<INamedTypeDefinition> AllTypes {
       get {
+        Contract.Ensures(Contract.Result<List<INamedTypeDefinition>>() != null);
         if (this.allTypes == null) this.allTypes = new List<INamedTypeDefinition>();
         return this.allTypes;
       }

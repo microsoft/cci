@@ -905,14 +905,16 @@ namespace Microsoft.Cci {
           if (parameterDefinition.MarshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.LPArray) {
             if (parameterDefinition.MarshallingInformation.ParamIndex != null) {
               var index = parameterDefinition.MarshallingInformation.ParamIndex.Value;
-              if (index > IteratorHelper.EnumerableCount(parameterDefinition.ContainingSignature.Parameters))
+              if (index >= IteratorHelper.EnumerableCount(parameterDefinition.ContainingSignature.Parameters))
                 this.ReportError(MetadataError.ParameterIndexIsInvalid, parameterDefinition.MarshallingInformation, parameterDefinition);
-              if (index == 0 && parameterDefinition.MarshallingInformation.NumberOfElements == 0 && !parameterDefinition.IsOut)
-                this.ReportError(MetadataError.ParameterMarshalledArraysMustHaveSizeKnownAtCompileTime, parameterDefinition.MarshallingInformation, parameterDefinition);
+              if (parameterDefinition.MarshallingInformation.NumberOfElements > 0)
+                this.ReportError(MetadataError.NumberOfElementsSpecifiedExplicitlyAsWellAsByAParameter, parameterDefinition);
             } else {
-              //The ECMA spec is not clear here because it only talks about ParamIndex == 0. It seems that if ParamIndex is actually null, then
-              //it is not an error to have NumberOfElements == 0, because the .NET signature usually includes the parameter with the array size and
-              //therefore the marshaller does not need to do anything.
+              //The ECMA spec seems to suggest that this check is needed.
+              //The MSDN documentation claims that these values are ignored when marshalling from the CLR to COM.
+              //Actual code found in the .NET Framework fail this test. So disable it for now.
+              //if (parameterDefinition.MarshallingInformation.NumberOfElements == 0 && parameterDefinition.IsOut)
+              //  this.ReportError(MetadataError.ParameterMarshalledArraysMustHaveSizeKnownAtCompileTime, parameterDefinition.MarshallingInformation, parameterDefinition);
             }
           }
           if (parameterDefinition.MarshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.ByValArray) {
@@ -1771,6 +1773,10 @@ namespace Microsoft.Cci {
       /// </summary>
       NotPosixName,
       /// <summary>
+      /// The size of the array passed in this parameter is specified explicitly as well as via another (size) parameter. This is probably a mistake.
+      /// </summary>
+      NumberOfElementsSpecifiedExplicitlyAsWellAsByAParameter,
+      /// <summary>
       /// Only types that have LayoutKind set to SequentialLayout are permitted to specify a non zero value for Alignment.
       /// </summary>
       OnlySequentialLayoutTypesCanSpecificyAlignment,
@@ -1907,6 +1913,8 @@ namespace Microsoft.Cci {
         get {
           switch (this.Error) {
             case MetadataError.MetadataConstantTypeMismatch:
+              return true;
+            case MetadataError.NumberOfElementsSpecifiedExplicitlyAsWellAsByAParameter:
               return true;
             default:
               return false;

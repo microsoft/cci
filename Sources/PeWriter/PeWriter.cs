@@ -5442,10 +5442,8 @@ namespace Microsoft.Cci {
     }
 
     public override void TraverseChildren(IPropertyDefinition propertyDefinition) {
-      if (this.traverseAttributes) {
+      if (this.traverseAttributes)
         this.Traverse(propertyDefinition.Attributes);
-        this.Traverse(propertyDefinition.ReturnValueAttributes);
-      }
       this.Traverse(propertyDefinition.Accessors);
       if (propertyDefinition.HasDefaultValue)
         this.Traverse(propertyDefinition.DefaultValue);

@@ -118,6 +118,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public Sublist<BasicBlock> SuccessorsFor(BasicBlock basicBlock) {
       Contract.Requires(basicBlock != null);
+
       if (basicBlock.firstSuccessorEdge+basicBlock.successorCount > this.SuccessorEdges.Count)
         throw new InvalidOperationException(); //can only happen if the basic block does not belong to this graph.
       Contract.Assume(basicBlock.firstSuccessorEdge >= 0);
@@ -128,11 +129,12 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Constructs a control and data flow graph for the given method body.
     /// </summary>
-    public static ControlAndDataFlowGraph<BasicBlock, Instruction> GetControlAndDataFlowGraphFor(IMetadataHost host, IMethodBody methodBody) {
+    public static ControlAndDataFlowGraph<BasicBlock, Instruction> GetControlAndDataFlowGraphFor(IMetadataHost host, IMethodBody methodBody, ILocalScopeProvider/*?*/ localScopeProvider = null) {
       Contract.Requires(host != null);
       Contract.Requires(methodBody != null);
+      Contract.Ensures(Contract.Result<ControlAndDataFlowGraph<BasicBlock, Instruction>>() != null);
       
-      var cdfg = ControlFlowInferencer<BasicBlock, Instruction>.SetupControlFlow(host, methodBody);
+      var cdfg = ControlFlowInferencer<BasicBlock, Instruction>.SetupControlFlow(host, methodBody, localScopeProvider);
       DataFlowInferencer<BasicBlock, Instruction>.SetupDataFlow(host, methodBody, cdfg);
       TypeInferencer<BasicBlock, Instruction>.FillInTypes(host, cdfg);
 

@@ -5076,10 +5076,6 @@ namespace Microsoft.Cci {
       get { return Enumerable<IParameterDefinition>.Empty; }
     }
 
-    public IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return Enumerable<ICustomAttribute>.Empty; }
-    }
-
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
       get { return Enumerable<ICustomModifier>.Empty; }
     }
@@ -6971,10 +6967,6 @@ namespace Microsoft.Cci {
 
     public IEnumerable<IParameterDefinition> Parameters {
       get { return Enumerable<IParameterDefinition>.Empty; }
-    }
-
-    public IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {

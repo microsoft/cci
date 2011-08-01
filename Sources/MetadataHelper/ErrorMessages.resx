@@ -390,4 +390,7 @@
   <data name="ParameterMarshalledArraysMustHaveSizeKnownAtCompileTime" xml:space="preserve">
     <value>Parameters whose values are marshalled to unmanaged arrays and for which the marshalling information does not specify a parameter to convey the number of array elements, must specify the size of the array at compile time since there is no place in the unmanaged array for the marshaller to store the number of elements.</value>
   </data>
+  <data name="NumberOfElementsSpecifiedExplicitlyAsWellAsByAParameter" xml:space="preserve">
+    <value>The size of the array passed in this parameter is specified explicitly as well as via another (size) parameter. This is probably a mistake.</value>
+  </data>
 </root>

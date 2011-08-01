@@ -1828,7 +1828,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (propertyDefinition.Getter != null)
         propertyDefinition.Getter = this.Rewrite(propertyDefinition.Getter);
       propertyDefinition.Parameters = this.Rewrite(propertyDefinition.Parameters);
-      propertyDefinition.ReturnValueAttributes = this.Rewrite(propertyDefinition.ReturnValueAttributes);
       if (propertyDefinition.ReturnValueIsModified)
         propertyDefinition.ReturnValueCustomModifiers = this.Rewrite(propertyDefinition.ReturnValueCustomModifiers);
       if (propertyDefinition.Setter != null)
@@ -5023,7 +5022,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (propertyDefinition.Getter != null)
         propertyDefinition.Getter = this.Visit(propertyDefinition.Getter);
       propertyDefinition.Parameters = this.Visit(propertyDefinition.Parameters);
-      propertyDefinition.ReturnValueAttributes = this.VisitPropertyReturnValueAttributes(propertyDefinition.ReturnValueAttributes);
       if (propertyDefinition.ReturnValueIsModified)
         propertyDefinition.ReturnValueCustomModifiers = this.Visit(propertyDefinition.ReturnValueCustomModifiers);
       if (propertyDefinition.Setter != null)
@@ -5267,15 +5265,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public virtual Win32Resource Visit(Win32Resource win32Resource) {
       return win32Resource;
-    }
-
-    /// <summary>
-    /// Visits the property return value attributes.
-    /// </summary>
-    /// <param name="customAttributes">The custom attributes.</param>
-    /// <returns></returns>
-    public virtual List<ICustomAttribute> VisitPropertyReturnValueAttributes(List<ICustomAttribute> customAttributes) {
-      return this.Visit(customAttributes);
     }
 
     /// <summary>
@@ -8420,7 +8409,6 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (propertyDefinition.Getter != null)
           this.Visit(propertyDefinition.Getter);
         this.Visit(propertyDefinition.Parameters);
-        this.Visit(propertyDefinition.ReturnValueAttributes);
         if (propertyDefinition.ReturnValueIsModified)
           this.Visit(propertyDefinition.ReturnValueCustomModifiers);
         if (propertyDefinition.Setter != null)
@@ -8446,7 +8434,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (propertyDefinition.Getter != null)
         propertyDefinition.Getter = this.Visit(propertyDefinition.Getter);
       propertyDefinition.Parameters = this.Mutate(propertyDefinition.Parameters);
-      propertyDefinition.ReturnValueAttributes = this.VisitPropertyReturnValueAttributes(propertyDefinition.ReturnValueAttributes);
       if (propertyDefinition.ReturnValueIsModified)
         propertyDefinition.ReturnValueCustomModifiers = this.Mutate(propertyDefinition.ReturnValueCustomModifiers);
       if (propertyDefinition.Setter != null)
@@ -8727,15 +8714,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public virtual IWin32Resource Visit(IWin32Resource win32Resource) {
       return win32Resource;
-    }
-
-    /// <summary>
-    /// Visits the property return value attributes.
-    /// </summary>
-    /// <param name="customAttributes">The custom attributes.</param>
-    /// <returns></returns>
-    public virtual List<ICustomAttribute>/*?*/ VisitPropertyReturnValueAttributes(List<ICustomAttribute>/*?*/ customAttributes) {
-      return this.Mutate(customAttributes);
     }
 
     /// <summary>

@@ -2932,7 +2932,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.defaultValue = Dummy.Constant;
       this.getter = null;
       this.parameters = null;
-      this.returnValueAttributes = null;
       this.returnValueCustomModifiers = null;
       this.setter = null;
       this.type = Dummy.TypeReference;
@@ -2959,10 +2958,6 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.parameters = new List<IParameterDefinition>(propertyDefinition.Parameters);
       else
         this.parameters = null;
-      if (IteratorHelper.EnumerableIsNotEmpty(propertyDefinition.ReturnValueAttributes))
-        this.returnValueAttributes = new List<ICustomAttribute>(propertyDefinition.ReturnValueAttributes);
-      else
-        this.returnValueAttributes = null;
       if (propertyDefinition.ReturnValueIsModified)
         this.returnValueCustomModifiers = new List<ICustomModifier>(propertyDefinition.ReturnValueCustomModifiers);
       else
@@ -3083,16 +3078,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     List<IParameterDefinition>/*?*/ parameters;
 
     /// <summary>
-    /// Custom attributes associated with the property's return value.
-    /// </summary>
-    /// <value></value>
-    public List<ICustomAttribute>/*?*/ ReturnValueAttributes {
-      get { return this.returnValueAttributes; }
-      set { this.returnValueAttributes = value; }
-    }
-    List<ICustomAttribute>/*?*/ returnValueAttributes;
-
-    /// <summary>
     /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
     /// </summary>
     /// <value></value>
@@ -3157,13 +3142,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       get {
         if (this.Parameters == null) return Enumerable<IParameterDefinition>.Empty;
         return this.Parameters.AsReadOnly();
-      }
-    }
-
-    IEnumerable<ICustomAttribute> IPropertyDefinition.ReturnValueAttributes {
-      get {
-        if (this.ReturnValueAttributes == null) return Enumerable<ICustomAttribute>.Empty;
-        return this.ReturnValueAttributes.AsReadOnly();
       }
     }
 

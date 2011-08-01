@@ -1874,6 +1874,18 @@ namespace Microsoft.Cci.UtilityDataStructures {
     }
 
     /// <summary>
+    /// Returns a sublist of this sublist.
+    /// </summary>
+    /// <param name="offset">An offset from the start of this sublist.</param>
+    /// <param name="count">The number of elements that should be in the resulting list.</param>
+    public Sublist<T> GetSublist(int offset, int count) {
+      Contract.Requires(offset >= 0);
+      Contract.Requires(0 <= count && count <= this.Count);
+
+      return new Sublist<T>(this.masterList, this.offset+offset, count);
+    }
+
+    /// <summary>
     /// The i'th element of this list.
     /// </summary>
     /// <param name="i"></param>

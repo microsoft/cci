@@ -9,13 +9,14 @@ namespace Microsoft.Cci {
     where BasicBlock : Microsoft.Cci.BasicBlock<Instruction>, new()
     where Instruction : Microsoft.Cci.Instruction, new() {
 
-    private ControlFlowInferencer(IMetadataHost host, IMethodBody methodBody) {
+    private ControlFlowInferencer(IMetadataHost host, IMethodBody methodBody, ILocalScopeProvider/*?*/ localScopeProvider = null) {
       Contract.Requires(host != null);
       Contract.Requires(methodBody != null);
 
       this.platformType = host.PlatformType;
       this.internFactory = host.InternFactory;
       this.methodBody = methodBody;
+      this.localScopeProvider = localScopeProvider;
 
       int size = 1024;
       var ops = methodBody.Operations as ICollection<IOperation>;
@@ -31,6 +32,7 @@ namespace Microsoft.Cci {
     IPlatformType platformType;
     IInternFactory internFactory;
     IMethodBody methodBody;
+    ILocalScopeProvider/*?*/ localScopeProvider;
     ControlAndDataFlowGraph<BasicBlock, Instruction> cdfg;
     List<BasicBlock> edges;
     List<Instruction> instructions;
@@ -48,12 +50,12 @@ namespace Microsoft.Cci {
     /// <summary>
     /// 
     /// </summary>
-    internal static ControlAndDataFlowGraph<BasicBlock, Instruction> SetupControlFlow(IMetadataHost host, IMethodBody methodBody) {
+    internal static ControlAndDataFlowGraph<BasicBlock, Instruction> SetupControlFlow(IMetadataHost host, IMethodBody methodBody, ILocalScopeProvider/*?*/ localScopeProvider = null) {
       Contract.Requires(host != null);
       Contract.Requires(methodBody != null);
       Contract.Ensures(Contract.Result<ControlAndDataFlowGraph<BasicBlock, Instruction>>() != null);
 
-      var inferencer = new ControlFlowInferencer<BasicBlock, Instruction>(host, methodBody);
+      var inferencer = new ControlFlowInferencer<BasicBlock, Instruction>(host, methodBody, localScopeProvider);
       return inferencer.CreateBlocksAndEdges();
     }
 
@@ -63,6 +65,7 @@ namespace Microsoft.Cci {
       var firstBlock = new BasicBlock();
       this.cdfg.BlockFor[0] = firstBlock;
       this.cdfg.RootBlocks.Add(firstBlock);
+      this.CreateBlocksForLocalScopes();
       this.CreateBlocksForBranchTargetsAndFallthroughs();
       this.CreateBlocksForExceptionHandlers();
       this.CreateEdges(firstBlock);
@@ -72,6 +75,13 @@ namespace Microsoft.Cci {
       this.cdfg.AllBlocks.TrimExcess();
       this.cdfg.RootBlocks.TrimExcess();
       return this.cdfg;
+    }
+
+    private void CreateBlocksForLocalScopes() {
+      if (this.localScopeProvider == null) return;
+      foreach (var scope in this.localScopeProvider.GetLocalScopes(this.methodBody)) {
+        this.CreateBlock(scope.Offset);
+      }
     }
 
     private void CreateBlocksForBranchTargetsAndFallthroughs() {

@@ -1052,6 +1052,7 @@ namespace Microsoft.Cci {
     public IMethodBody Body {
       get {
         Contract.Requires(!this.IsAbstract && !this.IsExternal);
+        Contract.Ensures(Contract.Result<IMethodBody>() != null);
         throw new NotImplementedException();
       }
     }
@@ -1439,11 +1440,6 @@ namespace Microsoft.Cci {
     new IEnumerable<IParameterDefinition> Parameters { get; }
 
     /// <summary>
-    /// Custom attributes associated with the property's return value.
-    /// </summary>
-    IEnumerable<ICustomAttribute> ReturnValueAttributes { get; }
-
-    /// <summary>
     /// The method used to set the value of this property. May be absent (null).
     /// </summary>
     IMethodReference/*?*/ Setter { get; }
@@ -1492,14 +1488,6 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<IEnumerable<IParameterDefinition>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IParameterDefinition>>(), x => x != null));
-        throw new NotImplementedException();
-      }
-    }
-
-    public IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get {
-        Contract.Ensures(Contract.Result<IEnumerable<ICustomAttribute>>() != null);
-        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ICustomAttribute>>(), x => x != null));
         throw new NotImplementedException();
       }
     }

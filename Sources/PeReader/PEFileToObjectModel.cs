@@ -48,7 +48,7 @@ namespace Microsoft.Cci.MetadataReader {
     CoreTypes CoreTypes {
       get {
         if (this.coreTypes == null) {
-          lock (this) {
+          lock (GlobalLock.LockingObject) {
             if (this.coreTypes == null)
               this.coreTypes = new CoreTypes(this);
           }

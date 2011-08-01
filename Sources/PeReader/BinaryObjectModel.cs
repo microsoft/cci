@@ -1384,7 +1384,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     void InitFieldSignature()
       //^ ensures (this.FieldFlags & FieldFlags.FieldLoaded) == FieldFlags.FieldLoaded;
     {
-      lock (this) {
+      lock (GlobalLock.LockingObject) {
         if ((this.FieldFlags & FieldFlags.FieldLoaded) != FieldFlags.FieldLoaded) {
           FieldSignatureConverter fieldSignature = this.PEFileToObjectModel.GetFieldSignature(this);
           this.fieldType = fieldSignature.TypeReference;
@@ -1881,7 +1881,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     void InitMethodSignature() {
       Contract.Ensures(this.returnType != null);
       Contract.Ensures(this.returnParameter != null);
-      lock (this) {
+      lock (GlobalLock.LockingObject) {
         if (this.returnType == null) {
           MethodDefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodSignature(this);
           this.FirstSignatureByte = methodSignature.FirstByte;
@@ -2684,7 +2684,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     void InitPropertySignature()
       //^ ensures this.ReturnModuleCustomModifiers != null;
     {
-      lock (this) {
+      lock (GlobalLock.LockingObject) {
         if (this.returnValueCustomModifiers == null) {
           PropertySignatureConverter propertySignature = this.PEFileToObjectModel.GetPropertySignature(this);
           this.FirstSignatureByte = propertySignature.firstByte;
@@ -2775,10 +2775,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         //^ assert this.moduleParameters != null;
         return this.parameters;
       }
-    }
-
-    public IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
     #endregion
@@ -3031,7 +3027,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     protected virtual void InitMethodSignature() {
-      lock (this) {
+      lock (GlobalLock.LockingObject) {
         if (this.returnCustomModifiers == null) {
           MethodRefSignatureConverter methodSignature = this.PEFileToObjectModel.GetMethodRefSignature(this);
           this.genericParameterCount = methodSignature.GenericParamCount;
@@ -3556,7 +3552,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public uint? ParamIndex {
-      get { return 0; }
+      get { return null; }
     }
 
     public System.Runtime.InteropServices.VarEnum SafeArrayElementSubtype {

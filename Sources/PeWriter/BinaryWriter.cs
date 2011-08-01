@@ -175,15 +175,6 @@ namespace Microsoft.Cci.WriterUtilities {
       buffer[i] = (byte)(value >> 24);
     }
 
-    public void WriteCompressed(uint value) {
-      //TOOD: implement this properly
-      MemoryStream m = this.BaseStream;
-      uint i = m.Position;
-      m.Position=i+1;
-      byte[] buffer = m.Buffer;
-      buffer[i] = (byte)value;
-    }
-
     public void WriteUint(uint value) {
       MemoryStream m = this.BaseStream;
       uint i = m.Position;
@@ -322,6 +313,63 @@ namespace Microsoft.Cci.WriterUtilities {
           buffer[i] = 0;
         }
       }
+    }
+
+    public void WriteCompressedFullInt(int value) {
+      MemoryStream m = this.BaseStream;
+      uint i = m.Position;
+      byte[] buffer = m.Buffer;
+      uint d = (uint)value;
+      if (d + 64 < 128) {
+        buffer[i++] = (byte)(d*2 + 0);
+      } else if (d + 64*128 < 128*128) {
+        buffer[i++] = (byte)(d*4 + 1);
+        buffer[i++] = (byte)(d >> 6);
+      } else if (d + 64*128*128 < 128*128*128) {
+        buffer[i++] = (byte)(d*8 + 3);
+        buffer[i++] = (byte)(d >> 5);
+        buffer[i++] = (byte)(d >> 13);
+      } else if (d + 64*128*128*128 < 128*128*128*128) {
+        buffer[i++] = (byte)(d*16 + 7);
+        buffer[i++] = (byte)(d >> 4);
+        buffer[i++] = (byte)(d >> 12);
+        buffer[i++] = (byte)(d >> 20);
+      } else {
+        buffer[i++] = (byte)15;
+        buffer[i++] = (byte)d;
+        buffer[i++] = (byte)(d >> 8);
+        buffer[i++] = (byte)(d >> 16);
+        buffer[i++] = (byte)(d >> 24);
+      }
+      m.Position=i;
+    }
+
+    public void WriteCompressedFullUInt(uint value) {
+      MemoryStream m = this.BaseStream;
+      uint i = m.Position;
+      byte[] buffer = m.Buffer;
+      if (value < 128) {
+        buffer[i++] = (byte)(value*2 + 0);
+      } else if (value < 128*128) {
+        buffer[i++] = (byte)(value*4 + 1);
+        buffer[i++] = (byte)(value >> 6);
+      } else if (value < 128*128*128) {
+        buffer[i++] = (byte)(value*8 + 3);
+        buffer[i++] = (byte)(value >> 5);
+        buffer[i++] = (byte)(value >> 13);
+      } else if (value < 128*128*128*128) {
+        buffer[i++] = (byte)(value*16 + 7);
+        buffer[i++] = (byte)(value >> 4);
+        buffer[i++] = (byte)(value >> 12);
+        buffer[i++] = (byte)(value >> 20);
+      } else {
+        buffer[i++] = (byte)15;
+        buffer[i++] = (byte)value;
+        buffer[i++] = (byte)(value >> 8);
+        buffer[i++] = (byte)(value >> 16);
+        buffer[i++] = (byte)(value >> 24);
+      }
+      m.Position=i;
     }
 
     public void WriteCompressedInt(int val) {

@@ -3784,14 +3784,6 @@ namespace Microsoft.Cci.Immutable {
     }
 
     /// <summary>
-    /// Custom attributes associated with the property's return value.
-    /// </summary>
-    /// <value></value>
-    public IEnumerable<ICustomAttribute> ReturnValueAttributes {
-      get { return this.UnspecializedVersion.ReturnValueAttributes; }
-    }
-
-    /// <summary>
     /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
     /// </summary>
     /// <value></value>
