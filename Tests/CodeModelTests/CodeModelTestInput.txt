@@ -12,7 +12,7 @@ namespace CodeModelTestInput
             short[] Shorts = new short[3] {-128, -32768, 32767};
             int[] Ints = new int[3] {-128, -32768, -2147483648};
             long[] Longs = new long[4] {-128, -32768, -2147483648, -9223372036854775808};
-            char[] Chars = new char[3] {a, b, c};
+            char[] Chars = new char[3] {'a', 'b', 'c'};
             return;
 
         }
@@ -44,7 +44,7 @@ namespace CodeModelTestInput
             CS$0$0007[0] = -9223372036854775808;
             long[] Longs = CS$0$0007;
             char[] CS$0$0008 = new char[1];
-            CS$0$0008[0] = 97;
+            CS$0$0008[0] = 'a';
             char[] Chars = CS$0$0008;
             bool[] CS$0$0009 = new bool[1];
             CS$0$0009[0] = true;

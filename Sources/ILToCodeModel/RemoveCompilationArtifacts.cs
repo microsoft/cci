@@ -99,6 +99,12 @@ namespace Microsoft.Cci.ILToCodeModel {
             bcc.Type = conversion.TypeAfterConversion;
             return bcc;
           }
+          if (conversion.TypeAfterConversion.TypeCode == PrimitiveTypeCode.Char && conversion.ValueToConvert.Type.TypeCode == PrimitiveTypeCode.Int32 && cc.Value is int) {
+            var bcc = new CompileTimeConstant();
+            bcc.Value = (char)(int)cc.Value;
+            bcc.Type = conversion.TypeAfterConversion;
+            return bcc;
+          }
         } else if (conversion.TypeAfterConversion.TypeCode == PrimitiveTypeCode.Boolean) {
           var conditional = conversion.ValueToConvert as Conditional;
           if (conditional != null) {

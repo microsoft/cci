@@ -133,7 +133,7 @@ namespace CSharpSourceEmitter {
               this.sourceEmitterOutput.Write(", ");
             }
             this.sourceEmitterOutput.Write(localDeclarationStatement.LocalVariable.Name.Value);
-          } else
+          } else 
             this.Traverse(statement);
         }
         first = false;
@@ -183,14 +183,28 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(ILocalDeclarationStatement localDeclarationStatement) {
+      if (localDeclarationStatement.LocalVariable.IsConstant)
+        this.sourceEmitterOutput.Write("const ", true);
+      else
+        this.sourceEmitterOutput.Write("", true);
       string type = TypeHelper.GetTypeName(localDeclarationStatement.LocalVariable.Type, NameFormattingOptions.ContractNullable|NameFormattingOptions.UseTypeKeywords);
-      this.sourceEmitterOutput.Write(type, true);
+      this.sourceEmitterOutput.Write(type);
+      if (localDeclarationStatement.LocalVariable.IsReference) {
+        if (localDeclarationStatement.LocalVariable.IsPinned)
+          this.sourceEmitterOutput.Write("*");
+        else
+          this.sourceEmitterOutput.Write("&");
+      }
       this.sourceEmitterOutput.Write(" ");
       this.PrintLocalName(localDeclarationStatement.LocalVariable);
       if (localDeclarationStatement.InitialValue != null) {
         this.sourceEmitterOutput.Write(" = ");
         this.Traverse(localDeclarationStatement.InitialValue);
+      } else if (localDeclarationStatement.LocalVariable.IsConstant) {
+        this.sourceEmitterOutput.Write(" = ");
+        this.Traverse(localDeclarationStatement.LocalVariable.CompileTimeValue);
       }
+
       this.sourceEmitterOutput.WriteLine(";");
     }
 
@@ -247,7 +261,7 @@ namespace CSharpSourceEmitter {
       this.sourceEmitterOutput.IncreaseIndent();
       this.Traverse(switchStatement.Cases);
       this.sourceEmitterOutput.DecreaseIndent();
-
+      
       this.sourceEmitterOutput.WriteLine("}", true);
     }
 

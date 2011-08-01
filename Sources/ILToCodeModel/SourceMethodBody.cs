@@ -864,6 +864,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       switch (currentOperation.OperationCode) {
         case OperationCode.Box:
           ((Expression)result.ValueToConvert).Type = (ITypeReference)currentOperation.Value;
+          var cc = result.ValueToConvert as CompileTimeConstant;
+          if (cc != null) cc.Value = this.ConvertBoxedValue(cc.Value, cc.Type);
           result.TypeAfterConversion = this.platformType.SystemObject;
           break;
         case OperationCode.Castclass:
@@ -925,6 +927,14 @@ namespace Microsoft.Cci.ILToCodeModel {
           result.TypeAfterConversion = (ITypeReference)currentOperation.Value; break;
       }
       return result;
+    }
+
+    private object ConvertBoxedValue(object ob, ITypeReference typeReference) {
+      switch (typeReference.TypeCode) {
+        case PrimitiveTypeCode.Boolean: return ((int)ob) == 1;
+        case PrimitiveTypeCode.Char: return (char)((int)ob);
+      }
+      return ob;
     }
 
     private Expression ParseCopyObject() {

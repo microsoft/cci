@@ -238,6 +238,8 @@ namespace CSharpSourceEmitter {
         this.sourceEmitterOutput.Write(((bool)constant.Value) ? "true" : "false");
       else if (constant.Value is string)
         this.PrintString((string)constant.Value);
+      else if (constant.Value is char)
+        this.sourceEmitterOutput.Write("'"+constant.Value+"'");
       else
         this.sourceEmitterOutput.Write(constant.Value.ToString());
     }

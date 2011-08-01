@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -192,6 +193,12 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.useCheckedArithmetic = blockStatement.UseCheckedArithmetic;
     }
 
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.statements != null);
+    }
+
+
     /// <summary>
     /// Calls visitor.Visit(IBlockStatement).
     /// </summary>
@@ -204,8 +211,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public List<IStatement> Statements {
-      get { return this.statements; }
-      set { this.statements = value; }
+      get {
+        Contract.Ensures(Contract.Result<List<IStatement>>() != null);
+        return this.statements; 
+      }
+      set {
+        Contract.Requires(value != null);
+        this.statements = value; 
+      }
     }
     List<IStatement> statements;
 

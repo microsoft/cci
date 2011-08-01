@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci.MutableContracts;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -181,8 +182,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public IEnumerable<ILocalScope> IteratorScopes {
       get {
+        Contract.Ensures(Contract.Result<IEnumerable<ILocalScope>>() != null);
         if (!this.ilWasGenerated) this.GenerateIL();
-        return this.iteratorScopes;
+        return this.iteratorScopes??Enumerable<ILocalScope>.Empty;
       }
     }
     IEnumerable<ILocalScope> iteratorScopes;

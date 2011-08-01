@@ -329,14 +329,28 @@ namespace Microsoft.Cci.ILToCodeModel {
       IPointerTypeReference/*?*/ pointerTypeReference = addressDereference.Address.Type as IPointerTypeReference;
       if (pointerTypeReference != null) {
         if (pointerTypeReference.TargetType != Dummy.TypeReference) {
-          ((AddressDereference)addressDereference).Type = pointerTypeReference.TargetType;
+          if (addressDereference.Type is Dummy)
+            ((AddressDereference)addressDereference).Type = pointerTypeReference.TargetType;
+          else if (!TypeHelper.TypesAreEquivalent(addressDereference.Type, pointerTypeReference.TargetType)) {
+            var targetPointerType = Immutable.PointerType.GetPointerType(addressDereference.Type, this.host.InternFactory);
+            ((AddressDereference)addressDereference).Address = new Conversion() {
+              ValueToConvert = addressDereference.Address, TypeAfterConversion = targetPointerType, Type = targetPointerType
+            };
+          }
           return;
         }
       }
       IManagedPointerTypeReference/*?*/ managedPointerTypeReference = addressDereference.Address.Type as IManagedPointerTypeReference;
       if (managedPointerTypeReference != null) {
         if (managedPointerTypeReference.TargetType != Dummy.TypeReference) {
-          ((AddressDereference)addressDereference).Type = managedPointerTypeReference.TargetType;
+          if (addressDereference.Type is Dummy) 
+            ((AddressDereference)addressDereference).Type = managedPointerTypeReference.TargetType;
+          else if (!TypeHelper.TypesAreEquivalent(addressDereference.Type, managedPointerTypeReference.TargetType)) {
+            var targetPointerType = Immutable.ManagedPointerType.GetManagedPointerType(addressDereference.Type, this.host.InternFactory);
+            ((AddressDereference)addressDereference).Address = new Conversion() {
+              ValueToConvert = addressDereference.Address, TypeAfterConversion = targetPointerType, Type = targetPointerType
+            };
+          }
           return;
         }
       }
@@ -390,7 +404,30 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       if (assignment.Target.Type.TypeCode == PrimitiveTypeCode.Boolean && assignment.Source.Type.TypeCode == PrimitiveTypeCode.Int32)
         ((Assignment)assignment).Source = ConvertToBoolean(assignment.Source);
+      else if (assignment.Target.Type.TypeCode == PrimitiveTypeCode.Char && assignment.Source.Type.TypeCode == PrimitiveTypeCode.Int32)
+        ((Assignment)assignment).Source = ConvertToCharacter(assignment.Source);
+      else if (assignment.Target.Type is IPointerTypeReference || assignment.Target.Type is IManagedPointerTypeReference) {
+        if (assignment.Source.Type.TypeCode == PrimitiveTypeCode.UIntPtr || assignment.Source.Type.TypeCode == PrimitiveTypeCode.IntPtr)
+          ((Assignment)assignment).Source = new Conversion() { ValueToConvert = assignment.Source, TypeAfterConversion = assignment.Target.Type, Type = assignment.Target.Type };
+      }      
       ((Assignment)assignment).Type = assignment.Target.Type;
+    }
+
+    public override void TraverseChildren(IBinaryOperation binaryOperation) {
+      base.TraverseChildren(binaryOperation);
+      if (binaryOperation.LeftOperand.Type.TypeCode == PrimitiveTypeCode.Char) {
+        if (binaryOperation.RightOperand.Type.TypeCode == PrimitiveTypeCode.Int32)
+          ((BinaryOperation)binaryOperation).RightOperand = new Conversion() {
+            ValueToConvert = binaryOperation.RightOperand,
+            Type = binaryOperation.LeftOperand.Type, TypeAfterConversion = binaryOperation.LeftOperand.Type
+          };
+      } else if (binaryOperation.RightOperand.Type.TypeCode == PrimitiveTypeCode.Char) {
+        if (binaryOperation.LeftOperand.Type.TypeCode == PrimitiveTypeCode.Int32)
+          ((BinaryOperation)binaryOperation).LeftOperand = new Conversion() {
+            ValueToConvert = binaryOperation.LeftOperand,
+            Type = binaryOperation.RightOperand.Type, TypeAfterConversion = binaryOperation.RightOperand.Type
+          };
+      }
     }
 
     public override void TraverseChildren(IBitwiseAnd bitwiseAnd) {
@@ -414,8 +451,13 @@ namespace Microsoft.Cci.ILToCodeModel {
       ILocalDefinition/*?*/ local = boundExpression.Definition as ILocalDefinition;
       if (local != null) {
         type = local.Type;
-        if (local.IsReference)
-          type = Immutable.ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory);
+        if (local.IsReference) {
+          if (local.IsPinned) {
+            type = Immutable.PointerType.GetPointerType(type, this.host.InternFactory);
+          } else {
+            type = Immutable.ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory);
+          }
+        }
       } else {
         IParameterDefinition/*?*/ parameter = boundExpression.Definition as IParameterDefinition;
         if (parameter != null) {
@@ -447,7 +489,9 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (conv != null) {
         if (conv.TypeAfterConversion.TypeCode == PrimitiveTypeCode.IntPtr || conv.Type.TypeCode == PrimitiveTypeCode.UIntPtr) {
           if (conv.ValueToConvert.Type is IPointerTypeReference || conv.ValueToConvert.Type is IManagedPointerTypeReference) {
-            conv.Type = conv.ValueToConvert.Type;
+            conv.Type = conv.TypeAfterConversion = conv.ValueToConvert.Type;
+            //TODO: hmm. Perhaps this is all wrong. In IL the point of the conversion is to "forget" that the pointer has type conv.ValueToConvert.Type.
+            //so that the verifier will allow the pointer to be abused as a pointer to something else
             return;
           }
         }
@@ -532,6 +576,17 @@ namespace Microsoft.Cci.ILToCodeModel {
         Type = platformType.SystemBoolean,
       };
       return result;
+    }
+
+    private static IExpression ConvertToCharacter(IExpression expression) {
+      IPlatformType platformType = expression.Type.PlatformType;
+      var cc = expression as CompileTimeConstant;
+      if (cc != null && cc.Value is int) {
+        cc.Value = (char)(int)cc.Value;
+        cc.Type = platformType.SystemChar;
+        return cc;
+      }
+      return expression;
     }
 
     public override void TraverseChildren(ICreateArray createArray) {
@@ -665,6 +720,9 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (p.Type.TypeCode == PrimitiveTypeCode.Boolean && a.Type.TypeCode == PrimitiveTypeCode.Int32) {
           args[i] = ConvertToBoolean(a);
           ((MethodCall)methodCall).Arguments = args;
+        } else if (p.Type.TypeCode == PrimitiveTypeCode.Char && a.Type.TypeCode == PrimitiveTypeCode.Int32) {
+          args[i] = ConvertToCharacter(a);
+          ((MethodCall)methodCall).Arguments = args;
         }
       }
       ((MethodCall)methodCall).Type = methodCall.MethodToCall.Type;
@@ -751,9 +809,15 @@ namespace Microsoft.Cci.ILToCodeModel {
       base.TraverseChildren(targetExpression);
       ITypeReference type = Dummy.TypeReference;
       ILocalDefinition/*?*/ local = targetExpression.Definition as ILocalDefinition;
-      if (local != null)
-        type = local.Type;
-      else {
+      if (local != null) {
+        if (local.IsReference) {
+          if (local.IsPinned)
+            type = Immutable.PointerType.GetPointerType(local.Type, this.host.InternFactory);
+          else
+            type = Immutable.ManagedPointerType.GetManagedPointerType(local.Type, this.host.InternFactory);
+        } else
+          type = local.Type;
+      } else {
         IParameterDefinition/*?*/ parameter = targetExpression.Definition as IParameterDefinition;
         if (parameter != null)
           type = parameter.Type;

@@ -9394,8 +9394,8 @@ namespace Microsoft.Cci.Ast {
       List<ITypeReference> argumentTypes = new List<ITypeReference>();
       foreach (TypeExpression typeArgument in this.argumentTypes)
         argumentTypes.Add(typeArgument.ResolvedType);
-      INamedTypeDefinition genericType = (INamedTypeDefinition)this.GenericType.Resolve(argumentTypes.Count);
-      if (!genericType.IsGeneric) {
+      INamedTypeDefinition genericType = this.GenericType.Resolve(argumentTypes.Count) as INamedTypeDefinition;
+      if (genericType == null || !genericType.IsGeneric) {
         //TODO: error message
         return Dummy.Type;
       }
