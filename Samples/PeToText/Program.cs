@@ -34,10 +34,11 @@ namespace PeToText {
         }
         using (pdbReader) {
           string txtFile = Path.ChangeExtension(pdbFile, "txt");
-          var writer = new StreamWriter(txtFile);
-          SourceEmitter csSourceEmitter = new SourceEmitter(writer, host, pdbReader);
-          csSourceEmitter.Visit((INamespaceDefinition)module.UnitNamespaceRoot);
-          writer.Close();
+          using (var writer = new StreamWriter(txtFile)) {
+            SourceEmitter csSourceEmitter = new SourceEmitter(writer, host, pdbReader);
+            csSourceEmitter.Visit((INamespaceDefinition)module.UnitNamespaceRoot);
+            writer.Close();
+          }
         }
       }
     }

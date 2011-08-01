@@ -68,8 +68,9 @@ namespace HelloCodeModel {
         var body = new ILGeneratorMethodBody(ilGenerator, true, 1, mainMethod, Enumerable<ILocalDefinition>.Empty, Enumerable<ITypeDefinition>.Empty);
         mainMethod.Body = body;
 
-        Stream peStream = File.Create("hello.exe");
-        PeWriter.WritePeToStream(assembly, host, peStream);
+        using (var peStream = File.Create("hello.exe")) {
+          PeWriter.WritePeToStream(assembly, host, peStream);
+        }
       }
     }
 

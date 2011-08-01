@@ -50,14 +50,15 @@ namespace PeToPe {
           var rewrittenModule = rewriter.Rewrite(mutableModule); 
 
           //Write out rewritten module.
-          Stream peStream = File.Create(rewrittenModule.Location + ".pe");
-          if (pdbReader == null) {
-            PeWriter.WritePeToStream(rewrittenModule, host, peStream);
-          } else {
-            //Note that the default copier and rewriter preserves the locations collections, so the original pdbReader is still a valid ISourceLocationProvider.
-            //However, if IL instructions were rewritten, the pdbReader will no longer be an accurate ILocalScopeProvider
-            using (var pdbWriter = new PdbWriter(rewrittenModule.Location + ".pdb", pdbReader)) {
-              PeWriter.WritePeToStream(rewrittenModule, host, peStream, pdbReader, pdbReader, pdbWriter);
+          using (var peStream = File.Create(rewrittenModule.Location + ".pe")) {
+            if (pdbReader == null) {
+              PeWriter.WritePeToStream(rewrittenModule, host, peStream);
+            } else {
+              //Note that the default copier and rewriter preserves the locations collections, so the original pdbReader is still a valid ISourceLocationProvider.
+              //However, if IL instructions were rewritten, the pdbReader will no longer be an accurate ILocalScopeProvider
+              using (var pdbWriter = new PdbWriter(rewrittenModule.Location + ".pdb", pdbReader)) {
+                PeWriter.WritePeToStream(rewrittenModule, host, peStream, pdbReader, pdbReader, pdbWriter);
+              }
             }
           }
         }

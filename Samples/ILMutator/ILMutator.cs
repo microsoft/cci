@@ -54,8 +54,10 @@ namespace ILMutator {
 
           var outputFileName = Path.GetFileNameWithoutExtension(outputPath);
 
-          using (var pdbWriter = new PdbWriter(outputFileName + ".pdb", pdbReader)) {
-            PeWriter.WritePeToStream(module, host, File.Create(outputPath), pdbReader, localScopeProvider, pdbWriter);
+          using (var outputStream = File.Create(outputPath)) {
+            using (var pdbWriter = new PdbWriter(outputFileName + ".pdb", pdbReader)) {
+              PeWriter.WritePeToStream(module, host, outputStream, pdbReader, localScopeProvider, pdbWriter);
+            }
           }
         }
         return 0; // success

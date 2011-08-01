@@ -33,13 +33,14 @@ namespace EdgeProfiler {
           var instrumentedModule = Instrumenter.GetInstrumented(host, module, pdbReader, logger);
           var newRoot = Path.GetFileNameWithoutExtension(module.Location)+".instrumented";
           var newName = newRoot+Path.GetExtension(module.Location);
-          Stream peStream = File.Create(newName);
-          if (pdbReader == null) {
-            PeWriter.WritePeToStream(instrumentedModule, host, peStream);
-          } else {
-            var localScopeProvider = new ILGenerator.LocalScopeProvider(pdbReader);
-            using (var pdbWriter = new PdbWriter(newRoot + ".pdb", pdbReader)) {
-              PeWriter.WritePeToStream(instrumentedModule, host, peStream, pdbReader, localScopeProvider, pdbWriter);
+          using (var peStream = File.Create(newName)) {
+            if (pdbReader == null) {
+              PeWriter.WritePeToStream(instrumentedModule, host, peStream);
+            } else {
+              var localScopeProvider = new ILGenerator.LocalScopeProvider(pdbReader);
+              using (var pdbWriter = new PdbWriter(newRoot + ".pdb", pdbReader)) {
+                PeWriter.WritePeToStream(instrumentedModule, host, peStream, pdbReader, localScopeProvider, pdbWriter);
+              }
             }
           }
         }
