@@ -497,12 +497,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       IFieldDefinition/*?*/ initialValueField = tokenOf.Definition as IFieldDefinition;
       if (initialValueField == null || !initialValueField.IsMapped) return;
       if (methodCall.MethodToCall.Name.UniqueKey != this.InitializeArray.UniqueKey) return;
-      expressionStatement = statements[i+3] as ExpressionStatement;
-      if (expressionStatement == null) return;
-      Assignment/*?*/ assignment = expressionStatement.Expression as Assignment;
-      if (assignment == null) return;
-      var pop2 = assignment.Source as Pop;
-      if (pop2 == null) return;
       List<ulong> sizes = new List<ulong>();
       foreach (IExpression expr in createArray.Sizes) {
         IMetadataConstant mdc = expr as IMetadataConstant;
@@ -510,9 +504,21 @@ namespace Microsoft.Cci.ILToCodeModel {
         sizes.Add(ConvertToUlong(mdc));
       }
       AddArrayInitializers(createArray, initialValueField, sizes.ToArray());
-      assignment.Source = createArray;
-      statements[i] = expressionStatement;
-      statements.RemoveRange(i+1, 3);
+      expressionStatement = statements[i+3] as ExpressionStatement;
+      if (expressionStatement != null) {
+        Assignment/*?*/ assignment = expressionStatement.Expression as Assignment;
+        if (assignment != null) {
+          var pop2 = assignment.Source as Pop;
+          if (pop2 != null) {
+            assignment.Source = createArray;
+            statements[i] = expressionStatement;
+            statements.RemoveRange(i+1, 3);
+            return;
+          }
+        }
+      }
+      push.ValueToPush = createArray;
+      statements.RemoveRange(i+1, 2);
     }
 
     private static void AddArrayInitializers(CreateArray createArray, IFieldDefinition initialValueField, ulong[] sizes) {
