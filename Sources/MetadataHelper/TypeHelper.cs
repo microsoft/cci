@@ -1005,7 +1005,7 @@ namespace Microsoft.Cci {
     /// Returns the unit that defines the given type. If the type is a structural type, such as a pointer the result is 
     /// the defining unit of the element type, or in the case of a generic type instance, the definining type of the generic template type.
     /// </summary>
-    public static IUnit/*?*/ GetDefiningUnit(ITypeDefinition typeDefinition) {
+    public static IUnit GetDefiningUnit(ITypeDefinition typeDefinition) {
       Contract.Requires(typeDefinition != null);
 
       INestedTypeDefinition/*?*/ nestedTypeDefinition = typeDefinition as INestedTypeDefinition;
@@ -1023,14 +1023,19 @@ namespace Microsoft.Cci {
       if (pointerType != null) return TypeHelper.GetDefiningUnit(pointerType.TargetType.ResolvedType);
       IArrayType/*?*/ arrayType = typeDefinition as IArrayType;
       if (arrayType != null) return TypeHelper.GetDefiningUnit(arrayType.ElementType.ResolvedType);
-      return null;
+      IGenericTypeParameter/*?*/ genericTypeParameter = typeDefinition as IGenericTypeParameter;
+      if (genericTypeParameter != null) return TypeHelper.GetDefiningUnit(genericTypeParameter.DefiningType);
+      IGenericMethodParameter/*?*/ genericMethodParameter = typeDefinition as IGenericMethodParameter;
+      if (genericMethodParameter != null) return TypeHelper.GetDefiningUnit(genericMethodParameter.DefiningMethod.ContainingType.ResolvedType);
+      Contract.Assume(false);
+      return Dummy.Unit;
     }
 
     /// <summary>
     /// Returns a reference to the unit that defines the given type. If the reference type is a reference to a structural type, such as a pointer the result is 
     /// the a reference to the defining unit of the element type, or in the case of a generic type instance, the definining type of the generic template type.
     /// </summary>
-    public static IUnitReference/*?*/ GetDefiningUnitReference(ITypeReference typeReference) {
+    public static IUnitReference GetDefiningUnitReference(ITypeReference typeReference) {
       Contract.Requires(typeReference != null);
 
       INestedTypeReference/*?*/ nestedTypeReference = typeReference as INestedTypeReference;
@@ -1048,7 +1053,12 @@ namespace Microsoft.Cci {
       if (pointerTypeReference != null) return TypeHelper.GetDefiningUnitReference(pointerTypeReference.TargetType);
       IArrayTypeReference/*?*/ arrayTypeReference = typeReference as IArrayTypeReference;
       if (arrayTypeReference != null) return TypeHelper.GetDefiningUnitReference(arrayTypeReference.ElementType);
-      return null;
+      IGenericTypeParameterReference/*?*/ genericTypeParameterReference = typeReference as IGenericTypeParameterReference;
+      if (genericTypeParameterReference != null) return TypeHelper.GetDefiningUnitReference(genericTypeParameterReference.DefiningType);
+      IGenericMethodParameterReference/*?*/ genericMethodParameterReference = typeReference as IGenericMethodParameterReference;
+      if (genericMethodParameterReference != null) return TypeHelper.GetDefiningUnitReference(genericMethodParameterReference.DefiningMethod.ContainingType);
+      Contract.Assume(false);
+      return Dummy.Unit;
     }
 
     /// <summary>
