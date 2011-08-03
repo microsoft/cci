@@ -80,6 +80,7 @@ namespace Microsoft.Cci {
     private void CreateBlocksForLocalScopes() {
       if (this.localScopeProvider == null) return;
       foreach (var scope in this.localScopeProvider.GetLocalScopes(this.methodBody)) {
+        Contract.Assume(scope != null);
         this.CreateBlock(scope.Offset);
       }
     }
@@ -281,7 +282,7 @@ namespace Microsoft.Cci {
       foreach (uint targetAddress in branches) {
         var target = this.cdfg.BlockFor[targetAddress];
         Contract.Assume(target != null); //All branch targets must have blocks, but we can't put that in a contract that satisfies the checker.
-        if (currentSuccesors.Contains(target)) return;
+        if (currentSuccesors.Contains(target)) continue;
         currentSuccesors.Add(target);
         edges.Add(target);
       }

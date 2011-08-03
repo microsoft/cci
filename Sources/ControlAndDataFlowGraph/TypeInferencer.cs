@@ -8,9 +8,9 @@ namespace Microsoft.Cci {
   /// <summary>
   /// 
   /// </summary>
-  internal class TypeInferencer<BasicBlock, Instruction> 
-    where BasicBlock : Microsoft.Cci.BasicBlock<Instruction>, new ()
-    where Instruction : Microsoft.Cci.Instruction, new () {
+  internal class TypeInferencer<BasicBlock, Instruction>
+    where BasicBlock : Microsoft.Cci.BasicBlock<Instruction>, new()
+    where Instruction : Microsoft.Cci.Instruction, new() {
 
     private TypeInferencer(IMetadataHost host, ControlAndDataFlowGraph<BasicBlock, Instruction> cfg, Stack<Instruction> stack, Queue<BasicBlock> blocksToVisit, SetOfObjects blocksAlreadyVisited) {
       Contract.Requires(host != null);
@@ -639,7 +639,7 @@ namespace Microsoft.Cci {
           Contract.Assume(constructorReference != null); //This is an informally specified property of the Metadata model.
           for (var i = constructorReference.ParameterCount; i > 0; i--)
             this.stack.Pop();
-          instruction.Type = constructorReference.ContainingType;          
+          instruction.Type = constructorReference.ContainingType;
           this.stack.Push(instruction);
           break;
         case OperationCode.Refanytype:
@@ -719,7 +719,7 @@ namespace Microsoft.Cci {
               return this.platformType.SystemFloat64;
 
             default:
-              return Dummy.TypeReference;
+              return rightOperand.Type; //code generators will tend to make both operands be of the same type. Assume this happened because the right operand is an enum.
           }
 
         case PrimitiveTypeCode.Int8:
@@ -758,7 +758,7 @@ namespace Microsoft.Cci {
               return this.platformType.SystemFloat64;
 
             default:
-              return Dummy.TypeReference;
+              return rightOperand.Type; //code generators will tend to make both operands be of the same type. Assume this happened because the right operand is an enum.
           }
 
         case PrimitiveTypeCode.UInt64:
@@ -790,7 +790,7 @@ namespace Microsoft.Cci {
               return this.platformType.SystemFloat64;
 
             default:
-              return Dummy.TypeReference;
+              return rightOperand.Type; //code generators will tend to make both operands be of the same type. Assume this happened because the right operand is an enum.
           }
 
         case PrimitiveTypeCode.Int64:
@@ -820,7 +820,7 @@ namespace Microsoft.Cci {
               return this.platformType.SystemFloat64;
 
             default:
-              return Dummy.TypeReference;
+              return rightOperand.Type; //code generators will tend to make both operands be of the same type. Assume this happened because the right operand is an enum.
           }
 
         case PrimitiveTypeCode.UIntPtr:
@@ -852,6 +852,7 @@ namespace Microsoft.Cci {
               return rightOperand.Type;
 
             default:
+              Contract.Assume(false);
               return Dummy.TypeReference;
           }
 
@@ -884,6 +885,7 @@ namespace Microsoft.Cci {
               return rightOperand.Type;
 
             default:
+              Contract.Assume(false);
               return Dummy.TypeReference;
           }
 
@@ -897,15 +899,38 @@ namespace Microsoft.Cci {
             case PrimitiveTypeCode.Pointer:
             case PrimitiveTypeCode.Reference:
               return this.platformType.SystemUIntPtr;
+            case PrimitiveTypeCode.Int8:
+            case PrimitiveTypeCode.Int16:
+            case PrimitiveTypeCode.Int32:
+            case PrimitiveTypeCode.Int64:
+            case PrimitiveTypeCode.UInt8:
+            case PrimitiveTypeCode.UInt16:
+            case PrimitiveTypeCode.UInt32:
+            case PrimitiveTypeCode.UInt64:
             case PrimitiveTypeCode.IntPtr:
             case PrimitiveTypeCode.UIntPtr:
               return leftOperand.Type;
             default:
+              Contract.Assume(false);
               return Dummy.TypeReference;
           }
 
         default:
-          return Dummy.TypeReference;
+          switch (rightTypeCode) {
+            case PrimitiveTypeCode.Int8:
+            case PrimitiveTypeCode.Int16:
+            case PrimitiveTypeCode.Int32:
+            case PrimitiveTypeCode.Int64:
+            case PrimitiveTypeCode.Boolean:
+            case PrimitiveTypeCode.Char:
+            case PrimitiveTypeCode.UInt8:
+            case PrimitiveTypeCode.UInt16:
+            case PrimitiveTypeCode.UInt32:
+            case PrimitiveTypeCode.UInt64:
+              //assume that the left operand has an enum type.
+              return leftOperand.Type;
+          }
+          return leftOperand.Type; //assume they are both enums
       }
     }
 
