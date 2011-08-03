@@ -527,6 +527,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
+    public override void TraverseChildren(IConditionalStatement conditionalStatement) {
+      base.TraverseChildren(conditionalStatement);
+      var condStat = (ConditionalStatement)conditionalStatement;
+      condStat.Condition = ConvertToBoolean(condStat.Condition);
+    }
+
     private static IExpression ConvertToBoolean(IExpression expression) {
       IPlatformType platformType = expression.Type.PlatformType;
       var cc = expression as CompileTimeConstant;
@@ -547,7 +553,20 @@ namespace Microsoft.Cci.ILToCodeModel {
       ITypeReference expressionType = expression.Type;
       IExpression rightOperand = null; // zero or null, but has to be type-specific
       switch (expressionType.TypeCode) {
-        case PrimitiveTypeCode.Boolean: return expression;
+        case PrimitiveTypeCode.Boolean: {
+            var addrDeref = expression as AddressDereference;
+            Conversion conversion;
+            IManagedPointerTypeReference mgdPtr;
+            if (addrDeref != null && (conversion = addrDeref.Address as Conversion) != null && 
+              (mgdPtr = conversion.ValueToConvert.Type as IManagedPointerTypeReference) != null) {
+              expressionType = mgdPtr.TargetType;
+              addrDeref.Address = conversion.ValueToConvert;
+              addrDeref.Type = expressionType;
+              expression = addrDeref;
+              goto default;
+            }
+            return expression;
+          }
         case PrimitiveTypeCode.Char: val = (char)0; type = platformType.SystemChar; break;
         case PrimitiveTypeCode.Float32: val = (float)0; type = platformType.SystemFloat32; break;
         case PrimitiveTypeCode.Float64: val = (double)0; type = platformType.SystemFloat64; break;
