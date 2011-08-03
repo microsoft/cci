@@ -62,7 +62,7 @@ namespace Microsoft.Cci.Ast {
           assemblyAttributes.TrimExcess();
           this.assemblyAttributes = assemblyAttributes.AsReadOnly();
         }
-        return this.assemblyAttributes; 
+        return this.assemblyAttributes;
       }
     }
     IEnumerable<ICustomAttribute> assemblyAttributes;
@@ -608,6 +608,13 @@ namespace Microsoft.Cci.Ast {
     readonly IEnumerable<IModuleReference> moduleReferences;
 
     /// <summary>
+    /// True if the module has a native entry point.
+    /// </summary>
+    public bool NativeEntryPoint {
+      get { return false; }
+    }
+
+    /// <summary>
     /// A globally unique persistent identifier for this module.
     /// </summary>
     public Guid PersistentIdentifier {
@@ -672,6 +679,13 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     public virtual ulong SizeOfStackCommit {
       get { return 0x1000; } //TODO: provide an option for setting this
+    }
+
+    /// <summary>
+    /// True if the module contains a hash of its contents, encrypted with the private key of an assembly strong name.
+    /// </summary>
+    public virtual bool StrongNameSigned {
+      get { return false; } //TODO: provide an option for setting this
     }
 
     /// <summary>
