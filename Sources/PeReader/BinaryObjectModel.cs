@@ -327,6 +327,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return (this.Cor20Flags & COR20Flags.ILOnly) == COR20Flags.ILOnly; }
     }
 
+    bool IModule.StrongNameSigned {
+      get { return (this.Cor20Flags & COR20Flags.StrongNameSigned) == COR20Flags.StrongNameSigned; }
+    }
+
+    bool IModule.NativeEntryPoint {
+      get { return (this.Cor20Flags & COR20Flags.NativeEntryPoint) == COR20Flags.NativeEntryPoint; }
+    }
+
     ModuleKind IModule.Kind {
       get { return this.PEFileToObjectModel.ModuleKind; }
     }
@@ -1725,7 +1733,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         unsafe {
           MemoryBlock block =
             new MemoryBlock(
-              this.peFileToObjectModel.PEFileReader.BinaryDocumentMemoryBlock.Pointer + this.sectionHeaders[this.index].OffsetToRawData + 0, 
+              this.peFileToObjectModel.PEFileReader.BinaryDocumentMemoryBlock.Pointer + this.sectionHeaders[this.index].OffsetToRawData + 0,
               this.sectionHeaders[this.index].VirtualSize);
           return new EnumerableMemoryBlockWrapper(block);
         }

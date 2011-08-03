@@ -205,6 +205,14 @@ namespace Microsoft.Cci {
       get { throw new NotImplementedException(); }
     }
 
+    public bool StrongNameSigned {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool NativeEntryPoint {
+      get { throw new NotImplementedException(); }
+    }
+
     public ModuleKind Kind {
       get { throw new NotImplementedException(); }
     }
@@ -787,6 +795,16 @@ namespace Microsoft.Cci {
     /// True if the module contains only IL and is processor independent.
     /// </summary>
     bool ILOnly { get; }
+
+    /// <summary>
+    /// True if the module contains a hash of its contents, encrypted with the private key of an assembly strong name.
+    /// </summary>
+    bool StrongNameSigned { get; }
+
+    /// <summary>
+    /// True if the module has a native entry point.
+    /// </summary>
+    bool NativeEntryPoint { get; }
 
     /// <summary>
     /// The kind of metadata stored in this module. For example whether this module is an executable or a manifest resource file.

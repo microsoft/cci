@@ -267,21 +267,6 @@ namespace Microsoft.Cci {
       return result+alignment;
     }
 
-    private uint ComputeHashSize() {
-      uint hashSize = 0;
-      IAssembly/*?*/ assembly = this.module as IAssembly;
-      if (assembly != null) {
-        uint keySize = IteratorHelper.EnumerableCount(assembly.PublicKey);
-        if (keySize > 0) {
-          if (keySize > 128+32)
-            hashSize = keySize-32;
-          else
-            hashSize = 128;
-        }
-      }
-      return hashSize;
-    }
-
     private uint ComputeStrongNameSignatureSize() {
       IAssembly/*?*/ assembly = this.module as IAssembly;
       if (assembly == null) return 0;
@@ -294,7 +279,7 @@ namespace Microsoft.Cci {
       uint result = this.ComputeOffsetToMetadata();
       result += this.ComputeSizeOfMetadata();
       result += Aligned(this.resourceWriter.BaseStream.Length, 4);
-      result += this.ComputeHashSize(); //size of strong name hash
+      result += this.ComputeStrongNameSignatureSize();
       return result;
     }
 
@@ -860,6 +845,8 @@ namespace Microsoft.Cci {
       uint result = 0;
       if (this.module.ILOnly) result |= 1;
       if (this.module.Requires32bits) result |= 2;
+      if (this.module.StrongNameSigned) result |= 8;
+      if (this.module.NativeEntryPoint) result |= 0x10;
       if (this.module.TrackDebugData) result |= 0x10000;
       return result;
     }
@@ -4406,6 +4393,9 @@ namespace Microsoft.Cci {
 
     private void WriteSpaceForHash() {
       uint size = this.clrHeader.strongNameSignature.Size;
+      //The actual contents will be filled in later by the StrongNameSignatureGeneration function in mscoree.dll
+      //At the moment the sn.exe utility is the only way to do it.
+      //TODO: add functionality to PeWriter to invoke StrongNameSignatureGeneration on the image once serialized.
       while (size > 0) { this.peStream.WriteByte(0); size--; }
     }
 

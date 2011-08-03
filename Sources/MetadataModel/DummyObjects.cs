@@ -779,6 +779,14 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
+    public bool StrongNameSigned {
+      get { return false; }
+    }
+
+    public bool NativeEntryPoint {
+      get { return false; }
+    }
+
     public ModuleKind Kind {
       get { return ModuleKind.ConsoleApplication; }
     }
@@ -2846,6 +2854,14 @@ namespace Microsoft.Cci {
     }
 
     public bool ILOnly {
+      get { return false; }
+    }
+
+    public bool StrongNameSigned {
+      get { return false; }
+    }
+
+    public bool NativeEntryPoint {
       get { return false; }
     }
 

@@ -705,6 +705,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.entryPoint = Dummy.MethodReference;
       this.fileAlignment = 512;
       this.ilOnly = true;
+      this.StrongNameSigned = false;
+      this.NativeEntryPoint = false;
       this.kind = ModuleKind.DynamicallyLinkedLibrary;
       this.linkerMajorVersion = 6;
       this.linkerMinorVersion = 0;
@@ -752,6 +754,8 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.entryPoint = Dummy.MethodReference;
       this.fileAlignment = module.FileAlignment;
       this.ilOnly = module.ILOnly;
+      this.strongNameSigned = module.StrongNameSigned;
+      this.nativeEntryPoint = module.NativeEntryPoint;
       this.kind = module.Kind;
       this.linkerMajorVersion = module.LinkerMajorVersion;
       this.linkerMinorVersion = module.LinkerMinorVersion;
@@ -899,6 +903,25 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.ilOnly = value; }
     }
     bool ilOnly;
+
+    /// <summary>
+    /// True if the module contains a hash of its contents, encrypted with the private key of an assembly strong name.
+    /// </summary>
+    public bool StrongNameSigned {
+      get { return this.strongNameSigned; }
+      set { this.strongNameSigned = value; }
+    }
+    bool strongNameSigned;
+
+    /// <summary>
+    /// True if the module has a native entry point.
+    /// </summary>
+    /// <value></value>
+    public bool NativeEntryPoint {
+      get { return this.nativeEntryPoint; }
+      set { this.nativeEntryPoint = value; }
+    }
+    bool nativeEntryPoint;
 
     /// <summary>
     /// The kind of metadata stored in this module. For example whether this module is an executable or a manifest resource file.
