@@ -1,5 +1,4 @@
-﻿using System;
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 //
 // Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the Microsoft Public License.
@@ -9,6 +8,7 @@
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
 //-----------------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
@@ -343,13 +343,17 @@ namespace Microsoft.Cci.ILToCodeModel {
       IManagedPointerTypeReference/*?*/ managedPointerTypeReference = addressDereference.Address.Type as IManagedPointerTypeReference;
       if (managedPointerTypeReference != null) {
         if (managedPointerTypeReference.TargetType != Dummy.TypeReference) {
-          if (addressDereference.Type is Dummy) 
+          if (addressDereference.Type is Dummy)
             ((AddressDereference)addressDereference).Type = managedPointerTypeReference.TargetType;
           else if (!TypeHelper.TypesAreEquivalent(addressDereference.Type, managedPointerTypeReference.TargetType)) {
-            var targetPointerType = Immutable.ManagedPointerType.GetManagedPointerType(addressDereference.Type, this.host.InternFactory);
-            ((AddressDereference)addressDereference).Address = new Conversion() {
-              ValueToConvert = addressDereference.Address, TypeAfterConversion = targetPointerType, Type = targetPointerType
-            };
+            if (managedPointerTypeReference.TargetType.TypeCode == PrimitiveTypeCode.Boolean && addressDereference.Type.TypeCode == PrimitiveTypeCode.Int8)
+              ((AddressDereference)addressDereference).Type = managedPointerTypeReference.TargetType;
+            else {
+              var targetPointerType = Immutable.ManagedPointerType.GetManagedPointerType(addressDereference.Type, this.host.InternFactory);
+              ((AddressDereference)addressDereference).Address = new Conversion() {
+                ValueToConvert = addressDereference.Address, TypeAfterConversion = targetPointerType, Type = targetPointerType
+              };
+            }
           }
           return;
         }
@@ -409,7 +413,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       else if (assignment.Target.Type is IPointerTypeReference || assignment.Target.Type is IManagedPointerTypeReference) {
         if (assignment.Source.Type.TypeCode == PrimitiveTypeCode.UIntPtr || assignment.Source.Type.TypeCode == PrimitiveTypeCode.IntPtr)
           ((Assignment)assignment).Source = new Conversion() { ValueToConvert = assignment.Source, TypeAfterConversion = assignment.Target.Type, Type = assignment.Target.Type };
-      }      
+      }
       ((Assignment)assignment).Type = assignment.Target.Type;
     }
 

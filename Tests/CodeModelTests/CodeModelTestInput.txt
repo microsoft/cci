@@ -490,6 +490,13 @@ namespace CodeModelTestInput
 
         }
 
+        public void Method26(out bool y)
+        {
+            y = false;
+            return;
+
+        }
+
         public Class1()
         {
             this.c = 0;

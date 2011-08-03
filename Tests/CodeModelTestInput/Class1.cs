@@ -225,6 +225,10 @@ namespace CodeModelTestInput {
       return x;
     }
 
+    public void Method26(out bool y) {
+      y=false;
+    }
+
   }
 
   public class Class2 {
@@ -1156,5 +1160,4 @@ namespace CodeModelTestInput {
     }
 
   }
-
 }
