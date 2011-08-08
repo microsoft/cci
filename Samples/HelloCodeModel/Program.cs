@@ -26,6 +26,7 @@ namespace HelloCodeModel {
           Name = nameTable.GetNameFor("hello"),
           ModuleName = nameTable.GetNameFor("hello.exe"),
           Kind = ModuleKind.ConsoleApplication,
+          PlatformType = host.PlatformType,
           TargetRuntimeVersion = coreAssembly.TargetRuntimeVersion,
           RequiresStartupStub = host.PointerSize == 4,
         };
