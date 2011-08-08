@@ -439,12 +439,12 @@ namespace Microsoft.Cci {
     /// </summary>
     private AssemblyIdentity/*?*/ Probe(string probeDir, AssemblyIdentity referencedAssembly) {
       string path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".dll");
-      if (File.Exists(path)) return new AssemblyIdentity(referencedAssembly, path);
-      path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".winmd");
-      if (File.Exists(path)) return new AssemblyIdentity(referencedAssembly, path);
-      path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".exe");
-      if (File.Exists(path)) return new AssemblyIdentity(referencedAssembly, path);
-      return null;
+      if (!File.Exists(path)) path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".exe");
+      if (!File.Exists(path)) return null;
+      var assembly = this.LoadUnitFrom(path) as IAssembly;
+      if (assembly == null) return null;
+      if (assembly.AssemblyIdentity != referencedAssembly) return null;
+      return assembly.AssemblyIdentity;
     }
 
     /// <summary>
