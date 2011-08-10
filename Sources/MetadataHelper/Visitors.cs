@@ -3082,7 +3082,7 @@ namespace Microsoft.Cci {
     /// A table in which we record the traversal of objects that can be reached several times (because they are references or can be referred to)
     /// so that we can avoid traversing them more than once.
     /// </summary>
-    protected SetOfObjects objectsThatHaveAlreadyBeenTraversed = new SetOfObjects(1024*4);    
+    protected SetOfObjects objectsThatHaveAlreadyBeenTraversed = new SetOfObjects(1024*4);
 
     IMetadataVisitor/*?*/ preorderVisitor;
     IMetadataVisitor/*?*/ postorderVisitor;
@@ -4441,6 +4441,9 @@ namespace Microsoft.Cci {
     /// </summary>
     public virtual void TraverseChildren(IFieldReference fieldReference) {
       Contract.Requires(fieldReference != null);
+      //field reference attributes are distinct from field definition attributes. When a definition serves as a reference, the reference is assumed to be unattributed.
+      if (!(fieldReference is IFieldDefinition))
+        this.Traverse(fieldReference.Attributes);
       this.Traverse(fieldReference.ContainingType);
       if (this.stopTraversal) return;
       if (fieldReference.IsModified) {
@@ -4724,7 +4727,9 @@ namespace Microsoft.Cci {
     /// </summary>
     public virtual void TraverseChildren(IMethodReference methodReference) {
       Contract.Requires(methodReference != null);
-      this.Traverse(methodReference.Attributes);
+      //method reference attributes are distinct from method definition attributes. When a definition serves as a reference, the reference is assumed to be unattributed.
+      if (!(methodReference is IMethodDefinition))
+        this.Traverse(methodReference.Attributes);
       if (this.stopTraversal) return;
       this.Traverse(methodReference.ContainingType);
       if (this.stopTraversal) return;
@@ -5147,7 +5152,9 @@ namespace Microsoft.Cci {
     /// </summary>
     public virtual void TraverseChildren(IUnitReference unitReference) {
       Contract.Requires(unitReference != null);
-      //no children to traverse
+      //unit reference attributes are distinct from unit definition attributes. When a definition serves as a reference, the reference is assumed to be unattributed.
+      if (!(unitReference is IUnit))
+        this.Traverse(unitReference.Attributes);
     }
 
     /// <summary>
