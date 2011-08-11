@@ -475,7 +475,7 @@ namespace Microsoft.Cci.Immutable {
     /// </summary>
     public override IAliasForType AliasForType {
       get {
-        if (this.aliasForType == null) 
+        if (this.aliasForType == null)
           this.resolvedType = this.GetResolvedType(); //also fills in this.aliasForType
         return this.aliasForType;
       }
@@ -1043,7 +1043,7 @@ namespace Microsoft.Cci.Immutable {
     INamespaceTypeReference/*?*/ systemCollectionsIList;
 
     /// <summary>
-    /// System.Collections.IList
+    /// System.Collections.IStructuralComparable
     /// </summary>
     public INamespaceTypeReference SystemCollectionsIStructuralComparable {
       get {
@@ -1056,7 +1056,7 @@ namespace Microsoft.Cci.Immutable {
     INamespaceTypeReference/*?*/ systemCollectionsIStructuralComparable;
 
     /// <summary>
-    /// System.Collections.IList
+    /// System.Collections.IStructuralEquatable
     /// </summary>
     public INamespaceTypeReference SystemCollectionsIStructuralEquatable {
       get {
