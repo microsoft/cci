@@ -637,7 +637,7 @@ namespace Microsoft.Cci.Ast {
       SimpleName/*?*/ simpleName = this.Expression as SimpleName;
       if (simpleName != null) return this.ResolveSimpleName(simpleName, true);
       QualifiedName/*?*/ qualifiedName = this.Expression as QualifiedName;
-      if (qualifiedName != null) return this.ResolveQualifiedName(qualifiedName.ResolveQualifierAsNamespaceOrType(), qualifiedName.SimpleName);
+      if (qualifiedName != null) return this.ResolveQualifiedName(qualifiedName.ResolveQualifierAsNamespaceOrType(true), qualifiedName.SimpleName);
       AliasQualifiedName/*?*/ aliasQualName = this.Expression as AliasQualifiedName;
       if (aliasQualName != null) return this.ResolveQualifiedName(aliasQualName.ResolveAlias(), aliasQualName.SimpleName);
       //^ assert false;
@@ -676,6 +676,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="simpleName"></param>
     /// <returns></returns>
     protected virtual ITypeDefinition ResolveQualifiedName(object/*?*/ qualifier, SimpleName simpleName) {
+      if (qualifier == null) return Dummy.Type;
       INamespaceDefinition/*?*/ nspace = qualifier as INamespaceDefinition;
       if (nspace != null) return ResolveQualifiedName(nspace, simpleName);
       ITypeDefinition/*?*/ qualifyingType = qualifier as ITypeDefinition;
@@ -727,8 +728,7 @@ namespace Microsoft.Cci.Ast {
         ITypeDefinition/*?*/ type = member as ITypeDefinition;
         if (type != null && TypeHelper.IsAttributeType(type)) return type;
       }
-      Error e = Error.ToBeDefined;
-      this.Helper.ReportError(new AstErrorMessage(this.Expression, e));
+      this.Helper.ReportError(new AstErrorMessage(simpleName, Error.TypeNameNotFound, nspace.Name.Value, simpleName.Name.Value));
       return Dummy.Type;
     }
 
@@ -16332,14 +16332,14 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Returns either null or the namespace or type group that binds to this name after resolving the Qualifier as a namespace or type.
     /// </summary>
-    public object/*?*/ ResolveAsNamespaceOrTypeGroup()
+    public object/*?*/ ResolveAsNamespaceOrTypeGroup(bool reportError = false)
       //^ ensures result == null || result is INamespaceDefinition || result is ITypeGroup;
     {
-      object/*?*/ resolvedQualifier = this.ResolveQualifierAsNamespaceOrType();
+      object/*?*/ resolvedQualifier = this.ResolveQualifierAsNamespaceOrType(reportError);
       ITypeDefinition/*?*/ qualifyingType = this.ResolveAsType(resolvedQualifier);
       if (qualifyingType != null) {
         if (!this.ContainingBlock.ContainingTypeDeclaration.CanAccess(qualifyingType))
-          resolvedQualifier = this.ResolveQualifierAsNamespace();
+          resolvedQualifier = this.ResolveQualifierAsNamespace(reportError);
         else {
           INestedTypeDefinition/*?*/ resolvedTypeMember = this.ResolveTypeMember(qualifyingType, false) as INestedTypeDefinition;
           if (resolvedTypeMember != null) {
@@ -16361,8 +16361,14 @@ namespace Microsoft.Cci.Ast {
           if (nsMember is INamespaceDefinition) resolvedNamespaceMember = nsMember;
         }
         //^ assume resolvedNamespaceMember == null || resolvedNamespaceMember is INamespaceDefinition; //follows from logic above
-        if (resolvedNamespaceMember != null) this.hasErrors = false;
-        return resolvedNamespaceMember;
+        if (resolvedNamespaceMember != null) {
+          this.hasErrors = false;
+          return resolvedNamespaceMember;
+        }
+      }
+      if (reportError) {
+        this.Helper.ReportError(new AstErrorMessage(this, Error.TypeNameNotFound, this.SimpleName.Name.Value, this.Qualifier.SourceLocation.Source));
+        this.hasErrors = true;
       }
       return null;
     }
@@ -16415,7 +16421,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Resolves the qualifier as a namespace, provided that it is a simple name. Returns null if this is not possible.
     /// </summary>
-    private INamespaceDefinition/*?*/ ResolveQualifierAsNamespace() {
+    private INamespaceDefinition/*?*/ ResolveQualifierAsNamespace(bool reportError = false) {
       SimpleName/*?*/ simpleName = this.Qualifier as SimpleName;
       if (simpleName != null) return simpleName.ResolveAsNamespace();
       return null;
@@ -16424,13 +16430,13 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// Resolves the qualifier as a namespace or as a type. Returns null if this is not possible.
     /// </summary>
-    public object/*?*/ ResolveQualifierAsNamespaceOrType()
+    public object/*?*/ ResolveQualifierAsNamespaceOrType(bool reportError = false)
       //^ ensures result == null || result is INamespaceDefinition || result is ITypeDefinition || result is ITypeGroup;
     {
       SimpleName/*?*/ simpleName = this.Qualifier as SimpleName;
-      if (simpleName != null) return simpleName.ResolveAsNamespaceOrType();
+      if (simpleName != null) return simpleName.ResolveAsNamespaceOrType(reportError);
       QualifiedName/*?*/ qualifiedName = this.Qualifier as QualifiedName;
-      if (qualifiedName != null) return qualifiedName.ResolveAsNamespaceOrTypeGroup();
+      if (qualifiedName != null) return qualifiedName.ResolveAsNamespaceOrTypeGroup(reportError);
       AliasQualifiedName/*?*/ aliasQualifiedName = this.Qualifier as AliasQualifiedName;
       if (aliasQualifiedName != null) return aliasQualifiedName.ResolveAsNamespaceOrType();
       GenericInstanceExpression/*?*/ genericInstanceExpression = this.Qualifier as GenericInstanceExpression;
@@ -17993,12 +17999,18 @@ namespace Microsoft.Cci.Ast {
     /// When the name binds to both a type and and a namespace, only the type is returned. When the name binds to more than one
     /// type, a type group is returned.
     /// </summary>
-    public virtual object/*?*/ ResolveAsNamespaceOrType()
+    public virtual object/*?*/ ResolveAsNamespaceOrType(bool reportError = false)
       //^ ensures result == null || result is INamespaceDefinition || result is ITypeDefinition || result is ITypeGroup;
     {
       this.hasErrors = false;
       object/*?*/ result = this.ResolveUsing(this.ContainingBlock, true);
-      if (result == null) this.hasErrors = null;
+      if (result == null) {
+        if (reportError) {
+          this.Helper.ReportError(new AstErrorMessage(this, Error.SingleTypeNameNotFound, this.Name.Value));
+          this.hasErrors = true;
+        } else
+        this.hasErrors = null;
+      }
       return result;
     }
 

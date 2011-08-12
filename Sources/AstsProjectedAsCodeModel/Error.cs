@@ -402,6 +402,11 @@ namespace Microsoft.Cci.Ast {
     IllegalUseOfType,
 
     /// <summary>
+    /// The type or namespace name '{1}' does not exist in the namespace '{0}' (are you missing an assembly reference?)
+    /// </summary>
+    TypeNameNotFound,
+
+    /// <summary>
     /// Not an actual error message, but a convenient place holder during development.
     /// </summary>
     ToBeDefined

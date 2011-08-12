@@ -286,4 +286,7 @@
   <data name="IllegalUseOfType" xml:space="preserve">
     <value>'{0}' : illegal use of type '{1}'.</value>
   </data>
+  <data name="TypeNameNotFound" xml:space="preserve">
+    <value>The type or namespace name '{1}' does not exist in the namespace '{0}' (are you missing an assembly reference?)</value>
+  </data>
 </root>
