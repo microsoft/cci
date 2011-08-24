@@ -1233,7 +1233,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           this.PopOperandStack();
           this.PopOperandStack();
           this.PopOperandStack();
-          Debug.Assert(false); //if code out there actually uses this, I need to know sooner rather than later.
+          //Debug.Assert(false); //if code out there actually uses this, I need to know sooner rather than later.
           break;
 
         case OperationCode.Cpobj:
@@ -1257,7 +1257,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           this.PopOperandStack();
           this.PopOperandStack();
           this.PopOperandStack();
-          Debug.Assert(false); //if code out there actually uses this, I need to know sooner rather than later.
+          //Debug.Assert(false); //if code out there actually uses this, I need to know sooner rather than later.
           break;
 
         case OperationCode.Initobj:
