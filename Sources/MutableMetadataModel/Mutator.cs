@@ -2003,9 +2003,9 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <remarks>While the model is being copied, the resulting model is incomplete and or inconsistent. It should not be traversed
   /// independently nor should any of its computed properties, such as ResolvedType be evaluated. Scenarios that need such functionality
   /// should be implemented by first making a mutable copy of the entire assembly and then running a second pass over the mutable result.
-  /// The new classes MetadataCopier and MutatingVisitor are meant to facilitate such scenarios.
+  /// The new classes MetadataDeepCopier and MetadataRewriter are meant to facilitate such scenarios.
   /// </remarks>
-  [Obsolete("This class has been superceded by MetadataCopier and MutatingVisitor, used in combination. It will go away after June 2011")]
+  [Obsolete("This class has been superceded by MetadataDeepCopier and MetadataRewriter, used in combination. It will go away in the future.")]
   public class MetadataMutator {
 
     /// <summary>
