@@ -45,123 +45,127 @@ namespace Microsoft.Cci.MutableCodeModel {
       internal object result;
 
       public void Visit(IAddition addition) {
-        this.result = this.rewriter.Rewrite((Addition)addition);
+        this.result = this.rewriter.Rewrite(addition);
       }
 
       public void Visit(IAddressableExpression addressableExpression) {
-        this.result = this.rewriter.Rewrite((AddressableExpression)addressableExpression);
+        this.result = this.rewriter.Rewrite(addressableExpression);
       }
 
       public void Visit(IAddressDereference addressDereference) {
-        this.result = this.rewriter.Rewrite((AddressDereference)addressDereference);
+        this.result = this.rewriter.Rewrite(addressDereference);
       }
 
       public void Visit(IAddressOf addressOf) {
-        this.result = this.rewriter.Rewrite((AddressOf)addressOf);
+        this.result = this.rewriter.Rewrite(addressOf);
       }
 
       public void Visit(IAnonymousDelegate anonymousDelegate) {
-        this.result = this.rewriter.Rewrite((AnonymousDelegate)anonymousDelegate);
+        this.result = this.rewriter.Rewrite(anonymousDelegate);
       }
 
       public void Visit(IArrayIndexer arrayIndexer) {
-        this.result = this.rewriter.Rewrite((ArrayIndexer)arrayIndexer);
+        this.result = this.rewriter.Rewrite(arrayIndexer);
       }
 
       public void Visit(IAssertStatement assertStatement) {
-        this.result = this.rewriter.Rewrite((AssertStatement)assertStatement);
+        this.result = this.rewriter.Rewrite(assertStatement);
       }
 
       public void Visit(IAssignment assignment) {
-        this.result = this.rewriter.Rewrite((Assignment)assignment);
+        this.result = this.rewriter.Rewrite(assignment);
       }
 
       public void Visit(IAssumeStatement assumeStatement) {
-        this.result = this.rewriter.Rewrite((AssumeStatement)assumeStatement);
+        this.result = this.rewriter.Rewrite(assumeStatement);
       }
 
       public void Visit(IBitwiseAnd bitwiseAnd) {
-        this.result = this.rewriter.Rewrite((BitwiseAnd)bitwiseAnd);
+        this.result = this.rewriter.Rewrite(bitwiseAnd);
       }
 
       public void Visit(IBitwiseOr bitwiseOr) {
-        this.result = this.rewriter.Rewrite((BitwiseOr)bitwiseOr);
+        this.result = this.rewriter.Rewrite(bitwiseOr);
       }
 
       public void Visit(IBlockExpression blockExpression) {
-        this.result = this.rewriter.Rewrite((BlockExpression)blockExpression);
+        this.result = this.rewriter.Rewrite(blockExpression);
       }
 
       public void Visit(IBlockStatement block) {
-        this.result = this.rewriter.Rewrite((BlockStatement)block);
+        this.result = this.rewriter.Rewrite(block);
       }
 
       public void Visit(IBreakStatement breakStatement) {
-        this.result = this.rewriter.Rewrite((BreakStatement)breakStatement);
+        this.result = this.rewriter.Rewrite(breakStatement);
       }
 
       public void Visit(IBoundExpression boundExpression) {
-        this.result = this.rewriter.Rewrite((BoundExpression)boundExpression);
+        this.result = this.rewriter.Rewrite(boundExpression);
       }
 
       public void Visit(ICastIfPossible castIfPossible) {
-        this.result = this.rewriter.Rewrite((CastIfPossible)castIfPossible);
+        this.result = this.rewriter.Rewrite(castIfPossible);
       }
 
       public void Visit(ICatchClause catchClause) {
-        this.result = this.rewriter.Rewrite((CatchClause)catchClause);
+        this.result = this.rewriter.Rewrite(catchClause);
       }
 
       public void Visit(ICheckIfInstance checkIfInstance) {
-        this.result = this.rewriter.Rewrite((CheckIfInstance)checkIfInstance);
+        this.result = this.rewriter.Rewrite(checkIfInstance);
       }
 
       public void Visit(ICompileTimeConstant constant) {
-        this.result = this.rewriter.Rewrite((CompileTimeConstant)constant);
+        this.result = this.rewriter.Rewrite(constant);
       }
 
       public void Visit(IConversion conversion) {
-        this.result = this.rewriter.Rewrite((Conversion)conversion);
+        this.result = this.rewriter.Rewrite(conversion);
       }
 
       public void Visit(IConditional conditional) {
-        this.result = this.rewriter.Rewrite((Conditional)conditional);
+        this.result = this.rewriter.Rewrite(conditional);
       }
 
       public void Visit(IConditionalStatement conditionalStatement) {
-        this.result = this.rewriter.Rewrite((ConditionalStatement)conditionalStatement);
+        this.result = this.rewriter.Rewrite(conditionalStatement);
       }
 
       public void Visit(IContinueStatement continueStatement) {
-        this.result = this.rewriter.Rewrite((ContinueStatement)continueStatement);
+        this.result = this.rewriter.Rewrite(continueStatement);
+      }
+
+      public void Visit(ICopyMemoryStatement copyMemoryBlock) {
+        this.result = this.rewriter.Rewrite(copyMemoryBlock);
       }
 
       public void Visit(ICreateArray createArray) {
-        this.result = this.rewriter.Rewrite((CreateArray)createArray);
+        this.result = this.rewriter.Rewrite(createArray);
       }
 
       public void Visit(ICreateDelegateInstance createDelegateInstance) {
-        this.result = this.rewriter.Rewrite((CreateDelegateInstance)createDelegateInstance);
+        this.result = this.rewriter.Rewrite(createDelegateInstance);
       }
 
       public void Visit(ICreateObjectInstance createObjectInstance) {
-        this.result = this.rewriter.Rewrite((CreateObjectInstance)createObjectInstance);
+        this.result = this.rewriter.Rewrite(createObjectInstance);
       }
 
       public void Visit(IDebuggerBreakStatement debuggerBreakStatement) {
-        this.result = this.rewriter.Rewrite((DebuggerBreakStatement)debuggerBreakStatement);
+        this.result = this.rewriter.Rewrite(debuggerBreakStatement);
       }
 
       public void Visit(IDefaultValue defaultValue) {
-        this.result = this.rewriter.Rewrite((DefaultValue)defaultValue);
+        this.result = this.rewriter.Rewrite(defaultValue);
       }
 
       public void Visit(IDivision division) {
-        this.result = this.rewriter.Rewrite((Division)division);
+        this.result = this.rewriter.Rewrite(division);
       }
 
       public void Visit(IDoUntilStatement doUntilStatement) {
-        this.result = this.rewriter.Rewrite((DoUntilStatement)doUntilStatement);
+        this.result = this.rewriter.Rewrite(doUntilStatement);
       }
 
       public void Visit(IDupValue dupValue) {
@@ -173,15 +177,19 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
 
       public void Visit(IEquality equality) {
-        this.result = this.rewriter.Rewrite((Equality)equality);
+        this.result = this.rewriter.Rewrite(equality);
       }
 
       public void Visit(IExclusiveOr exclusiveOr) {
-        this.result = this.rewriter.Rewrite((ExclusiveOr)exclusiveOr);
+        this.result = this.rewriter.Rewrite(exclusiveOr);
       }
 
       public void Visit(IExpressionStatement expressionStatement) {
-        this.result = this.rewriter.Rewrite((ExpressionStatement)expressionStatement);
+        this.result = this.rewriter.Rewrite(expressionStatement);
+      }
+
+      public void Visit(IFillMemoryStatement fillMemoryStatement) {
+        this.result = this.rewriter.Rewrite(fillMemoryStatement);
       }
 
       public void Visit(IForEachStatement forEachStatement) {
@@ -189,31 +197,31 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
 
       public void Visit(IForStatement forStatement) {
-        this.result = this.rewriter.Rewrite((ForStatement)forStatement);
+        this.result = this.rewriter.Rewrite(forStatement);
       }
 
       public void Visit(IGotoStatement gotoStatement) {
-        this.result = this.rewriter.Rewrite((GotoStatement)gotoStatement);
+        this.result = this.rewriter.Rewrite(gotoStatement);
       }
 
       public void Visit(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
-        this.result = this.rewriter.Rewrite((GotoSwitchCaseStatement)gotoSwitchCaseStatement);
+        this.result = this.rewriter.Rewrite(gotoSwitchCaseStatement);
       }
 
       public void Visit(IGetTypeOfTypedReference getTypeOfTypedReference) {
-        this.result = this.rewriter.Rewrite((GetTypeOfTypedReference)getTypeOfTypedReference);
+        this.result = this.rewriter.Rewrite(getTypeOfTypedReference);
       }
 
       public void Visit(IGetValueOfTypedReference getValueOfTypedReference) {
-        this.result = this.rewriter.Rewrite((GetValueOfTypedReference)getValueOfTypedReference);
+        this.result = this.rewriter.Rewrite(getValueOfTypedReference);
       }
 
       public void Visit(IGreaterThan greaterThan) {
-        this.result = this.rewriter.Rewrite((GreaterThan)greaterThan);
+        this.result = this.rewriter.Rewrite(greaterThan);
       }
 
       public void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
-        this.result = this.rewriter.Rewrite((GreaterThanOrEqual)greaterThanOrEqual);
+        this.result = this.rewriter.Rewrite(greaterThanOrEqual);
       }
 
       public void Visit(ILabeledStatement labeledStatement) {
@@ -221,47 +229,47 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
 
       public void Visit(ILeftShift leftShift) {
-        this.result = this.rewriter.Rewrite((LeftShift)leftShift);
+        this.result = this.rewriter.Rewrite(leftShift);
       }
 
       public void Visit(ILessThan lessThan) {
-        this.result = this.rewriter.Rewrite((LessThan)lessThan);
+        this.result = this.rewriter.Rewrite(lessThan);
       }
 
       public void Visit(ILessThanOrEqual lessThanOrEqual) {
-        this.result = this.rewriter.Rewrite((LessThanOrEqual)lessThanOrEqual);
+        this.result = this.rewriter.Rewrite(lessThanOrEqual);
       }
 
       public void Visit(ILocalDeclarationStatement localDeclarationStatement) {
-        this.result = this.rewriter.Rewrite((LocalDeclarationStatement)localDeclarationStatement);
+        this.result = this.rewriter.Rewrite(localDeclarationStatement);
       }
 
       public void Visit(ILockStatement lockStatement) {
-        this.result = this.rewriter.Rewrite((LockStatement)lockStatement);
+        this.result = this.rewriter.Rewrite(lockStatement);
       }
 
       public void Visit(ILogicalNot logicalNot) {
-        this.result = this.rewriter.Rewrite((LogicalNot)logicalNot);
+        this.result = this.rewriter.Rewrite(logicalNot);
       }
 
       public void Visit(IMakeTypedReference makeTypedReference) {
-        this.result = this.rewriter.Rewrite((MakeTypedReference)makeTypedReference);
+        this.result = this.rewriter.Rewrite(makeTypedReference);
       }
 
       public void Visit(IMethodCall methodCall) {
-        this.result = this.rewriter.Rewrite((MethodCall)methodCall);
+        this.result = this.rewriter.Rewrite(methodCall);
       }
 
       public void Visit(IModulus modulus) {
-        this.result = this.rewriter.Rewrite((Modulus)modulus);
+        this.result = this.rewriter.Rewrite(modulus);
       }
 
       public void Visit(IMultiplication multiplication) {
-        this.result = this.rewriter.Rewrite((Multiplication)multiplication);
+        this.result = this.rewriter.Rewrite(multiplication);
       }
 
       public void Visit(INamedArgument namedArgument) {
-        this.result = this.rewriter.Rewrite((NamedArgument)namedArgument);
+        this.result = this.rewriter.Rewrite(namedArgument);
       }
 
       public void Visit(INotEquality notEquality) {
@@ -269,123 +277,123 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
 
       public void Visit(IOldValue oldValue) {
-        this.result = this.rewriter.Rewrite((OldValue)oldValue);
+        this.result = this.rewriter.Rewrite(oldValue);
       }
 
       public void Visit(IOnesComplement onesComplement) {
-        this.result = this.rewriter.Rewrite((OnesComplement)onesComplement);
+        this.result = this.rewriter.Rewrite(onesComplement);
       }
 
       public void Visit(IOutArgument outArgument) {
-        this.result = this.rewriter.Rewrite((OutArgument)outArgument);
+        this.result = this.rewriter.Rewrite(outArgument);
       }
 
       public void Visit(IPointerCall pointerCall) {
-        this.result = this.rewriter.Rewrite((PointerCall)pointerCall);
+        this.result = this.rewriter.Rewrite(pointerCall);
       }
 
       public void Visit(IPopValue popValue) {
-        this.result = this.rewriter.Rewrite((PopValue)popValue);
+        this.result = this.rewriter.Rewrite(popValue);
       }
 
       public void Visit(IPushStatement pushStatement) {
-        this.result = this.rewriter.Rewrite((PushStatement)pushStatement);
+        this.result = this.rewriter.Rewrite(pushStatement);
       }
 
       public void Visit(IRefArgument refArgument) {
-        this.result = this.rewriter.Rewrite((RefArgument)refArgument);
+        this.result = this.rewriter.Rewrite(refArgument);
       }
 
       public void Visit(IResourceUseStatement resourceUseStatement) {
-        this.result = this.rewriter.Rewrite((ResourceUseStatement)resourceUseStatement);
+        this.result = this.rewriter.Rewrite(resourceUseStatement);
       }
 
       public void Visit(IReturnValue returnValue) {
-        this.result = this.rewriter.Rewrite((ReturnValue)returnValue);
+        this.result = this.rewriter.Rewrite(returnValue);
       }
 
       public void Visit(IRethrowStatement rethrowStatement) {
-        this.result = this.rewriter.Rewrite((RethrowStatement)rethrowStatement);
+        this.result = this.rewriter.Rewrite(rethrowStatement);
       }
 
       public void Visit(IReturnStatement returnStatement) {
-        this.result = this.rewriter.Rewrite((ReturnStatement)returnStatement);
+        this.result = this.rewriter.Rewrite(returnStatement);
       }
 
       public void Visit(IRightShift rightShift) {
-        this.result = this.rewriter.Rewrite((RightShift)rightShift);
+        this.result = this.rewriter.Rewrite(rightShift);
       }
 
       public void Visit(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
-        this.result = this.rewriter.Rewrite((RuntimeArgumentHandleExpression)runtimeArgumentHandleExpression);
+        this.result = this.rewriter.Rewrite(runtimeArgumentHandleExpression);
       }
 
       public void Visit(ISizeOf sizeOf) {
-        this.result = this.rewriter.Rewrite((SizeOf)sizeOf);
+        this.result = this.rewriter.Rewrite(sizeOf);
       }
 
       public void Visit(IStackArrayCreate stackArrayCreate) {
-        this.result = this.rewriter.Rewrite((StackArrayCreate)stackArrayCreate);
+        this.result = this.rewriter.Rewrite(stackArrayCreate);
       }
 
       public void Visit(ISubtraction subtraction) {
-        this.result = this.rewriter.Rewrite((Subtraction)subtraction);
+        this.result = this.rewriter.Rewrite(subtraction);
       }
 
       public void Visit(ISwitchCase switchCase) {
-        this.result = this.rewriter.Rewrite((SwitchCase)switchCase);
+        this.result = this.rewriter.Rewrite(switchCase);
       }
 
       public void Visit(ISwitchStatement switchStatement) {
-        this.result = this.rewriter.Rewrite((SwitchStatement)switchStatement);
+        this.result = this.rewriter.Rewrite(switchStatement);
       }
 
       public void Visit(ITargetExpression targetExpression) {
-        this.result = this.rewriter.Rewrite((TargetExpression)targetExpression);
+        this.result = this.rewriter.Rewrite(targetExpression);
       }
 
       public void Visit(IThisReference thisReference) {
-        this.result = this.rewriter.Rewrite((ThisReference)thisReference);
+        this.result = this.rewriter.Rewrite(thisReference);
       }
 
       public void Visit(IThrowStatement throwStatement) {
-        this.result = this.rewriter.Rewrite((ThrowStatement)throwStatement);
+        this.result = this.rewriter.Rewrite(throwStatement);
       }
 
       public void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
-        this.result = this.rewriter.Rewrite((TryCatchFinallyStatement)tryCatchFilterFinallyStatement);
+        this.result = this.rewriter.Rewrite(tryCatchFilterFinallyStatement);
       }
 
       public void Visit(ITokenOf tokenOf) {
-        this.result = this.rewriter.Rewrite((TokenOf)tokenOf);
+        this.result = this.rewriter.Rewrite(tokenOf);
       }
 
       public void Visit(ITypeOf typeOf) {
-        this.result = this.rewriter.Rewrite((TypeOf)typeOf);
+        this.result = this.rewriter.Rewrite(typeOf);
       }
 
       public void Visit(IUnaryNegation unaryNegation) {
-        this.result = this.rewriter.Rewrite((UnaryNegation)unaryNegation);
+        this.result = this.rewriter.Rewrite(unaryNegation);
       }
 
       public void Visit(IUnaryPlus unaryPlus) {
-        this.result = this.rewriter.Rewrite((UnaryPlus)unaryPlus);
+        this.result = this.rewriter.Rewrite(unaryPlus);
       }
 
       public void Visit(IVectorLength vectorLength) {
-        this.result = this.rewriter.Rewrite((VectorLength)vectorLength);
+        this.result = this.rewriter.Rewrite(vectorLength);
       }
 
       public void Visit(IWhileDoStatement whileDoStatement) {
-        this.result = this.rewriter.Rewrite((WhileDoStatement)whileDoStatement);
+        this.result = this.rewriter.Rewrite(whileDoStatement);
       }
 
       public void Visit(IYieldBreakStatement yieldBreakStatement) {
-        this.result = this.rewriter.Rewrite((YieldBreakStatement)yieldBreakStatement);
+        this.result = this.rewriter.Rewrite(yieldBreakStatement);
       }
 
       public void Visit(IYieldReturnStatement yieldReturnStatement) {
-        this.result = this.rewriter.Rewrite((YieldReturnStatement)yieldReturnStatement);
+        this.result = this.rewriter.Rewrite(yieldReturnStatement);
       }
 
     }
@@ -668,6 +676,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Rewrites the given copy memory statement.
+    /// </summary>
+    /// <param name="copyMemoryStatement"></param>
+    public virtual IStatement Rewrite(ICopyMemoryStatement copyMemoryStatement) {
+      var mutableCopyMemoryStatement = copyMemoryStatement as CopyMemoryStatement;
+      if (mutableCopyMemoryStatement == null) return copyMemoryStatement;
+      this.RewriteChildren(mutableCopyMemoryStatement);
+      return mutableCopyMemoryStatement;
+    }
+
+    /// <summary>
     /// Rewrites the given array creation expression.
     /// </summary>
     /// <param name="createArray"></param>
@@ -806,6 +825,17 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (mutableExpressionStatement == null) return expressionStatement;
       this.RewriteChildren(mutableExpressionStatement);
       return mutableExpressionStatement;
+    }
+
+    /// <summary>
+    /// Rewrites the given fill memory statement.
+    /// </summary>
+    /// <param name="fillMemoryStatement"></param>
+    public virtual IStatement Rewrite(IFillMemoryStatement fillMemoryStatement) {
+      var mutableFillMemoryStatement = fillMemoryStatement as FillMemoryStatement;
+      if (mutableFillMemoryStatement == null) return fillMemoryStatement;
+      this.RewriteChildren(mutableFillMemoryStatement);
+      return mutableFillMemoryStatement;
     }
 
     /// <summary>
@@ -1718,6 +1748,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Rewrites the children of the given copy memory statement.
+    /// </summary>
+    public virtual void RewriteChildren(CopyMemoryStatement copyMemoryStatement) {
+      this.RewriteChildren((Statement)copyMemoryStatement);
+      copyMemoryStatement.TargetAddress = this.Rewrite(copyMemoryStatement.TargetAddress);
+      copyMemoryStatement.SourceAddress = this.Rewrite(copyMemoryStatement.SourceAddress);
+      copyMemoryStatement.NumberOfBytesToCopy = this.Rewrite(copyMemoryStatement.NumberOfBytesToCopy);
+    }
+
+    /// <summary>
     /// Rewrites the children of the given array creation expression.
     /// </summary>
     public virtual void RewriteChildren(CreateArray createArray) {
@@ -1816,6 +1856,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual void RewriteChildren(ExpressionStatement expressionStatement) {
       this.RewriteChildren((Statement)expressionStatement);
       expressionStatement.Expression = this.Rewrite(expressionStatement.Expression);
+    }
+
+    /// <summary>
+    /// Rewrites the children of the given fill memory statement.
+    /// </summary>
+    public virtual void RewriteChildren(FillMemoryStatement fillMemoryStatement) {
+      this.RewriteChildren((Statement)fillMemoryStatement);
+      fillMemoryStatement.TargetAddress = this.Rewrite(fillMemoryStatement.TargetAddress);
+      fillMemoryStatement.FillValue = this.Rewrite(fillMemoryStatement.FillValue);
+      fillMemoryStatement.NumberOfBytesToFill = this.Rewrite(fillMemoryStatement.NumberOfBytesToFill);
     }
 
     /// <summary>
@@ -2302,9 +2352,9 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <remarks>While the model is being copied, the resulting model is incomplete and or inconsistent. It should not be traversed
   /// independently nor should any of its computed properties, such as ResolvedType be evaluated. Scenarios that need such functionality
   /// should be implemented by first making a mutable copy of the entire assembly and then running a second pass over the mutable result.
-  /// The new classes CodeCopier and CodeMutatingVisitor are meant to facilitate such scenarios.
+  /// The new classes CodeDeepCopier and CodeRewriter are meant to facilitate such scenarios.
   /// </remarks>
-  [Obsolete("This class has been superceded by CodeCopier and CodeMutatingVisitor, used in combination. It will go away after May 2011")]
+  [Obsolete("This class has been superceded by CodeDeepCopier and CodeRewriter, used in combination. It will go away in the future.")]
   public class CodeMutator : MetadataMutator {
 
     private CreateMutableType createMutableType;
@@ -3836,6 +3886,16 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
 
       /// <summary>
+      /// Visits the specified copy memory statement.
+      /// </summary>
+      /// <param name="copyMemoryStatement">The copy memory statement.</param>
+      public override void Visit(ICopyMemoryStatement copyMemoryStatement) {
+        CopyMemoryStatement mutableCopyMemoryStatement = copyMemoryStatement as CopyMemoryStatement;
+        if (alwaysMakeACopy || mutableCopyMemoryStatement == null) mutableCopyMemoryStatement = new CopyMemoryStatement(copyMemoryStatement);
+        this.resultStatement = this.myCodeMutator.Visit(mutableCopyMemoryStatement);
+      }
+
+      /// <summary>
       /// Visits the specified create array.
       /// </summary>
       /// <param name="createArray">The create array.</param>
@@ -3961,6 +4021,16 @@ namespace Microsoft.Cci.MutableCodeModel {
         ExpressionStatement mutableExpressionStatement = expressionStatement as ExpressionStatement;
         if (alwaysMakeACopy || mutableExpressionStatement == null) mutableExpressionStatement = new ExpressionStatement(expressionStatement);
         this.resultStatement = this.myCodeMutator.Visit(mutableExpressionStatement);
+      }
+
+      /// <summary>
+      /// Visits the specified fill memory statement.
+      /// </summary>
+      /// <param name="fillMemoryStatement">The fill memory statement.</param>
+      public override void Visit(IFillMemoryStatement fillMemoryStatement) {
+        FillMemoryStatement mutableFillMemoryStatement = fillMemoryStatement as FillMemoryStatement;
+        if (alwaysMakeACopy || mutableFillMemoryStatement == null) mutableFillMemoryStatement = new FillMemoryStatement(fillMemoryStatement);
+        this.resultStatement = this.myCodeMutator.Visit(mutableFillMemoryStatement);
       }
 
       /// <summary>
@@ -4925,6 +4995,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Visits the specified copy memory statement.
+    /// </summary>
+    /// <param name="copyMemoryStatement">The copy memory statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(CopyMemoryStatement copyMemoryStatement) {
+      copyMemoryStatement.TargetAddress = Visit(copyMemoryStatement.TargetAddress);
+      copyMemoryStatement.SourceAddress = Visit(copyMemoryStatement.SourceAddress);
+      copyMemoryStatement.NumberOfBytesToCopy = Visit(copyMemoryStatement.NumberOfBytesToCopy);
+      return copyMemoryStatement;
+    }
+
+    /// <summary>
     /// Visits the specified create array.
     /// </summary>
     /// <param name="createArray">The create array.</param>
@@ -5058,6 +5140,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual IStatement Visit(ExpressionStatement expressionStatement) {
       expressionStatement.Expression = Visit(expressionStatement.Expression);
       return expressionStatement;
+    }
+
+    /// <summary>
+    /// Visits the specified fill memory statement.
+    /// </summary>
+    /// <param name="fillMemoryStatement">The fill memory statement.</param>
+    /// <returns></returns>
+    public virtual IStatement Visit(FillMemoryStatement fillMemoryStatement) {
+      fillMemoryStatement.TargetAddress = Visit(fillMemoryStatement.TargetAddress);
+      fillMemoryStatement.FillValue = Visit(fillMemoryStatement.FillValue);
+      fillMemoryStatement.NumberOfBytesToFill = Visit(fillMemoryStatement.NumberOfBytesToFill);
+      return fillMemoryStatement;
     }
 
     /// <summary>
@@ -6132,6 +6226,19 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
 
       /// <summary>
+      /// Performs some computation with the given copy memory statement.
+      /// </summary>
+      /// <param name="copyMemoryStatement"></param>
+      public override void Visit(ICopyMemoryStatement copyMemoryStatement) {
+        CopyMemoryStatement mutableCopyMemoryStatement = copyMemoryStatement as CopyMemoryStatement;
+        if (mutableCopyMemoryStatement == null) {
+          this.resultStatement = copyMemoryStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableCopyMemoryStatement);
+      }
+
+      /// <summary>
       /// Visits the specified create array.
       /// </summary>
       /// <param name="createArray">The create array.</param>
@@ -6293,6 +6400,19 @@ namespace Microsoft.Cci.MutableCodeModel {
           return;
         }
         this.resultStatement = this.myCodeMutator.Visit(mutableExpressionStatement);
+      }
+
+      /// <summary>
+      /// Performs some computation with the given fill memory statement.
+      /// </summary>
+      /// <param name="fillMemoryStatement"></param>
+      public override void Visit(IFillMemoryStatement fillMemoryStatement) {
+        FillMemoryStatement mutableFillMemoryStatement = fillMemoryStatement as FillMemoryStatement;
+        if (mutableFillMemoryStatement == null) {
+          this.resultStatement = fillMemoryStatement;
+          return;
+        }
+        this.resultStatement = this.myCodeMutator.Visit(mutableFillMemoryStatement);
       }
 
       /// <summary>
@@ -7274,9 +7394,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
   /// <remarks>While the model is being copied, the resulting model is incomplete and or inconsistent. It should not be traversed
   /// independently nor should any of its computed properties, such as ResolvedType be evaluated. Scenarios that need such functionality
   /// should be implemented by first making a mutable copy of the entire assembly and then running a second pass over the mutable result.
-  /// The new classes CodeAndContractCopier and CodeAndContractMutatingVisitor are meant to facilitate such scenarios.
+  /// The new classes CodeAndContractDeepCopier and CodeAndContractRewriter are meant to facilitate such scenarios.
   /// </remarks>
-  [Obsolete("This class has been superceded by CodeAndContractCopier and CodeAndContractMutatingVisitor, used in combination. It will go away after April 2011")]
+  [Obsolete("This class has been superceded by CodeAndContractDeepCopier and CodeAndContractRewriter, used in combination. It will go away after April 2011")]
   public class CodeAndContractMutator : CodeMutator {
 
     /// <summary>

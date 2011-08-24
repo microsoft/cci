@@ -913,6 +913,18 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Generates IL for the specified copy memory statement.
+    /// </summary>
+    /// <param name="copyMemoryStatement">The copy memory statement.</param>
+    public override void TraverseChildren(ICopyMemoryStatement copyMemoryStatement) {
+      this.EmitSequencePoint(copyMemoryStatement.Locations);
+      this.Traverse(copyMemoryStatement.TargetAddress);
+      this.Traverse(copyMemoryStatement.SourceAddress);
+      this.Traverse(copyMemoryStatement.NumberOfBytesToCopy);
+      this.generator.Emit(OperationCode.Cpblk);
+    }
+
+    /// <summary>
     /// Generates IL for the specified conversion.
     /// </summary>
     /// <param name="conversion">The conversion.</param>
@@ -1177,6 +1189,18 @@ namespace Microsoft.Cci {
         }
       }
       this.lastStatementWasUnconditionalTransfer = false;
+    }
+
+    /// <summary>
+    /// Generates IL for the specified fill memory statement.
+    /// </summary>
+    /// <param name="fillMemoryStatement">The fill memory statement.</param>
+    public override void TraverseChildren(IFillMemoryStatement fillMemoryStatement) {
+      this.EmitSequencePoint(fillMemoryStatement.Locations);
+      this.Traverse(fillMemoryStatement.TargetAddress);
+      this.Traverse(fillMemoryStatement.FillValue);
+      this.Traverse(fillMemoryStatement.NumberOfBytesToFill);
+      this.generator.Emit(OperationCode.Initblk);
     }
 
     /// <summary>

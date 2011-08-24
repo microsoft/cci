@@ -150,6 +150,10 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.result = this.copier.Copy(continueStatement);
       }
 
+      public void Visit(ICopyMemoryStatement copyMemoryBlock) {
+        this.result = this.copier.Copy(copyMemoryBlock);
+      }
+
       public void Visit(ICreateArray createArray) {
         this.result = this.copier.Copy(createArray);
       }
@@ -196,6 +200,10 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       public void Visit(IExpressionStatement expressionStatement) {
         this.result = this.copier.Copy(expressionStatement);
+      }
+
+      public void Visit(IFillMemoryStatement fillMemoryStatement) {
+        this.result = this.copier.Copy(fillMemoryStatement);
       }
 
       public void Visit(IForEachStatement forEachStatement) {
@@ -582,6 +590,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Returns a shallow copy of the given copy memory statement.
+    /// </summary>
+    /// <param name="copyMemoryStatement"></param>
+    public CopyMemoryStatement Copy(ICopyMemoryStatement copyMemoryStatement) {
+      return new CopyMemoryStatement(copyMemoryStatement);
+    }
+
+    /// <summary>
     /// Returns a shallow copy of the given array creation expression.
     /// </summary>
     /// <param name="createArray"></param>
@@ -692,6 +708,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="expressionStatement"></param>
     public ExpressionStatement Copy(IExpressionStatement expressionStatement) {
       return new ExpressionStatement(expressionStatement);
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of the given fill memory block statement.
+    /// </summary>
+    /// <param name="fillMemoryStatement"></param>
+    public FillMemoryStatement Copy(IFillMemoryStatement fillMemoryStatement) {
+      return new FillMemoryStatement(fillMemoryStatement);
     }
 
     /// <summary>
@@ -1290,6 +1314,10 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.result = this.copier.Copy(continueStatement);
       }
 
+      public void Visit(ICopyMemoryStatement copyMemoryBlock) {
+        this.result = this.copier.Copy(copyMemoryBlock);
+      }
+
       public void Visit(ICreateArray createArray) {
         this.result = this.copier.Copy(createArray);
       }
@@ -1336,6 +1364,10 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       public void Visit(IExpressionStatement expressionStatement) {
         this.result = this.copier.Copy(expressionStatement);
+      }
+
+      public void Visit(IFillMemoryStatement fillMemoryStatement) {
+        this.result = this.copier.Copy(fillMemoryStatement);
       }
 
       public void Visit(IForEachStatement forEachStatement) {
@@ -1883,6 +1915,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Returns a deep copy of the given copy memory statement.
+    /// </summary>
+    /// <param name="copyMemoryStatement"></param>
+    public CopyMemoryStatement Copy(ICopyMemoryStatement copyMemoryStatement) {
+      var mutableCopy = this.shallowCopier.Copy(copyMemoryStatement);
+      mutableCopy.TargetAddress = this.Copy(mutableCopy.TargetAddress);
+      mutableCopy.SourceAddress = this.Copy(mutableCopy.SourceAddress);
+      mutableCopy.NumberOfBytesToCopy = this.Copy(mutableCopy.NumberOfBytesToCopy);
+      return mutableCopy;
+    }
+
+    /// <summary>
     /// Returns a deep copy of the given array creation expression.
     /// </summary>
     /// <param name="createArray"></param>
@@ -2016,6 +2060,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     public ExpressionStatement Copy(IExpressionStatement expressionStatement) {
       var mutableCopy = this.shallowCopier.Copy(expressionStatement);
       mutableCopy.Expression = this.Copy(mutableCopy.Expression);
+      return mutableCopy;
+    }
+
+    /// <summary>
+    /// Returns a deep copy of the given fill memory block statement.
+    /// </summary>
+    /// <param name="fillMemoryStatement"></param>
+    public FillMemoryStatement Copy(IFillMemoryStatement fillMemoryStatement) {
+      var mutableCopy = this.shallowCopier.Copy(fillMemoryStatement);
+      mutableCopy.TargetAddress = this.Copy(mutableCopy.TargetAddress);
+      mutableCopy.FillValue = this.Copy(mutableCopy.FillValue);
+      mutableCopy.NumberOfBytesToFill = this.Copy(mutableCopy.NumberOfBytesToFill);
       return mutableCopy;
     }
 
@@ -3172,6 +3228,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="copyMemoryStatement"></param>
+    /// <returns></returns>
+    protected virtual IStatement DeepCopy(CopyMemoryStatement copyMemoryStatement) {
+      copyMemoryStatement.TargetAddress = Substitute(copyMemoryStatement.TargetAddress);
+      copyMemoryStatement.SourceAddress = Substitute(copyMemoryStatement.SourceAddress);
+      copyMemoryStatement.NumberOfBytesToCopy = Substitute(copyMemoryStatement.NumberOfBytesToCopy);
+      return copyMemoryStatement;
+    }
+
+    /// <summary>
     /// Visits the specified create array.
     /// </summary>
     /// <param name="createArray">The create array.</param>
@@ -3306,6 +3374,18 @@ namespace Microsoft.Cci.MutableCodeModel {
     protected virtual IStatement DeepCopy(ExpressionStatement expressionStatement) {
       expressionStatement.Expression = Substitute(expressionStatement.Expression);
       return expressionStatement;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="fillMemoryStatement"></param>
+    /// <returns></returns>
+    protected virtual IStatement DeepCopy(FillMemoryStatement fillMemoryStatement) {
+      fillMemoryStatement.TargetAddress = Substitute(fillMemoryStatement.TargetAddress);
+      fillMemoryStatement.FillValue = Substitute(fillMemoryStatement.FillValue);
+      fillMemoryStatement.NumberOfBytesToFill = Substitute(fillMemoryStatement.NumberOfBytesToFill);
+      return fillMemoryStatement;
     }
 
     /// <summary>
@@ -4232,6 +4312,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
 
       /// <summary>
+      /// Performs some computation with the given copy memory statement.
+      /// </summary>
+      /// <param name="copyMemoryStatement"></param>
+      public override void Visit(ICopyMemoryStatement copyMemoryStatement) {
+        CopyMemoryStatement mutableCopyMemoryStatement = new CopyMemoryStatement(copyMemoryStatement);
+        this.resultStatement = this.myCodeCopier.DeepCopy(mutableCopyMemoryStatement);
+      }
+
+      /// <summary>
       /// Visits the specified create array.
       /// </summary>
       /// <param name="createArray">The create array.</param>
@@ -4344,6 +4433,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       public override void Visit(IExpressionStatement expressionStatement) {
         ExpressionStatement mutableExpressionStatement = new ExpressionStatement(expressionStatement);
         this.resultStatement = this.myCodeCopier.DeepCopy(mutableExpressionStatement);
+      }
+
+      /// <summary>
+      /// Performs some computation with the given fill memory block statement.
+      /// </summary>
+      /// <param name="fillMemoryStatement"></param>
+      public override void Visit(IFillMemoryStatement fillMemoryStatement) {
+        FillMemoryStatement mutableFillMemoryStatement = new FillMemoryStatement(fillMemoryStatement);
+        this.resultStatement = this.myCodeCopier.DeepCopy(mutableFillMemoryStatement);
       }
 
       /// <summary>

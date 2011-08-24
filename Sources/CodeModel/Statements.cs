@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -135,6 +136,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An object that represents a statement consisting of two sub statements and a condition that governs which one of the two gets executed. Most languages refer to this as an "if statement".
   /// </summary>
+  [ContractClass(typeof(IConditionalStatementContract))]
   public interface IConditionalStatement : IStatement {
     /// <summary>
     /// The expression to evaluate as true or false.
@@ -152,11 +154,128 @@ namespace Microsoft.Cci {
     IStatement FalseBranch { get; }
   }
 
+  #region IConditionalStatement contract binding
+  [ContractClassFor(typeof(IConditionalStatement))]
+  abstract class IConditionalStatementContract : IConditionalStatement {
+    #region IConditionalStatement Members
+
+    public IExpression Condition {
+      get {
+        Contract.Ensures(Contract.Result<IExpression>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IStatement TrueBranch {
+      get {
+        Contract.Ensures(Contract.Result<IStatement>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IStatement FalseBranch {
+      get {
+        Contract.Ensures(Contract.Result<IStatement>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    #endregion
+
+    #region IStatement Members
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
+
   /// <summary>
   /// Terminates execution of the loop body containing this statement directly or indirectly and continues on to the loop exit condition test.
   /// </summary>
   public interface IContinueStatement : IStatement {
   }
+
+  /// <summary>
+  /// Represents the cpblk IL instruction, which copies a block of memory from one address to another.
+  /// The behavior of this instruction is undefined if the source block overlaps the target block.
+  /// </summary>
+  [ContractClass(typeof(ICopyMemoryStatementContract))]
+  public interface ICopyMemoryStatement : IStatement {
+
+    /// <summary>
+    /// A pointer to the block of memory that is overwritten with the contents of block at SourceAddress.
+    /// </summary>
+    IExpression TargetAddress { get; }
+
+    /// <summary>
+    /// A pointer to the block of memory whose contents is to be copied to the block of memory at TargetAddress.
+    /// </summary>
+    IExpression SourceAddress { get; }
+
+    /// <summary>
+    /// The number of bytes to copy from SourceAddress to TargetAddress.
+    /// </summary>
+    IExpression NumberOfBytesToCopy { get; }
+  }
+
+  #region ICopyMemoryStatement contract binding
+
+  [ContractClassFor(typeof(ICopyMemoryStatement))]
+  abstract class ICopyMemoryStatementContract : ICopyMemoryStatement {
+    #region ICopyMemoryStatement Members
+
+    public IExpression TargetAddress {
+      get {
+        Contract.Ensures(Contract.Result<IExpression>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IExpression SourceAddress {
+      get {
+        Contract.Ensures(Contract.Result<IExpression>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IExpression NumberOfBytesToCopy {
+      get {
+        Contract.Ensures(Contract.Result<IExpression>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    #endregion
+
+    #region IStatement Members
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
 
   /// <summary>
   /// Signals a breakpoint to an attached debugger.
@@ -198,6 +317,75 @@ namespace Microsoft.Cci {
     /// </summary>
     IExpression Expression { get; }
   }
+
+  /// <summary>
+  /// Represents the initblk IL instruction, which fills a block of memory with repeated copies of a given fill value.
+  /// </summary>
+  [ContractClass(typeof(IFillMemoryStatementContract))]
+  public interface IFillMemoryStatement : IStatement {
+
+    /// <summary>
+    /// A pointer to the block of memory that is overwritten with the repeated value of FillValue.
+    /// </summary>
+    IExpression TargetAddress { get; }
+
+    /// <summary>
+    /// An expression resulting in an unsigned 8-bite value that will be used to fill the block at TargetAddress.
+    /// </summary>
+    IExpression FillValue { get; }
+
+    /// <summary>
+    /// The number of bytes to fill with FillValue.
+    /// </summary>
+    IExpression NumberOfBytesToFill { get; }
+  }
+
+  #region IFillMemoryStatement contract binding
+
+  [ContractClassFor(typeof(IFillMemoryStatement))]
+  abstract class IFillMemoryStatementContract : IFillMemoryStatement {
+    #region IFillMemoryStatement Members
+
+    public IExpression TargetAddress {
+      get {
+        Contract.Ensures(Contract.Result<IExpression>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IExpression FillValue {
+      get {
+        Contract.Ensures(Contract.Result<IExpression>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IExpression NumberOfBytesToFill {
+      get {
+        Contract.Ensures(Contract.Result<IExpression>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    #endregion
+
+    #region IStatement Members
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
 
   /// <summary>
   /// Represents a foreach statement. Executes the loop body for each element of a collection.
@@ -249,12 +437,45 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Represents a goto statement.
   /// </summary>
+  [ContractClass(typeof(IGotoStatementContract))]
   public interface IGotoStatement : IStatement {
     /// <summary>
     /// The statement at which the program execution is to continue.
     /// </summary>
     ILabeledStatement TargetStatement { get; }
   }
+
+  #region IGotoStatement contract binding
+  [ContractClassFor(typeof(IGotoStatement))]
+  abstract class IGotoStatementContract : IGotoStatement {
+    #region IGotoStatement Members
+
+    public ILabeledStatement TargetStatement {
+      get {
+        Contract.Ensures(Contract.Result<ILabeledStatement>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    #endregion
+
+    #region IStatement Members
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
 
   /// <summary>
   /// Represents a "goto case x;" or "goto default" statement in C#.
@@ -270,6 +491,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An object that represents a labeled statement or a stand-alone label.
   /// </summary>
+  [ContractClass(typeof(ILabeledStatementContract))]
   public interface ILabeledStatement : IStatement {
     /// <summary>
     /// The label.
@@ -282,9 +504,50 @@ namespace Microsoft.Cci {
     IStatement Statement { get; }
   }
 
+  #region ILabeledStatement contract binding
+  [ContractClassFor(typeof(ILabeledStatement))]
+  abstract class ILabeledStatementContract : ILabeledStatement {
+    #region ILabeledStatement Members
+
+    public IName Label {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IStatement Statement {
+      get {
+        Contract.Ensures(Contract.Result<IStatement>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    #endregion
+
+    #region IStatement Members
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
+
   /// <summary>
   /// An object that represents the declaration of a local variable or constant, with optional initializer.
   /// </summary>
+  [ContractClass(typeof(ILocalDeclarationStatementContract))]
   public interface ILocalDeclarationStatement : IStatement {
 
     /// <summary>
@@ -298,6 +561,44 @@ namespace Microsoft.Cci {
     ILocalDefinition LocalVariable { get; }
 
   }
+
+  #region ILocalDeclarationStatement contract binding
+  [ContractClassFor(typeof(ILocalDeclarationStatement))]
+  abstract class ILocalDeclarationStatementContract : ILocalDeclarationStatement {
+
+    #region ILocalDeclarationStatement Members
+
+    public IExpression InitialValue {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ILocalDefinition LocalVariable {
+      get {
+        Contract.Ensures(Contract.Result<ILocalDefinition>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    #endregion
+
+    #region IStatement Members
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// Represents matched monitor enter and exit calls, together with a try-finally to ensure that the exit call always happens.
@@ -319,12 +620,35 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Pushes a value onto an implicit operand stack.
   /// </summary>
+  [ContractClass(typeof(IPushStatementContract))]
   public interface IPushStatement : IStatement {
     /// <summary>
     /// A value that is to be pushed onto the implicit operand stack.
     /// </summary>
     IExpression ValueToPush { get; }
   }
+
+  #region IPushStatement contract binding
+
+  [ContractClassFor(typeof(IPushStatement))]
+  abstract class IPushStatementContract : IPushStatement {
+    public IExpression ValueToPush {
+      get {
+        Contract.Ensures(Contract.Result<IExpression>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+  }
+  #endregion
+
 
   /// <summary>
   /// Represents a using statement block (of one or more IDisposable resources).
@@ -362,6 +686,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An executable statement.
   /// </summary>
+  [ContractClass(typeof(IStatementContract))]
   public interface IStatement : IObjectWithLocations {
 
     /// <summary>
@@ -372,6 +697,21 @@ namespace Microsoft.Cci {
     void Dispatch(ICodeVisitor visitor);
 
   }
+
+  #region IStatement contract binding
+  [ContractClassFor(typeof(IStatement))]
+  abstract class IStatementContract : IStatement {
+    public void Dispatch(ICodeVisitor visitor) {
+      Contract.Requires(visitor != null);
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+  }
+  #endregion
+
 
   /// <summary>
   /// An object representing a switch case.

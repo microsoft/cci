@@ -21,6 +21,7 @@ namespace Microsoft.Cci {
   /// Implemented by classes that visit nodes of object graphs via a double dispatch mechanism, usually performing some computation of a subset of the nodes in the graph.
   /// Contains a specialized Visit routine for each standard type of object defined in the code model. 
   /// </summary>
+  [ContractClass(typeof(ICodeVisitorContract))]
   public interface ICodeVisitor : IMetadataVisitor {
 
     /// <summary>
@@ -116,6 +117,10 @@ namespace Microsoft.Cci {
     /// </summary>
     void Visit(IContinueStatement continueStatement);
     /// <summary>
+    /// Performs some computation with the given copy memory statement.
+    /// </summary>
+    void Visit(ICopyMemoryStatement copyMemoryStatement);
+    /// <summary>
     /// Performs some computation with the given array creation expression.
     /// </summary>
     void Visit(ICreateArray createArray);
@@ -164,6 +169,10 @@ namespace Microsoft.Cci {
     /// Performs some computation with the given expression statement.
     /// </summary>
     void Visit(IExpressionStatement expressionStatement);
+    /// <summary>
+    /// Performs some computation with the given fill memory statement.
+    /// </summary>
+    void Visit(IFillMemoryStatement fillMemoryStatement);
     /// <summary>
     /// Performs some computation with the given foreach statement.
     /// </summary>
@@ -371,6 +380,729 @@ namespace Microsoft.Cci {
     void Visit(IYieldReturnStatement yieldReturnStatement);
   }
 
+  #region ICodeVisitor contract binding
+
+  [ContractClassFor(typeof(ICodeVisitor))]
+  abstract class ICodeVisitorContract : ICodeVisitor {
+    #region ICodeVisitor Members
+
+    public void Visit(IAddition addition) {
+      Contract.Requires(addition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAddressableExpression addressableExpression) {
+      Contract.Requires(addressableExpression != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAddressDereference addressDereference) {
+      Contract.Requires(addressDereference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAddressOf addressOf) {
+      Contract.Requires(addressOf != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAnonymousDelegate anonymousDelegate) {
+      Contract.Requires(anonymousDelegate != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IArrayIndexer arrayIndexer) {
+      Contract.Requires(arrayIndexer != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAssertStatement assertStatement) {
+      Contract.Requires(assertStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAssignment assignment) {
+      Contract.Requires(assignment != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAssumeStatement assumeStatement) {
+      Contract.Requires(assumeStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IBitwiseAnd bitwiseAnd) {
+      Contract.Requires(bitwiseAnd != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IBitwiseOr bitwiseOr) {
+      Contract.Requires(bitwiseOr != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IBlockExpression blockExpression) {
+      Contract.Requires(blockExpression != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IBlockStatement block) {
+      Contract.Requires(block != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IBreakStatement breakStatement) {
+      Contract.Requires(breakStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IBoundExpression boundExpression) {
+      Contract.Requires(boundExpression != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICastIfPossible castIfPossible) {
+      Contract.Requires(castIfPossible != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICatchClause catchClause) {
+      Contract.Requires(catchClause != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICheckIfInstance checkIfInstance) {
+      Contract.Requires(checkIfInstance != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICompileTimeConstant constant) {
+      Contract.Requires(constant != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IConversion conversion) {
+      Contract.Requires(conversion != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IConditional conditional) {
+      Contract.Requires(conditional != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IConditionalStatement conditionalStatement) {
+      Contract.Requires(conditionalStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IContinueStatement continueStatement) {
+      Contract.Requires(continueStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICopyMemoryStatement copyMemoryStatement) {
+      Contract.Requires(copyMemoryStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICreateArray createArray) {
+      Contract.Requires(createArray != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICreateDelegateInstance createDelegateInstance) {
+      Contract.Requires(createDelegateInstance != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICreateObjectInstance createObjectInstance) {
+      Contract.Requires(createObjectInstance != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IDebuggerBreakStatement debuggerBreakStatement) {
+      Contract.Requires(debuggerBreakStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IDefaultValue defaultValue) {
+      Contract.Requires(defaultValue != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IDivision division) {
+      Contract.Requires(division != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IDoUntilStatement doUntilStatement) {
+      Contract.Requires(doUntilStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IDupValue dupValue) {
+      Contract.Requires(dupValue != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IEmptyStatement emptyStatement) {
+      Contract.Requires(emptyStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IEquality equality) {
+      Contract.Requires(equality != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IExclusiveOr exclusiveOr) {
+      Contract.Requires(exclusiveOr != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IExpressionStatement expressionStatement) {
+      Contract.Requires(expressionStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IFillMemoryStatement fillMemoryStatement) {
+      Contract.Requires(fillMemoryStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IForEachStatement forEachStatement) {
+      Contract.Requires(forEachStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IForStatement forStatement) {
+      Contract.Requires(forStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGotoStatement gotoStatement) {
+      Contract.Requires(gotoStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      Contract.Requires(gotoSwitchCaseStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGetTypeOfTypedReference getTypeOfTypedReference) {
+      Contract.Requires(getTypeOfTypedReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGetValueOfTypedReference getValueOfTypedReference) {
+      Contract.Requires(getValueOfTypedReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGreaterThan greaterThan) {
+      Contract.Requires(greaterThan != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
+      Contract.Requires(greaterThanOrEqual != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILabeledStatement labeledStatement) {
+      Contract.Requires(labeledStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILeftShift leftShift) {
+      Contract.Requires(leftShift != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILessThan lessThan) {
+      Contract.Requires(lessThan != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILessThanOrEqual lessThanOrEqual) {
+      Contract.Requires(lessThanOrEqual != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+      Contract.Requires(localDeclarationStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILockStatement lockStatement) {
+      Contract.Requires(lockStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILogicalNot logicalNot) {
+      Contract.Requires(logicalNot != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMakeTypedReference makeTypedReference) {
+      Contract.Requires(makeTypedReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMethodCall methodCall) {
+      Contract.Requires(methodCall != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IModulus modulus) {
+      Contract.Requires(modulus != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMultiplication multiplication) {
+      Contract.Requires(multiplication != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INamedArgument namedArgument) {
+      Contract.Requires(namedArgument != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INotEquality notEquality) {
+      Contract.Requires(notEquality != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IOldValue oldValue) {
+      Contract.Requires(oldValue != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IOnesComplement onesComplement) {
+      Contract.Requires(onesComplement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IOutArgument outArgument) {
+      Contract.Requires(outArgument != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPointerCall pointerCall) {
+      Contract.Requires(pointerCall != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPopValue popValue) {
+      Contract.Requires(popValue != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPushStatement pushStatement) {
+      Contract.Requires(pushStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRefArgument refArgument) {
+      Contract.Requires(refArgument != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IResourceUseStatement resourceUseStatement) {
+      Contract.Requires(resourceUseStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IReturnValue returnValue) {
+      Contract.Requires(returnValue != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRethrowStatement rethrowStatement) {
+      Contract.Requires(rethrowStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IReturnStatement returnStatement) {
+      Contract.Requires(returnStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRightShift rightShift) {
+      Contract.Requires(rightShift != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+      Contract.Requires(runtimeArgumentHandleExpression != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISizeOf sizeOf) {
+      Contract.Requires(sizeOf != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IStackArrayCreate stackArrayCreate) {
+      Contract.Requires(stackArrayCreate != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISubtraction subtraction) {
+      Contract.Requires(subtraction != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISwitchCase switchCase) {
+      Contract.Requires(switchCase != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISwitchStatement switchStatement) {
+      Contract.Requires(switchStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ITargetExpression targetExpression) {
+      Contract.Requires(targetExpression != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IThisReference thisReference) {
+      Contract.Requires(thisReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IThrowStatement throwStatement) {
+      Contract.Requires(throwStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+      Contract.Requires(tryCatchFilterFinallyStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ITokenOf tokenOf) {
+      Contract.Requires(tokenOf != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ITypeOf typeOf) {
+      Contract.Requires(typeOf != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IUnaryNegation unaryNegation) {
+      Contract.Requires(unaryNegation != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IUnaryPlus unaryPlus) {
+      Contract.Requires(unaryPlus != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IVectorLength vectorLength) {
+      Contract.Requires(vectorLength != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IWhileDoStatement whileDoStatement) {
+      Contract.Requires(whileDoStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IYieldBreakStatement yieldBreakStatement) {
+      Contract.Requires(yieldBreakStatement != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IYieldReturnStatement yieldReturnStatement) {
+      Contract.Requires(yieldReturnStatement != null);
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IMetadataVisitor Members
+
+    public void Visit(IArrayTypeReference arrayTypeReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAssembly assembly) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAssemblyReference assemblyReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICustomAttribute customAttribute) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICustomModifier customModifier) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IEventDefinition eventDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IFieldDefinition fieldDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IFieldReference fieldReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IFileReference fileReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IFunctionPointerTypeReference functionPointerTypeReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericMethodInstanceReference genericMethodInstanceReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericMethodParameter genericMethodParameter) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericMethodParameterReference genericMethodParameterReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGlobalFieldDefinition globalFieldDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGlobalMethodDefinition globalMethodDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericTypeInstanceReference genericTypeInstanceReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericTypeParameter genericTypeParameter) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericTypeParameterReference genericTypeParameterReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILocalDefinition localDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void VisitReference(ILocalDefinition localDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IManagedPointerTypeReference managedPointerTypeReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMarshallingInformation marshallingInformation) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMetadataConstant constant) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMetadataCreateArray createArray) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMetadataExpression expression) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMetadataNamedArgument namedArgument) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMetadataTypeOf typeOf) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMethodBody methodBody) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMethodDefinition method) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMethodImplementation methodImplementation) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMethodReference methodReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IModifiedTypeReference modifiedTypeReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IModule module) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IModuleReference moduleReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INamespaceAliasForType namespaceAliasForType) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INamespaceTypeReference namespaceTypeReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedAliasForType nestedAliasForType) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedTypeDefinition nestedTypeDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedTypeReference nestedTypeReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedUnitNamespace nestedUnitNamespace) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedUnitSetNamespace nestedUnitSetNamespace) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IOperation operation) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IOperationExceptionInformation operationExceptionInformation) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IParameterDefinition parameterDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void VisitReference(IParameterDefinition parameterDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IParameterTypeInformation parameterTypeInformation) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPESection peSection) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPlatformInvokeInformation platformInvokeInformation) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPointerTypeReference pointerTypeReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPropertyDefinition propertyDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IResourceReference resourceReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRootUnitNamespace rootUnitNamespace) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRootUnitNamespaceReference rootUnitNamespaceReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRootUnitSetNamespace rootUnitSetNamespace) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISecurityAttribute securityAttribute) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedEventDefinition specializedEventDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedFieldDefinition specializedFieldDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedFieldReference specializedFieldReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedMethodDefinition specializedMethodDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedMethodReference specializedMethodReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedPropertyDefinition specializedPropertyDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedNestedTypeDefinition specializedNestedTypeDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedNestedTypeReference specializedNestedTypeReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IUnitSet unitSet) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IWin32Resource win32Resource) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+  }
+  #endregion
+
+
   /// <summary>
   /// Contains a specialized Visit routine for each standard type of object defined in the code and metadata model. 
   /// </summary>
@@ -566,6 +1298,14 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Performs some computation with the given copy memory statement.
+    /// </summary>
+    /// <param name="copyMemoryStatement"></param>
+    public virtual void Visit(ICopyMemoryStatement copyMemoryStatement) {
+      this.Visit((IStatement)copyMemoryStatement);
+    }
+
+    /// <summary>
     /// Performs some computation with the given array creation expression.
     /// </summary>
     /// <param name="createArray"></param>
@@ -674,6 +1414,14 @@ namespace Microsoft.Cci {
     /// <param name="expressionStatement"></param>
     public virtual void Visit(IExpressionStatement expressionStatement) {
       this.Visit((IStatement)expressionStatement);
+    }
+
+    /// <summary>
+    /// Performs some computation with the given fill memory statement.
+    /// </summary>
+    /// <param name="fillMemoryStatement"></param>
+    public virtual void Visit(IFillMemoryStatement fillMemoryStatement) {
+      this.Visit((IStatement)fillMemoryStatement);
     }
 
     /// <summary>
@@ -1236,6 +1984,10 @@ namespace Microsoft.Cci {
         this.traverser.Traverse(continueStatement);
       }
 
+      public void Visit(ICopyMemoryStatement copyMemoryStatement) {
+        this.traverser.Traverse(copyMemoryStatement);
+      }
+
       public void Visit(ICreateArray createArray) {
         this.traverser.Traverse(createArray);
       }
@@ -1282,6 +2034,10 @@ namespace Microsoft.Cci {
 
       public void Visit(IExpressionStatement expressionStatement) {
         this.traverser.Traverse(expressionStatement);
+      }
+
+      public void Visit(IFillMemoryStatement fillMemoryStatement) {
+        this.traverser.Traverse(fillMemoryStatement);
       }
 
       public void Visit(IForEachStatement forEachStatement) {
@@ -1494,6 +2250,7 @@ namespace Microsoft.Cci {
     /// Traverses the addition.
     /// </summary>
     public void Traverse(IAddition addition) {
+      Contract.Requires(addition != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(addition);
       if (this.StopTraversal) return;
       this.TraverseChildren(addition);
@@ -1505,6 +2262,7 @@ namespace Microsoft.Cci {
     /// Traverses the addressable expression.
     /// </summary>
     public void Traverse(IAddressableExpression addressableExpression) {
+      Contract.Requires(addressableExpression != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(addressableExpression);
       if (this.StopTraversal) return;
       this.TraverseChildren(addressableExpression);
@@ -1516,6 +2274,7 @@ namespace Microsoft.Cci {
     /// Traverses the address dereference expression.
     /// </summary>
     public void Traverse(IAddressDereference addressDereference) {
+      Contract.Requires(addressDereference != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(addressDereference);
       if (this.StopTraversal) return;
       this.TraverseChildren(addressDereference);
@@ -1527,6 +2286,7 @@ namespace Microsoft.Cci {
     /// Traverses the AddressOf expression.
     /// </summary>
     public void Traverse(IAddressOf addressOf) {
+      Contract.Requires(addressOf != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(addressOf);
       if (this.StopTraversal) return;
       this.TraverseChildren(addressOf);
@@ -1538,6 +2298,7 @@ namespace Microsoft.Cci {
     /// Traverses the anonymous delegate expression.
     /// </summary>
     public void Traverse(IAnonymousDelegate anonymousDelegate) {
+      Contract.Requires(anonymousDelegate != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(anonymousDelegate);
       if (this.StopTraversal) return;
       this.TraverseChildren(anonymousDelegate);
@@ -1549,6 +2310,7 @@ namespace Microsoft.Cci {
     /// Traverses the array indexer expression.
     /// </summary>
     public void Traverse(IArrayIndexer arrayIndexer) {
+      Contract.Requires(arrayIndexer != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(arrayIndexer);
       if (this.StopTraversal) return;
       this.TraverseChildren(arrayIndexer);
@@ -1560,6 +2322,7 @@ namespace Microsoft.Cci {
     /// Traverses the assert statement.
     /// </summary>
     public void Traverse(IAssertStatement assertStatement) {
+      Contract.Requires(assertStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(assertStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(assertStatement);
@@ -1571,6 +2334,7 @@ namespace Microsoft.Cci {
     /// Traverses the assignment expression.
     /// </summary>
     public void Traverse(IAssignment assignment) {
+      Contract.Requires(assignment != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(assignment);
       if (this.StopTraversal) return;
       this.TraverseChildren(assignment);
@@ -1582,6 +2346,7 @@ namespace Microsoft.Cci {
     /// Traverses the assume statement.
     /// </summary>
     public void Traverse(IAssumeStatement assumeStatement) {
+      Contract.Requires(assumeStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(assumeStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(assumeStatement);
@@ -1594,6 +2359,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="binaryOperation"></param>
     public void Traverse(IBinaryOperation binaryOperation) {
+      Contract.Requires(binaryOperation != null);
       binaryOperation.Dispatch(this.dispatchingVisitor);
     }
 
@@ -1601,6 +2367,7 @@ namespace Microsoft.Cci {
     /// Traverses the bitwise and expression.
     /// </summary>
     public void Traverse(IBitwiseAnd bitwiseAnd) {
+      Contract.Requires(bitwiseAnd != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(bitwiseAnd);
       if (this.StopTraversal) return;
       this.TraverseChildren(bitwiseAnd);
@@ -1612,6 +2379,7 @@ namespace Microsoft.Cci {
     /// Traverses the bitwise or expression.
     /// </summary>
     public void Traverse(IBitwiseOr bitwiseOr) {
+      Contract.Requires(bitwiseOr != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(bitwiseOr);
       if (this.StopTraversal) return;
       this.TraverseChildren(bitwiseOr);
@@ -1623,6 +2391,7 @@ namespace Microsoft.Cci {
     /// Traverses the block expression.
     /// </summary>
     public void Traverse(IBlockExpression blockExpression) {
+      Contract.Requires(blockExpression != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(blockExpression);
       if (this.StopTraversal) return;
       this.TraverseChildren(blockExpression);
@@ -1634,6 +2403,7 @@ namespace Microsoft.Cci {
     /// Traverses the statement block.
     /// </summary>
     public void Traverse(IBlockStatement block) {
+      Contract.Requires(block != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(block);
       if (this.StopTraversal) return;
       this.TraverseChildren(block);
@@ -1645,6 +2415,7 @@ namespace Microsoft.Cci {
     /// Traverses the bound expression.
     /// </summary>
     public void Traverse(IBoundExpression boundExpression) {
+      Contract.Requires(boundExpression != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(boundExpression);
       if (this.StopTraversal) return;
       this.TraverseChildren(boundExpression);
@@ -1656,6 +2427,7 @@ namespace Microsoft.Cci {
     /// Traverses the break statement.
     /// </summary>
     public void Traverse(IBreakStatement breakStatement) {
+      Contract.Requires(breakStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(breakStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(breakStatement);
@@ -1667,6 +2439,7 @@ namespace Microsoft.Cci {
     /// Traverses the cast-if-possible expression.
     /// </summary>
     public void Traverse(ICastIfPossible castIfPossible) {
+      Contract.Requires(castIfPossible != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(castIfPossible);
       if (this.StopTraversal) return;
       this.TraverseChildren(castIfPossible);
@@ -1678,6 +2451,7 @@ namespace Microsoft.Cci {
     /// Traverses the catch clause.
     /// </summary>
     public void Traverse(ICatchClause catchClause) {
+      Contract.Requires(catchClause != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(catchClause);
       if (this.StopTraversal) return;
       this.TraverseChildren(catchClause);
@@ -1689,6 +2463,7 @@ namespace Microsoft.Cci {
     /// Traverses the check-if-instance expression.
     /// </summary>
     public void Traverse(ICheckIfInstance checkIfInstance) {
+      Contract.Requires(checkIfInstance != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(checkIfInstance);
       if (this.StopTraversal) return;
       this.TraverseChildren(checkIfInstance);
@@ -1700,6 +2475,7 @@ namespace Microsoft.Cci {
     /// Traverses the compile time constant.
     /// </summary>
     public void Traverse(ICompileTimeConstant constant) {
+      Contract.Requires(constant != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(constant);
       if (this.StopTraversal) return;
       this.TraverseChildren(constant);
@@ -1711,6 +2487,7 @@ namespace Microsoft.Cci {
     /// Traverses the conditional expression.
     /// </summary>
     public void Traverse(IConditional conditional) {
+      Contract.Requires(conditional != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(conditional);
       if (this.StopTraversal) return;
       this.TraverseChildren(conditional);
@@ -1722,6 +2499,7 @@ namespace Microsoft.Cci {
     /// Traverses the conditional statement.
     /// </summary>
     public void Traverse(IConditionalStatement conditionalStatement) {
+      Contract.Requires(conditionalStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(conditionalStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(conditionalStatement);
@@ -1733,6 +2511,7 @@ namespace Microsoft.Cci {
     /// Traverses the continue statement.
     /// </summary>
     public void Traverse(IContinueStatement continueStatement) {
+      Contract.Requires(continueStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(continueStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(continueStatement);
@@ -1744,6 +2523,7 @@ namespace Microsoft.Cci {
     /// Traverses the conversion expression.
     /// </summary>
     public void Traverse(IConversion conversion) {
+      Contract.Requires(conversion != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(conversion);
       if (this.StopTraversal) return;
       this.TraverseChildren(conversion);
@@ -1752,9 +2532,23 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Traverses the copy memory statement.
+    /// </summary>
+    /// <param name="copyMemoryStatement"></param>
+    public void Traverse(ICopyMemoryStatement copyMemoryStatement) {
+      Contract.Requires(copyMemoryStatement != null);
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(copyMemoryStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(copyMemoryStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(copyMemoryStatement);
+    }
+
+    /// <summary>
     /// Traverses the array creation expression.
     /// </summary>
     public void Traverse(ICreateArray createArray) {
+      Contract.Requires(createArray != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(createArray);
       if (this.StopTraversal) return;
       this.TraverseChildren(createArray);
@@ -1766,6 +2560,7 @@ namespace Microsoft.Cci {
     /// Traverses the delegate creation expression.
     /// </summary>
     public void Traverse(ICreateDelegateInstance createDelegateInstance) {
+      Contract.Requires(createDelegateInstance != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(createDelegateInstance);
       if (this.StopTraversal) return;
       this.TraverseChildren(createDelegateInstance);
@@ -1777,6 +2572,7 @@ namespace Microsoft.Cci {
     /// Traverses the create object instance expression.
     /// </summary>
     public void Traverse(ICreateObjectInstance createObjectInstance) {
+      Contract.Requires(createObjectInstance != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(createObjectInstance);
       if (this.StopTraversal) return;
       this.TraverseChildren(createObjectInstance);
@@ -1788,6 +2584,7 @@ namespace Microsoft.Cci {
     /// Traverses the debugger break statement.
     /// </summary>
     public void Traverse(IDebuggerBreakStatement debuggerBreakStatement) {
+      Contract.Requires(debuggerBreakStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(debuggerBreakStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(debuggerBreakStatement);
@@ -1799,6 +2596,7 @@ namespace Microsoft.Cci {
     /// Traverses the defalut value expression.
     /// </summary>
     public void Traverse(IDefaultValue defaultValue) {
+      Contract.Requires(defaultValue != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(defaultValue);
       if (this.StopTraversal) return;
       this.TraverseChildren(defaultValue);
@@ -1810,6 +2608,7 @@ namespace Microsoft.Cci {
     /// Traverses the division expression.
     /// </summary>
     public void Traverse(IDivision division) {
+      Contract.Requires(division != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(division);
       if (this.StopTraversal) return;
       this.TraverseChildren(division);
@@ -1821,6 +2620,7 @@ namespace Microsoft.Cci {
     /// Traverses the do until statement.
     /// </summary>
     public void Traverse(IDoUntilStatement doUntilStatement) {
+      Contract.Requires(doUntilStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(doUntilStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(doUntilStatement);
@@ -1832,6 +2632,7 @@ namespace Microsoft.Cci {
     /// Traverses the dup value expression.
     /// </summary>
     public void Traverse(IDupValue dupValue) {
+      Contract.Requires(dupValue != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(dupValue);
       if (this.StopTraversal) return;
       this.TraverseChildren(dupValue);
@@ -1843,6 +2644,7 @@ namespace Microsoft.Cci {
     /// Traverses the empty statement.
     /// </summary>
     public void Traverse(IEmptyStatement emptyStatement) {
+      Contract.Requires(emptyStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(emptyStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(emptyStatement);
@@ -1854,6 +2656,7 @@ namespace Microsoft.Cci {
     /// Traverses the equality expression.
     /// </summary>
     public void Traverse(IEquality equality) {
+      Contract.Requires(equality != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(equality);
       if (this.StopTraversal) return;
       this.TraverseChildren(equality);
@@ -1865,6 +2668,7 @@ namespace Microsoft.Cci {
     /// Traverses the exclusive or expression.
     /// </summary>
     public void Traverse(IExclusiveOr exclusiveOr) {
+      Contract.Requires(exclusiveOr != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(exclusiveOr);
       if (this.StopTraversal) return;
       this.TraverseChildren(exclusiveOr);
@@ -1876,6 +2680,7 @@ namespace Microsoft.Cci {
     /// Traverses the expression.
     /// </summary>
     public void Traverse(IExpression expression) {
+      Contract.Requires(expression != null);
       expression.Dispatch(this.dispatchingVisitor);
     }
 
@@ -1883,6 +2688,7 @@ namespace Microsoft.Cci {
     /// Traverses the expression statement.
     /// </summary>
     public void Traverse(IExpressionStatement expressionStatement) {
+      Contract.Requires(expressionStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(expressionStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(expressionStatement);
@@ -1891,9 +2697,23 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Traverses the fill memory statement.
+    /// </summary>
+    /// <param name="fillMemoryStatement"></param>
+    public void Traverse(IFillMemoryStatement fillMemoryStatement) {
+      Contract.Requires(fillMemoryStatement != null);
+      if (this.preorderVisitor != null) this.preorderVisitor.Visit(fillMemoryStatement);
+      if (this.StopTraversal) return;
+      this.TraverseChildren(fillMemoryStatement);
+      if (this.StopTraversal) return;
+      if (this.postorderVisitor != null) this.postorderVisitor.Visit(fillMemoryStatement);
+    }
+
+    /// <summary>
     /// Traverses the foreach statement.
     /// </summary>
     public void Traverse(IForEachStatement forEachStatement) {
+      Contract.Requires(forEachStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(forEachStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(forEachStatement);
@@ -1905,6 +2725,7 @@ namespace Microsoft.Cci {
     /// Traverses the for statement.
     /// </summary>
     public void Traverse(IForStatement forStatement) {
+      Contract.Requires(forStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(forStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(forStatement);
@@ -1916,6 +2737,7 @@ namespace Microsoft.Cci {
     /// Traverses the get type of typed reference expression.
     /// </summary>
     public void Traverse(IGetTypeOfTypedReference getTypeOfTypedReference) {
+      Contract.Requires(getTypeOfTypedReference != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(getTypeOfTypedReference);
       if (this.StopTraversal) return;
       this.TraverseChildren(getTypeOfTypedReference);
@@ -1927,6 +2749,7 @@ namespace Microsoft.Cci {
     /// Traverses the get value of typed reference expression.
     /// </summary>
     public void Traverse(IGetValueOfTypedReference getValueOfTypedReference) {
+      Contract.Requires(getValueOfTypedReference != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(getValueOfTypedReference);
       if (this.StopTraversal) return;
       this.TraverseChildren(getValueOfTypedReference);
@@ -1938,6 +2761,7 @@ namespace Microsoft.Cci {
     /// Traverses the goto statement.
     /// </summary>
     public void Traverse(IGotoStatement gotoStatement) {
+      Contract.Requires(gotoStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(gotoStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(gotoStatement);
@@ -1949,6 +2773,7 @@ namespace Microsoft.Cci {
     /// Traverses the goto switch case statement.
     /// </summary>
     public void Traverse(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      Contract.Requires(gotoSwitchCaseStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(gotoSwitchCaseStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(gotoSwitchCaseStatement);
@@ -1960,6 +2785,7 @@ namespace Microsoft.Cci {
     /// Traverses the greater-than expression.
     /// </summary>
     public void Traverse(IGreaterThan greaterThan) {
+      Contract.Requires(greaterThan != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(greaterThan);
       if (this.StopTraversal) return;
       this.TraverseChildren(greaterThan);
@@ -1971,6 +2797,7 @@ namespace Microsoft.Cci {
     /// Traverses the greater-than-or-equal expression.
     /// </summary>
     public void Traverse(IGreaterThanOrEqual greaterThanOrEqual) {
+      Contract.Requires(greaterThanOrEqual != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(greaterThanOrEqual);
       if (this.StopTraversal) return;
       this.TraverseChildren(greaterThanOrEqual);
@@ -1982,6 +2809,7 @@ namespace Microsoft.Cci {
     /// Traverses the labeled statement.
     /// </summary>
     public void Traverse(ILabeledStatement labeledStatement) {
+      Contract.Requires(labeledStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(labeledStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(labeledStatement);
@@ -1993,6 +2821,7 @@ namespace Microsoft.Cci {
     /// Traverses the left shift expression.
     /// </summary>
     public void Traverse(ILeftShift leftShift) {
+      Contract.Requires(leftShift != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(leftShift);
       if (this.StopTraversal) return;
       this.TraverseChildren(leftShift);
@@ -2004,6 +2833,7 @@ namespace Microsoft.Cci {
     /// Traverses the less-than expression.
     /// </summary>
     public void Traverse(ILessThan lessThan) {
+      Contract.Requires(lessThan != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(lessThan);
       if (this.StopTraversal) return;
       this.TraverseChildren(lessThan);
@@ -2015,6 +2845,7 @@ namespace Microsoft.Cci {
     /// Traverses the less-than-or-equal expression.
     /// </summary>
     public void Traverse(ILessThanOrEqual lessThanOrEqual) {
+      Contract.Requires(lessThanOrEqual != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(lessThanOrEqual);
       if (this.StopTraversal) return;
       this.TraverseChildren(lessThanOrEqual);
@@ -2026,6 +2857,7 @@ namespace Microsoft.Cci {
     /// Traverses the local declaration statement.
     /// </summary>
     public void Traverse(ILocalDeclarationStatement localDeclarationStatement) {
+      Contract.Requires(localDeclarationStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(localDeclarationStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(localDeclarationStatement);
@@ -2037,6 +2869,7 @@ namespace Microsoft.Cci {
     /// Traverses the lock statement.
     /// </summary>
     public void Traverse(ILockStatement lockStatement) {
+      Contract.Requires(lockStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(lockStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(lockStatement);
@@ -2048,6 +2881,7 @@ namespace Microsoft.Cci {
     /// Traverses the logical not expression.
     /// </summary>
     public void Traverse(ILogicalNot logicalNot) {
+      Contract.Requires(logicalNot != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(logicalNot);
       if (this.StopTraversal) return;
       this.TraverseChildren(logicalNot);
@@ -2059,6 +2893,7 @@ namespace Microsoft.Cci {
     /// Traverses the make typed reference expression.
     /// </summary>
     public void Traverse(IMakeTypedReference makeTypedReference) {
+      Contract.Requires(makeTypedReference != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(makeTypedReference);
       if (this.StopTraversal) return;
       this.TraverseChildren(makeTypedReference);
@@ -2081,6 +2916,7 @@ namespace Microsoft.Cci {
     /// Traverses the method call.
     /// </summary>
     public void Traverse(IMethodCall methodCall) {
+      Contract.Requires(methodCall != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(methodCall);
       if (this.StopTraversal) return;
       this.TraverseChildren(methodCall);
@@ -2092,6 +2928,7 @@ namespace Microsoft.Cci {
     /// Traverses the modulus expression.
     /// </summary>
     public void Traverse(IModulus modulus) {
+      Contract.Requires(modulus != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(modulus);
       if (this.StopTraversal) return;
       this.TraverseChildren(modulus);
@@ -2103,6 +2940,7 @@ namespace Microsoft.Cci {
     /// Traverses the multiplication expression.
     /// </summary>
     public void Traverse(IMultiplication multiplication) {
+      Contract.Requires(multiplication != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(multiplication);
       if (this.StopTraversal) return;
       this.TraverseChildren(multiplication);
@@ -2114,6 +2952,7 @@ namespace Microsoft.Cci {
     /// Traverses the named argument expression.
     /// </summary>
     public void Traverse(INamedArgument namedArgument) {
+      Contract.Requires(namedArgument != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(namedArgument);
       if (this.StopTraversal) return;
       this.TraverseChildren(namedArgument);
@@ -2125,6 +2964,7 @@ namespace Microsoft.Cci {
     /// Traverses the not equality expression.
     /// </summary>
     public void Traverse(INotEquality notEquality) {
+      Contract.Requires(notEquality != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(notEquality);
       if (this.StopTraversal) return;
       this.TraverseChildren(notEquality);
@@ -2136,6 +2976,7 @@ namespace Microsoft.Cci {
     /// Traverses the old value expression.
     /// </summary>
     public void Traverse(IOldValue oldValue) {
+      Contract.Requires(oldValue != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(oldValue);
       if (this.StopTraversal) return;
       this.TraverseChildren(oldValue);
@@ -2147,6 +2988,7 @@ namespace Microsoft.Cci {
     /// Traverses the one's complement expression.
     /// </summary>
     public void Traverse(IOnesComplement onesComplement) {
+      Contract.Requires(onesComplement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(onesComplement);
       if (this.StopTraversal) return;
       this.TraverseChildren(onesComplement);
@@ -2158,6 +3000,7 @@ namespace Microsoft.Cci {
     /// Traverses the out argument expression.
     /// </summary>
     public void Traverse(IOutArgument outArgument) {
+      Contract.Requires(outArgument != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(outArgument);
       if (this.StopTraversal) return;
       this.TraverseChildren(outArgument);
@@ -2169,6 +3012,7 @@ namespace Microsoft.Cci {
     /// Traverses the pointer call.
     /// </summary>
     public void Traverse(IPointerCall pointerCall) {
+      Contract.Requires(pointerCall != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(pointerCall);
       if (this.StopTraversal) return;
       this.TraverseChildren(pointerCall);
@@ -2180,6 +3024,7 @@ namespace Microsoft.Cci {
     /// Traverses the pop value expression.
     /// </summary>
     public void Traverse(IPopValue popValue) {
+      Contract.Requires(popValue != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(popValue);
       if (this.StopTraversal) return;
       this.TraverseChildren(popValue);
@@ -2191,6 +3036,7 @@ namespace Microsoft.Cci {
     /// Traverses the push statement.
     /// </summary>
     public void Traverse(IPushStatement pushStatement) {
+      Contract.Requires(pushStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(pushStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(pushStatement);
@@ -2202,6 +3048,7 @@ namespace Microsoft.Cci {
     /// Traverses the ref argument expression.
     /// </summary>
     public void Traverse(IRefArgument refArgument) {
+      Contract.Requires(refArgument != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(refArgument);
       if (this.StopTraversal) return;
       this.TraverseChildren(refArgument);
@@ -2213,6 +3060,7 @@ namespace Microsoft.Cci {
     /// Traverses the resource usage statement.
     /// </summary>
     public void Traverse(IResourceUseStatement resourceUseStatement) {
+      Contract.Requires(resourceUseStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(resourceUseStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(resourceUseStatement);
@@ -2224,6 +3072,7 @@ namespace Microsoft.Cci {
     /// Traverses the rethrow statement.
     /// </summary>
     public void Traverse(IRethrowStatement rethrowStatement) {
+      Contract.Requires(rethrowStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(rethrowStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(rethrowStatement);
@@ -2235,6 +3084,7 @@ namespace Microsoft.Cci {
     /// Traverses the return statement.
     /// </summary>
     public void Traverse(IReturnStatement returnStatement) {
+      Contract.Requires(returnStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(returnStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(returnStatement);
@@ -2246,6 +3096,7 @@ namespace Microsoft.Cci {
     /// Traverses the return value expression.
     /// </summary>
     public void Traverse(IReturnValue returnValue) {
+      Contract.Requires(returnValue != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(returnValue);
       if (this.StopTraversal) return;
       this.TraverseChildren(returnValue);
@@ -2257,6 +3108,7 @@ namespace Microsoft.Cci {
     /// Traverses the right shift expression.
     /// </summary>
     public void Traverse(IRightShift rightShift) {
+      Contract.Requires(rightShift != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(rightShift);
       if (this.StopTraversal) return;
       this.TraverseChildren(rightShift);
@@ -2268,6 +3120,7 @@ namespace Microsoft.Cci {
     /// Traverses the runtime argument handle expression.
     /// </summary>
     public void Traverse(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+      Contract.Requires(runtimeArgumentHandleExpression != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(runtimeArgumentHandleExpression);
       if (this.StopTraversal) return;
       this.TraverseChildren(runtimeArgumentHandleExpression);
@@ -2279,6 +3132,7 @@ namespace Microsoft.Cci {
     /// Traverses the sizeof() expression.
     /// </summary>
     public void Traverse(ISizeOf sizeOf) {
+      Contract.Requires(sizeOf != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(sizeOf);
       if (this.StopTraversal) return;
       this.TraverseChildren(sizeOf);
@@ -2290,6 +3144,7 @@ namespace Microsoft.Cci {
     /// Traverses the the given source method body.
     /// </summary>
     public void Traverse(ISourceMethodBody sourceMethodBody) {
+      Contract.Requires(sourceMethodBody != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(sourceMethodBody);
       if (this.StopTraversal) return;
       this.TraverseChildren(sourceMethodBody);
@@ -2301,6 +3156,7 @@ namespace Microsoft.Cci {
     /// Traverses the stack array create expression.
     /// </summary>
     public void Traverse(IStackArrayCreate stackArrayCreate) {
+      Contract.Requires(stackArrayCreate != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(stackArrayCreate);
       if (this.StopTraversal) return;
       this.TraverseChildren(stackArrayCreate);
@@ -2313,6 +3169,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="statement">The statement.</param>
     public void Traverse(IStatement statement) {
+      Contract.Requires(statement != null);
       statement.Dispatch(this.dispatchingVisitor);
     }
 
@@ -2320,6 +3177,7 @@ namespace Microsoft.Cci {
     /// Traverses the subtraction expression.
     /// </summary>
     public void Traverse(ISubtraction subtraction) {
+      Contract.Requires(subtraction != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(subtraction);
       if (this.StopTraversal) return;
       this.TraverseChildren(subtraction);
@@ -2331,6 +3189,7 @@ namespace Microsoft.Cci {
     /// Traverses the switch case.
     /// </summary>
     public void Traverse(ISwitchCase switchCase) {
+      Contract.Requires(switchCase != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(switchCase);
       if (this.StopTraversal) return;
       this.TraverseChildren(switchCase);
@@ -2342,6 +3201,7 @@ namespace Microsoft.Cci {
     /// Traverses the switch statement.
     /// </summary>
     public void Traverse(ISwitchStatement switchStatement) {
+      Contract.Requires(switchStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(switchStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(switchStatement);
@@ -2353,6 +3213,7 @@ namespace Microsoft.Cci {
     /// Traverses the target expression.
     /// </summary>
     public void Traverse(ITargetExpression targetExpression) {
+      Contract.Requires(targetExpression != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(targetExpression);
       if (this.StopTraversal) return;
       this.TraverseChildren(targetExpression);
@@ -2364,6 +3225,7 @@ namespace Microsoft.Cci {
     /// Traverses the this reference expression.
     /// </summary>
     public void Traverse(IThisReference thisReference) {
+      Contract.Requires(thisReference != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(thisReference);
       if (this.StopTraversal) return;
       this.TraverseChildren(thisReference);
@@ -2375,6 +3237,7 @@ namespace Microsoft.Cci {
     /// Traverses the throw statement.
     /// </summary>
     public void Traverse(IThrowStatement throwStatement) {
+      Contract.Requires(throwStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(throwStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(throwStatement);
@@ -2386,6 +3249,7 @@ namespace Microsoft.Cci {
     /// Traverses the try-catch-filter-finally statement.
     /// </summary>
     public void Traverse(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+      Contract.Requires(tryCatchFilterFinallyStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(tryCatchFilterFinallyStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(tryCatchFilterFinallyStatement);
@@ -2397,6 +3261,7 @@ namespace Microsoft.Cci {
     /// Traverses the tokenof() expression.
     /// </summary>
     public void Traverse(ITokenOf tokenOf) {
+      Contract.Requires(tokenOf != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(tokenOf);
       if (this.StopTraversal) return;
       this.TraverseChildren(tokenOf);
@@ -2408,6 +3273,7 @@ namespace Microsoft.Cci {
     /// Traverses the typeof() expression.
     /// </summary>
     public void Traverse(ITypeOf typeOf) {
+      Contract.Requires(typeOf != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(typeOf);
       if (this.StopTraversal) return;
       this.TraverseChildren(typeOf);
@@ -2419,6 +3285,7 @@ namespace Microsoft.Cci {
     /// Traverses the unary negation expression.
     /// </summary>
     public void Traverse(IUnaryNegation unaryNegation) {
+      Contract.Requires(unaryNegation != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(unaryNegation);
       if (this.StopTraversal) return;
       this.TraverseChildren(unaryNegation);
@@ -2431,6 +3298,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="unaryOperation"></param>
     public void Traverse(IUnaryOperation unaryOperation) {
+      Contract.Requires(unaryOperation != null);
       unaryOperation.Dispatch(this.dispatchingVisitor);
     }
 
@@ -2438,6 +3306,7 @@ namespace Microsoft.Cci {
     /// Traverses the unary plus expression.
     /// </summary>
     public void Traverse(IUnaryPlus unaryPlus) {
+      Contract.Requires(unaryPlus != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(unaryPlus);
       if (this.StopTraversal) return;
       this.TraverseChildren(unaryPlus);
@@ -2449,6 +3318,7 @@ namespace Microsoft.Cci {
     /// Traverses the vector length expression.
     /// </summary>
     public void Traverse(IVectorLength vectorLength) {
+      Contract.Requires(vectorLength != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(vectorLength);
       if (this.StopTraversal) return;
       this.TraverseChildren(vectorLength);
@@ -2460,6 +3330,7 @@ namespace Microsoft.Cci {
     /// Traverses the while do statement.
     /// </summary>
     public void Traverse(IWhileDoStatement whileDoStatement) {
+      Contract.Requires(whileDoStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(whileDoStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(whileDoStatement);
@@ -2471,6 +3342,7 @@ namespace Microsoft.Cci {
     /// Traverses the yield break statement.
     /// </summary>
     public void Traverse(IYieldBreakStatement yieldBreakStatement) {
+      Contract.Requires(yieldBreakStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(yieldBreakStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(yieldBreakStatement);
@@ -2482,6 +3354,7 @@ namespace Microsoft.Cci {
     /// Traverses the yield return statement.
     /// </summary>
     public void Traverse(IYieldReturnStatement yieldReturnStatement) {
+      Contract.Requires(yieldReturnStatement != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(yieldReturnStatement);
       if (this.StopTraversal) return;
       this.TraverseChildren(yieldReturnStatement);
@@ -2493,6 +3366,7 @@ namespace Microsoft.Cci {
     /// Traverses the enumeration of catch clauses.
     /// </summary>
     public void Traverse(IEnumerable<ICatchClause> catchClauses) {
+      Contract.Requires(catchClauses != null);
       foreach (var catchClause in catchClauses) {
         this.Traverse(catchClause);
         if (this.StopTraversal) return;
@@ -2503,6 +3377,7 @@ namespace Microsoft.Cci {
     /// Traverses the enumeration of expressions.
     /// </summary>
     public void Traverse(IEnumerable<IExpression> expressions) {
+      Contract.Requires(expressions != null);
       foreach (var expression in expressions) {
         this.Traverse(expression);
         if (this.StopTraversal) return;
@@ -2533,6 +3408,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the addition.
     /// </summary>
     public virtual void TraverseChildren(IAddition addition) {
+      Contract.Requires(addition != null);
       this.TraverseChildren((IBinaryOperation)addition);
     }
 
@@ -2540,6 +3416,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the addressable expression.
     /// </summary>
     public virtual void TraverseChildren(IAddressableExpression addressableExpression) {
+      Contract.Requires(addressableExpression != null);
       this.TraverseChildren((IExpression)addressableExpression);
       if (this.StopTraversal) return;
       var local = addressableExpression.Definition as ILocalDefinition;
@@ -2586,6 +3463,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the address dereference expression.
     /// </summary>
     public virtual void TraverseChildren(IAddressDereference addressDereference) {
+      Contract.Requires(addressDereference != null);
       this.TraverseChildren((IExpression)addressDereference);
       if (this.StopTraversal) return;
       this.Traverse(addressDereference.Address);
@@ -2595,6 +3473,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the AddressOf expression.
     /// </summary>
     public virtual void TraverseChildren(IAddressOf addressOf) {
+      Contract.Requires(addressOf != null);
       this.TraverseChildren((IExpression)addressOf);
       if (this.StopTraversal) return;
       this.Traverse(addressOf.Expression);
@@ -2604,6 +3483,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the anonymous delegate expression.
     /// </summary>
     public virtual void TraverseChildren(IAnonymousDelegate anonymousDelegate) {
+      Contract.Requires(anonymousDelegate != null);
       this.TraverseChildren((IExpression)anonymousDelegate);
       if (this.StopTraversal) return;
       this.Traverse(anonymousDelegate.Parameters);
@@ -2620,6 +3500,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the array indexer expression.
     /// </summary>
     public virtual void TraverseChildren(IArrayIndexer arrayIndexer) {
+      Contract.Requires(arrayIndexer != null);
       this.TraverseChildren((IExpression)arrayIndexer);
       if (this.StopTraversal) return;
       this.Traverse(arrayIndexer.IndexedObject);
@@ -2631,6 +3512,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the assert statement.
     /// </summary>
     public virtual void TraverseChildren(IAssertStatement assertStatement) {
+      Contract.Requires(assertStatement != null);
       this.TraverseChildren((IStatement)assertStatement);
       if (this.StopTraversal) return;
       this.Traverse(assertStatement.Condition);
@@ -2643,6 +3525,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the assignment expression.
     /// </summary>
     public virtual void TraverseChildren(IAssignment assignment) {
+      Contract.Requires(assignment != null);
       this.TraverseChildren((IExpression)assignment);
       if (this.StopTraversal) return;
       this.Traverse(assignment.Target);
@@ -2654,6 +3537,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the assume statement.
     /// </summary>
     public virtual void TraverseChildren(IAssumeStatement assumeStatement) {
+      Contract.Requires(assumeStatement != null);
       this.TraverseChildren((IStatement)assumeStatement);
       if (this.StopTraversal) return;
       this.Traverse(assumeStatement.Condition);
@@ -2668,6 +3552,7 @@ namespace Microsoft.Cci {
     /// regardless of how the traversal gets to them.
     /// </summary>
     public virtual void TraverseChildren(IBinaryOperation binaryOperation) {
+      Contract.Requires(binaryOperation != null);
       this.TraverseChildren((IExpression)binaryOperation);
       this.Traverse(binaryOperation.LeftOperand);
       this.Traverse(binaryOperation.RightOperand);
@@ -2677,6 +3562,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the bitwise and expression.
     /// </summary>
     public virtual void TraverseChildren(IBitwiseAnd bitwiseAnd) {
+      Contract.Requires(bitwiseAnd != null);
       this.TraverseChildren((IBinaryOperation)bitwiseAnd);
     }
 
@@ -2684,6 +3570,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the bitwise or expression.
     /// </summary>
     public virtual void TraverseChildren(IBitwiseOr bitwiseOr) {
+      Contract.Requires(bitwiseOr != null);
       this.TraverseChildren((IBinaryOperation)bitwiseOr);
     }
 
@@ -2691,6 +3578,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the block expression.
     /// </summary>
     public virtual void TraverseChildren(IBlockExpression blockExpression) {
+      Contract.Requires(blockExpression != null);
       this.TraverseChildren((IExpression)blockExpression);
       if (this.StopTraversal) return;
       this.Traverse(blockExpression.BlockStatement);
@@ -2702,6 +3590,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the statement block.
     /// </summary>
     public virtual void TraverseChildren(IBlockStatement block) {
+      Contract.Requires(block != null);
       this.TraverseChildren((IStatement)block);
       if (this.StopTraversal) return;
       this.Traverse(block.Statements);
@@ -2711,6 +3600,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the bound expression.
     /// </summary>
     public virtual void TraverseChildren(IBoundExpression boundExpression) {
+      Contract.Requires(boundExpression != null);
       this.TraverseChildren((IExpression)boundExpression);
       if (this.StopTraversal) return;
       if (boundExpression.Instance != null) {
@@ -2735,6 +3625,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the break statement.
     /// </summary>
     public virtual void TraverseChildren(IBreakStatement breakStatement) {
+      Contract.Requires(breakStatement != null);
       this.TraverseChildren((IStatement)breakStatement);
     }
 
@@ -2742,6 +3633,7 @@ namespace Microsoft.Cci {
     /// Traverses the cast-if-possible expression.
     /// </summary>
     public virtual void TraverseChildren(ICastIfPossible castIfPossible) {
+      Contract.Requires(castIfPossible != null);
       this.TraverseChildren((IExpression)castIfPossible);
       if (this.StopTraversal) return;
       this.Traverse(castIfPossible.ValueToCast);
@@ -2753,7 +3645,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the catch clause.
     /// </summary>
     public virtual void TraverseChildren(ICatchClause catchClause) {
-      //base case
+      Contract.Requires(catchClause != null);
       this.Traverse(catchClause.ExceptionType);
       if (this.StopTraversal) return;
       if (catchClause.ExceptionContainer != Dummy.LocalVariable) {
@@ -2771,6 +3663,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the check-if-instance expression.
     /// </summary>
     public virtual void TraverseChildren(ICheckIfInstance checkIfInstance) {
+      Contract.Requires(checkIfInstance != null);
       this.TraverseChildren((IExpression)checkIfInstance);
       if (this.StopTraversal) return;
       this.Traverse(checkIfInstance.Operand);
@@ -2782,6 +3675,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the compile time constant.
     /// </summary>
     public virtual void TraverseChildren(ICompileTimeConstant constant) {
+      Contract.Requires(constant != null);
       this.TraverseChildren((IExpression)constant);
     }
 
@@ -2789,6 +3683,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the conditional expression.
     /// </summary>
     public virtual void TraverseChildren(IConditional conditional) {
+      Contract.Requires(conditional != null);
       this.TraverseChildren((IExpression)conditional);
       if (this.StopTraversal) return;
       this.Traverse(conditional.Condition);
@@ -2802,6 +3697,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the conditional statement.
     /// </summary>
     public virtual void TraverseChildren(IConditionalStatement conditionalStatement) {
+      Contract.Requires(conditionalStatement != null);
       this.TraverseChildren((IStatement)conditionalStatement);
       if (this.StopTraversal) return;
       this.Traverse(conditionalStatement.Condition);
@@ -2815,13 +3711,29 @@ namespace Microsoft.Cci {
     /// Traverses the children of the continue statement.
     /// </summary>
     public virtual void TraverseChildren(IContinueStatement continueStatement) {
+      Contract.Requires(continueStatement != null);
       this.TraverseChildren((IStatement)continueStatement);
+    }
+
+    /// <summary>
+    /// Traverses the children of the copy memory statement.
+    /// </summary>
+    public virtual void TraverseChildren(ICopyMemoryStatement copyMemoryStatement) {
+      Contract.Requires(copyMemoryStatement != null);
+      this.TraverseChildren((IStatement)copyMemoryStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(copyMemoryStatement.TargetAddress);
+      if (this.StopTraversal) return;
+      this.Traverse(copyMemoryStatement.SourceAddress);
+      if (this.StopTraversal) return;
+      this.Traverse(copyMemoryStatement.NumberOfBytesToCopy);
     }
 
     /// <summary>
     /// Traverses the children of the conversion expression.
     /// </summary>
     public virtual void TraverseChildren(IConversion conversion) {
+      Contract.Requires(conversion != null);
       this.TraverseChildren((IExpression)conversion);
       if (this.StopTraversal) return;
       this.Traverse(conversion.ValueToConvert);
@@ -2833,6 +3745,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the array creation expression.
     /// </summary>
     public virtual void TraverseChildren(ICreateArray createArray) {
+      Contract.Requires(createArray != null);
       this.TraverseChildren((IExpression)createArray);
       if (this.StopTraversal) return;
       this.Traverse(createArray.ElementType);
@@ -2846,6 +3759,7 @@ namespace Microsoft.Cci {
     /// Traverses the children the delegate instance creation expression.
     /// </summary>
     public virtual void TraverseChildren(ICreateDelegateInstance createDelegateInstance) {
+      Contract.Requires(createDelegateInstance != null);
       this.TraverseChildren((IExpression)createDelegateInstance);
       if (this.StopTraversal) return;
       if (createDelegateInstance.Instance != null)
@@ -2858,6 +3772,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the create object instance expression.
     /// </summary>
     public virtual void TraverseChildren(ICreateObjectInstance createObjectInstance) {
+      Contract.Requires(createObjectInstance != null);
       this.TraverseChildren((IExpression)createObjectInstance);
       if (this.StopTraversal) return;
       this.Traverse(createObjectInstance.MethodToCall);
@@ -2869,6 +3784,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the debugger break statement.
     /// </summary>
     public virtual void TraverseChildren(IDebuggerBreakStatement debuggerBreakStatement) {
+      Contract.Requires(debuggerBreakStatement != null);
       this.TraverseChildren((IStatement)debuggerBreakStatement);
     }
 
@@ -2876,6 +3792,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the defalut value expression.
     /// </summary>
     public virtual void TraverseChildren(IDefaultValue defaultValue) {
+      Contract.Requires(defaultValue != null);
       this.TraverseChildren((IExpression)defaultValue);
       if (this.StopTraversal) return;
       this.Traverse(defaultValue.DefaultValueType);
@@ -2885,6 +3802,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the division expression.
     /// </summary>
     public virtual void TraverseChildren(IDivision division) {
+      Contract.Requires(division != null);
       this.TraverseChildren((IBinaryOperation)division);
     }
 
@@ -2892,6 +3810,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the do until statement.
     /// </summary>
     public virtual void TraverseChildren(IDoUntilStatement doUntilStatement) {
+      Contract.Requires(doUntilStatement != null);
       this.TraverseChildren((IStatement)doUntilStatement);
       if (this.StopTraversal) return;
       this.Traverse(doUntilStatement.Body);
@@ -2903,6 +3822,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the dup value expression.
     /// </summary>
     public virtual void TraverseChildren(IDupValue dupValue) {
+      Contract.Requires(dupValue != null);
       this.TraverseChildren((IExpression)dupValue);
     }
 
@@ -2910,6 +3830,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the empty statement.
     /// </summary>
     public virtual void TraverseChildren(IEmptyStatement emptyStatement) {
+      Contract.Requires(emptyStatement != null);
       this.TraverseChildren((IStatement)emptyStatement);
     }
 
@@ -2917,6 +3838,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the equality expression.
     /// </summary>
     public virtual void TraverseChildren(IEquality equality) {
+      Contract.Requires(equality != null);
       this.TraverseChildren((IBinaryOperation)equality);
     }
 
@@ -2924,6 +3846,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the exclusive or expression.
     /// </summary>
     public virtual void TraverseChildren(IExclusiveOr exclusiveOr) {
+      Contract.Requires(exclusiveOr != null);
       this.TraverseChildren((IBinaryOperation)exclusiveOr);
     }
 
@@ -2933,6 +3856,7 @@ namespace Microsoft.Cci {
     /// regardless of how the traversal gets to them.
     /// </summary>
     public virtual void TraverseChildren(IExpression expression) {
+      Contract.Requires(expression != null);
       this.Traverse(expression.Type);
     }
 
@@ -2940,15 +3864,31 @@ namespace Microsoft.Cci {
     /// Traverses the children of the expression statement.
     /// </summary>
     public virtual void TraverseChildren(IExpressionStatement expressionStatement) {
+      Contract.Requires(expressionStatement != null);
       this.TraverseChildren((IStatement)expressionStatement);
       if (this.StopTraversal) return;
       this.Traverse(expressionStatement.Expression);
     }
 
     /// <summary>
+    /// Traverses the children of the fill memory statement.
+    /// </summary>
+    public virtual void TraverseChildren(IFillMemoryStatement fillMemoryStatement) {
+      Contract.Requires(fillMemoryStatement != null);
+      this.TraverseChildren((IStatement)fillMemoryStatement);
+      if (this.StopTraversal) return;
+      this.Traverse(fillMemoryStatement.TargetAddress);
+      if (this.StopTraversal) return;
+      this.Traverse(fillMemoryStatement.FillValue);
+      if (this.StopTraversal) return;
+      this.Traverse(fillMemoryStatement.NumberOfBytesToFill);
+    }
+
+    /// <summary>
     /// Traverses the children of the foreach statement.
     /// </summary>
     public virtual void TraverseChildren(IForEachStatement forEachStatement) {
+      Contract.Requires(forEachStatement != null);
       this.TraverseChildren((IStatement)forEachStatement);
       if (this.StopTraversal) return;
       this.Traverse(forEachStatement.Variable);
@@ -2962,6 +3902,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the for statement.
     /// </summary>
     public virtual void TraverseChildren(IForStatement forStatement) {
+      Contract.Requires(forStatement != null);
       this.TraverseChildren((IStatement)forStatement);
       if (this.StopTraversal) return;
       this.Traverse(forStatement.InitStatements);
@@ -2977,6 +3918,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the get type of typed reference expression.
     /// </summary>
     public virtual void TraverseChildren(IGetTypeOfTypedReference getTypeOfTypedReference) {
+      Contract.Requires(getTypeOfTypedReference != null);
       this.TraverseChildren((IExpression)getTypeOfTypedReference);
       if (this.StopTraversal) return;
       this.Traverse(getTypeOfTypedReference.TypedReference);
@@ -2986,6 +3928,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the get value of typed reference expression.
     /// </summary>
     public virtual void TraverseChildren(IGetValueOfTypedReference getValueOfTypedReference) {
+      Contract.Requires(getValueOfTypedReference != null);
       this.TraverseChildren((IExpression)getValueOfTypedReference);
       if (this.StopTraversal) return;
       this.Traverse(getValueOfTypedReference.TypedReference);
@@ -2997,6 +3940,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the goto statement.
     /// </summary>
     public virtual void TraverseChildren(IGotoStatement gotoStatement) {
+      Contract.Requires(gotoStatement != null);
       this.TraverseChildren((IStatement)gotoStatement);
     }
 
@@ -3004,6 +3948,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the goto switch case statement.
     /// </summary>
     public virtual void TraverseChildren(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      Contract.Requires(gotoSwitchCaseStatement != null);
       this.TraverseChildren((IStatement)gotoSwitchCaseStatement);
     }
 
@@ -3011,6 +3956,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the greater-than expression.
     /// </summary>
     public virtual void TraverseChildren(IGreaterThan greaterThan) {
+      Contract.Requires(greaterThan != null);
       this.TraverseChildren((IBinaryOperation)greaterThan);
     }
 
@@ -3018,6 +3964,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the greater-than-or-equal expression.
     /// </summary>
     public virtual void TraverseChildren(IGreaterThanOrEqual greaterThanOrEqual) {
+      Contract.Requires(greaterThanOrEqual != null);
       this.TraverseChildren((IBinaryOperation)greaterThanOrEqual);
     }
 
@@ -3025,6 +3972,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the labeled statement.
     /// </summary>
     public virtual void TraverseChildren(ILabeledStatement labeledStatement) {
+      Contract.Requires(labeledStatement != null);
       this.TraverseChildren((IStatement)labeledStatement);
       if (this.StopTraversal) return;
       this.Traverse(labeledStatement.Statement);
@@ -3034,6 +3982,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the left shift expression.
     /// </summary>
     public virtual void TraverseChildren(ILeftShift leftShift) {
+      Contract.Requires(leftShift != null);
       this.TraverseChildren((IBinaryOperation)leftShift);
     }
 
@@ -3041,6 +3990,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the less-than expression.
     /// </summary>
     public virtual void TraverseChildren(ILessThan lessThan) {
+      Contract.Requires(lessThan != null);
       this.TraverseChildren((IBinaryOperation)lessThan);
     }
 
@@ -3048,6 +3998,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the less-than-or-equal expression.
     /// </summary>
     public virtual void TraverseChildren(ILessThanOrEqual lessThanOrEqual) {
+      Contract.Requires(lessThanOrEqual != null);
       this.TraverseChildren((IBinaryOperation)lessThanOrEqual);
     }
 
@@ -3055,6 +4006,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the local declaration statement.
     /// </summary>
     public virtual void TraverseChildren(ILocalDeclarationStatement localDeclarationStatement) {
+      Contract.Requires(localDeclarationStatement != null);
       this.TraverseChildren((IStatement)localDeclarationStatement);
       if (this.StopTraversal) return;
       this.Traverse(localDeclarationStatement.LocalVariable);
@@ -3067,6 +4019,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the lock statement.
     /// </summary>
     public virtual void TraverseChildren(ILockStatement lockStatement) {
+      Contract.Requires(lockStatement != null);
       this.TraverseChildren((IStatement)lockStatement);
       if (this.StopTraversal) return;
       this.Traverse(lockStatement.Guard);
@@ -3078,6 +4031,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the logical not expression.
     /// </summary>
     public virtual void TraverseChildren(ILogicalNot logicalNot) {
+      Contract.Requires(logicalNot != null);
       this.TraverseChildren((IUnaryOperation)logicalNot);
     }
 
@@ -3085,6 +4039,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the make typed reference expression.
     /// </summary>
     public virtual void TraverseChildren(IMakeTypedReference makeTypedReference) {
+      Contract.Requires(makeTypedReference != null);
       this.TraverseChildren((IExpression)makeTypedReference);
       if (this.StopTraversal) return;
       this.Traverse(makeTypedReference.Operand);
@@ -3094,6 +4049,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the method call.
     /// </summary>
     public virtual void TraverseChildren(IMethodCall methodCall) {
+      Contract.Requires(methodCall != null);
       this.TraverseChildren((IExpression)methodCall);
       if (this.StopTraversal) return;
       if (!methodCall.IsStaticCall) {
@@ -3109,6 +4065,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the modulus expression.
     /// </summary>
     public virtual void TraverseChildren(IModulus modulus) {
+      Contract.Requires(modulus != null);
       this.TraverseChildren((IBinaryOperation)modulus);
     }
 
@@ -3116,6 +4073,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the multiplication expression.
     /// </summary>
     public virtual void TraverseChildren(IMultiplication multiplication) {
+      Contract.Requires(multiplication != null);
       this.TraverseChildren((IBinaryOperation)multiplication);
     }
 
@@ -3123,6 +4081,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the named argument expression.
     /// </summary>
     public virtual void TraverseChildren(INamedArgument namedArgument) {
+      Contract.Requires(namedArgument != null);
       this.TraverseChildren((IExpression)namedArgument);
       if (this.StopTraversal) return;
       this.Traverse(namedArgument.ArgumentValue);
@@ -3132,6 +4091,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the not equality expression.
     /// </summary>
     public virtual void TraverseChildren(INotEquality notEquality) {
+      Contract.Requires(notEquality != null);
       this.TraverseChildren((IBinaryOperation)notEquality);
     }
 
@@ -3139,6 +4099,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the old value expression.
     /// </summary>
     public virtual void TraverseChildren(IOldValue oldValue) {
+      Contract.Requires(oldValue != null);
       this.TraverseChildren((IExpression)oldValue);
       if (this.StopTraversal) return;
       this.Traverse(oldValue.Expression);
@@ -3148,6 +4109,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the one's complement expression.
     /// </summary>
     public virtual void TraverseChildren(IOnesComplement onesComplement) {
+      Contract.Requires(onesComplement != null);
       this.TraverseChildren((IUnaryOperation)onesComplement);
     }
 
@@ -3155,6 +4117,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the out argument expression.
     /// </summary>
     public virtual void TraverseChildren(IOutArgument outArgument) {
+      Contract.Requires(outArgument != null);
       this.TraverseChildren((IExpression)outArgument);
       if (this.StopTraversal) return;
       this.Traverse(outArgument.Expression);
@@ -3164,6 +4127,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the pointer call.
     /// </summary>
     public virtual void TraverseChildren(IPointerCall pointerCall) {
+      Contract.Requires(pointerCall != null);
       this.TraverseChildren((IExpression)pointerCall);
       if (this.StopTraversal) return;
       this.Traverse(pointerCall.Pointer);
@@ -3175,6 +4139,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the pop value expression.
     /// </summary>
     public virtual void TraverseChildren(IPopValue popValue) {
+      Contract.Requires(popValue != null);
       this.TraverseChildren((IExpression)popValue);
     }
 
@@ -3182,6 +4147,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the push statement.
     /// </summary>
     public virtual void TraverseChildren(IPushStatement pushStatement) {
+      Contract.Requires(pushStatement != null);
       this.TraverseChildren((IStatement)pushStatement);
       if (this.StopTraversal) return;
       this.Traverse(pushStatement.ValueToPush);
@@ -3191,6 +4157,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the ref argument expression.
     /// </summary>
     public virtual void TraverseChildren(IRefArgument refArgument) {
+      Contract.Requires(refArgument != null);
       this.TraverseChildren((IExpression)refArgument);
       if (this.StopTraversal) return;
       this.Traverse(refArgument.Expression);
@@ -3200,6 +4167,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the resource usage statement.
     /// </summary>
     public virtual void TraverseChildren(IResourceUseStatement resourceUseStatement) {
+      Contract.Requires(resourceUseStatement != null);
       this.TraverseChildren((IStatement)resourceUseStatement);
       if (this.StopTraversal) return;
       this.Traverse(resourceUseStatement.ResourceAcquisitions);
@@ -3211,6 +4179,7 @@ namespace Microsoft.Cci {
     /// Traverses the rethrow statement.
     /// </summary>
     public virtual void TraverseChildren(IRethrowStatement rethrowStatement) {
+      Contract.Requires(rethrowStatement != null);
       this.TraverseChildren((IStatement)rethrowStatement);
     }
 
@@ -3218,6 +4187,7 @@ namespace Microsoft.Cci {
     /// Traverses the return statement.
     /// </summary>
     public virtual void TraverseChildren(IReturnStatement returnStatement) {
+      Contract.Requires(returnStatement != null);
       this.TraverseChildren((IStatement)returnStatement);
       if (this.StopTraversal) return;
       if (returnStatement.Expression != null)
@@ -3228,6 +4198,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the return value expression.
     /// </summary>
     public virtual void TraverseChildren(IReturnValue returnValue) {
+      Contract.Requires(returnValue != null);
       this.TraverseChildren((IExpression)returnValue);
     }
 
@@ -3235,6 +4206,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the right shift expression.
     /// </summary>
     public virtual void TraverseChildren(IRightShift rightShift) {
+      Contract.Requires(rightShift != null);
       this.TraverseChildren((IBinaryOperation)rightShift);
     }
 
@@ -3242,6 +4214,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the runtime argument handle expression.
     /// </summary>
     public virtual void TraverseChildren(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+      Contract.Requires(runtimeArgumentHandleExpression != null);
       this.TraverseChildren((IExpression)runtimeArgumentHandleExpression);
     }
 
@@ -3249,6 +4222,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the sizeof() expression.
     /// </summary>
     public virtual void TraverseChildren(ISizeOf sizeOf) {
+      Contract.Requires(sizeOf != null);
       this.TraverseChildren((IExpression)sizeOf);
       if (this.StopTraversal) return;
       this.Traverse(sizeOf.TypeToSize);
@@ -3258,6 +4232,7 @@ namespace Microsoft.Cci {
     /// Traverses the the given source method body.
     /// </summary>
     public virtual void TraverseChildren(ISourceMethodBody sourceMethodBody) {
+      Contract.Requires(sourceMethodBody != null);
       //do not traverse the IL via IMethodBody
       this.Traverse(sourceMethodBody.Block);
     }
@@ -3266,6 +4241,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the stack array create expression.
     /// </summary>
     public virtual void TraverseChildren(IStackArrayCreate stackArrayCreate) {
+      Contract.Requires(stackArrayCreate != null);
       this.TraverseChildren((IExpression)stackArrayCreate);
       if (this.StopTraversal) return;
       this.Traverse(stackArrayCreate.ElementType);
@@ -3279,6 +4255,7 @@ namespace Microsoft.Cci {
     /// regardless of how the traversal gets to them.
     /// </summary>
     public virtual void TraverseChildren(IStatement statement) {
+      Contract.Requires(statement != null);
       //this is just an extension hook
     }
 
@@ -3286,6 +4263,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the subtraction expression.
     /// </summary>
     public virtual void TraverseChildren(ISubtraction subtraction) {
+      Contract.Requires(subtraction != null);
       this.TraverseChildren((IBinaryOperation)subtraction);
     }
 
@@ -3293,6 +4271,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the switch case.
     /// </summary>
     public virtual void TraverseChildren(ISwitchCase switchCase) {
+      Contract.Requires(switchCase != null);
       if (!switchCase.IsDefault) {
         this.Traverse(switchCase.Expression);
         if (this.StopTraversal) return;
@@ -3304,6 +4283,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the switch statement.
     /// </summary>
     public virtual void TraverseChildren(ISwitchStatement switchStatement) {
+      Contract.Requires(switchStatement != null);
       this.TraverseChildren((IStatement)switchStatement);
       if (this.StopTraversal) return;
       this.Traverse(switchStatement.Expression);
@@ -3315,6 +4295,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the target expression.
     /// </summary>
     public virtual void TraverseChildren(ITargetExpression targetExpression) {
+      Contract.Requires(targetExpression != null);
       this.TraverseChildren((IExpression)targetExpression);
       if (this.StopTraversal) return;
       var local = targetExpression.Definition as ILocalDefinition;
@@ -3354,6 +4335,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the this reference expression.
     /// </summary>
     public virtual void TraverseChildren(IThisReference thisReference) {
+      Contract.Requires(thisReference != null);
       this.TraverseChildren((IExpression)thisReference);
     }
 
@@ -3361,6 +4343,7 @@ namespace Microsoft.Cci {
     /// Traverses the throw statement.
     /// </summary>
     public virtual void TraverseChildren(IThrowStatement throwStatement) {
+      Contract.Requires(throwStatement != null);
       this.TraverseChildren((IStatement)throwStatement);
       if (this.StopTraversal) return;
       this.Traverse(throwStatement.Exception);
@@ -3370,6 +4353,7 @@ namespace Microsoft.Cci {
     /// Traverses the try-catch-filter-finally statement.
     /// </summary>
     public virtual void TraverseChildren(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+      Contract.Requires(tryCatchFilterFinallyStatement != null);
       this.TraverseChildren((IStatement)tryCatchFilterFinallyStatement);
       if (this.StopTraversal) return;
       this.Traverse(tryCatchFilterFinallyStatement.TryBody);
@@ -3388,6 +4372,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the tokenof() expression.
     /// </summary>
     public virtual void TraverseChildren(ITokenOf tokenOf) {
+      Contract.Requires(tokenOf != null);
       this.TraverseChildren((IExpression)tokenOf);
       if (this.StopTraversal) return;
       var fieldReference = tokenOf.Definition as IFieldReference;
@@ -3408,6 +4393,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the typeof() expression.
     /// </summary>
     public virtual void TraverseChildren(ITypeOf typeOf) {
+      Contract.Requires(typeOf != null);
       this.TraverseChildren((IExpression)typeOf);
       if (this.StopTraversal) return;
       this.Traverse(typeOf.TypeToGet);
@@ -3417,6 +4403,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the unary negation expression.
     /// </summary>
     public virtual void TraverseChildren(IUnaryNegation unaryNegation) {
+      Contract.Requires(unaryNegation != null);
       this.TraverseChildren((IUnaryOperation)unaryNegation);
     }
 
@@ -3426,6 +4413,7 @@ namespace Microsoft.Cci {
     /// regardless of how the traversal gets to them.
     /// </summary>
     public virtual void TraverseChildren(IUnaryOperation unaryOperation) {
+      Contract.Requires(unaryOperation != null);
       this.TraverseChildren((IExpression)unaryOperation);
       this.Traverse(unaryOperation.Operand);
     }
@@ -3434,6 +4422,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the unary plus expression.
     /// </summary>
     public virtual void TraverseChildren(IUnaryPlus unaryPlus) {
+      Contract.Requires(unaryPlus != null);
       this.TraverseChildren((IUnaryOperation)unaryPlus);
     }
 
@@ -3441,6 +4430,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the vector length expression.
     /// </summary>
     public virtual void TraverseChildren(IVectorLength vectorLength) {
+      Contract.Requires(vectorLength != null);
       this.TraverseChildren((IExpression)vectorLength);
       if (this.StopTraversal) return;
       this.Traverse(vectorLength.Vector);
@@ -3450,6 +4440,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the while do statement.
     /// </summary>
     public virtual void TraverseChildren(IWhileDoStatement whileDoStatement) {
+      Contract.Requires(whileDoStatement != null);
       this.TraverseChildren((IStatement)whileDoStatement);
       if (this.StopTraversal) return;
       this.Traverse(whileDoStatement.Condition);
@@ -3461,6 +4452,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the yield break statement.
     /// </summary>
     public virtual void TraverseChildren(IYieldBreakStatement yieldBreakStatement) {
+      Contract.Requires(yieldBreakStatement != null);
       this.TraverseChildren((IStatement)yieldBreakStatement);
     }
 
@@ -3468,6 +4460,7 @@ namespace Microsoft.Cci {
     /// Traverses the children of the yield return statement.
     /// </summary>
     public virtual void TraverseChildren(IYieldReturnStatement yieldReturnStatement) {
+      Contract.Requires(yieldReturnStatement != null);
       this.TraverseChildren((IStatement)yieldReturnStatement);
       if (this.StopTraversal) return;
       this.Traverse(yieldReturnStatement.Expression);
@@ -3865,6 +4858,23 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Traverses the given copy memory statement.
+    /// </summary>
+    /// <param name="copyMemoryStatement"></param>
+    public virtual void Visit(ICopyMemoryStatement copyMemoryStatement)
+      //^ ensures this.path.Count == old(this.path.Count);
+    {
+      if (this.stopTraversal) return;
+      //^ int oldCount = this.path.Count;
+      this.path.Push(copyMemoryStatement);
+      this.Visit(copyMemoryStatement.TargetAddress);
+      this.Visit(copyMemoryStatement.SourceAddress);
+      this.Visit(copyMemoryStatement.NumberOfBytesToCopy);
+      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not to decrease this.path.Count.
+      this.path.Pop();
+    }
+
+    /// <summary>
     /// Traverses the given array creation expression.
     /// </summary>
     /// <param name="createArray"></param>
@@ -4123,6 +5133,23 @@ namespace Microsoft.Cci {
       this.path.Push(expressionStatement);
       this.Visit(expressionStatement.Expression);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.
+      this.path.Pop();
+    }
+
+    /// <summary>
+    /// Traverses the given fill memory statement.
+    /// </summary>
+    /// <param name="fillMemoryStatement"></param>
+    public virtual void Visit(IFillMemoryStatement fillMemoryStatement)
+      //^ ensures this.path.Count == old(this.path.Count);
+    {
+      if (this.stopTraversal) return;
+      //^ int oldCount = this.path.Count;
+      this.path.Push(fillMemoryStatement);
+      this.Visit(fillMemoryStatement.TargetAddress);
+      this.Visit(fillMemoryStatement.FillValue);
+      this.Visit(fillMemoryStatement.NumberOfBytesToFill);
+      //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not to decrease this.path.Count.
       this.path.Pop();
     }
 
@@ -5254,6 +6281,13 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Performs some computation with the given copy memory statement.
+    /// </summary>
+    /// <param name="copyMemoryStatement"></param>
+    public virtual void Visit(ICopyMemoryStatement copyMemoryStatement) {
+    }
+
+    /// <summary>
     /// Performs some computation with the given array creation expression.
     /// </summary>
     /// <param name="createArray"></param>
@@ -5349,6 +6383,13 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="expressionStatement"></param>
     public virtual void Visit(IExpressionStatement expressionStatement) {
+    }
+
+    /// <summary>
+    /// Performs some computation with the given fill memory block statement.
+    /// </summary>
+    /// <param name="fillMemoryStatement"></param>
+    public virtual void Visit(IFillMemoryStatement fillMemoryStatement) {
     }
 
     /// <summary>
@@ -5747,6 +6788,7 @@ namespace Microsoft.Cci.Contracts {
   /// Implemented by classes that visit nodes of object graphs via a double dispatch mechanism, usually performing some computation of a subset of the nodes in the graph.
   /// Contains a specialized Visit routine for each standard type of object defined in the contract object model. 
   /// </summary>
+  [ContractClass(typeof(ICodeAndContractVisitorContract))]
   public interface ICodeAndContractVisitor : ICodeVisitor {
     /// <summary>
     /// Performs some computation with the given loop contract.
@@ -5788,6 +6830,685 @@ namespace Microsoft.Cci.Contracts {
     /// </summary>
     void Visit(ITypeInvariant typeInvariant);
   }
+
+  #region ICodeAndContractVisitor contract binding
+  [ContractClassFor(typeof(ICodeAndContractVisitor))]
+  abstract class ICodeAndContractVisitorContract : ICodeAndContractVisitor {
+    #region ICodeAndContractVisitor Members
+
+    public void Visit(ILoopContract loopContract) {
+      Contract.Requires(loopContract != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILoopInvariant loopInvariant) {
+      Contract.Requires(loopInvariant != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMethodContract methodContract) {
+      Contract.Requires(methodContract != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPostcondition postCondition) {
+      Contract.Requires(postCondition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPrecondition precondition) {
+      Contract.Requires(precondition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IThrownException thrownException) {
+      Contract.Requires(thrownException != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ITypeContract typeContract) {
+      Contract.Requires(typeContract != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ITypeInvariant typeInvariant) {
+      Contract.Requires(typeInvariant != null);
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region ICodeVisitor Members
+
+    public void Visit(IAddition addition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAddressableExpression addressableExpression) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAddressDereference addressDereference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAddressOf addressOf) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAnonymousDelegate anonymousDelegate) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IArrayIndexer arrayIndexer) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAssertStatement assertStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAssignment assignment) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAssumeStatement assumeStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IBitwiseAnd bitwiseAnd) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IBitwiseOr bitwiseOr) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IBlockExpression blockExpression) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IBlockStatement block) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IBreakStatement breakStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IBoundExpression boundExpression) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICastIfPossible castIfPossible) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICatchClause catchClause) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICheckIfInstance checkIfInstance) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICompileTimeConstant constant) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IConversion conversion) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IConditional conditional) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IConditionalStatement conditionalStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IContinueStatement continueStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICopyMemoryStatement copyMemoryBlock) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICreateArray createArray) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICreateDelegateInstance createDelegateInstance) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICreateObjectInstance createObjectInstance) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IDebuggerBreakStatement debuggerBreakStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IDefaultValue defaultValue) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IDivision division) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IDoUntilStatement doUntilStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IDupValue dupValue) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IEmptyStatement emptyStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IEquality equality) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IExclusiveOr exclusiveOr) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IExpressionStatement expressionStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IFillMemoryStatement fillMemoryStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IForEachStatement forEachStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IForStatement forStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGotoStatement gotoStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGetTypeOfTypedReference getTypeOfTypedReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGetValueOfTypedReference getValueOfTypedReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGreaterThan greaterThan) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGreaterThanOrEqual greaterThanOrEqual) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILabeledStatement labeledStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILeftShift leftShift) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILessThan lessThan) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILessThanOrEqual lessThanOrEqual) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILocalDeclarationStatement localDeclarationStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILockStatement lockStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILogicalNot logicalNot) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMakeTypedReference makeTypedReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMethodCall methodCall) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IModulus modulus) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMultiplication multiplication) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INamedArgument namedArgument) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INotEquality notEquality) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IOldValue oldValue) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IOnesComplement onesComplement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IOutArgument outArgument) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPointerCall pointerCall) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPopValue popValue) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPushStatement pushStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRefArgument refArgument) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IResourceUseStatement resourceUseStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IReturnValue returnValue) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRethrowStatement rethrowStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IReturnStatement returnStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRightShift rightShift) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISizeOf sizeOf) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IStackArrayCreate stackArrayCreate) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISubtraction subtraction) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISwitchCase switchCase) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISwitchStatement switchStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ITargetExpression targetExpression) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IThisReference thisReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IThrowStatement throwStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ITokenOf tokenOf) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ITypeOf typeOf) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IUnaryNegation unaryNegation) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IUnaryPlus unaryPlus) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IVectorLength vectorLength) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IWhileDoStatement whileDoStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IYieldBreakStatement yieldBreakStatement) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IYieldReturnStatement yieldReturnStatement) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IMetadataVisitor Members
+
+    public void Visit(IArrayTypeReference arrayTypeReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAssembly assembly) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAssemblyReference assemblyReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICustomAttribute customAttribute) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICustomModifier customModifier) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IEventDefinition eventDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IFieldDefinition fieldDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IFieldReference fieldReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IFileReference fileReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IFunctionPointerTypeReference functionPointerTypeReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericMethodInstanceReference genericMethodInstanceReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericMethodParameter genericMethodParameter) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericMethodParameterReference genericMethodParameterReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGlobalFieldDefinition globalFieldDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGlobalMethodDefinition globalMethodDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericTypeInstanceReference genericTypeInstanceReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericTypeParameter genericTypeParameter) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericTypeParameterReference genericTypeParameterReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILocalDefinition localDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void VisitReference(ILocalDefinition localDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IManagedPointerTypeReference managedPointerTypeReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMarshallingInformation marshallingInformation) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMetadataConstant constant) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMetadataCreateArray createArray) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMetadataExpression expression) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMetadataNamedArgument namedArgument) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMetadataTypeOf typeOf) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMethodBody methodBody) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMethodDefinition method) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMethodImplementation methodImplementation) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMethodReference methodReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IModifiedTypeReference modifiedTypeReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IModule module) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IModuleReference moduleReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INamespaceAliasForType namespaceAliasForType) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INamespaceTypeReference namespaceTypeReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedAliasForType nestedAliasForType) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedTypeDefinition nestedTypeDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedTypeReference nestedTypeReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedUnitNamespace nestedUnitNamespace) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedUnitSetNamespace nestedUnitSetNamespace) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IOperation operation) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IOperationExceptionInformation operationExceptionInformation) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IParameterDefinition parameterDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void VisitReference(IParameterDefinition parameterDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IParameterTypeInformation parameterTypeInformation) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPESection peSection) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPlatformInvokeInformation platformInvokeInformation) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPointerTypeReference pointerTypeReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPropertyDefinition propertyDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IResourceReference resourceReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRootUnitNamespace rootUnitNamespace) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRootUnitNamespaceReference rootUnitNamespaceReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRootUnitSetNamespace rootUnitSetNamespace) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISecurityAttribute securityAttribute) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedEventDefinition specializedEventDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedFieldDefinition specializedFieldDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedFieldReference specializedFieldReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedMethodDefinition specializedMethodDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedMethodReference specializedMethodReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedPropertyDefinition specializedPropertyDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedNestedTypeDefinition specializedNestedTypeDefinition) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedNestedTypeReference specializedNestedTypeReference) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IUnitSet unitSet) {
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IWin32Resource win32Resource) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+  }
+  #endregion
+
 
   /// <summary>
   /// Contains a specialized Visit routine for each standard type of object defined in the contract, code and metadata model. 
@@ -5952,6 +7673,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the contract element.
     /// </summary>
     public void Traverse(IContractElement contractElement) {
+      Contract.Requires(contractElement != null);
       contractElement.Dispatch(this.dispatchingVisitor);
     }
 
@@ -5959,6 +7681,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the enumeration of addressable expressions.
     /// </summary>
     public virtual void Traverse(IEnumerable<IAddressableExpression> addressableExpressions) {
+      Contract.Requires(addressableExpressions != null);
       foreach (var addressableExpression in addressableExpressions) {
         this.Traverse(addressableExpression);
         if (this.StopTraversal) return;
@@ -5969,6 +7692,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the enumeration of trigger expressions.
     /// </summary>
     public virtual void Traverse(IEnumerable<IEnumerable<IExpression>> triggers) {
+      Contract.Requires(triggers != null);
       foreach (var trigs in triggers) {
         this.Traverse(trigs);
         if (this.StopTraversal) return;
@@ -5979,6 +7703,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the enumeration of loop invariants.
     /// </summary>
     public virtual void Traverse(IEnumerable<ILoopInvariant> loopInvariants) {
+      Contract.Requires(loopInvariants != null);
       foreach (var loopInvariant in loopInvariants) {
         this.Traverse(loopInvariant);
         if (this.StopTraversal) return;
@@ -5989,6 +7714,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the enumeration of post conditions.
     /// </summary>
     public virtual void Traverse(IEnumerable<IPostcondition> postConditions) {
+      Contract.Requires(postConditions != null);
       foreach (var postCondition in postConditions) {
         this.Traverse(postCondition);
         if (this.StopTraversal) return;
@@ -5999,6 +7725,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the enumeration of pre conditions.
     /// </summary>
     public virtual void Traverse(IEnumerable<IPrecondition> preconditions) {
+      Contract.Requires(preconditions != null);
       foreach (var precondition in preconditions) {
         this.Traverse(precondition);
         if (this.StopTraversal) return;
@@ -6009,6 +7736,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the enumeration of thrown exceptions.
     /// </summary>
     public virtual void Traverse(IEnumerable<IThrownException> thrownExceptions) {
+      Contract.Requires(thrownExceptions != null);
       foreach (var thrownException in thrownExceptions) {
         this.Traverse(thrownException);
         if (this.StopTraversal) return;
@@ -6019,6 +7747,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the enumeration of addressable expressions.
     /// </summary>
     public virtual void Traverse(IEnumerable<ITypeInvariant> typeInvariants) {
+      Contract.Requires(typeInvariants != null);
       foreach (var typeInvariant in typeInvariants) {
         this.Traverse(typeInvariant);
         if (this.StopTraversal) return;
@@ -6029,6 +7758,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the loop contract.
     /// </summary>
     public void Traverse(ILoopContract loopContract) {
+      Contract.Requires(loopContract != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(loopContract);
       if (this.StopTraversal) return;
       this.TraverseChildren(loopContract);
@@ -6040,6 +7770,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the loop invariant.
     /// </summary>
     public void Traverse(ILoopInvariant loopInvariant) {
+      Contract.Requires(loopInvariant != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(loopInvariant);
       if (this.StopTraversal) return;
       this.TraverseChildren(loopInvariant);
@@ -6051,6 +7782,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the method contract.
     /// </summary>
     public void Traverse(IMethodContract methodContract) {
+      Contract.Requires(methodContract != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(methodContract);
       if (this.StopTraversal) return;
       this.TraverseChildren(methodContract);
@@ -6062,6 +7794,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the postCondition.
     /// </summary>
     public void Traverse(IPostcondition postCondition) {
+      Contract.Requires(postCondition != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(postCondition);
       if (this.StopTraversal) return;
       this.TraverseChildren(postCondition);
@@ -6073,6 +7806,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the pre condition.
     /// </summary>
     public void Traverse(IPrecondition precondition) {
+      Contract.Requires(precondition != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(precondition);
       if (this.StopTraversal) return;
       this.TraverseChildren(precondition);
@@ -6084,6 +7818,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the thrown exception.
     /// </summary>
     public void Traverse(IThrownException thrownException) {
+      Contract.Requires(thrownException != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(thrownException);
       if (this.StopTraversal) return;
       this.TraverseChildren(thrownException);
@@ -6095,6 +7830,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the type contract.
     /// </summary>
     public void Traverse(ITypeContract typeContract) {
+      Contract.Requires(typeContract != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(typeContract);
       if (this.StopTraversal) return;
       this.TraverseChildren(typeContract);
@@ -6106,6 +7842,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the type invariant.
     /// </summary>
     public void Traverse(ITypeInvariant typeInvariant) {
+      Contract.Requires(typeInvariant != null);
       if (this.preorderVisitor != null) this.preorderVisitor.Visit(typeInvariant);
       if (this.StopTraversal) return;
       this.TraverseChildren(typeInvariant);
@@ -6119,6 +7856,7 @@ namespace Microsoft.Cci.Contracts {
     /// regardless of how the traversal gets to them.
     /// </summary>
     public virtual void TraverseChildren(IContractElement contractElement) {
+      Contract.Requires(contractElement != null);
       this.Traverse(contractElement.Condition);
       if (this.StopTraversal) return;
       if (contractElement.Description != null) {
@@ -6131,6 +7869,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the children of the loop contract.
     /// </summary>
     public virtual void TraverseChildren(ILoopContract loopContract) {
+      Contract.Requires(loopContract != null);
       this.Traverse(loopContract.Invariants);
       if (this.StopTraversal) return;
       this.Traverse(loopContract.Variants);
@@ -6142,6 +7881,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the children of the loop invariant.
     /// </summary>
     public virtual void TraverseChildren(ILoopInvariant loopInvariant) {
+      Contract.Requires(loopInvariant != null);
       this.TraverseChildren((IContractElement)loopInvariant);
     }
 
@@ -6161,6 +7901,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the children of the method contract.
     /// </summary>
     public virtual void TraverseChildren(IMethodContract methodContract) {
+      Contract.Requires(methodContract != null);
       this.Traverse(methodContract.Allocates);
       if (this.StopTraversal) return;
       this.Traverse(methodContract.Frees);
@@ -6194,6 +7935,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the children of the postCondition.
     /// </summary>
     public virtual void TraverseChildren(IPostcondition postCondition) {
+      Contract.Requires(postCondition != null);
       this.TraverseChildren((IContractElement)postCondition);
     }
 
@@ -6201,6 +7943,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the children of the pre condition.
     /// </summary>
     public virtual void TraverseChildren(IPrecondition precondition) {
+      Contract.Requires(precondition != null);
       this.TraverseChildren((IContractElement)precondition);
       if (this.StopTraversal) return;
       if (precondition.ExceptionToThrow != null)
@@ -6222,6 +7965,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the children of the thrown exception.
     /// </summary>
     public virtual void TraverseChildren(IThrownException thrownException) {
+      Contract.Requires(thrownException != null);
       this.Traverse(thrownException.ExceptionType);
       if (this.StopTraversal) return;
       this.Traverse(thrownException.Postcondition);
@@ -6231,6 +7975,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the children of the type contract.
     /// </summary>
     public virtual void TraverseChildren(ITypeContract typeContract) {
+      Contract.Requires(typeContract != null);
       this.Traverse(typeContract.ContractFields);
       if (this.StopTraversal) return;
       this.Traverse(typeContract.ContractMethods);
@@ -6254,6 +7999,7 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the children of the type invariant.
     /// </summary>
     public virtual void TraverseChildren(ITypeInvariant typeInvariant) {
+      Contract.Requires(typeInvariant != null);
       this.TraverseChildren((IContractElement)typeInvariant);
     }
 

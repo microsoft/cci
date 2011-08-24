@@ -213,11 +213,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     public List<IStatement> Statements {
       get {
         Contract.Ensures(Contract.Result<List<IStatement>>() != null);
-        return this.statements; 
+        return this.statements;
       }
       set {
         Contract.Requires(value != null);
-        this.statements = value; 
+        this.statements = value;
       }
     }
     List<IStatement> statements;
@@ -462,6 +462,73 @@ namespace Microsoft.Cci.MutableCodeModel {
   }
 
   /// <summary>
+  /// Represents the cpblk IL instruction, which copies a block of memory from one address to another.
+  /// The behavior of this instruction is undefined if the source block overlaps the target block.
+  /// </summary>
+  public sealed class CopyMemoryStatement : Statement, ICopyMemoryStatement {
+
+    /// <summary>
+    /// Represents the cpblk IL instruction, which copies a block of memory from one address to another.
+    /// The behavior of this instruction is undefined if the source block overlaps the target block.
+    /// </summary>
+    public CopyMemoryStatement() {
+      this.targetAddress = CodeDummy.Expression;
+      this.sourceAddress = CodeDummy.Expression;
+      this.numberOfBytesToCopy = CodeDummy.Expression;
+    }
+
+    /// <summary>
+    /// Makes a shallow copy of a statement that represents cpblk IL instruction, which copies a block of memory from one address to another.
+    /// </summary>
+    /// <param name="copyMemoryStatement"></param>
+    public CopyMemoryStatement(ICopyMemoryStatement copyMemoryStatement)
+      : base(copyMemoryStatement) {
+      this.targetAddress = copyMemoryStatement.TargetAddress;
+      this.sourceAddress = copyMemoryStatement.SourceAddress;
+      this.numberOfBytesToCopy = copyMemoryStatement.NumberOfBytesToCopy;
+    }
+
+    /// <summary>
+    /// Calls the visitor.Visit(ICopyMemoryStatement).
+    /// </summary>
+    public override void Dispatch(ICodeVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    #region ICopyMemoryStatement Members
+
+    /// <summary>
+    /// A pointer to the block of memory that is overwritten with the contents of block at SourceAddress.
+    /// </summary>
+    public IExpression TargetAddress {
+      get { return this.targetAddress; }
+      set { this.targetAddress = value; }
+    }
+    IExpression targetAddress;
+
+    /// <summary>
+    /// A pointer to the block of memory whose contents is to be copied to the block of memory at TargetAddress.
+    /// </summary>
+    public IExpression SourceAddress {
+      get { return this.sourceAddress; }
+      set { this.sourceAddress = value; }
+    }
+    IExpression sourceAddress;
+
+    /// <summary>
+    /// The number of bytes to copy from SourceAddress to TargetAddress.
+    /// </summary>
+    public IExpression NumberOfBytesToCopy {
+      get { return this.numberOfBytesToCopy; }
+      set { this.numberOfBytesToCopy = value; }
+    }
+    IExpression numberOfBytesToCopy;
+
+    #endregion
+
+  }
+
+  /// <summary>
   /// 
   /// </summary>
   public sealed class DebuggerBreakStatement : Statement, IDebuggerBreakStatement {
@@ -621,6 +688,71 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.expression = value; }
     }
     IExpression expression;
+
+  }
+
+  /// <summary>
+  /// Represents the initblk IL instruction, which fills a block of memory with repeated copies of a given fill value.
+  /// </summary>
+  public sealed class FillMemoryStatement : Statement, IFillMemoryStatement {
+
+    /// <summary>
+    /// Represents the initblk IL instruction, which fills a block of memory with repeated copies of a given fill value.
+    /// </summary>
+    public FillMemoryStatement() {
+      this.targetAddress = CodeDummy.Expression;
+      this.fillValue = CodeDummy.Expression;
+      this.numberOfBytesToFill = CodeDummy.Expression;
+    }
+
+    /// <summary>
+    /// Makes a shallow copy of a statement that represents initblk IL instruction, which fills a block of memory with repeated copies of a given fill value.
+    /// </summary>
+    /// <param name="fillMemoryStatement">The IFillMemoryStatement instance to copy.</param>
+    public FillMemoryStatement(IFillMemoryStatement fillMemoryStatement)
+      : base(fillMemoryStatement) {
+      this.targetAddress = fillMemoryStatement.TargetAddress;
+      this.fillValue = fillMemoryStatement.FillValue;
+      this.numberOfBytesToFill = fillMemoryStatement.NumberOfBytesToFill;
+    }
+
+    /// <summary>
+    /// Calls the visitor.Visit(IFillMemoryStatement).
+    /// </summary>
+    public override void Dispatch(ICodeVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    #region IFillMemoryStatement Members
+
+    /// <summary>
+    /// An expression resulting in an unsigned 8-bite value that will be used to fill the block at TargetAddress.
+    /// </summary>
+    public IExpression FillValue {
+      get { return this.fillValue; }
+      set { this.fillValue = value; }
+    }
+    IExpression fillValue;
+
+    /// <summary>
+    /// A pointer to the block of memory that is overwritten with the repeated value of FillValue.
+    /// </summary>
+    public IExpression TargetAddress {
+      get { return this.targetAddress; }
+      set { this.targetAddress = value; }
+    }
+    IExpression targetAddress;
+
+    /// <summary>
+    /// The number of bytes to fill (initialize) with FillValue.
+    /// </summary>
+    public IExpression NumberOfBytesToFill {
+      get { return this.numberOfBytesToFill; }
+      set { this.numberOfBytesToFill = value; }
+    }
+    IExpression numberOfBytesToFill;
+
+    #endregion
 
   }
 
@@ -1193,8 +1325,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="statement"></param>
     protected Statement(IStatement statement) {
+      Contract.Requires(statement != null);
       this.locations = new List<ILocation>(statement.Locations);
     }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.locations != null);
+    }
+
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
@@ -1208,8 +1347,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public List<ILocation> Locations {
-      get { return this.locations; }
-      set { this.locations = value; }
+      get {
+        Contract.Ensures(Contract.Result<List<ILocation>>() != null);
+        return this.locations;
+      }
+      set {
+        Contract.Requires(value != null);
+        this.locations = value;
+      }
     }
     List<ILocation> locations;
 
@@ -1436,13 +1581,27 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.tryBody = tryCatchFinallyStatement.TryBody;
     }
 
+    [ContractInvariantMethod]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Justification = "Required for code contracts.")]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.catchClauses != null);
+      Contract.Invariant(this.tryBody != null);
+    }
+
+
     /// <summary>
     /// The catch clauses.
     /// </summary>
     /// <value></value>
     public List<ICatchClause> CatchClauses {
-      get { return this.catchClauses; }
-      set { this.catchClauses = value; }
+      get {
+        Contract.Ensures(Contract.Result<List<ICatchClause>>() != null);
+        return this.catchClauses;
+      }
+      set {
+        Contract.Requires(value != null);
+        this.catchClauses = value;
+      }
     }
     List<ICatchClause> catchClauses;
 

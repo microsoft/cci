@@ -71,6 +71,16 @@ namespace CSharpSourceEmitter {
       sourceEmitterOutput.WriteLine("continue;");
     }
 
+    public override void TraverseChildren(ICopyMemoryStatement copyMemoryStatement) {
+      sourceEmitterOutput.WriteLine("Intrinsic.CopyMemory(");
+      this.Traverse(copyMemoryStatement.TargetAddress);
+      this.sourceEmitterOutput.Write(", ");
+      this.Traverse(copyMemoryStatement.SourceAddress);
+      this.sourceEmitterOutput.Write(", ");
+      this.Traverse(copyMemoryStatement.NumberOfBytesToCopy);
+      this.sourceEmitterOutput.Write(")");
+    }
+
     public override void TraverseChildren(ICatchClause catchClause) {
       base.TraverseChildren(catchClause);
     }
@@ -100,6 +110,16 @@ namespace CSharpSourceEmitter {
 
     public override void TraverseChildren(IFileReference fileReference) {
       base.TraverseChildren(fileReference);
+    }
+
+    public override void TraverseChildren(IFillMemoryStatement fillMemoryStatement) {
+      sourceEmitterOutput.WriteLine("Intrinsic.FillMemory(");
+      this.Traverse(fillMemoryStatement.TargetAddress);
+      this.sourceEmitterOutput.Write(", ");
+      this.Traverse(fillMemoryStatement.FillValue);
+      this.sourceEmitterOutput.Write(", ");
+      this.Traverse(fillMemoryStatement.NumberOfBytesToFill);
+      this.sourceEmitterOutput.Write(")");
     }
 
     public override void TraverseChildren(IForEachStatement forEachStatement) {
@@ -133,7 +153,7 @@ namespace CSharpSourceEmitter {
               this.sourceEmitterOutput.Write(", ");
             }
             this.sourceEmitterOutput.Write(localDeclarationStatement.LocalVariable.Name.Value);
-          } else 
+          } else
             this.Traverse(statement);
         }
         first = false;
@@ -261,7 +281,7 @@ namespace CSharpSourceEmitter {
       this.sourceEmitterOutput.IncreaseIndent();
       this.Traverse(switchStatement.Cases);
       this.sourceEmitterOutput.DecreaseIndent();
-      
+
       this.sourceEmitterOutput.WriteLine("}", true);
     }
 

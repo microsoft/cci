@@ -1229,11 +1229,11 @@ namespace Microsoft.Cci.ILToCodeModel {
           break;
 
         case OperationCode.Cpblk:
-          //TODO: need to capture this in the code model
-          this.PopOperandStack();
-          this.PopOperandStack();
-          this.PopOperandStack();
-          //Debug.Assert(false); //if code out there actually uses this, I need to know sooner rather than later.
+          var copyMemory = new CopyMemoryStatement();
+          copyMemory.NumberOfBytesToCopy = this.PopOperandStack();
+          copyMemory.SourceAddress = this.PopOperandStack();
+          copyMemory.TargetAddress = this.PopOperandStack();
+          statement = copyMemory;
           break;
 
         case OperationCode.Cpobj:
@@ -1253,11 +1253,11 @@ namespace Microsoft.Cci.ILToCodeModel {
           break;
 
         case OperationCode.Initblk:
-          //TODO: need to capture this in the code model
-          this.PopOperandStack();
-          this.PopOperandStack();
-          this.PopOperandStack();
-          //Debug.Assert(false); //if code out there actually uses this, I need to know sooner rather than later.
+          var fillMemory = new FillMemoryStatement();
+          fillMemory.NumberOfBytesToFill = this.PopOperandStack();
+          fillMemory.FillValue = this.PopOperandStack();
+          fillMemory.TargetAddress = this.PopOperandStack();
+          statement = fillMemory;
           break;
 
         case OperationCode.Initobj:
