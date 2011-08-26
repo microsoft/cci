@@ -1328,7 +1328,7 @@ namespace Microsoft.Cci.MetadataReader {
             if (underlyingType == null) return null;
             return this.ReadSerializedValue(underlyingType);
           }
-          if (TypeHelper.TypesAreEquivalent(type, this.PEFileToObjectModel.SystemType)) {
+          if (TypeHelper.TypesAreEquivalent(type, this.PEFileToObjectModel.PlatformType.SystemType)) {
             string/*?*/ typeNameStr = this.GetSerializedString();
             if (typeNameStr == null) {
               return new ConstantExpression(this.PEFileToObjectModel.PlatformType.SystemType, null);
