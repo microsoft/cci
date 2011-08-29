@@ -464,6 +464,15 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// A path to the debug information corresponding to this module. Can be absolute or relative to the file path of the module. Empty if not specified.
+    /// </summary>
+    public string DebugInformationLocation {
+      get {
+        return System.IO.Path.ChangeExtension(this.Location, "pdb");
+      }
+    }
+
+    /// <summary>
     /// Flags that control the behavior of the target operating system. CLI implementations are supposed to ignore this, but some operating system pay attention.
     /// </summary>
     public virtual ushort DllCharacteristics {
