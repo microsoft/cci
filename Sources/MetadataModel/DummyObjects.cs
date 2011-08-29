@@ -763,6 +763,10 @@ namespace Microsoft.Cci {
       get { return 0; }
     }
 
+    public string DebugInformationLocation {
+      get { return string.Empty; }
+    }
+
     public ushort DllCharacteristics {
       get { return 0; }
     }
@@ -2839,6 +2843,10 @@ namespace Microsoft.Cci {
 
     public AssemblyIdentity CoreAssemblySymbolicIdentity {
       get { return Dummy.Assembly.AssemblyIdentity; }
+    }
+
+    public string DebugInformationLocation {
+      get { return string.Empty; }
     }
 
     public ushort DllCharacteristics {

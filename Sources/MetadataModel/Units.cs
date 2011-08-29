@@ -173,6 +173,10 @@ namespace Microsoft.Cci {
       get { throw new NotImplementedException(); }
     }
 
+    public string DebugInformationLocation {
+      get { throw new NotImplementedException(); }
+    }
+
     public ushort DllCharacteristics {
       get { throw new NotImplementedException(); }
     }
@@ -726,6 +730,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An object that represents a .NET module.
   /// </summary>
+  [ContractClass(typeof(IModuleContract))]
   public interface IModule : IUnit, IModuleReference {
 
     /// <summary>
@@ -747,17 +752,19 @@ namespace Microsoft.Cci {
     new IAssembly/*?*/ ContainingAssembly { get; }
 
     /// <summary>
+    /// A path to the debug information corresponding to this module. Can be absolute or relative to the file path of the module. Empty if not specified.
+    /// </summary>
+    string DebugInformationLocation { get; }
+
+    /// <summary>
     /// Flags that control the behavior of the target operating system. CLI implementations are supposed to ignore this, but some operating system pay attention.
     /// </summary>
     ushort DllCharacteristics { get; }
 
     /// <summary>
-    /// The method that will be called to start execution of this executable module. 
+    /// The method that will be called to start execution of this executable module. If there is no entry point, the result is Dummy.MethodReference.
     /// </summary>
-    IMethodReference EntryPoint {
-      get;
-      //^ requires this.Kind == ModuleKind.ConsoleApplication || this.Kind == ModuleKind.WindowsApplication;
-    }
+    IMethodReference EntryPoint { get; }
 
     /// <summary>
     /// The alignment of sections in the module's image file.
@@ -939,6 +946,306 @@ namespace Microsoft.Cci {
     /// </summary>
     IEnumerable<IWin32Resource> Win32Resources { get; }
   }
+
+  #region IModule contract binding
+  [ContractClassFor(typeof(IModule))]
+  abstract class IModuleContract : IModule {
+    #region IModule Members
+
+    public IEnumerable<IAssemblyReference> AssemblyReferences {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IAssemblyReference>>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public ulong BaseAddress {
+      get {
+        Contract.Ensures(Contract.Result<ulong>() <= uint.MaxValue || this.Requires64bits);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IAssembly ContainingAssembly {
+      get {
+        Contract.Ensures(Contract.Result<IAssembly>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public string DebugInformationLocation {
+      get {
+        Contract.Ensures(Contract.Result<string>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public ushort DllCharacteristics {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IMethodReference EntryPoint {
+      get {
+        Contract.Ensures(Contract.Result<IMethodReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public uint FileAlignment {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<string> GetStrings() {
+      Contract.Ensures(Contract.Result<IEnumerable<string>>() != null);
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<INamedTypeDefinition> GetAllTypes() {
+      Contract.Ensures(Contract.Result<IEnumerable<INamedTypeDefinition>>() != null);
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeReference> GetTypeReferences() {
+      Contract.Ensures(Contract.Result<IEnumerable<ITypeReference>>() != null);
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeMemberReference> GetTypeMemberReferences() {
+      Contract.Ensures(Contract.Result<IEnumerable<ITypeMemberReference>>() != null);
+      throw new NotImplementedException();
+    }
+
+    public bool ILOnly {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool StrongNameSigned {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool NativeEntryPoint {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ModuleKind Kind {
+      get { throw new NotImplementedException(); }
+    }
+
+    public byte LinkerMajorVersion {
+      get { throw new NotImplementedException(); }
+    }
+
+    public byte LinkerMinorVersion {
+      get { throw new NotImplementedException(); }
+    }
+
+    public byte MetadataFormatMajorVersion {
+      get { throw new NotImplementedException(); }
+    }
+
+    public byte MetadataFormatMinorVersion {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> ModuleAttributes {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ICustomAttribute>>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IName ModuleName {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IModuleReference> ModuleReferences {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IModuleReference>>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public Guid PersistentIdentifier {
+      get { throw new NotImplementedException(); }
+    }
+
+    public Machine Machine {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool RequiresAmdInstructionSet {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool RequiresStartupStub {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool Requires32bits {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool Requires64bits {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ulong SizeOfHeapCommit {
+      get {
+        Contract.Ensures(Contract.Result<ulong>() <= uint.MaxValue || this.Requires64bits);
+        throw new NotImplementedException();
+      }
+    }
+
+    public ulong SizeOfHeapReserve {
+      get {
+        Contract.Ensures(Contract.Result<ulong>() <= uint.MaxValue || this.Requires64bits);
+        throw new NotImplementedException();
+      }
+    }
+
+    public ulong SizeOfStackCommit {
+      get {
+        Contract.Ensures(Contract.Result<ulong>() <= uint.MaxValue || this.Requires64bits);
+        throw new NotImplementedException();
+      }
+    }
+
+    public ulong SizeOfStackReserve {
+      get {
+        Contract.Ensures(Contract.Result<ulong>() <= uint.MaxValue || this.Requires64bits);
+        throw new NotImplementedException();
+      }
+    }
+
+    public string TargetRuntimeVersion {
+      get {
+        Contract.Ensures(Contract.Result<string>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public bool TrackDebugData {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool UsePublicKeyTokensForAssemblyReferences {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IWin32Resource> Win32Resources {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IWin32Resource>>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    #endregion
+
+    #region IUnit Members
+
+    public AssemblyIdentity ContractAssemblySymbolicIdentity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public AssemblyIdentity CoreAssemblySymbolicIdentity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public string Location {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IPESection> UninterpretedSections {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IRootUnitNamespace UnitNamespaceRoot {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IUnitReference> UnitReferences {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region INamespaceRootOwner Members
+
+    public INamespaceDefinition NamespaceRoot {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IUnitReference Members
+
+    public IUnit ResolvedUnit {
+      get { throw new NotImplementedException(); }
+    }
+
+    public UnitIdentity UnitIdentity {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IReference Members
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region INamedEntity Members
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IModuleReference Members
+
+    IAssemblyReference IModuleReference.ContainingAssembly {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IModule ResolvedModule {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ModuleIdentity ModuleIdentity {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// A reference to a .NET module.

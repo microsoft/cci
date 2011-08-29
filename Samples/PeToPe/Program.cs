@@ -29,7 +29,9 @@ namespace PeToPe {
         }
 
         PdbReader/*?*/ pdbReader = null;
-        string pdbFile = Path.ChangeExtension(module.Location, "pdb");
+        string pdbFile = module.DebugInformationLocation;
+        if (string.IsNullOrEmpty(pdbFile))
+          pdbFile = Path.ChangeExtension(module.Location, "pdb");
         if (File.Exists(pdbFile)) {
           Stream pdbStream = File.OpenRead(pdbFile);
           pdbReader = new PdbReader(pdbStream, host);
@@ -56,7 +58,7 @@ namespace PeToPe {
             } else {
               //Note that the default copier and rewriter preserves the locations collections, so the original pdbReader is still a valid ISourceLocationProvider.
               //However, if IL instructions were rewritten, the pdbReader will no longer be an accurate ILocalScopeProvider
-              using (var pdbWriter = new PdbWriter(rewrittenModule.Location + ".pdb", pdbReader)) {
+              using (var pdbWriter = new PdbWriter(pdbFile + ".pdb", pdbReader)) {
                 PeWriter.WritePeToStream(rewrittenModule, host, peStream, pdbReader, pdbReader, pdbWriter);
               }
             }

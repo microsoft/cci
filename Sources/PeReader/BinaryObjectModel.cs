@@ -306,6 +306,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
+    string IModule.DebugInformationLocation {
+      get {
+        return this.PEFileToObjectModel.GetDebugInformationLocation();
+      }
+    }
+
     ushort IModule.DllCharacteristics {
       get { return (ushort)this.PEFileToObjectModel.GetDllCharacteristics(); }
     }
@@ -1833,7 +1839,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal abstract class MethodDefinition : TypeMember, IMethodDefinition {
+  internal abstract class MethodDefinition : TypeMember, IMethodDefinition, ITokenDecoder {
     internal readonly uint MethodDefRowId;
     internal MethodFlags MethodFlags;
     internal MethodImplFlags MethodImplFlags;
@@ -2217,6 +2223,13 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #endregion
 
+    #region ITokenDecoder Members
+
+    public IMetadataObjectWithToken GetObjectForToken(uint token) {
+      return this.PEFileToObjectModel.GetReferenceForToken(this, token) as IMetadataObjectWithToken;
+    }
+
+    #endregion
   }
 
   internal class NonGenericMethod : MethodDefinition {

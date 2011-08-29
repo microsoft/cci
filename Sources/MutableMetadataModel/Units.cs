@@ -747,6 +747,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.assemblyReferences = null;
       this.baseAddress = module.BaseAddress;
       this.containingAssembly = module.ContainingAssembly;
+      this.debugInformationLocation = module.DebugInformationLocation;
       this.dllCharacteristics = module.DllCharacteristics;
       if (module.Kind == ModuleKind.ConsoleApplication || module.Kind == ModuleKind.WindowsApplication)
         this.entryPoint = module.EntryPoint;
@@ -849,6 +850,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.containingAssembly = value; }
     }
     IAssembly/*?*/ containingAssembly;
+
+    /// <summary>
+    /// A path to the debug information corresponding to this module. Can be absolute or relative to the file path of the module. Empty if not specified.
+    /// </summary>
+    public virtual string DebugInformationLocation {
+      get { return this.debugInformationLocation; }
+      set { this.debugInformationLocation = value; }
+    }
+    string debugInformationLocation;
 
     /// <summary>
     /// Flags that control the behavior of the target operating system. CLI implementations are supposed to ignore this, but some operating system pay attention.

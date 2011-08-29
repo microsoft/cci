@@ -583,7 +583,13 @@ namespace Microsoft.Cci.MetadataReader {
       for (int i = 0, n = this.PEFileReader.SectionHeaders.Length; i < n; i++) {
         var nameStr = this.PEFileReader.SectionHeaders[i].Name;
         switch (nameStr) {
-          case ".text":  case ".sdata": case ".tls":  case ".rdata":  case ".cover": case ".rsrc": case ".reloc": continue;
+          case ".text":
+          case ".sdata":
+          case ".tls":
+          case ".rdata":
+          case ".cover":
+          case ".rsrc":
+          case ".reloc": continue;
         }
         var name = this.ModuleReader.metadataReaderHost.NameTable.GetNameFor(nameStr);
         yield return new PESection(this.PEFileReader.SectionHeaders, i, name, this);
@@ -839,6 +845,10 @@ namespace Microsoft.Cci.MetadataReader {
       for (int i = 1; i < resRefArr.Length; ++i) {
         yield return resRefArr[i];
       }
+    }
+
+    internal string GetDebugInformationLocation() {
+      return this.PEFileReader.DebugInformationLocation;
     }
 
     internal DllCharacteristics GetDllCharacteristics() {
