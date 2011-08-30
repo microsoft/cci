@@ -2679,6 +2679,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
     #region Methods [PEFile]
 
     private string ReadDebugInformationLocationFromDebugTableDirectoryData() {
+      if (this.OptionalHeaderDirectoryEntries.DebugTableDirectory.Size == 0) return string.Empty;
       var debugDirectoryReader = new MemoryReader(this.DirectoryToMemoryBlock(this.OptionalHeaderDirectoryEntries.DebugTableDirectory));
       PeDebugDirectory debugDir = new PeDebugDirectory();
       debugDir.Characteristics = debugDirectoryReader.ReadUInt32();
@@ -2689,6 +2690,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
       debugDir.SizeOfData = debugDirectoryReader.ReadUInt32();
       debugDir.AddressOfRawData = debugDirectoryReader.ReadUInt32();
       debugDir.PointerToRawData = debugDirectoryReader.ReadUInt32();
+      if (debugDir.SizeOfData == 0) return string.Empty;
       var dataBlock = new MemoryBlock(this.BinaryDocumentMemoryBlock.Pointer + debugDir.PointerToRawData, debugDir.SizeOfData);
       var debugDataReader = new MemoryReader(dataBlock);
       var magic = debugDataReader.ReadUInt32();
