@@ -213,6 +213,65 @@ namespace Microsoft.Cci.UtilityDataStructures {
     }
 
     /// <summary>
+    /// Checks if key is present in the MultiHashtable
+    /// </summary>
+    public bool ContainsKey(uint key) {
+      unchecked {
+        uint mask = this.size - 1;
+        var keyValueTable = this.keyValueTable;
+        uint hash1 = HashHelper.HashInt1(key);
+        uint hash2 = HashHelper.HashInt2(key);
+        uint tableIndex = hash1 & mask;
+        while (keyValueTable[tableIndex].Value != null) {
+          if (keyValueTable[tableIndex].Key == key)
+            return true;
+          tableIndex = (tableIndex + hash2) & mask;
+        }
+        return false;
+      }
+    }
+
+    /// <summary>
+    /// Returns the number of entries that are associated with the key
+    /// </summary>
+    public int NumberOfEntries(uint key) {
+      unchecked {
+        int count = 0;
+        uint mask = this.size - 1;
+        var keyValueTable = this.keyValueTable;
+        uint hash1 = HashHelper.HashInt1(key);
+        uint hash2 = HashHelper.HashInt2(key);
+        uint tableIndex = hash1 & mask;
+        while (keyValueTable[tableIndex].Value != null) {
+          if (keyValueTable[tableIndex].Key == key)
+            count++;
+          tableIndex = (tableIndex + hash2) & mask;
+        }
+        return count;
+      }
+    }
+
+    /// <summary>
+    /// Updates the hashtable so that newValue shows up in the place of oldValue.
+    /// </summary>
+    public void ReplaceEntry(uint key, InternalT oldValue, InternalT newValue) {
+      unchecked {
+        uint mask = this.size - 1;
+        var keyValueTable = this.keyValueTable;
+        uint hash1 = HashHelper.HashInt1(key);
+        uint hash2 = HashHelper.HashInt2(key);
+        uint tableIndex = hash1 & mask;
+        while (keyValueTable[tableIndex].Value != null) {
+          if (keyValueTable[tableIndex].Key == key && keyValueTable[tableIndex].Value == oldValue) {
+            keyValueTable[tableIndex].Value = newValue;
+            return;
+          }
+          tableIndex = (tableIndex + hash2) & mask;
+        }
+      }
+    }
+
+    /// <summary>
     /// Enumerator to enumerate values with given key.
     /// </summary>
     public struct KeyedValuesEnumerator {
@@ -1880,7 +1939,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     /// <param name="count">The number of elements that should be in the resulting list.</param>
     public Sublist<T> GetSublist(int offset, int count) {
       Contract.Requires(offset >= 0);
-      Contract.Requires(0 <= count && count <= this.Count);
+      Contract.Requires(count >= 0);
+      Contract.Requires(offset < this.Count);
+      Contract.Requires(offset+count <= this.Count);
 
       return new Sublist<T>(this.masterList, this.offset+offset, count);
     }

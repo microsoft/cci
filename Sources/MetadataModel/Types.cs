@@ -1305,6 +1305,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A reference to a named type, such as an INamespaceTypeReference or an INestedTypeReference.
   /// </summary>
+  [ContractClass(typeof(INamedTypeReferenceContract))]
   public interface INamedTypeReference : ITypeReference, INamedEntity {
 
     /// <summary>
@@ -1328,6 +1329,99 @@ namespace Microsoft.Cci {
     }
 
   }
+
+  #region INamedTypeReference contract binding
+  [ContractClassFor(typeof(INamedTypeReference))]
+  abstract class INamedTypeReferenceContract : INamedTypeReference {
+    #region INamedTypeReference Members
+
+    public ushort GenericParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool MangleName {
+      get { throw new NotImplementedException(); }
+    }
+
+    public INamedTypeDefinition ResolvedType {
+      get {
+        Contract.Ensures(Contract.Result<INamedTypeDefinition>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+
+    #region ITypeReference Members
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    ITypeDefinition ITypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IReference Members
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region INamedEntity Members
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// A named type definition, such as an INamespaceTypeDefinition or an INestedTypeDefinition.

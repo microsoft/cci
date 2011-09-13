@@ -132,6 +132,23 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns an array whose elements are those returned by the given enumerable.
+    /// </summary>
+    public static T[] GetAsArray<T>(IEnumerable<T> enumerable) {
+      Contract.Ensures(Contract.Result<T[]>() != null);
+      if (enumerable == null) return new T[0];
+      var collection = enumerable as ICollection<T>;
+      if (collection != null) {
+        var n = collection.Count;
+        var a = new T[n];
+        collection.CopyTo(a, 0);
+        return a;
+      }
+      var list = new List<T>(enumerable);
+      return list.ToArray();
+    }
+
+    /// <summary>
     /// Returns an enumerable containing no objects.
     /// </summary>
     /// <returns></returns>
@@ -471,6 +488,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A single CLR IL operation.
   /// </summary>
+  [ContractClass(typeof(IOperationContract))]
   public interface IOperation {
 
     /// <summary>
@@ -495,6 +513,31 @@ namespace Microsoft.Cci {
       get;
     }
   }
+
+  #region IOperation contract binding
+  [ContractClassFor(typeof(IOperation))]
+  abstract class IOperationContract : IOperation {
+    public OperationCode OperationCode {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint Offset {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ILocation Location {
+      get {
+        Contract.Ensures(Contract.Result<ILocation>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public object Value {
+      get { throw new NotImplementedException(); }
+    }
+  }
+  #endregion
+
 
   /// <summary>
   /// A metadata custom attribute.

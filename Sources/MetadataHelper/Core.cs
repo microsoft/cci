@@ -434,11 +434,12 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Looks in the specified <paramref name="probeDir"/> to see if a file
-    /// exists, first with the extension "dll" and then with the extension "exe".
+    /// exists, first with the extension "dll" and then with the extensions "winmd" and "exe".
     /// Returns null if not found, otherwise constructs a new AssemblyIdentity
     /// </summary>
     private AssemblyIdentity/*?*/ Probe(string probeDir, AssemblyIdentity referencedAssembly) {
       string path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".dll");
+      if (!File.Exists(path)) path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".winmd");
       if (!File.Exists(path)) path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".exe");
       if (!File.Exists(path)) return null;
       var assembly = this.LoadUnitFrom(path) as IAssembly;

@@ -231,6 +231,7 @@ namespace Microsoft.Cci {
     public ISectionBlock FieldMapping {
       get {
         Contract.Requires(this.IsMapped);
+        Contract.Ensures(Contract.Result<ISectionBlock>() != null);
         throw new NotImplementedException(); 
       }
     }
@@ -513,7 +514,8 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Exception information of the method body expressed in terms of offsets in CLR IL.
   /// </summary>
-  public partial interface IOperationExceptionInformation {
+  [ContractClass(typeof(IOperationExceptionInformationContract))]
+  public interface IOperationExceptionInformation {
     /// <summary>
     /// Handler kind for this SEH info
     /// </summary>
@@ -551,12 +553,6 @@ namespace Microsoft.Cci {
     uint HandlerEndOffset { get; }
   }
 
-  #region IOperationExceptionInformation contract binding
-  [ContractClass(typeof(IOperationExceptionInformationContract))]
-  public partial interface IOperationExceptionInformation {
-
-  }
-
   [ContractClassFor(typeof(IOperationExceptionInformation))]
   abstract class IOperationExceptionInformationContract : IOperationExceptionInformation {
     #region IOperationExceptionInformation Members
@@ -577,24 +573,34 @@ namespace Microsoft.Cci {
     }
 
     public uint TryEndOffset {
-      get { throw new NotImplementedException(); }
+      get {
+        Contract.Ensures(Contract.Result<uint>() >= this.TryStartOffset);
+        throw new NotImplementedException(); 
+      }
     }
 
     public uint FilterDecisionStartOffset {
-      get { throw new NotImplementedException(); }
+      get {
+        throw new NotImplementedException(); 
+      }
     }
 
     public uint HandlerStartOffset {
-      get { throw new NotImplementedException(); }
+      get {
+        Contract.Ensures(Contract.Result<uint>() > this.FilterDecisionStartOffset);
+        throw new NotImplementedException(); 
+      }
     }
 
     public uint HandlerEndOffset {
-      get { throw new NotImplementedException(); }
+      get {
+        Contract.Ensures(Contract.Result<uint>() >= this.HandlerStartOffset);
+        throw new NotImplementedException(); 
+      }
     }
 
     #endregion
   }
-  #endregion
 
   /// <summary>
   /// An object that represents a local variable or constant.
