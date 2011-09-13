@@ -469,7 +469,10 @@ namespace Microsoft.Cci.MutableContracts {
             string mname = methodToCall.Name.Value;
             List<IExpression> arguments = new List<IExpression>(methodCall.Arguments);
             int numArgs = arguments.Count;
-            if (numArgs == 0 && mname == "EndContractBlock") return;
+            if (numArgs == 0 && mname == "EndContractBlock") {
+              this.CurrentMethodContract.Locations.AddRange(methodCall.Locations);
+              return;
+            }
             if (!(numArgs == 1 || numArgs == 2 || numArgs == 3)) return;
 
             var locations = new List<ILocation>(methodCall.Locations);
@@ -578,11 +581,12 @@ namespace Microsoft.Cci.MutableContracts {
               abbreviatorDef = methodToCall.ResolvedMethod;
             var mc = ContractHelper.GetMethodContractFor(this.contractAwarehost, abbreviatorDef);
             if (mc != null) {
-              mc = ContractHelper.InlineAndStuff(this.host, mc, this.sourceMethodBody.MethodDefinition, abbreviatorDef, new List<IExpression>(methodCall.Arguments));
+              var mutableMC = ContractHelper.InlineAndStuff(this.host, mc, this.sourceMethodBody.MethodDefinition, abbreviatorDef, new List<IExpression>(methodCall.Arguments));
+              mutableMC.Locations.InsertRange(0, methodCall.Locations);
               if (this.currentMethodContract == null)
-                this.currentMethodContract = new MethodContract(mc);
+                this.currentMethodContract = new MethodContract(mutableMC);
               else
-                ContractHelper.AddMethodContract(this.currentMethodContract, mc);
+                ContractHelper.AddMethodContract(this.currentMethodContract, mutableMC);
             }
           }
         }
@@ -678,6 +682,7 @@ namespace Microsoft.Cci.MutableContracts {
       return false;
     }
     internal bool IsPrePostEndOrLegacy(IStatement statement, bool countLegacy) {
+      if (statement is IBlockStatement) return false; // each block is searched separately, don't descend down into nested blocks
       if (countLegacy && IsLegacyRequires(statement)) return true;
       IExpressionStatement expressionStatement = statement as IExpressionStatement;
       if (expressionStatement == null) return false; ;
@@ -753,9 +758,11 @@ namespace Microsoft.Cci.MutableContracts {
       List<IStatement> statements = new List<IStatement>(blockStatement.Statements);
       // Zero or more assignments to locals
       //TODO: Make sure they are compiler-generated locals
+      var count = statements.Count;
       int i = 0;
-      while (i < statements.Count && IsAssignmentToLocal(statements[i])) i++;
-      if (i == statements.Count) return false;
+      while (i < count && statements[i] is IEmptyStatement) i++;
+      while (i < count && IsAssignmentToLocal(statements[i])) i++;
+      if (i == count) return false;
       IStatement stmt = statements[i];
       IThrowStatement throwStatement = stmt as IThrowStatement;
       if (throwStatement != null) {

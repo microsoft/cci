@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -403,9 +404,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="arrayIndexer"></param>
     public ArrayIndexer(IArrayIndexer arrayIndexer)
       : base(arrayIndexer) {
+      Contract.Requires(arrayIndexer != null);
       this.indexedObject = arrayIndexer.IndexedObject;
       this.indices = new List<IExpression>(arrayIndexer.Indices);
     }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.indices != null);
+    }
+
 
     /// <summary>
     /// An expression that results in value of an array type.
@@ -422,8 +430,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public List<IExpression> Indices {
-      get { return this.indices; }
-      set { this.indices = value; }
+      get {
+        Contract.Ensures(Contract.Result<List<IExpression>>() != null);
+        return this.indices; 
+      }
+      set {
+        Contract.Requires(value != null);
+        this.indices = value; 
+      }
     }
     List<IExpression> indices;
 
@@ -465,6 +479,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.source = assignment.Source;
       this.target = assignment.Target;
     }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.source != null);
+      Contract.Invariant(this.target != null);
+    }
+
 
     /// <summary>
     /// Calls visitor.Visit(IAssignment).
@@ -1060,6 +1081,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="createObjectInstance"></param>
     internal ConstructorOrMethodCall(ICreateObjectInstance createObjectInstance)
       : base(createObjectInstance) {
+      Contract.Requires(createObjectInstance != null);
       this.arguments = new List<IExpression>(createObjectInstance.Arguments);
       this.methodToCall = createObjectInstance.MethodToCall;
     }
@@ -1070,17 +1092,31 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="methodCall"></param>
     internal ConstructorOrMethodCall(IMethodCall methodCall)
       : base(methodCall) {
+      Contract.Requires(methodCall != null);
       this.arguments = new List<IExpression>(methodCall.Arguments);
       this.methodToCall = methodCall.MethodToCall;
     }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.arguments != null);
+      Contract.Invariant(this.methodToCall != null);
+    }
+
 
     /// <summary>
     /// Gets or sets the arguments.
     /// </summary>
     /// <value>The arguments.</value>
     public List<IExpression> Arguments {
-      get { return this.arguments; }
-      set { this.arguments = value; }
+      get {
+        Contract.Ensures(Contract.Result<List<IExpression>>() != null);
+        return this.arguments; 
+      }
+      set {
+        Contract.Requires(value != null);
+        this.arguments = value; 
+      }
     }
     internal List<IExpression> arguments;
 
@@ -1089,8 +1125,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value>The method to call.</value>
     public IMethodReference MethodToCall {
-      get { return this.methodToCall; }
-      set { this.methodToCall = value; }
+      get {
+        Contract.Ensures(Contract.Result<IMethodReference>() != null);
+        return this.methodToCall; 
+      }
+      set {
+        Contract.Requires(value != null);
+        this.methodToCall = value;
+      }
     }
     IMethodReference methodToCall;
 
@@ -1118,11 +1160,20 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="createArray"></param>
     public CreateArray(ICreateArray createArray)
       : base(createArray) {
+      Contract.Requires(createArray != null);
       this.elementType = createArray.ElementType;
       this.initializers = new List<IExpression>(createArray.Initializers);
       this.lowerBounds = new List<int>(createArray.LowerBounds);
       this.rank = createArray.Rank;
       this.sizes = new List<IExpression>(createArray.Sizes);
+    }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.elementType != null);
+      Contract.Invariant(this.initializers != null);
+      Contract.Invariant(this.lowerBounds != null);
+      Contract.Invariant(this.sizes != null);
     }
 
     /// <summary>
@@ -1145,7 +1196,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITypeReference ElementType {
       get { return this.elementType; }
-      set { this.elementType = value; }
+      set {
+        Contract.Requires(value != null);
+        this.elementType = value; 
+      }
     }
     ITypeReference elementType;
 
@@ -1154,8 +1208,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public List<IExpression> Initializers {
-      get { return this.initializers; }
-      set { this.initializers = value; }
+      get {
+        Contract.Ensures(Contract.Result<List<IExpression>>() != null);
+        return this.initializers; 
+      }
+      set {
+        Contract.Requires(value != null);
+        this.initializers = value; 
+      }
     }
     List<IExpression> initializers;
 
@@ -1164,8 +1224,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public List<int> LowerBounds {
-      get { return this.lowerBounds; }
-      set { this.lowerBounds = value; }
+      get {
+        Contract.Ensures(Contract.Result<List<int>>() != null);
+        return this.lowerBounds; 
+      }
+      set {
+        Contract.Requires(value != null);
+        this.lowerBounds = value; 
+      }
     }
     List<int> lowerBounds;
 
@@ -1175,11 +1241,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public uint Rank {
       get { return this.rank; }
-      set
-        //^ requires value > 0;
-      {
-        this.rank = value;
-      }
+      set { this.rank = value; }
     }
     uint rank;
 
@@ -1188,8 +1250,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public List<IExpression> Sizes {
-      get { return this.sizes; }
-      set { this.sizes = value; }
+      get {
+        Contract.Ensures(Contract.Result<List<Expression>>() != null);
+        return this.sizes; 
+      }
+      set {
+        Contract.Requires(value != null);
+        this.sizes = value; 
+      }
     }
     List<IExpression> sizes;
 
@@ -1348,6 +1416,10 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IEnumerable<IExpression> ICreateObjectInstance.Arguments {
       get { return this.arguments.AsReadOnly(); }
+    }
+
+    IMethodReference ICreateObjectInstance.MethodToCall {
+      get { return this.MethodToCall; }
     }
 
     #endregion
@@ -1528,9 +1600,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="expression"></param>
     protected Expression(IExpression expression) {
+      Contract.Requires(expression != null);
       this.locations = new List<ILocation>(expression.Locations);
       this.type = expression.Type;
     }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.locations != null);
+      Contract.Invariant(this.type != null);
+    }
+
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
@@ -1544,8 +1624,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public List<ILocation> Locations {
-      get { return this.locations; }
-      set { this.locations = value; }
+      get {
+        Contract.Ensures(Contract.Result<List<ILocation>>() != null);
+        return this.locations; 
+      }
+      set {
+        Contract.Requires(value != null);
+        this.locations = value; 
+      }
     }
     List<ILocation> locations;
 
@@ -2017,6 +2103,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.arguments.AsReadOnly(); }
     }
 
+    IMethodReference IMethodCall.MethodToCall {
+      get { return this.MethodToCall; }
+    }
+
     #endregion
   }
 
@@ -2342,9 +2432,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="pointerCall"></param>
     public PointerCall(IPointerCall pointerCall)
       : base(pointerCall) {
+      Contract.Requires(pointerCall != null);
       this.arguments = new List<IExpression>(pointerCall.Arguments);
       this.pointer = pointerCall.Pointer;
     }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.arguments != null);
+      Contract.Invariant(this.pointer != null);
+    }
+
 
     /// <summary>
     /// Calls visitor.Visit(IPointerCall).
@@ -2358,8 +2456,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public List<IExpression> Arguments {
-      get { return this.arguments; }
-      set { this.arguments = value; }
+      get {
+        Contract.Ensures(Contract.Result<List<IExpression>>() != null);
+        return this.arguments; 
+      }
+      set {
+        Contract.Requires(value != null);
+        this.arguments = value; 
+      }
     }
     internal List<IExpression> arguments;
 

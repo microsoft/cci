@@ -350,10 +350,16 @@ namespace Microsoft.Cci.Contracts {
       }
 
       IMethodBody methodBody = methodDefinition.Body;
+
+      if (methodBody is Dummy) {
+        this.underlyingContractProvider.AssociateMethodWithContract(method, ContractDummy.MethodContract);
+        return null;
+      }
+
       ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody == null) {
         //sourceMethodBody = new Microsoft.Cci.ILToCodeModel.SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader);
-        sourceMethodBody = Decompiler.GetCodeModelFromMetadataModel(this.host, methodBody, this.pdbReader);
+        sourceMethodBody = Decompiler.GetCodeModelFromMetadataModel(this.host, methodBody, this.pdbReader, DecompilerOptions.AnonymousDelegates);
       }
 
       MethodContractAndMethodBody result = this.SplitMethodBodyIntoContractAndCode(sourceMethodBody);

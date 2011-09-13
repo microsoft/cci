@@ -108,6 +108,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Represents a catch clause of a try-catch statement or a try-catch-finally statement. 
   /// </summary>
+  [ContractClass(typeof(ICatchClauseContract))]
   public interface ICatchClause : IObjectWithLocations {
     /// <summary>
     /// The statements within the catch clause.
@@ -132,6 +133,49 @@ namespace Microsoft.Cci {
     IExpression/*?*/ FilterCondition { get; }
 
   }
+
+  #region ICatchClause contract binding
+  [ContractClassFor(typeof(ICatchClause))]
+  abstract class ICatchClauseContract : ICatchClause {
+    #region ICatchClause Members
+
+    public IBlockStatement Body {
+      get {
+        Contract.Ensures(Contract.Result<IBlockStatement>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public ILocalDefinition ExceptionContainer {
+      get {
+        Contract.Ensures(Contract.Result<ILocalDefinition>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public ITypeReference ExceptionType {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IExpression FilterCondition {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// An object that represents a statement consisting of two sub statements and a condition that governs which one of the two gets executed. Most languages refer to this as an "if statement".
@@ -768,6 +812,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Represents a try block with any number of catch clauses, any number of filter clauses and, optionally, a finally or fault block.
   /// </summary>
+  [ContractClass(typeof(ITryCatchFinallyStatementContract))]
   public interface ITryCatchFinallyStatement : IStatement {
     /// <summary>
     /// The catch clauses.
@@ -791,6 +836,54 @@ namespace Microsoft.Cci {
     IBlockStatement TryBody { get; }
 
   }
+
+  #region ITryCatchFinallyStatement contract binding
+  [ContractClassFor(typeof(ITryCatchFinallyStatement))]
+  abstract class ITryCatchFinallyStatementContract : ITryCatchFinallyStatement {
+    #region ITryCatchFinallyStatement Members
+
+    public IEnumerable<ICatchClause> CatchClauses {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ICatchClause>>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IBlockStatement FinallyBody {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IBlockStatement FaultBody {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IBlockStatement TryBody {
+      get {
+        Contract.Ensures(Contract.Result<IBlockStatement>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+
+    #region IStatement Members
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// While condition do statements. Tests the condition before the body. Exits when the condition is true.

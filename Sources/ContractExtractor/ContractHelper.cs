@@ -809,7 +809,7 @@ namespace Microsoft.Cci.MutableContracts {
       return fromMethodContract;
     }
 
-    public static IMethodContract InlineAndStuff(IMetadataHost host, IMethodContract methodContract, IMethodDefinition toMethod, IMethodDefinition fromMethod,
+    public static MethodContract InlineAndStuff(IMetadataHost host, IMethodContract methodContract, IMethodDefinition toMethod, IMethodDefinition fromMethod,
       List<IExpression> expressions) {
       var specializedFromMethod = fromMethod as ISpecializedMethodDefinition;
       if (specializedFromMethod != null) {
@@ -1110,7 +1110,7 @@ namespace Microsoft.Cci.MutableContracts {
 
       public override void RewriteChildren(MethodCall methodCall) {
         base.RewriteChildren(methodCall);
-        if (methodCall.ThisArgument is IThisReference && this.targetType.IsValueType && !this.sourceType.IsValueType) {
+        if (!methodCall.IsStaticCall && methodCall.ThisArgument is IThisReference && this.targetType.IsValueType && !this.sourceType.IsValueType) {
           methodCall.ThisArgument =
               new ThisReference() {
                 Type = MutableModelHelper.GetManagedPointerTypeReference(methodCall.ThisArgument.Type, this.host.InternFactory, methodCall.ThisArgument.Type)
@@ -1334,7 +1334,7 @@ namespace Microsoft.Cci.MutableContracts {
 
     public override void RewriteChildren(MethodCall methodCall) {
       base.RewriteChildren(methodCall);
-      if (methodCall.ThisArgument is IThisReference && this.targetType.IsValueType && !this.sourceType.IsValueType) {
+      if (!methodCall.IsStaticCall && methodCall.ThisArgument is IThisReference && this.targetType.IsValueType && !this.sourceType.IsValueType) {
         methodCall.ThisArgument =
             new ThisReference() {
               Type = MutableModelHelper.GetManagedPointerTypeReference(methodCall.ThisArgument.Type, this.host.InternFactory, methodCall.ThisArgument.Type)
@@ -1661,15 +1661,40 @@ namespace Microsoft.Cci.MutableContracts {
           this.unit2ContractExtractor.Add(alreadyLoadedUnit.UnitIdentity, contractProviderForLoadedUnit);
         } else {
           #region Load any reference assemblies for the loaded unit
-          var oobProvidersAndHosts = new List<KeyValuePair<IContractProvider, IMetadataHost>>();
           var loadedAssembly = alreadyLoadedUnit as IAssembly; // Only assemblies can have associated reference assemblies.
+          var oobProvidersAndHosts = new List<KeyValuePair<IContractProvider, IMetadataHost>>();
           if (loadedAssembly != null) {
-            var refAssemWithoutLocation = new AssemblyIdentity(this.NameTable.GetNameFor(alreadyLoadedUnit.Name.Value + ".Contracts"), loadedAssembly.AssemblyIdentity.Culture, loadedAssembly.AssemblyIdentity.Version, loadedAssembly.AssemblyIdentity.PublicKeyToken, "");
+            var refAssemWithoutLocation =
+              new AssemblyIdentity(this.NameTable.GetNameFor(alreadyLoadedUnit.Name.Value + ".Contracts"),
+                loadedAssembly.AssemblyIdentity.Culture,
+                loadedAssembly.AssemblyIdentity.Version,
+                loadedAssembly.AssemblyIdentity.PublicKeyToken,
+                "");
             var referenceAssemblyIdentity = this.ProbeAssemblyReference(alreadyLoadedUnit, refAssemWithoutLocation);
-            if (referenceAssemblyIdentity.Location != "unknown://location") {
-              #region Load reference assembly and attach a contract provider to it
-              IContractAwareHost hostForReferenceAssembly = this; // default
-              IUnit referenceUnit = null;
+            IUnit referenceUnit = null;
+            IContractAwareHost hostForReferenceAssembly = this; // default
+            if (referenceAssemblyIdentity.Location.Equals("unknown://location")) {
+              // It might be the case that this was returned because the identity constructed for it had the wrong version number
+              // (or something else that didn't match the identity of hte already loaded unit). But it might be that the probing
+              // logic succeeded in loading *some* reference assembly. And we're not picky: the reference assembly is just
+              // the first assembly found with the right name.
+              foreach (var u in this.LoadedUnits) {
+                if (u.Name.Equals(refAssemWithoutLocation.Name)) {
+                  // fine, use this one!
+                  referenceUnit = u;
+                  break;
+                }
+              }
+              if (referenceUnit != null && loadedAssembly.AssemblyIdentity.Equals(this.CoreAssemblySymbolicIdentity)) {
+                // Need to use a separate host because the reference assembly for the core assembly thinks *it* is the core assembly
+                var separateHost = new SimpleHostEnvironment(this.NameTable);
+                this.disposableObjectAllocatedByThisHost.Add(separateHost);
+                referenceUnit = separateHost.LoadUnitFrom(referenceUnit.Location);
+                hostForReferenceAssembly = separateHost;
+              }
+            } else {
+              // referenceAssemblyIdentity.Location != "unknown://location")
+              #region Load reference assembly
               if (loadedAssembly.AssemblyIdentity.Equals(this.CoreAssemblySymbolicIdentity)) {
                 // Need to use a separate host because the reference assembly for the core assembly thinks *it* is the core assembly
                 var separateHost = new SimpleHostEnvironment(this.NameTable);
@@ -1681,22 +1706,24 @@ namespace Microsoft.Cci.MutableContracts {
                 referenceUnit = this.peReader.OpenModule(BinaryDocument.GetBinaryDocumentForFile(referenceAssemblyIdentity.Location, this));
                 this.RegisterAsLatest(referenceUnit);
               }
-              if (referenceUnit != null && referenceUnit != Dummy.Unit) {
-                IAssembly referenceAssembly = referenceUnit as IAssembly;
-                if (referenceAssembly != null) {
-                  var referenceAssemblyContractProvider = new CodeContractsContractExtractor(hostForReferenceAssembly,
-                    new LazyContractExtractor(hostForReferenceAssembly, referenceAssembly, contractMethods, this.AllowExtractorsToUsePdbs));
-                  oobProvidersAndHosts.Add(new KeyValuePair<IContractProvider, IMetadataHost>(referenceAssemblyContractProvider, hostForReferenceAssembly));
-                  if (!this.unit2ReferenceAssemblies.ContainsKey(alreadyLoadedUnit)) {
-                    this.unit2ReferenceAssemblies[alreadyLoadedUnit] = new List<IUnitReference>();
-                  }
-                  // Reference assemblies don't have references to the real assembly but they are "dependent"
-                  // on them in that they should be dumped and reloaded if the real assembly changes.
-                  this.unit2ReferenceAssemblies[alreadyLoadedUnit].Add(referenceAssembly);
-                }
-              }
-              #endregion Load reference assembly and attach a contract provider to it
+              #endregion
             }
+            #region Attach a contract provider to it
+            if (referenceUnit != null && referenceUnit != Dummy.Unit) {
+              IAssembly referenceAssembly = referenceUnit as IAssembly;
+              if (referenceAssembly != null) {
+                var referenceAssemblyContractProvider = new CodeContractsContractExtractor(hostForReferenceAssembly,
+                  new LazyContractExtractor(hostForReferenceAssembly, referenceAssembly, contractMethods, this.AllowExtractorsToUsePdbs));
+                oobProvidersAndHosts.Add(new KeyValuePair<IContractProvider, IMetadataHost>(referenceAssemblyContractProvider, hostForReferenceAssembly));
+                if (!this.unit2ReferenceAssemblies.ContainsKey(alreadyLoadedUnit)) {
+                  this.unit2ReferenceAssemblies[alreadyLoadedUnit] = new List<IUnitReference>();
+                }
+                // Reference assemblies don't have references to the real assembly but they are "dependent"
+                // on them in that they should be dumped and reloaded if the real assembly changes.
+                this.unit2ReferenceAssemblies[alreadyLoadedUnit].Add(referenceAssembly);
+              }
+            }
+            #endregion
           }
           var aggregateContractProvider = new AggregatingContractExtractor(this, contractProviderForLoadedUnit, oobProvidersAndHosts);
           this.unit2ContractExtractor.Add(alreadyLoadedUnit.UnitIdentity, aggregateContractProvider);
