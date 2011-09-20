@@ -2336,6 +2336,28 @@ namespace Microsoft.Cci.MutableCodeModel {
             allTypes[i] = mutableType;
           }
         }
+        var typeReferences = mutableCopy.TypeReferences;
+        if (typeReferences != null) {
+          for (int i = 0; i < typeReferences.Count; i++) {
+            var typeReference = typeReferences[i];
+            object copy;
+            if (this.ReferenceCache.TryGetValue(typeReference, out copy))
+              typeReferences[i] = (ITypeReference)copy;
+            else
+              typeReferences.RemoveAt(i--);
+          }
+        }
+        var typeMemberReferences = mutableCopy.TypeMemberReferences;
+        if (typeMemberReferences != null) {
+          for (int i = 0; i < typeMemberReferences.Count; i++) {
+            var typeMemberReference = typeMemberReferences[i];
+            object copy;
+            if (this.ReferenceCache.TryGetValue(typeMemberReference, out copy))
+              typeMemberReferences[i] = (ITypeMemberReference)copy;
+            else
+              typeMemberReferences.RemoveAt(i--);
+          }
+        }
 
       }
 
@@ -5685,6 +5707,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.flatListOfTypes.Sort(new TypeOrderPreserver(module.AllTypes));
       module.AllTypes = this.flatListOfTypes;
       this.flatListOfTypes = new List<INamedTypeDefinition>();
+      module.TypeMemberReferences = null;
+      module.TypeReferences = null;
       return module;
     }
 

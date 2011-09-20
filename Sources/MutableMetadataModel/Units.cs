@@ -740,7 +740,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="internFactory"></param>
     public void Copy(IModule module, IInternFactory internFactory) {
       ((ICopyFrom<IUnit>)this).Copy(module, internFactory);
-      this.allTypes = new List<INamedTypeDefinition>(module.GetAllTypes());
+      var allTypes = module.GetAllTypes();
+      if (IteratorHelper.EnumerableIsNotEmpty(allTypes))
+        this.allTypes = new List<INamedTypeDefinition>(module.GetAllTypes());
+      else
+        this.allTypes = null;
       if (IteratorHelper.EnumerableIsNotEmpty(module.AssemblyReferences))
         this.assemblyReferences = new List<IAssemblyReference>(module.AssemblyReferences);
       else
@@ -1167,7 +1171,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     bool trackDebugData;
 
     /// <summary>
-    /// Zero or more type references used in the module. If the module is produced by reading in a CLR PE file, then this will be the contents
+    /// Zero or more type references used in the module. May be null. If the module is produced by reading in a CLR PE file, then this will be the contents
     /// of the type reference table. If the module is produced some other way, the method may return an empty enumeration or an enumeration that is a
     /// subset of the type references actually used in the module. 
     /// </summary>
@@ -1178,7 +1182,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     List<ITypeReference>/*?*/ typeReferences;
 
     /// <summary>
-    /// Returns zero or more type member references used in the module. If the module is produced by reading in a CLR PE file, then this will be the contents
+    /// Returns zero or more type member references used in the module. May be null. If the module is produced by reading in a CLR PE file, then this will be the contents
     /// of the member reference table (which only contains entries for fields and methods). If the module is produced some other way, 
     /// the method may return an empty enumeration or an enumeration that is a subset of the member references actually used in the module. 
     /// </summary>
@@ -1248,13 +1252,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     IEnumerable<ITypeReference> IModule.GetTypeReferences() {
-      if (this.TypeReferences == null) return Enumerable<ITypeReference>.Empty;
-      return this.TypeReferences.AsReadOnly();
+      if (this.typeReferences == null) return Enumerable<ITypeReference>.Empty;
+      return this.typeReferences.AsReadOnly();
     }
 
     IEnumerable<ITypeMemberReference> IModule.GetTypeMemberReferences() {
-      if (this.TypeMemberReferences == null) return Enumerable<ITypeMemberReference>.Empty;
-      return this.TypeMemberReferences.AsReadOnly();
+      if (this.typeMemberReferences == null) return Enumerable<ITypeMemberReference>.Empty;
+      return this.typeMemberReferences.AsReadOnly();
     }
 
     IEnumerable<ICustomAttribute> IModule.ModuleAttributes {

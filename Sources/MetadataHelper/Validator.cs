@@ -769,6 +769,10 @@ namespace Microsoft.Cci {
           else
             refsSeenSoFar.Add(assemblyReference.AssemblyIdentity, assemblyReference);
         }
+        foreach (var typeMemberReference in module.GetTypeMemberReferences())
+          this.Visit(typeMemberReference);
+        foreach (var typeReference in module.GetTypeReferences())
+          this.Visit(typeReference);
       }
 
       /// <summary>

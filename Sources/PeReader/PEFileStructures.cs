@@ -883,7 +883,6 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
     public uint SizeOfData;
     public uint AddressOfRawData;
     public uint PointerToRawData;
-    public byte[] Data;
   }
 
   internal struct OptionalHeaderStandardFields {

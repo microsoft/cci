@@ -1661,6 +1661,28 @@ namespace Microsoft.Cci.MutableCodeModel {
       module.ModuleReferences = this.Rewrite(module.ModuleReferences);
       module.Win32Resources = this.Rewrite(module.Win32Resources);
       module.UnitNamespaceRoot = this.Rewrite(module.UnitNamespaceRoot);
+      var typeReferences = module.TypeReferences;
+      if (typeReferences != null) {
+        for (int i = 0; i < typeReferences.Count; i++) {
+          var typeReference = typeReferences[i];
+          object copy;
+          if (this.referenceRewrites.TryGetValue(typeReference, out copy))
+            typeReferences[i] = (ITypeReference)copy;
+          else
+            typeReferences.RemoveAt(i--);
+        }
+      }
+      var typeMemberReferences = module.TypeMemberReferences;
+      if (typeMemberReferences != null) {
+        for (int i = 0; i < typeMemberReferences.Count; i++) {
+          var typeMemberReference = typeMemberReferences[i];
+          object copy;
+          if (this.referenceRewrites.TryGetValue(typeMemberReference, out copy))
+            typeMemberReferences[i] = (ITypeMemberReference)copy;
+          else
+            typeMemberReferences.RemoveAt(i--);
+        }
+      }
     }
 
     /// <summary>
@@ -4305,6 +4327,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.flatListOfTypes.Sort(new TypeOrderPreserver(module.AllTypes));
       module.AllTypes = this.flatListOfTypes;
       this.flatListOfTypes = new List<INamedTypeDefinition>();
+      module.TypeMemberReferences = null;
+      module.TypeReferences = null;
       this.path.Pop();
       return module;
     }
@@ -7041,6 +7065,8 @@ namespace Microsoft.Cci.MutableCodeModel {
           this.Visit(globalsType);
       }
       this.VisitPrivateHelperMembers(module.AllTypes);
+      module.TypeMemberReferences = null;
+      module.TypeReferences = null;
       module.EntryPoint = this.Visit(module.EntryPoint);
       this.path.Pop();
       this.path.Pop();
