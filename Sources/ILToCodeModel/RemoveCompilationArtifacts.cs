@@ -84,7 +84,10 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override IExpression Visit(Conversion conversion) {
       conversion.ValueToConvert = this.Visit(conversion.ValueToConvert);
-      if (TypeHelper.TypesAreEquivalent(conversion.TypeAfterConversion, conversion.ValueToConvert.Type))
+      if (TypeHelper.TypesAreEquivalent(conversion.TypeAfterConversion, conversion.ValueToConvert.Type) &&
+        // converting a floating point number to the same floating point number is not a nop: it might result in precision loss.
+        !(conversion.TypeAfterConversion.TypeCode == PrimitiveTypeCode.Float32 || conversion.TypeAfterConversion.TypeCode == PrimitiveTypeCode.Float64)
+        )
         return conversion.ValueToConvert;
       else {
         var cc = conversion.ValueToConvert as CompileTimeConstant;
