@@ -169,6 +169,15 @@ namespace Microsoft.Cci {
           instruction.Type = arrayType.ElementType;
           this.stack.Push(instruction);
           break;
+        case OperationCode.Array_Set:
+          arrayType = instruction.Operation.Value as IArrayTypeReference;
+          Contract.Assume(arrayType != null); //This is an informally specified property of the Metadata model.
+          this.stack.Pop(); //The value to set
+          for (var i = arrayType.Rank; i > 0; i--)
+            this.stack.Pop();
+          this.stack.Pop();
+          instruction.Type = this.platformType.SystemVoid;
+          break;
         case OperationCode.Beq:
         case OperationCode.Beq_S:
         case OperationCode.Bge:

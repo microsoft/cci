@@ -243,9 +243,8 @@ namespace Microsoft.Cci {
           break;
 
         case OperationCode.Array_Set:
-          instruction.Operand1 = stack.Pop();
           Contract.Assume(instruction.Operation.Value is IArrayTypeReference); //This is an informally specified property of the Metadata model.
-          InitializeArrayIndexerInstruction(instruction, stack, (IArrayTypeReference)instruction.Operation.Value);
+          InitializeArraySetInstruction(instruction, stack, (IArrayTypeReference)instruction.Operation.Value);
           break;
 
         case OperationCode.Beq:
@@ -474,6 +473,17 @@ namespace Microsoft.Cci {
       stack.Push(instruction);
     }
 
+    private static void InitializeArraySetInstruction(Instruction instruction, Stack<Instruction> stack, IArrayTypeReference arrayType) {
+      Contract.Requires(instruction != null);
+      Contract.Requires(stack != null);
+      Contract.Requires(arrayType != null);
+      var rank = arrayType.Rank;
+      var indices = new Instruction[rank+1];
+      instruction.Operand2 = indices;
+      for (var i = rank+1; i > 0; i--)
+        indices[i-1] = stack.Pop();
+      instruction.Operand1 = stack.Pop();
+    }
 
   }
 
