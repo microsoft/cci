@@ -3146,6 +3146,7 @@ namespace Microsoft.Cci.Ast {
           object/*?*/ value = convertedInitializer.Value;
           if (value != null) {
             CompileTimeConstant ctc = new CompileTimeConstant(value, convertedInitializer.SourceLocation);
+            ctc.UnfoldedExpression = convertedInitializer;
             ctc.SetContainingExpression(convertedInitializer);
             result = ctc;
           }
@@ -3342,7 +3343,7 @@ namespace Microsoft.Cci.Ast {
       foreach (LocalDeclaration localDeclaration in this.Declarations) {
         result = result || localDeclaration.HasErrors;
         if (!result && this.TypeExpression.ResolvedType.TypeCode == PrimitiveTypeCode.Void) {
-          this.Helper.ReportError(new AstErrorMessage(this, Error.IllegalUseOfType,  localDeclaration.Name.Value, this.Helper.GetTypeName(this.PlatformType.SystemVoid.ResolvedType)));
+          this.Helper.ReportError(new AstErrorMessage(this, Error.IllegalUseOfType, localDeclaration.Name.Value, this.Helper.GetTypeName(this.PlatformType.SystemVoid.ResolvedType)));
           result = true;
         }
       }

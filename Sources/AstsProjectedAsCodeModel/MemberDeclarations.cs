@@ -902,6 +902,7 @@ namespace Microsoft.Cci.Ast {
           object/*?*/ value = convertedInitializer.Value;
           if (value != null) {
             CompileTimeConstant ctc = new CompileTimeConstant(value, convertedInitializer.SourceLocation);
+            ctc.UnfoldedExpression = convertedInitializer;
             ctc.SetContainingExpression(convertedInitializer);
             result = ctc;
           }
@@ -1751,7 +1752,7 @@ namespace Microsoft.Cci.Ast {
     //  return firstParameter;
     //}
 
-     
+
 
     private void CheckIfNonVirtualThatImplicitlyImplementsInterfaceMethod() {
       if ((this.flags & (int)ExtendedFlags.ImplicitInterfaceImplementationNotYetChecked) == 0) return;
@@ -2351,7 +2352,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="isThis"></param>
     /// <param name="sourceLocation"></param>
     public ParameterDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes,
-      TypeExpression type, NameDeclaration name, Expression/*?*/ defaultValue, ushort index, 
+      TypeExpression type, NameDeclaration name, Expression/*?*/ defaultValue, ushort index,
       bool isOptional, bool isOut, bool isParameterArray, bool isRef, bool isThis, ISourceLocation sourceLocation)
       : base(sourceLocation)
       //^ requires isParameterArray ==> type is ArrayTypeExpression;
@@ -2387,8 +2388,7 @@ namespace Microsoft.Cci.Ast {
     public ParameterDeclaration(List<SourceCustomAttribute>/*?*/ sourceAttributes,
       TypeExpression type, NameDeclaration name, Expression/*?*/ defaultValue, ushort index,
       bool isOptional, bool isOut, bool isParameterArray, bool isRef, ISourceLocation sourceLocation)
-      : this(sourceAttributes, type, name, defaultValue, index, isOptional, isOut, isParameterArray, isRef, false, sourceLocation)
-    {
+      : this(sourceAttributes, type, name, defaultValue, index, isOptional, isOut, isParameterArray, isRef, false, sourceLocation) {
     }
 
 

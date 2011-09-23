@@ -277,9 +277,8 @@ namespace Microsoft.Cci.Ast {
 
     class PointerAddition : CheckableSourceItem, IAddition {
 
-      internal PointerAddition(Addition addition, Expression leftOperand, Expression rightOperand) 
-        : base(addition.SourceLocation)
-      {
+      internal PointerAddition(Addition addition, Expression leftOperand, Expression rightOperand)
+        : base(addition.SourceLocation) {
         this.addition = addition;
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
@@ -4780,7 +4779,7 @@ namespace Microsoft.Cci.Ast {
     public virtual IEnumerable<Expression> ApplicableArguments {
       get {
         IMethodDefinition dummy = this.ResolvedMethod; // Called for side-effect;
-        return (this.argumentsForExtensionCall != null ? this.argumentsForExtensionCall : this.originalArguments); 
+        return (this.argumentsForExtensionCall != null ? this.argumentsForExtensionCall : this.originalArguments);
       }
     }
     private IEnumerable<Expression> argumentsForExtensionCall;
@@ -5320,6 +5319,7 @@ namespace Microsoft.Cci.Ast {
     {
       this.valueIsPolymorphicCompileTimeConstant = template.ValueIsPolymorphicCompileTimeConstant;
       this.couldBeInterpretedAsNegativeSignedInteger = template.CouldBeInterpretedAsNegativeSignedInteger;
+      this.unfoldedExpression = template.UnfoldedExpression;
     }
 
     /// <summary>
@@ -5334,6 +5334,7 @@ namespace Microsoft.Cci.Ast {
       object/*?*/ newBoxedValue = this.ConvertToBoxedValueOfTargetTypeIfIntegerInRangeOf(targetType, allowLossOfSign);
       if (newBoxedValue != this.Value) {
         CompileTimeConstant result = new CompileTimeConstant(newBoxedValue, true, this.SourceLocation);
+        result.UnfoldedExpression = this.UnfoldedExpression;
         result.SetContainingBlock(this.ContainingBlock);
         return result;
       }
@@ -5915,6 +5916,20 @@ namespace Microsoft.Cci.Ast {
     }
     readonly bool valueIsPolymorphicCompileTimeConstant;
 
+    /// <summary>
+    /// If this expression is the result of constant folding performed on another expression, then this property returns that other expression.
+    /// Otherwise it returns this object.
+    /// </summary>
+    public Expression UnfoldedExpression {
+      get {
+        return this.unfoldedExpression??this;
+      }
+      set {
+        this.unfoldedExpression = value;
+      }
+    }
+    Expression/*?*/ unfoldedExpression;
+
     #region IMetadataExpression Members
 
     void IMetadataExpression.Dispatch(IMetadataVisitor visitor) {
@@ -6469,8 +6484,8 @@ namespace Microsoft.Cci.Ast {
         this.Helper.ReportError(new AstErrorMessage(this, Error.AmbiguousCall, cand0, cand1));
         return;
       } else if (candidates.Count == 1) {
-        this.Helper.ReportError(new AstErrorMessage(this, Error.WrongNumberOfArgumentsInConstructorCall, 
-          this.Helper.GetTypeName(this.Type), argCount.ToString())); 
+        this.Helper.ReportError(new AstErrorMessage(this, Error.WrongNumberOfArgumentsInConstructorCall,
+          this.Helper.GetTypeName(this.Type), argCount.ToString()));
       } else if (candidates.Count == 0) {
         this.Helper.ReportError(new AstErrorMessage(this, Error.WrongNumberOfArgumentsInConstructorCall,
           this.Helper.GetTypeName(this.Type), argCount.ToString()));
@@ -6752,12 +6767,11 @@ namespace Microsoft.Cci.Ast {
               }
               int size = (int)sizeValue;
               if (size != (int)initCount) {
-                this.Helper.ReportError(new AstErrorMessage(size0, Error.ExplicitSizeDoesNotMatchInitializer, size.ToString(), initCount.ToString())); 
+                this.Helper.ReportError(new AstErrorMessage(size0, Error.ExplicitSizeDoesNotMatchInitializer, size.ToString(), initCount.ToString()));
                 return true;
               }
             }
-          }
-          else if (this.rank > 1) {
+          } else if (this.rank > 1) {
             //   each initializer must define an array of the same shape
             //   if sizes is not empty, sizes must be constant and compatible with shape
             //   each initializer leaf element must be compatible with element type.
@@ -6767,7 +6781,7 @@ namespace Microsoft.Cci.Ast {
             while (initializerEnumerator.MoveNext()) {
               Expression otherElement = initializerEnumerator.Current;
               if (!CreateArray.SameShape(elementZero, otherElement, ref message)) {
-                this.Helper.ReportError(message); 
+                this.Helper.ReportError(message);
                 return true;
               }
             }
@@ -6794,8 +6808,7 @@ namespace Microsoft.Cci.Ast {
           }
         }
         this.convertedInitializers = convertedList;
-      }
-      else {
+      } else {
         CreateArray nestedCreate = null;
         foreach (Expression exp in this.Initializers) {
           if ((nestedCreate = exp as CreateArray) != null)
@@ -6826,8 +6839,7 @@ namespace Microsoft.Cci.Ast {
       if (sampleCount != exampleCount) {
         message = new AstErrorMessage(other, Error.InitializerCountInconsistent, sampleCount.ToString(), exampleCount.ToString());
         return false;
-      }
-      else {
+      } else {
         IEnumerator<Expression> enumerator = sample.Initializers.GetEnumerator();
         if (enumerator.MoveNext()) {
           Expression elementZero = enumerator.Current;
@@ -6872,11 +6884,9 @@ namespace Microsoft.Cci.Ast {
         if (sizeCount != initCount) {
           message = new AstErrorMessage(size, Error.ExplicitSizeDoesNotMatchInitializer, sizeCount.ToString(), initCount.ToString());
           return false;
-        }
-        else
+        } else
           return CreateArray.LengthMatches(depth + 1, IteratorHelper.First(create.Initializers), sizes, ref message);
-      }
-      else 
+      } else
         return true;
     }
 
@@ -7024,8 +7034,7 @@ namespace Microsoft.Cci.Ast {
       if (this.Rank == 1 && IteratorHelper.EnumerableIsEmpty(this.LowerBounds)) {
         // TODO: check that all initializer values are implicitly convertible to this.ElementType.
         return Vector.GetVector(this.ElementType, this.Compilation.HostEnvironment.InternFactory);
-      }
-      else {
+      } else {
         // TODO: check that all initializer leaf values are implicitly convertible to this.ElementType.
         return Matrix.GetMatrix(this.ElementType, this.Rank, this.ComputedLowerBounds, this.ComputedSizes, this.Compilation.HostEnvironment.InternFactory);
       }
@@ -7043,13 +7052,13 @@ namespace Microsoft.Cci.Ast {
     /// Returns the initializers, modified by any required implicit conversion
     /// </summary>
     public IEnumerable<Expression> ConvertedInitializers {
-      get { 
+      get {
         if (convertedInitializers == null)
           this.ConvertInitializers();
         return this.convertedInitializers;
       }
     }
-    private IEnumerable<Expression> convertedInitializers = null; 
+    private IEnumerable<Expression> convertedInitializers = null;
 
 
 
@@ -8938,6 +8947,7 @@ namespace Microsoft.Cci.Ast {
       //^ requires this.Value != null;
     {
       CompileTimeConstant result = new CompileTimeConstant(this);
+      result.UnfoldedExpression = this;
       result.SetContainingExpression(this);
       return result;
     }
@@ -8949,7 +8959,7 @@ namespace Microsoft.Cci.Ast {
       return null;
     }
 
-    
+
 
     /// <summary>
     /// Checks if the expression has a side effect and reports an error unless told otherwise.
@@ -9042,6 +9052,7 @@ namespace Microsoft.Cci.Ast {
         object/*?*/ value = this.Value;
         if (value != null) {
           CompileTimeConstant cconst = new CompileTimeConstant(value, this.SourceLocation);
+          cconst.UnfoldedExpression = this;
           cconst.SetContainingExpression(this);
           return cconst;
         }
@@ -12269,7 +12280,7 @@ namespace Microsoft.Cci.Ast {
     /// Precondition: this.MethodExpression must be a QualifiedName.
     /// </summary>
     /// <returns></returns>
-    public virtual IEnumerable<IMethodDefinition> GetCandidateExtensionMethods(IEnumerable<Expression> arguments){
+    public virtual IEnumerable<IMethodDefinition> GetCandidateExtensionMethods(IEnumerable<Expression> arguments) {
       // Binding extension methods requires a special traversal of the namespaces. Very C# specific.
       List<IMethodDefinition> result = new List<IMethodDefinition>();
       NamespaceDeclaration enclosingNamespace = this.ContainingBlock.ContainingNamespaceDeclaration;
@@ -15782,8 +15793,7 @@ namespace Microsoft.Cci.Ast {
     }
     IExpression/*?*/ cachedProjection;
 
-    private Expression NewAssignUsingTemporary(TargetExpression target, PostfixUnaryOperationAssignment parent, BoundExpression temporary)
-    {
+    private Expression NewAssignUsingTemporary(TargetExpression target, PostfixUnaryOperationAssignment parent, BoundExpression temporary) {
       Expression source;
       object one = GetConstantOneOfMatchingTypeForIncrementDecrement(target.Type);
       CompileTimeConstant delta = new CompileTimeConstant(one, SourceDummy.SourceLocation);
@@ -16152,10 +16162,10 @@ namespace Microsoft.Cci.Ast {
     /// factored out subexpressions. This transformation is useful when expressing the semantics of operation assignments and increment/decrement operations.
     /// </summary>
     public override Expression FactoredExpression()
-    //^^ ensures result == this || result is BlockExpression;
+      //^^ ensures result == this || result is BlockExpression;
     {
       SimpleName simpleQualifier = this.Qualifier as SimpleName;
-      if (simpleQualifier != null && (simpleQualifier.ResolvesToLocalOrParameter || !simpleQualifier.Type.IsReferenceType)) 
+      if (simpleQualifier != null && (simpleQualifier.ResolvesToLocalOrParameter || !simpleQualifier.Type.IsReferenceType))
         return this;
       else if (!this.Qualifier.Type.IsReferenceType) {
         // If Qualifier denotes a value-type we cannot use that as the cached 
@@ -16169,7 +16179,7 @@ namespace Microsoft.Cci.Ast {
           // In this case we want to return the same block, with expression "temp.ValueField.SimpleNameOfThis".
           BlockExpression bExp = (BlockExpression)factored; // Asserted by postcondition
           QualifiedName aliasName = new QualifiedName(bExp.Expression, this.SimpleName, this.SourceLocation);
-          BlockExpression result = new BlockExpression(bExp.BlockStatement, aliasName, this.sourceLocation); 
+          BlockExpression result = new BlockExpression(bExp.BlockStatement, aliasName, this.sourceLocation);
           result.SetContainingExpression(this);
           return result;
         } else
@@ -17952,7 +17962,7 @@ namespace Microsoft.Cci.Ast {
           if (local.IsConstant) {
             var compileTimeVal = local.CompileTimeValue.ProjectAsIExpression();
             if (!(compileTimeVal is DummyConstant)) return cachedProjection = compileTimeVal;
-          } 
+          }
         }
       }
       if (container == null) container = Dummy.Field;
@@ -17985,13 +17995,13 @@ namespace Microsoft.Cci.Ast {
     }
     object/*?*/ resolvedValue;
 
-      /// <summary>
-      /// Returns true if this resolves to a local declaration or a 
-      /// call parameter of the current method. Used for finding a
-      /// worthwhile QualifiedName.Qualifier to cache in FactoredExpression.
-      /// </summary>
+    /// <summary>
+    /// Returns true if this resolves to a local declaration or a 
+    /// call parameter of the current method. Used for finding a
+    /// worthwhile QualifiedName.Qualifier to cache in FactoredExpression.
+    /// </summary>
     public bool ResolvesToLocalOrParameter {
-        get { return (resolvedValue is LocalDefinition || resolvedValue is ParameterDefinition); }
+      get { return (resolvedValue is LocalDefinition || resolvedValue is ParameterDefinition); }
     }
 
     /// <summary>
@@ -18009,7 +18019,7 @@ namespace Microsoft.Cci.Ast {
           this.Helper.ReportError(new AstErrorMessage(this, Error.SingleTypeNameNotFound, this.Name.Value));
           this.hasErrors = true;
         } else
-        this.hasErrors = null;
+          this.hasErrors = null;
       }
       return result;
     }
@@ -18465,6 +18475,7 @@ namespace Microsoft.Cci.Ast {
       object/*?*/ value = this.Value;
       if (value != null) {
         CompileTimeConstant result = new CompileTimeConstant(value, this.SourceLocation);
+        result.UnfoldedExpression = this;
         result.SetContainingExpression(this);
         return result;
       } else
@@ -18916,9 +18927,8 @@ namespace Microsoft.Cci.Ast {
 
     class PointerSubtraction : CheckableSourceItem, ISubtraction {
 
-      internal PointerSubtraction(Subtraction subtraction, Expression leftOperand, Expression rightOperand) 
-        : base(subtraction.SourceLocation)
-      {
+      internal PointerSubtraction(Subtraction subtraction, Expression leftOperand, Expression rightOperand)
+        : base(subtraction.SourceLocation) {
         this.subtraction = subtraction;
         this.leftOperand = leftOperand;
         this.rightOperand = rightOperand;
