@@ -365,36 +365,16 @@ namespace Microsoft.Cci.Contracts {
       MethodContractAndMethodBody result = this.SplitMethodBodyIntoContractAndCode(sourceMethodBody);
       var methodContract = result.MethodContract;
 
-      // If the method was generated for an auto-property, then need to see if a
-      // contract can be derived by mining the invariant.
-      if (ContractHelper.IsAutoPropertyMember(this.host, methodDefinition)) {
-
-        var tc = GetTypeContractFor(methodDefinition.ContainingTypeDefinition);
-        if (tc != null) {
-          var derivedPreconditions = new List<IPrecondition>();
-          var locations = new List<ILocation>();
-          foreach (var i in tc.Invariants) {
-            locations.AddRange(i.Locations);
-            derivedPreconditions.Add(
-              new Precondition() {
-                Condition = i.Condition,
-                Description = i.Description,
-                OriginalSource = i.OriginalSource,
-                Locations = new List<ILocation>(i.Locations),
-              });
-          }
-          if (0 < derivedPreconditions.Count) {
-            var derivedMethodContract = new MethodContract() {
-              Locations = locations,
-              Preconditions = derivedPreconditions,
-            };
-            if (methodContract != null) {
-              ContractHelper.AddMethodContract(derivedMethodContract, methodContract);
-            }
-            methodContract = derivedMethodContract;
-          }
-        }
+      #region Auto-properties get their contract from mining the invariant
+      var tc = this.GetTypeContractFor(methodDefinition.ContainingTypeDefinition);
+      MethodContract mc = ContractHelper.GetAutoPropertyContract(this.host, tc, methodDefinition);
+      if (mc != null) {
+        if (methodContract == null)
+          methodContract = mc;
+        else
+          ContractHelper.AddMethodContract(mc, methodContract);
       }
+      #endregion
 
       if (methodContract == null) {
         this.underlyingContractProvider.AssociateMethodWithContract(method, ContractDummy.MethodContract); // so we don't try to extract more than once
@@ -480,6 +460,7 @@ namespace Microsoft.Cci.Contracts {
     }
 
     #endregion
+
   }
 
   /// <summary>

@@ -1184,6 +1184,161 @@ namespace Microsoft.Cci.MutableContracts {
 
     }
 
+    /// <summary>
+    /// Given a method definition for a getter or setter that the compiler produced for an auto-property,
+    /// mine the type contract and extract contracts from any invariants that mention the property.
+    /// If the <paramref name="methodDefinition"/> is a getter, then the returned method contract contains
+    /// only postconditions.
+    /// If the <paramref name="methodDefinition"/> is a setter, then the returned method contract contains
+    /// only preconditions.
+    /// If an invariant does not mention the property, then it is not represented in the returned contract.
+    /// </summary>
+    /// <param name="typeContract">
+    /// This must be the type contract corresponding to the containing type of <paramref name="methodDefinition"/>.
+    /// </param>
+    /// <param name="methodDefinition">
+    /// A method definition that should be a getter or setter for an auto-property. If it is not, then null is returned.
+    /// </param>
+    /// <returns>Either null or a method contract containing pre- or postconditions (mutually exclusive)
+    /// mined from the invariants contained in the <paramref name="typeContract"/>.
+    /// </returns>
+    public static MethodContract/*?*/ GetAutoPropertyContract(IMetadataHost host, ITypeContract typeContract, IMethodDefinition methodDefinition) {
+      // If the method was generated for an auto-property, then need to see if a contract can be derived by mining the invariant.
+      if (!methodDefinition.IsSpecialName) return null;
+      bool isPropertyGetter = methodDefinition.Name.Value.StartsWith("get_");
+      bool isPropertySetter = methodDefinition.Name.Value.StartsWith("set_");
+      //^ assume !(isPropertyGetter && isPropertySetter); // maybe neither, but never both!
+      if (!((isPropertyGetter || isPropertySetter) && ContractHelper.IsAutoPropertyMember(host, methodDefinition))) return null;
+      IMethodDefinition getter = null;
+      IMethodDefinition setter = null;
+      // needs to have both a setter and a getter
+      var ct = methodDefinition.ContainingTypeDefinition;
+      if (isPropertyGetter) {
+        getter = methodDefinition;
+        var mms = ct.GetMatchingMembersNamed(host.NameTable.GetNameFor("set_" + methodDefinition.Name.Value.Substring(4)), false, md => ContractHelper.IsAutoPropertyMember(host, md));
+        foreach (var mem in mms) {
+          setter = mem as IMethodDefinition;
+          break;
+        }
+      } else { // isPropertySetter
+        setter = methodDefinition;
+        var mms = ct.GetMatchingMembersNamed(host.NameTable.GetNameFor("get_" + methodDefinition.Name.Value.Substring(4)), false, md => ContractHelper.IsAutoPropertyMember(host, md));
+        foreach (var mem in mms) {
+          getter = mem as IMethodDefinition;
+          break;
+        }
+      }
+
+      // If the auto-property inherits any contracts then it doesn't derive any from the invariant
+      var inheritsContract = false;
+      IMethodDefinition overriddenMethod = MemberHelper.GetImplicitlyOverriddenBaseClassMethod(getter) as IMethodDefinition;
+      var isOverride = getter.IsNewSlot && overriddenMethod != null && overriddenMethod != Dummy.Method;
+      inheritsContract |= isOverride;
+      if (!inheritsContract) {
+        inheritsContract |= IteratorHelper.EnumerableIsNotEmpty(ContractHelper.GetAllImplicitlyImplementedInterfaceMethods(getter));
+      }
+      if (!inheritsContract) {
+        inheritsContract |= IteratorHelper.EnumerableIsNotEmpty(MemberHelper.GetExplicitlyOverriddenMethods(getter));
+      }
+
+      if (inheritsContract || getter == null || setter == null) return null;
+
+      if (typeContract == null) return null;
+      MethodContract derivedMethodContract = null;
+      if (isPropertyGetter) {
+        var derivedPostConditions = new List<IPostcondition>();
+        foreach (var i in typeContract.Invariants) {
+          if (!MemberFinder.ExpressionContains(i.Condition, getter)) continue;
+          derivedPostConditions.Add(
+            new Postcondition() {
+              Condition = ReplaceAutoPropGetter.MakeEnsures(host, getter, i.Condition),
+              Description = i.Description,
+              OriginalSource = i.OriginalSource,
+              Locations = new List<ILocation>(i.Locations),
+            });
+        }
+        if (0 < derivedPostConditions.Count) {
+          derivedMethodContract = new MethodContract() {
+            Postconditions = derivedPostConditions,
+          };
+        }
+      } else { // isPropertySetter
+        var derivedPreconditions = new List<IPrecondition>();
+        foreach (var i in typeContract.Invariants) {
+          if (!MemberFinder.ExpressionContains(i.Condition, getter)) continue;
+          derivedPreconditions.Add(
+            new Precondition() {
+              Condition = ReplaceAutoPropGetter.MakeRequires(host, getter, setter, i.Condition),
+              Description = i.Description,
+              OriginalSource = i.OriginalSource,
+              Locations = new List<ILocation>(i.Locations),
+            });
+        }
+        if (0 < derivedPreconditions.Count) {
+          derivedMethodContract = new MethodContract() {
+            Preconditions = derivedPreconditions,
+          };
+        }
+      }
+      return derivedMethodContract;
+    }
+
+    private class MemberFinder : CodeTraverser {
+      ITypeDefinitionMember memberToFind;
+      bool found = false;
+      private MemberFinder(ITypeDefinitionMember memberToFind) {
+        this.memberToFind = memberToFind;
+      }
+      public static bool ExpressionContains(IExpression expression, ITypeDefinitionMember member) {
+        var mf = new MemberFinder(member);
+        mf.Traverse(expression);
+        return mf.found;
+      }
+      public override void TraverseChildren(IMethodReference methodReference) {
+        var mr = ContractHelper.UninstantiateAndUnspecialize(methodReference);
+        if (mr.InternedKey == (this.memberToFind as IMethodReference).InternedKey) {
+          this.StopTraversal = true;
+          this.found = true;
+          return;
+        }
+      }
+
+    }
+
+    private class ReplaceAutoPropGetter : CodeRewriter {
+      IMethodDefinition getter;
+      IMethodDefinition/*?*/ setter;
+      private ReplaceAutoPropGetter(IMetadataHost host, IMethodDefinition getter, IMethodDefinition/*?*/ setter)
+        : base(host) {
+        this.getter = getter;
+        this.setter = setter;
+      }
+      public static IExpression MakeRequires(IMetadataHost host, IMethodDefinition getter, IMethodDefinition setter, IExpression expression) {
+        var e = new CodeDeepCopier(host).Copy(expression);
+        var rewriter = new ReplaceAutoPropGetter(host, getter, setter);
+        return rewriter.Rewrite(e);
+      }
+      public static IExpression MakeEnsures(IMetadataHost host, IMethodDefinition getter, IExpression expression) {
+        var e = new CodeDeepCopier(host).Copy(expression);
+        var rewriter = new ReplaceAutoPropGetter(host, getter, null);
+        return rewriter.Rewrite(e);
+      }
+      public override IExpression Rewrite(IMethodCall methodCall) {
+        var mr = ContractHelper.UninstantiateAndUnspecialize(methodCall.MethodToCall);
+        if (mr.InternedKey == this.getter.InternedKey) {
+          if (this.setter != null) {
+            var p = IteratorHelper.First(this.setter.Parameters);
+            return new BoundExpression() { Definition = p, Instance = null, Type = p.Type, };
+          } else {
+            return new ReturnValue() { Type = this.getter.Type, };
+          }
+        }
+        return base.Rewrite(methodCall);
+      }
+    }
+
+
+
   }
   /// <summary>
   /// A mutator that reparents locals defined in the target method so that they point to the source method.
