@@ -84,10 +84,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override IExpression Visit(Conversion conversion) {
       conversion.ValueToConvert = this.Visit(conversion.ValueToConvert);
-      if (TypeHelper.TypesAreEquivalent(conversion.TypeAfterConversion, conversion.ValueToConvert.Type) &&
-        // converting a floating point number to the same floating point number is not a nop: it might result in precision loss.
-        !(conversion.TypeAfterConversion.TypeCode == PrimitiveTypeCode.Float32 || conversion.TypeAfterConversion.TypeCode == PrimitiveTypeCode.Float64)
-        )
+      if (TypeHelper.TypesAreEquivalent(conversion.TypeAfterConversion, conversion.ValueToConvert.Type))
         return conversion.ValueToConvert;
       else {
         var cc = conversion.ValueToConvert as CompileTimeConstant;
@@ -666,7 +663,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.expressionToSubstituteForCompilerGeneratedSingleAssignmentLocal.Add(local, val);
         return CodeDummy.Block; //Causes the caller to omit this statement from the containing statement list.
       }
-      if (numReferences == 0 && val == null) return CodeDummy.Block; //unused declaration
+      if (numReferences == 0 && val == null && numberOfAssignments == 0) return CodeDummy.Block; //unused declaration
       return localDeclarationStatement;
     }
 
