@@ -10,15 +10,13 @@
 //
 //-----------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using Microsoft.Cci;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Security;
+using System.Text;
 
 //^ using Microsoft.Contracts;
 
-namespace Microsoft.Cci {
+namespace Microsoft.Cci.PeWriterInternal {
 
   internal struct COR_FIELD_OFFSET {
     public uint ridOfField;

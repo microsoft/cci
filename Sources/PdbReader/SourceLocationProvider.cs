@@ -10,14 +10,12 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using System.IO;
-using Microsoft.Cci;
-using Microsoft.Cci.Pdb;
-using Microsoft.Cci.MetadataReader;
-using System.Text;
 using System.Diagnostics.SymbolStore;
+using System.IO;
+using Microsoft.Cci.MetadataReader;
 
 namespace Microsoft.Cci {
+  using Microsoft.Cci.Pdb;
 
   /// <summary>
   /// An object that can map offsets in an IL stream to source locations and block scopes.
@@ -78,7 +76,7 @@ namespace Microsoft.Cci {
     /// Return zero or more locations in primary source documents that are the closest to corresponding to one or more of the given derived (non primary) document locations.
     /// </summary>
     /// <param name="locations">Zero or more locations in documents that have been derived from one or more source documents.</param>
-    public IEnumerable<IPrimarySourceLocation> GetClosestPrimarySourceLocationsFor(IEnumerable<ILocation> locations){
+    public IEnumerable<IPrimarySourceLocation> GetClosestPrimarySourceLocationsFor(IEnumerable<ILocation> locations) {
       foreach (ILocation location in locations) {
         IPrimarySourceLocation/*?*/ psloc = location as IPrimarySourceLocation;
         if (psloc != null) yield return psloc;
@@ -411,6 +409,9 @@ namespace Microsoft.Cci {
 
   }
 
+}
+
+namespace Microsoft.Cci.Pdb {
   internal sealed class UsedNamespace : IUsedNamespace {
 
     internal UsedNamespace(IName alias, IName namespaceName) {

@@ -1,18 +1,29 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------------
+//
+// Copyright (c) Microsoft. All rights reserved.
+// This code is licensed under the Microsoft Public License.
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+//-----------------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using Microsoft.Cci.UtilityDataStructures;
 using System.Text;
+using Microsoft.Cci.UtilityDataStructures;
 
 namespace Microsoft.Cci {
+  using Microsoft.Cci.ControlAndDataFlowGraph;
 
   /// <summary>
   /// A set of basic blocks, each of which has a list of successor blocks and some other information.
   /// Each block consists of a list of instructions, each of which can point to previous instructions that compute the operands it consumes.
   /// </summary>
-  public class ControlAndDataFlowGraph<BasicBlock, Instruction> 
-    where BasicBlock : Microsoft.Cci.BasicBlock<Instruction>, new ()
-    where Instruction : Microsoft.Cci.Instruction, new () {
+  public class ControlAndDataFlowGraph<BasicBlock, Instruction>
+    where BasicBlock : Microsoft.Cci.BasicBlock<Instruction>, new()
+    where Instruction : Microsoft.Cci.Instruction, new() {
 
     internal ControlAndDataFlowGraph(IMethodBody body, List<BasicBlock> successorEdges, List<BasicBlock> allBlocks, List<BasicBlock> rootBlocks, Hashtable<BasicBlock> blockFor) {
       Contract.Requires(body != null);
@@ -43,11 +54,11 @@ namespace Microsoft.Cci {
     public IMethodBody MethodBody {
       get {
         Contract.Ensures(Contract.Result<IMethodBody>() != null);
-        return this.methodBody; 
+        return this.methodBody;
       }
       set {
         Contract.Requires(value != null);
-        this.methodBody = value; 
+        this.methodBody = value;
       }
     }
     private IMethodBody methodBody;
@@ -58,11 +69,11 @@ namespace Microsoft.Cci {
     public List<BasicBlock> RootBlocks {
       get {
         Contract.Ensures(Contract.Result<List<BasicBlock>>() != null);
-        return this.rootBlocks; 
+        return this.rootBlocks;
       }
       set {
         Contract.Requires(value != null);
-        this.rootBlocks = value; 
+        this.rootBlocks = value;
       }
     }
     List<BasicBlock> rootBlocks;
@@ -89,11 +100,11 @@ namespace Microsoft.Cci {
     public Hashtable<BasicBlock> BlockFor {
       get {
         Contract.Ensures(Contract.Result<Hashtable<BasicBlock>>() != null);
-        return this.blockFor; 
+        return this.blockFor;
       }
       set {
         Contract.Requires(value != null);
-        this.blockFor = value; 
+        this.blockFor = value;
       }
     }
     private Hashtable<BasicBlock> blockFor;
@@ -133,7 +144,7 @@ namespace Microsoft.Cci {
       Contract.Requires(host != null);
       Contract.Requires(methodBody != null);
       Contract.Ensures(Contract.Result<ControlAndDataFlowGraph<BasicBlock, Instruction>>() != null);
-      
+
       var cdfg = ControlFlowInferencer<BasicBlock, Instruction>.SetupControlFlow(host, methodBody, localScopeProvider);
       DataFlowInferencer<BasicBlock, Instruction>.SetupDataFlow(host, methodBody, cdfg);
       TypeInferencer<BasicBlock, Instruction>.FillInTypes(host, cdfg);
@@ -198,11 +209,11 @@ namespace Microsoft.Cci {
     public IOperation Operation {
       get {
         Contract.Ensures(Contract.Result<IOperation>() != null);
-        return operation; 
+        return operation;
       }
       set {
         Contract.Requires(value != null);
-        operation = value; 
+        operation = value;
       }
     }
     private IOperation operation;
@@ -271,17 +282,20 @@ namespace Microsoft.Cci {
     public ITypeReference Type {
       get {
         Contract.Ensures(Contract.Result<ITypeReference>() != null);
-        return type; 
+        return type;
       }
       set {
         Contract.Requires(value != null);
-        type = value; 
+        type = value;
       }
     }
     private ITypeReference type;
 
   }
 
+}
+
+namespace Microsoft.Cci.ControlAndDataFlowGraph {
   internal class Stack<Instruction> where Instruction : class {
 
     internal Stack(int maxStack, List<Instruction> operandStackSetup) {
@@ -333,7 +347,7 @@ namespace Microsoft.Cci {
 
     internal Instruction Pop() {
       Contract.Ensures(Contract.Result<Instruction>() != null);
-      
+
       Contract.Assume(this.top >= 0); //This is an optimistic assumption. Clients have to match their Pop and Push calls, but enforcing this convention via contracts is too verbose.
       return this.elements[this.top--];
     }
@@ -342,5 +356,4 @@ namespace Microsoft.Cci {
       get { return this.top; }
     }
   }
-
 }

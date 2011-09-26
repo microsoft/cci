@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 
 namespace Microsoft.Cci {
+  using Microsoft.Cci.ILGeneratorImplementation;
   /// <summary>
   /// A metadata (IL) level represetation of the body of a method or of a property/event accessor.
   /// </summary>
@@ -31,7 +32,7 @@ namespace Microsoft.Cci {
     /// In case of AST to instructions conversion this lists the types produced.
     /// In case of instructions to AST decompilation this should ideally be list of all types
     /// which are local to method.</param>
-    public ILGeneratorMethodBody(ILGenerator generator, bool localsAreZeroed, ushort maxStack, IMethodDefinition methodDefinition, 
+    public ILGeneratorMethodBody(ILGenerator generator, bool localsAreZeroed, ushort maxStack, IMethodDefinition methodDefinition,
       IEnumerable<ILocalDefinition> localVariables, IEnumerable<ITypeDefinition> privateHelperTypes) {
       this.localsAreZeroed = localsAreZeroed;
       this.operationExceptionInformation = generator.GetOperationExceptionInformation();

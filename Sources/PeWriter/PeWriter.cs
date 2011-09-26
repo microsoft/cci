@@ -10,17 +10,16 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Microsoft.Cci;
 using System.Configuration.Assemblies;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Text;
 using Microsoft.Cci.UtilityDataStructures;
-using Microsoft.Cci.WriterUtilities;
 
 //^ using Microsoft.Contracts;
 
 namespace Microsoft.Cci {
+  using Microsoft.Cci.PeWriterInternal;
 
   public class PeWriter : ITokenProvider {
 
@@ -2863,7 +2862,7 @@ namespace Microsoft.Cci {
       foreach (MethodRow method in this.methodTable) {
         if (method.Rva == uint.MaxValue)
           writer.WriteUint(0);
-        else 
+        else
           writer.WriteUint(GetRva(this.textMethodBodySection, method.Rva));
         writer.WriteUshort(method.ImplFlags);
         writer.WriteUshort(method.Flags);
@@ -4761,6 +4760,10 @@ namespace Microsoft.Cci {
     /// </summary>
     uint GetTokenFor(string str);
   }
+
+}
+
+namespace Microsoft.Cci.PeWriterInternal {
 
   internal class ByteArrayComparer : IEqualityComparer<byte[]> {
 #if COMPACTFX

@@ -1,9 +1,18 @@
-﻿using System.Collections.Generic;
+﻿//-----------------------------------------------------------------------------
+//
+// Copyright (c) Microsoft. All rights reserved.
+// This code is licensed under the Microsoft Public License.
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+//-----------------------------------------------------------------------------
+using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-using System;
 using Microsoft.Cci.UtilityDataStructures;
-using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci.ReflectionEmitter {
   /// <summary>
@@ -37,7 +46,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
       var ident = assemblyReference.AssemblyIdentity;
       Assembly result = null;
       if (!this.assemblyMap.TryGetValue(ident, out result)) {
-        AssemblyName name = new AssemblyName();
+        var name = new System.Reflection.AssemblyName();
         if (!String.IsNullOrEmpty(ident.Location))
           name.CodeBase = new Uri(ident.Location).ToString();
         name.CultureInfo = new System.Globalization.CultureInfo(ident.Culture);
@@ -46,7 +55,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
         name.Version = ident.Version;
         var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
         foreach (var loadedAssem in loadedAssemblies) {
-          if (AssemblyName.ReferenceMatchesDefinition(name, loadedAssem.GetName())) {
+          if (System.Reflection.AssemblyName.ReferenceMatchesDefinition(name, loadedAssem.GetName())) {
             result = loadedAssem;
             break;
           }
@@ -368,7 +377,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
   /// It uses a provided ReflectionMapper object to map element types to System.Type instances so
   /// that the caches maintained by ReflectionMapper can be used.
   /// </summary>
-  class MappingVisitorForTypes : MetadataVisitor {
+  internal class MappingVisitorForTypes : MetadataVisitor {
 
     internal MappingVisitorForTypes(ReflectionMapper mapper) {
       this.mapper = mapper;

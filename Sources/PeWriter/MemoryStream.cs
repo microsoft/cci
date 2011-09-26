@@ -8,12 +8,9 @@
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
 //-----------------------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Microsoft.Cci.WriterUtilities {
-  public sealed class MemoryStream {
+namespace Microsoft.Cci.PeWriterInternal {
+  internal sealed class MemoryStream {
 
     public MemoryStream() {
       this.Buffer = new byte[64];

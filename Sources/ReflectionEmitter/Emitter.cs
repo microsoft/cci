@@ -1,11 +1,18 @@
-﻿using System.Collections.Generic;
+﻿//-----------------------------------------------------------------------------
+//
+// Copyright (c) Microsoft. All rights reserved.
+// This code is licensed under the Microsoft Public License.
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+//-----------------------------------------------------------------------------
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.SymbolStore;
 using System.Reflection;
 using System.Reflection.Emit;
-using System;
-using Microsoft.Cci.UtilityDataStructures;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Diagnostics.SymbolStore;
 
 namespace Microsoft.Cci.ReflectionEmitter {
 
@@ -37,7 +44,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
       get {
         if (this.assemblyBuilder == null)
           this.assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(
-            new AssemblyName("CCI generated dynamic assembly "+this.GetHashCode()),
+            new System.Reflection.AssemblyName("CCI generated dynamic assembly "+this.GetHashCode()),
             AssemblyBuilderAccess.RunAndCollect);
         return this.assemblyBuilder;
       }
@@ -483,7 +490,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
       DynamicLoader loader;
       Dictionary<uint, Label> labelFor;
       Dictionary<ILocalDefinition, LocalBuilder> localFor;
-      ILGenerator ilGenerator;
+      System.Reflection.Emit.ILGenerator ilGenerator;
       IMethodBody methodBody;
       ISourceLocationProvider/*?*/ sourceLocationProvider;
       ILocalScopeProvider/*?*/ localScopeProvider;
@@ -850,7 +857,7 @@ namespace Microsoft.Cci.ReflectionEmitter {
         }
       }
 
-      internal void EmitIL(ILGenerator ilGenerator, IMethodBody methodBody) {
+      internal void EmitIL(System.Reflection.Emit.ILGenerator ilGenerator, IMethodBody methodBody) {
         //this is painful and slow, but it seems to be the only way to get debugging information into a dynamic assembly.
         this.ilGenerator = ilGenerator;
         this.methodBody = methodBody;

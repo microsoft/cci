@@ -9,11 +9,6 @@
 //
 //-----------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Cci;
-using System.Configuration.Assemblies;
-using System.Diagnostics;
 
 //^ using Microsoft.Contracts;
 
