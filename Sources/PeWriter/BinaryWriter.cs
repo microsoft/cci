@@ -9,8 +9,8 @@
 //
 //-----------------------------------------------------------------------------
 
-namespace Microsoft.Cci.PeWriterInternal {
-  internal sealed class BinaryWriter {
+namespace Microsoft.Cci.WriterUtilities {
+  public sealed class BinaryWriter {
 
     public BinaryWriter(MemoryStream output) {
       this.BaseStream = output;

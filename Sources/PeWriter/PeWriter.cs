@@ -20,6 +20,7 @@ using Microsoft.Cci.UtilityDataStructures;
 
 namespace Microsoft.Cci {
   using Microsoft.Cci.PeWriterInternal;
+  using Microsoft.Cci.WriterUtilities;
 
   public class PeWriter : ITokenProvider {
 
