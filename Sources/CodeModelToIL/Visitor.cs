@@ -14,6 +14,7 @@ using System.Diagnostics.Contracts;
 using Microsoft.Cci.Immutable;
 
 namespace Microsoft.Cci {
+  using Microsoft.Cci.CodeModelToIL;
 
   /// <summary>
   /// An object with a method that converts a given block of statements to a list of IL operations, exception information and possibly some private
@@ -4277,6 +4278,9 @@ namespace Microsoft.Cci {
     }
   }
 
+}
+
+namespace Microsoft.Cci.CodeModelToIL {
   internal class LabelAndTryBlockAssociater : CodeTraverser {
 
     Dictionary<object, IStatement> mostNestedTryCatchFor;

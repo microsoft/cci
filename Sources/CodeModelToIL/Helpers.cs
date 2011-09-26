@@ -8,12 +8,9 @@
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
 //-----------------------------------------------------------------------------
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using Microsoft.Cci;
 
-namespace Microsoft.Cci {
+namespace Microsoft.Cci.CodeModelToIL {
   internal sealed class TemporaryVariable : ILocalDefinition {
 
     internal TemporaryVariable(ITypeReference type, IMethodDefinition containingMethod) {
