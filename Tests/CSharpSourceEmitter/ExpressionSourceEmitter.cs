@@ -37,11 +37,6 @@ namespace CSharpSourceEmitter {
         this.PrintParameterDefinitionName(param);
         return;
       }
-      IFieldReference/*?*/ field = addressableExpression.Definition as IFieldReference;
-      if (field != null) {
-        this.sourceEmitterOutput.Write(field.Name.Value);
-        return;
-      }
       IArrayIndexer/*?*/ arrayIndexer = addressableExpression.Definition as IArrayIndexer;
       if (arrayIndexer != null) {
         this.Traverse(arrayIndexer);
@@ -50,6 +45,19 @@ namespace CSharpSourceEmitter {
       IAddressDereference/*?*/ addressDereference = addressableExpression.Definition as IAddressDereference;
       if (addressDereference != null) {
         this.Traverse(addressDereference);
+        return;
+      }
+      if (addressableExpression.Instance != null) {
+        var addrOf = addressableExpression.Instance as IAddressOf;
+        if (addrOf != null && addrOf.Expression.Type.IsValueType)
+          this.Traverse(addrOf.Expression);
+        else
+          this.Traverse(addressableExpression.Instance);
+        this.sourceEmitterOutput.Write(".");
+      }
+      IFieldReference/*?*/ field = addressableExpression.Definition as IFieldReference;
+      if (field != null) {
+        this.sourceEmitterOutput.Write(field.Name.Value);
         return;
       }
       IMethodReference/*?*/ method = addressableExpression.Definition as IMethodReference;
@@ -245,20 +253,40 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(IConditional conditional) {
+      if (conditional.Type.TypeCode == PrimitiveTypeCode.Boolean) {
+        if (ExpressionHelper.IsIntegralOne(conditional.ResultIfTrue)) {
+          this.sourceEmitterOutput.Write("(");
+          this.Traverse(conditional.Condition);
+          this.sourceEmitterOutput.Write(" || ");
+          this.Traverse(conditional.ResultIfFalse);
+          this.sourceEmitterOutput.Write(")");
+          return;
+        }
+        if (ExpressionHelper.IsIntegralZero(conditional.ResultIfFalse)) {
+          this.sourceEmitterOutput.Write("(");
+          this.Traverse(conditional.Condition);
+          this.sourceEmitterOutput.Write(" && ");
+          this.Traverse(conditional.ResultIfTrue);
+          this.sourceEmitterOutput.Write(")");
+          return;
+        }
+        if (ExpressionHelper.IsIntegralZero(conditional.ResultIfTrue)) {
+          this.sourceEmitterOutput.Write("!(");
+          this.Traverse(conditional.Condition);
+          this.sourceEmitterOutput.Write(" || ");
+          var ln = conditional.ResultIfFalse as ILogicalNot;
+          if (ln != null)
+            this.Traverse(ln.Operand);
+          else {
+            this.sourceEmitterOutput.Write("!");
+            this.Traverse(conditional.ResultIfFalse);
+          }
+          this.sourceEmitterOutput.Write(")");
+          return;
+        }
+      }
       this.sourceEmitterOutput.Write("(");
       this.Traverse(conditional.Condition);
-      if (ExpressionHelper.IsIntegralOne(conditional.ResultIfTrue)) {
-        this.sourceEmitterOutput.Write(" || ");
-        this.Traverse(conditional.ResultIfFalse);
-        this.sourceEmitterOutput.Write(")");
-        return;
-      }
-      if (ExpressionHelper.IsIntegralZero(conditional.ResultIfFalse)) {
-        this.sourceEmitterOutput.Write(" && ");
-        this.Traverse(conditional.ResultIfTrue);
-        this.sourceEmitterOutput.Write(")");
-        return;
-      }
       this.sourceEmitterOutput.Write(" ? ");
       this.Traverse(conditional.ResultIfTrue);
       this.sourceEmitterOutput.Write(" : ");
@@ -267,6 +295,14 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(IConversion conversion) {
+      if (conversion.ValueToConvert is IVectorLength) {
+        this.Traverse(((IVectorLength)conversion.ValueToConvert).Vector);
+        if (conversion.TypeAfterConversion.TypeCode == PrimitiveTypeCode.Int64 || conversion.TypeAfterConversion.TypeCode == PrimitiveTypeCode.UInt64)
+          this.sourceEmitterOutput.Write(".LongLength");
+        else
+          this.sourceEmitterOutput.Write(".Length");
+        return;
+      }
       if (conversion.CheckNumericRange)
         this.sourceEmitterOutput.Write("checked");
       this.sourceEmitterOutput.Write("((");
@@ -879,7 +915,9 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(ISizeOf sizeOf) {
-      base.TraverseChildren(sizeOf);
+      this.sourceEmitterOutput.Write("sizeOf(");
+      this.PrintTypeReference(sizeOf.TypeToSize);
+      this.sourceEmitterOutput.Write(")");
     }
 
     public override void TraverseChildren(ISourceMethodBody methodBody) {
@@ -920,7 +958,11 @@ namespace CSharpSourceEmitter {
         return;
       } else {
         if (targetExpression.Instance != null) {
-          this.Traverse(targetExpression.Instance);
+          IAddressOf/*?*/ addressOf = targetExpression.Instance as IAddressOf;
+          if (addressOf != null)
+            this.Traverse(addressOf.Expression);
+          else
+            this.Traverse(targetExpression.Instance);
           this.sourceEmitterOutput.Write(".");
         }
       }
