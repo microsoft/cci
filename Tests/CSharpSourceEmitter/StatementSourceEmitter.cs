@@ -229,7 +229,10 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(ILockStatement lockStatement) {
-      base.TraverseChildren(lockStatement);
+      this.sourceEmitterOutput.Write("lock(", true);
+      this.Traverse(lockStatement.Guard);
+      this.sourceEmitterOutput.WriteLine(")");
+      this.Traverse(lockStatement.Body);
     }
 
     public override void TraverseChildren(IPushStatement pushStatement) {
@@ -300,27 +303,26 @@ namespace CSharpSourceEmitter {
       this.PrintToken(CSharpToken.Try);
       this.Traverse(tryCatchFilterFinallyStatement.TryBody);
       foreach (ICatchClause clause in tryCatchFilterFinallyStatement.CatchClauses) {
-        this.sourceEmitterOutput.Write("catch", true);
-        if (clause.ExceptionType != Dummy.TypeReference) {
-          this.sourceEmitterOutput.Write("(");
-          this.PrintTypeReference(clause.ExceptionType);
-          if (clause.ExceptionContainer != Dummy.LocalVariable) {
-            this.sourceEmitterOutput.Write(" ");
-            this.PrintLocalName(clause.ExceptionContainer);
-          }
-          this.sourceEmitterOutput.Write(")");
-        }
         if (clause.FilterCondition != null) {
-          this.sourceEmitterOutput.WriteLine("{");
-          this.sourceEmitterOutput.IncreaseIndent();
-          this.sourceEmitterOutput.Write("if (", true);
+          this.sourceEmitterOutput.Write("filter(", true);
           this.Traverse(clause.FilterCondition);
           this.sourceEmitterOutput.WriteLine(" == 1)");
           this.Traverse(clause.Body);
-          this.sourceEmitterOutput.DecreaseIndent();
-          this.sourceEmitterOutput.WriteLine("}", true);
+        } else {
+          this.sourceEmitterOutput.Write("catch", true);
+          if (clause.ExceptionType != Dummy.TypeReference) {
+            if (clause.ExceptionContainer != Dummy.LocalVariable || clause.ExceptionType.InternedKey != clause.ExceptionType.PlatformType.SystemObject.InternedKey) {
+              this.sourceEmitterOutput.Write("(");
+              this.PrintTypeReference(clause.ExceptionType);
+              if (clause.ExceptionContainer != Dummy.LocalVariable) {
+                this.sourceEmitterOutput.Write(" ");
+                this.PrintLocalName(clause.ExceptionContainer);
+              }
+              this.sourceEmitterOutput.Write(")");
+            }
+          }
+          this.Traverse(clause.Body);
         }
-        this.Traverse(clause.Body);
       }
       if (tryCatchFilterFinallyStatement.FaultBody != null) {
         this.sourceEmitterOutput.Write("fault", true);
