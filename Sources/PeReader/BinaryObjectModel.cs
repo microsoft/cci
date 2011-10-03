@@ -2225,8 +2225,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #region ITokenDecoder Members
 
-    public IMetadataObjectWithToken GetObjectForToken(uint token) {
-      return this.PEFileToObjectModel.GetReferenceForToken(this, token) as IMetadataObjectWithToken;
+    public object GetObjectForToken(uint token) {
+      return this.PEFileToObjectModel.GetReferenceForToken(this, token);
     }
 
     #endregion

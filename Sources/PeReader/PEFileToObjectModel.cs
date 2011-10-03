@@ -1692,13 +1692,15 @@ namespace Microsoft.Cci.MetadataReader {
       for (uint i = 1; i <= this.PEFileReader.MemberRefTable.NumberOfRows; i++) {
         MemberRefRow mrr = this.PEFileReader.MemberRefTable[i];
         if ((mrr.Class & TokenTypeIds.TokenTypeMask) == TokenTypeIds.TypeSpec) continue;
-        yield return this.GetModuleMemberReferenceAtRow(this.Module, i);
+        var mr = this.GetModuleMemberReferenceAtRow(this.Module, i);
+        if (mr != null) yield return mr;
       }
     }
 
     internal IEnumerable<ITypeReference> GetTypeReferences() {
       for (uint i = 1; i <= this.PEFileReader.TypeRefTable.NumberOfRows; i++) {
-        yield return this.GetTypeRefReferenceAtRow(i);
+        var tr = this.GetTypeRefReferenceAtRow(i);
+        if (tr != null) yield return tr; //could be null if the module is malformed (which happens with some obfuscators).
       }
     }
 
@@ -3206,39 +3208,46 @@ namespace Microsoft.Cci.MetadataReader {
         case TokenTypeIds.TypeDef: {
             if (rowId == 0 || rowId > this.PEFileReader.TypeDefTable.NumberOfRows) {
               //  handle Error
+              return null;
             }
             return this.GetTypeDefinitionAtRow(rowId);
           }
         case TokenTypeIds.TypeRef: {
             if (rowId == 0 || rowId > this.PEFileReader.TypeRefTable.NumberOfRows) {
               //  handle Error
+              return null;
             }
             return this.GetTypeRefReferenceAtRow(rowId);
           }
         case TokenTypeIds.TypeSpec: {
             if (rowId == 0 || rowId > this.PEFileReader.TypeSpecTable.NumberOfRows) {
               //  handle Error
+              return null;
             }
             return this.GetTypeSpecReferenceAtRow(owningObject, rowId).UnderlyingModuleTypeReference;
           }
         case TokenTypeIds.MethodDef:
           if (rowId == 0 || rowId > this.PEFileReader.MethodTable.NumberOfRows) {
             //  handle Error
+            return null;
           }
           return this.GetMethodDefAtRow(rowId);
         case TokenTypeIds.FieldDef:
           if (rowId == 0 || rowId > this.PEFileReader.FieldTable.NumberOfRows) {
             //  handle Error
+            return null;
           }
           return this.GetFieldDefAtRow(rowId);
         case TokenTypeIds.MemberRef:
           if (rowId == 0 || rowId > this.PEFileReader.MemberRefTable.NumberOfRows) {
             //  handle Error
+            return null;
           }
           return this.GetModuleMemberReferenceAtRow(owningObject, rowId);
         case TokenTypeIds.MethodSpec:
           if (rowId == 0 || rowId > this.PEFileReader.MethodSpecTable.NumberOfRows) {
             //  handle Error
+            return null;
           }
           return this.GetMethodSpecAtRow(owningObject, rowId);
         default:
@@ -3536,7 +3545,7 @@ namespace Microsoft.Cci.MetadataReader {
       genericArgumentCount -= genericParametersCount;
       var genericArgumentArray = new ITypeReference[genericParametersCount];
       for (int i = 0; i < genericParametersCount; ++i) genericArgumentArray[i] = this.GetTypeReference()??Dummy.TypeReference;
-      if (outer)
+      if (outer && typeSpecToken != 0xFFFFFFFF)
         return new GenericTypeInstanceReferenceWithToken(typeSpecToken, namedTypeReference, IteratorHelper.GetReadonly(genericArgumentArray), this.PEFileToObjectModel.InternFactory);
       else
         return new GenericTypeInstanceReference(namedTypeReference, IteratorHelper.GetReadonly(genericArgumentArray), this.PEFileToObjectModel.InternFactory);
@@ -3545,7 +3554,10 @@ namespace Microsoft.Cci.MetadataReader {
     protected ManagedPointerType/*?*/ GetModuleManagedPointerType(uint typeSpecToken) {
       ITypeReference/*?*/ targetType = this.GetTypeReference();
       if (targetType == null) return null;
-      return new ManagedPointerTypeWithToken(typeSpecToken, targetType, this.PEFileToObjectModel.InternFactory);
+      if (typeSpecToken != 0xFFFFFFFF)
+        return new ManagedPointerTypeWithToken(typeSpecToken, targetType, this.PEFileToObjectModel.InternFactory);
+      else
+        return ManagedPointerType.GetManagedPointerType(targetType, this.PEFileToObjectModel.InternFactory);
     }
 
     protected PointerType/*?*/ GetModulePointerType(uint typeSpecToken) {
@@ -3613,8 +3625,12 @@ namespace Microsoft.Cci.MetadataReader {
         IParameterTypeInformation[] moduleParameterArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount - methodParamCount);
         if (moduleParameterArr.Length > 0) moduleVarargsParameters = IteratorHelper.GetReadonly(moduleParameterArr);
       }
-      return new FunctionPointerTypeWithToken(typeSpecToken, (CallingConvention)firstByte, isReturnByReference, returnTypeReference, returnCustomModifiers, moduleParameters,
-        moduleVarargsParameters, this.PEFileToObjectModel.InternFactory);
+      if (typeSpecToken != 0xFFFFFFFF)
+        return new FunctionPointerTypeWithToken(typeSpecToken, (CallingConvention)firstByte, isReturnByReference, returnTypeReference, returnCustomModifiers, moduleParameters,
+          moduleVarargsParameters, this.PEFileToObjectModel.InternFactory);
+      else
+        return new FunctionPointerType((CallingConvention)firstByte, isReturnByReference, returnTypeReference, returnCustomModifiers, moduleParameters,
+          moduleVarargsParameters, this.PEFileToObjectModel.InternFactory);
     }
 
     protected ITypeReference/*?*/ GetTypeReference() {

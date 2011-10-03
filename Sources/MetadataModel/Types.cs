@@ -737,7 +737,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A reference to the definition of a type parameter of a generic type or method.
   /// </summary>
-  public interface IGenericParameterReference : ITypeReference, INamedEntity {
+  public interface IGenericParameterReference : ITypeReference, INamedEntity, IParameterListEntry {
   }
 
   /// <summary>
@@ -1015,7 +1015,7 @@ namespace Microsoft.Cci {
   /// A reference to a type parameter of a generic method.
   /// </summary>
   [ContractClass(typeof(IGenericMethodParameterReferenceContract))]
-  public interface IGenericMethodParameterReference : IGenericParameterReference, IParameterListEntry {
+  public interface IGenericMethodParameterReference : IGenericParameterReference {
 
     /// <summary>
     /// A reference to the generic method that defines the referenced type parameter.
@@ -1214,7 +1214,7 @@ namespace Microsoft.Cci {
   /// A reference to a type parameter of a generic type.
   /// </summary>
   [ContractClass(typeof(IGenericTypeParameterReferenceContract))]
-  public interface IGenericTypeParameterReference : IGenericParameterReference, IParameterListEntry {
+  public interface IGenericTypeParameterReference : IGenericParameterReference {
 
     /// <summary>
     /// A reference to the generic type that defines the referenced type parameter.
@@ -3777,8 +3777,8 @@ namespace Microsoft.Cci {
     /// include TypeRef tokens. A more accurate model of the metadata format would encode the information obtained from those signatures in a separate property of
     /// the object containing the type reference, or would introduce a new kind of type reference such as INamespaceEnumTypeReference and INestedEnumTypeReference.
     /// However, for historical/usability reasons this object model oversimplifies the situation by pretending that all type references can tell if they refer to enum types
-    /// or not. When consuming metadata, a type reference starts off with the value being false, but may change it to true as soon as it is token is encountered
-    /// in a signature that indicates that is is an enum type. In practise this means that a type reference encountered in a part of the object model where it is
+    /// or not. When consuming metadata, a type reference starts off with the value being false, but may change it to true as soon as its token is encountered
+    /// in a signature that indicates that is an enum type. In practice this means that a type reference encountered in a part of the object model where it is
     /// important to know if the referenced type is an enum type, will get the right value from this property. However, if the value of this property is cached
     /// as soon as it is encountered for the first time, the wrong value may get cached.
     /// </remarks>
@@ -3799,8 +3799,8 @@ namespace Microsoft.Cci {
     /// include TypeRef tokens. A more accurate model of the metadata format would encode the information obtained from those signatures in a separate property of
     /// the object containing the type reference, or would introduce a new kind of type reference such as INamespaceValueTypeReference and INestedValueTypeReference.
     /// However, for historical/usability reasons this object model oversimplifies the situation by pretending that all type references can tell if they refer to value types
-    /// or not. When consuming metadata, a type reference starts off with the value being false, but may change it to true as soon as it is token is encountered
-    /// in a signature that indicates that is is a value type. In practise this means that a type reference encountered in a part of the object model where it is
+    /// or not. When consuming metadata, a type reference starts off with the value being false, but may change it to true as soon as its token is encountered
+    /// in a signature that indicates that is a value type. In practice this means that a type reference encountered in a part of the object model where it is
     /// important to know if the referenced type is a value type, will get the right value from this property. However, if the value of this property is cached
     /// as soon as it is encountered for the first time, the wrong value may get cached.
     /// </remarks>

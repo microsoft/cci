@@ -33,6 +33,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="host">An object representing the application that is hosting this rewriter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     public MetadataRewriter(IMetadataHost host) {
+      Contract.Requires(host != null);
       this.host = host;
       this.internFactory = host.InternFactory;
       this.dispatchingVisitor = new Dispatcher() { rewriter = this };
@@ -44,6 +45,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     protected readonly IMetadataHost host;
     IInternFactory internFactory;
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.host != null);
+    }
 
     Dispatcher dispatchingVisitor;
     class Dispatcher : MetadataVisitor {

@@ -474,7 +474,7 @@ namespace Microsoft.Cci {
       Contract.Requires(returnType != null);
       Contract.Requires(name != null);
       Contract.Requires(parameterTypes != null);
-      Contract.Requires(Contract.ForAll(parameterTypes, x => x != null));
+      //Contract.Requires(Contract.ForAll(parameterTypes, x => x != null));
 
       this.host = host;
       this.containingType = containingType;
@@ -509,9 +509,9 @@ namespace Microsoft.Cci {
       Contract.Requires(returnType != null);
       Contract.Requires(name != null);
       Contract.Requires(parameters != null);
-      Contract.Requires(Contract.ForAll(parameters, x => x != null));
+      //Contract.Requires(Contract.ForAll(parameters, x => x != null));
       Contract.Requires(extraParameterTypes != null);
-      Contract.Requires(Contract.ForAll(extraParameterTypes, x => x != null));
+      //Contract.Requires(Contract.ForAll(extraParameterTypes, x => x != null));
 
       this.host = host;
       this.containingType = containingType;

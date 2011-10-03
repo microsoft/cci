@@ -70,6 +70,13 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
         while (blocksToVisit.Count != 0)
           inferencer.DequeueBlockAndFillInItsTypes();
       }
+      //At this point, all reachable code blocks have had their types inferred. Now look for unreachable blocks.
+      foreach (var block in cfg.AllBlocks) {
+        if (blocksAlreadyVisited.Contains(block)) continue;
+        blocksToVisit.Enqueue(block);
+        while (blocksToVisit.Count != 0)
+          inferencer.DequeueBlockAndFillInItsTypes();
+      }
     }
 
     private void DequeueBlockAndFillInItsTypes() {
@@ -80,7 +87,7 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
       //The block either has no operand stack setup instructions, or we presume that a predecessor block has already assigned types to them.
       foreach (var stackSetupInstruction in block.OperandStack) {
         Contract.Assume(stackSetupInstruction != null); //block.OperandStack only has non null elements, but we can't put that in a contract that satisfies the checker
-        stack.Push(stackSetupInstruction);
+        this.stack.Push(stackSetupInstruction);
       }
 
       foreach (var instruction in block.Instructions) {
@@ -430,10 +437,13 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
         case OperationCode.Ldarga:
         case OperationCode.Ldarga_S:
           parameter = instruction.Operation.Value as IParameterDefinition;
-          Contract.Assume(parameter != null); //This is an informally specified property of the Metadata model.
-          instruction.Type = ManagedPointerType.GetManagedPointerType(parameter.Type, this.internFactory);
-          if (parameter.IsByReference)
-            instruction.Type = ManagedPointerType.GetManagedPointerType(instruction.Type, this.internFactory);
+          if (parameter == null) { //this arg
+            instruction.Type = ManagedPointerType.GetManagedPointerType(this.cfg.MethodBody.MethodDefinition.ContainingType, this.internFactory);
+          } else {
+            instruction.Type = ManagedPointerType.GetManagedPointerType(parameter.Type, this.internFactory);
+            if (parameter.IsByReference)
+              instruction.Type = ManagedPointerType.GetManagedPointerType(instruction.Type, this.internFactory);
+          }
           this.stack.Push(instruction);
           break;
         case OperationCode.Ldc_I4:
@@ -471,7 +481,6 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
           this.stack.Push(instruction);
           break;
         case OperationCode.Ldobj:
-        case OperationCode.Refanyval:
         case OperationCode.Unbox_Any:
           this.stack.Pop();
           Contract.Assume(instruction.Operation.Value is ITypeReference); //This is an informally specified property of the Metadata model.
@@ -512,8 +521,11 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
           this.stack.Pop();
           this.stack.Pop();
           Contract.Assume(instruction.Operand1 != null); //Assumed because of the informal specification of the DataFlowInferencer
-          Contract.Assume(instruction.Operand1.Type is IArrayTypeReference); //Assumed because of the informal specification of the DataFlowInferencer
-          instruction.Type = ((IArrayTypeReference)instruction.Operand1.Type).ElementType;
+          arrayType = instruction.Operand1.Type as IArrayTypeReference;
+          if (arrayType != null)
+            instruction.Type = arrayType.ElementType;
+          else //Should only get here if the IL is bad.
+            instruction.Type = this.platformType.SystemObject;
           this.stack.Push(instruction);
           break;
         case OperationCode.Ldelem_R4:
@@ -641,6 +653,10 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
           }
           this.stack.Push(instruction);
           break;
+        case OperationCode.Leave:
+        case OperationCode.Leave_S:
+          this.stack.Clear();
+          break;
         case OperationCode.Mkrefany:
           this.stack.Pop();
           instruction.Type = this.platformType.SystemTypedReference;
@@ -664,6 +680,17 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
           this.stack.Pop();
           instruction.Type = this.platformType.SystemRuntimeTypeHandle;
           this.stack.Push(instruction);
+          break;
+        case OperationCode.Refanyval:
+          this.stack.Pop();
+          Contract.Assume(instruction.Operation.Value is ITypeReference); //This is an informally specified property of the Metadata model.
+          instruction.Type = ManagedPointerType.GetManagedPointerType((ITypeReference)instruction.Operation.Value, this.internFactory);
+          this.stack.Push(instruction);
+          break;
+        case OperationCode.Ret:
+          if (this.cfg.MethodBody.MethodDefinition.Type.TypeCode != PrimitiveTypeCode.Void)
+            instruction.Operand1 = this.stack.Pop();
+          instruction.Type = this.platformType.SystemVoid;
           break;
         case OperationCode.Shl:
         case OperationCode.Shr:

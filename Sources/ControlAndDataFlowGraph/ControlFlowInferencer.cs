@@ -135,6 +135,11 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
             this.CreateBlock((uint)ilOperation.Value);
             lastInstructionWasBranch = true;
             break;
+          case OperationCode.Ret:
+          case OperationCode.Throw:
+            //The code following these instructions will be dead unless its a branch target, but we may as well end the basic block with the transfer.
+            lastInstructionWasBranch = true;
+            break;
           case OperationCode.Switch: {
               Contract.Assume(ilOperation.Value is uint[]); //This is an informally specified property of the Metadata model.
               uint[] branches = (uint[])ilOperation.Value;

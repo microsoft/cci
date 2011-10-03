@@ -72,6 +72,13 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
         while (this.blocksToVisit.Count != 0)
           this.DequeueBlockAndSetupDataFlow();
       }
+      //At this point, all reachable code blocks have had their data flow inferred. Now look for unreachable blocks.
+      foreach (var block in cdfg.AllBlocks) {
+        if (this.blocksAlreadyVisited.Contains(block)) continue;
+        blocksToVisit.Enqueue(block);
+        while (blocksToVisit.Count != 0)
+          this.DequeueBlockAndSetupDataFlow();
+      }
       this.operandStackSetupInstructions.TrimExcess();
     }
 
@@ -82,6 +89,9 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
         Contract.Assume(exinfo != null); //The checker can't work out that all collection elements are non null, even though there is a contract to that effect
         if (exinfo.HandlerKind == HandlerKind.Filter) {
           var block = this.cdfg.BlockFor[exinfo.FilterDecisionStartOffset];
+          Contract.Assume(block != null); //All branch targets must have blocks, but we can't put that in a contract that satisfies the checker.
+          this.AddStackSetup(block, exinfo.ExceptionType);
+          block = this.cdfg.BlockFor[exinfo.HandlerStartOffset];
           Contract.Assume(block != null); //All branch targets must have blocks, but we can't put that in a contract that satisfies the checker.
           this.AddStackSetup(block, exinfo.ExceptionType);
         } else if (exinfo.HandlerKind == HandlerKind.Catch) {
@@ -426,6 +436,11 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
         case OperationCode.Throw:
         case OperationCode.Switch:
           instruction.Operand1 = stack.Pop();
+          break;
+
+        case OperationCode.Leave:
+        case OperationCode.Leave_S:
+          this.stack.Clear();
           break;
 
         case OperationCode.Newobj:
