@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Diagnostics.Contracts;
 //^ using Microsoft.Contracts;
 
 namespace Microsoft.Cci {
@@ -67,6 +68,7 @@ namespace Microsoft.Cci {
 
     public static IExpression Expression {
       get {
+        Contract.Ensures(Contract.Result<IExpression>() != null);
         if (CodeDummy.expression == null)
           Interlocked.CompareExchange(ref CodeDummy.expression, new DummyExpression(), null);
         return CodeDummy.expression;
@@ -361,6 +363,10 @@ namespace Microsoft.Cci {
 
     public IEnumerable<IExpression> Arguments {
       get { return Enumerable<IExpression>.Empty; }
+    }
+
+    public bool IsJumpCall {
+      get { return false; }
     }
 
     public bool IsVirtualCall {

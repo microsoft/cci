@@ -544,6 +544,17 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     /// <summary>
+    /// Returns the attribute iff the field resolves to a definition which is decorated
+    /// with an attribute named "ContractModelAttribute".
+    /// The namespace the attribute belongs to is ignored.
+    /// </summary>
+    public static ICustomAttribute/*?*/ IsModel(IFieldDefinition fieldDefinition) {
+      if (fieldDefinition is Dummy) return null;
+      ICustomAttribute/*?*/ attr;
+      TryGetAttributeByName(fieldDefinition.Attributes, "ContractModelAttribute", out attr);
+      return attr;
+    }
+    /// <summary>
     /// Returns the attribute iff the method resolves to a definition which is decorated
     /// with an attribute named "ContractModelAttribute".
     /// The namespace the attribute belongs to is ignored.
@@ -566,6 +577,18 @@ namespace Microsoft.Cci.MutableContracts {
       }
       return null;
     }
+
+    private static ITypeReference pureAttribute = null;
+    public static bool IsPure(IMetadataHost host, IMethodReference methodReference) {
+      if (contractInvariantMethod == null) {
+        var contractAssemblyReference = new Immutable.AssemblyReference(host, host.ContractAssemblySymbolicIdentity);
+        pureAttribute = ContractHelper.CreateTypeReference(host, contractAssemblyReference, "System.Diagnostics.Contracts.PureAttribute"); 
+      }
+      if (AttributeHelper.Contains(methodReference.Attributes, pureAttribute)) return true;
+      var methodDefinition = methodReference.ResolvedMethod;
+      return methodDefinition != methodReference && AttributeHelper.Contains(methodDefinition.Attributes, pureAttribute);
+    }
+
     private static bool TryGetAttributeByName(IEnumerable<ICustomAttribute> attributes, string attributeTypeName, out ICustomAttribute/*?*/ attribute) {
       attribute = null;
       foreach (ICustomAttribute a in attributes) {
@@ -959,7 +982,7 @@ namespace Microsoft.Cci.MutableContracts {
       }
 
       public override void TraverseChildren(ITypeDefinition typeDefinition) {
-        var contract = ContractExtractor.GetObjectInvariant(this.contractAwareHost, typeDefinition, this.pdbReader, this.localScopeProvider);
+        var contract = ContractExtractor.GetTypeContract(this.contractAwareHost, typeDefinition, this.pdbReader, this.localScopeProvider);
         if (contract != null) {
           this.contractProvider.AssociateTypeWithContract(typeDefinition, contract);
         }

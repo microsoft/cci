@@ -12508,6 +12508,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// True if this method call terminates the calling method and reuses the arguments of the calling method as the arguments of the called method.
+    /// </summary>
+    public bool IsJumpCall {
+      get { return false; }
+    }
+
+    /// <summary>
     /// True if the method to call is static (has no this parameter).
     /// </summary>
     public bool IsStaticCall {

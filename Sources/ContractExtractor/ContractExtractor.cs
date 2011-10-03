@@ -59,10 +59,11 @@ namespace Microsoft.Cci.MutableContracts {
     /// list of statements within a block statement, i.e., that they form a linear
     /// linked list.
     /// </summary>
-    public static ITypeContract/*?*/ GetObjectInvariant(IContractAwareHost host, ITypeDefinition typeDefinition, PdbReader/*?*/ pdbReader, ILocalScopeProvider/*?*/ localScopeProvider) {
-      TypeContract cumulativeContract = new TypeContract();
-      NamedTypeDefinition mutableTypeDefinition = typeDefinition as NamedTypeDefinition;
+    public static ITypeContract/*?*/ GetTypeContract(IContractAwareHost host, ITypeDefinition typeDefinition, PdbReader/*?*/ pdbReader, ILocalScopeProvider/*?*/ localScopeProvider) {
+      var cumulativeContract = new TypeContract();
+      var mutableTypeDefinition = typeDefinition as NamedTypeDefinition;
       var invariantMethods = new List<IMethodDefinition>(ContractHelper.GetInvariantMethods(typeDefinition));
+      var validContract = false;
       foreach (var invariantMethod in invariantMethods) {
         IMethodBody methodBody = invariantMethod.Body;
         ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
@@ -75,13 +76,38 @@ namespace Microsoft.Cci.MutableContracts {
           var tc = e.ExtractObjectInvariants(b);
           if (tc != null) {
             cumulativeContract.Invariants.AddRange(tc.Invariants);
+            validContract = true;
           }
         }
       }
+      var contractFields = new List<IFieldDefinition>();
+      foreach (var f in typeDefinition.Fields) {
+        if (ContractHelper.IsModel(f) != null) {
+          var smd = f as ISpecializedFieldDefinition;
+          if (smd != null)
+            contractFields.Add(smd.UnspecializedVersion);
+          else
+            contractFields.Add(f);
+          validContract = true;
+        }
+      }
+      if (0 < contractFields.Count)
+        cumulativeContract.ContractFields = contractFields;
+      var contractMethods = new List<IMethodDefinition>();
+      foreach (var m in typeDefinition.Methods) {
+        if (ContractHelper.IsModel(m) != null) {
+          var smd = m as ISpecializedMethodDefinition;
+          if (smd != null)
+            contractMethods.Add(smd.UnspecializedVersion);
+          else
+            contractMethods.Add(m);
+          validContract = true;
+        }
+      }
+      if (0 < contractMethods.Count)
+        cumulativeContract.ContractMethods = contractMethods;
 
-      return (cumulativeContract.Invariants.Count == 0)
-        ? null
-        : cumulativeContract;
+      return validContract ? cumulativeContract : null;
     }
 
     #endregion
@@ -186,8 +212,7 @@ namespace Microsoft.Cci.MutableContracts {
       }
 
       #region Set contract purity based on whether the method definition has the pure attribute
-      var pureAttribute = ContractHelper.CreateTypeReference(this.host, contractAssemblyReference, "System.Diagnostics.Contracts.PureAttribute");
-      if (AttributeHelper.Contains(sourceMethodBody.MethodDefinition.Attributes, pureAttribute)) {
+      if (ContractHelper.IsPure(this.host, sourceMethodBody.MethodDefinition)) {
         this.CurrentMethodContract.IsPure = true;
       }
       #endregion Set contract purity based on whether the method definition has the pure attribute

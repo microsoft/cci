@@ -2008,6 +2008,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public MethodCall() {
+      this.isJumpCall = false;
       this.isVirtualCall = false;
       this.isStaticCall = false;
       this.thisArgument = CodeDummy.Expression;
@@ -2019,6 +2020,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="methodCall"></param>
     public MethodCall(IMethodCall methodCall)
       : base(methodCall) {
+      this.isJumpCall = methodCall.IsJumpCall;
       this.isVirtualCall = methodCall.IsVirtualCall;
       this.isTailCall = methodCall.IsTailCall;
       this.isStaticCall = methodCall.IsStaticCall;
@@ -2037,50 +2039,36 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// True if this method call terminates the calling method and reuses the arguments of the calling method as the arguments of the called method.
+    /// </summary>
+    public bool IsJumpCall {
+      get { return this.isJumpCall; }
+      set { this.isJumpCall = value; }
+    }
+    bool isJumpCall;
+
+    /// <summary>
     /// True if the method to call is determined at run time, based on the runtime type of ThisArgument.
     /// </summary>
-    /// <value></value>
     public bool IsVirtualCall {
-      get
-        //^ ensures result ==> this.MethodToCall.ResolvedMethod.IsVirtual;
-      {
-        //^ assume false;
-        return this.isVirtualCall;
-      }
-      set
-        //^ requires value ==> this.MethodToCall.ResolvedMethod.IsVirtual;
-      {
-        this.isVirtualCall = value;
-      }
+      get { return this.isVirtualCall; }
+      set { this.isVirtualCall = value; }
     }
     bool isVirtualCall;
-    //^ invariant isVirtualCall ==> this.MethodToCall.ResolvedMethod.IsVirtual;
 
     /// <summary>
     /// True if the method to call is static (has no this parameter).
     /// </summary>
-    /// <value></value>
     public bool IsStaticCall {
-      get
-        //^ ensures result ==> this.MethodToCall.ResolvedMethod.IsStatic;
-      {
-        //^ assume false;
-        return this.isStaticCall;
-      }
-      set
-        //^ requires value ==> this.MethodToCall.ResolvedMethod.IsStatic;
-      {
-        this.isStaticCall = value;
-      }
+      get { return this.isStaticCall; }
+      set { this.isStaticCall = value; }
     }
     bool isStaticCall;
-    //^ invariant isStaticCall ==> this.MethodToCall.ResolvedMethod.IsStatic;
 
     /// <summary>
     /// True if this method call terminates the calling method. It indicates that the calling method's stack frame is not required
     /// and can be removed before executing the call.
     /// </summary>
-    /// <value></value>
     public bool IsTailCall {
       get { return this.isTailCall; }
       set { this.isTailCall = value; }
@@ -2090,7 +2078,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// The expression that results in the value that must be passed as the value of the this argument of the resolved method.
     /// </summary>
-    /// <value></value>
     public IExpression ThisArgument {
       get { return this.thisArgument; }
       set { this.thisArgument = value; }
@@ -2274,8 +2261,6 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #endregion
   }
-
-  //TODO: nested method to which both anon del and lambda can project without needing to introduce explicit closure classes.
 
   /// <summary>
   /// 

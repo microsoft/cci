@@ -1399,8 +1399,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public List<IStatement> Body {
-      get { return this.body; }
-      set { this.body = value; }
+      get {
+        Contract.Ensures(Contract.Result<List<IStatement>>() != null);
+        return this.body; 
+      }
+      set {
+        Contract.Requires(value != null);
+        this.body = value; 
+      }
     }
     List<IStatement> body;
 
@@ -1489,8 +1495,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public List<ISwitchCase> Cases {
-      get { return this.cases; }
-      set { this.cases = value; }
+      get {
+        Contract.Ensures(Contract.Result<List<ISwitchCase>>() != null);
+        return this.cases; 
+      }
+      set {
+        Contract.Requires(value != null);
+        this.cases = value; 
+      }
     }
     List<ISwitchCase> cases;
 

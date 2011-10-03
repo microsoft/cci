@@ -1626,21 +1626,27 @@ namespace Microsoft.Cci {
     /// <param name="methodCall">The method call.</param>
     public override void TraverseChildren(IMethodCall methodCall) {
       if (methodCall.MethodToCall == Dummy.MethodReference) return;
-      if (!methodCall.IsStaticCall)
+      if (!methodCall.IsStaticCall && !methodCall.IsJumpCall)
         this.Traverse(methodCall.ThisArgument);
       this.Traverse(methodCall.Arguments);
+      if (methodCall.MethodToCall.ContainingType.TypeCode == PrimitiveTypeCode.Float64 && methodCall.MethodToCall.CallingConvention == CallingConvention.FastCall &&
+        methodCall.MethodToCall.Name.Value == "__ckfinite__") {
+        this.generator.Emit(OperationCode.Ckfinite);
+        return;
+      }
       OperationCode call = OperationCode.Call;
       if (methodCall.IsVirtualCall) {
         call = OperationCode.Callvirt;
         IManagedPointerTypeReference mpt = methodCall.ThisArgument.Type as IManagedPointerTypeReference;
         if (mpt != null)
           this.generator.Emit(OperationCode.Constrained_, mpt.TargetType);
-      }
+      } else if (methodCall.IsJumpCall)
+        call = OperationCode.Jmp;
       if (methodCall.IsTailCall)
         this.generator.Emit(OperationCode.Tail_);
       this.generator.Emit(call, methodCall.MethodToCall);
       this.StackSize -= (ushort)IteratorHelper.EnumerableCount(methodCall.Arguments);
-      if (!methodCall.IsStaticCall) this.StackSize--;
+      if (!methodCall.IsStaticCall && !methodCall.IsJumpCall) this.StackSize--;
       if (methodCall.Type.TypeCode != PrimitiveTypeCode.Void)
         this.StackSize++;
     }

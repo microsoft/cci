@@ -1219,9 +1219,15 @@ namespace Microsoft.Cci.ILToCodeModel {
           break;
 
         case OperationCode.Ckfinite:
-          this.PopOperandStack();
-          Debug.Assert(false); //if code out there actually uses this, I need to know sooner rather than later.
-          //TODO: need a code model statement for this instruction.
+          var operand = this.PopOperandStack();
+          var chkfinite = new MutableCodeModel.MethodReference() {
+            CallingConvention = Cci.CallingConvention.FastCall,
+            ContainingType = host.PlatformType.SystemFloat64,
+            Name = this.host.NameTable.GetNameFor("__ckfinite__"),
+            Type = host.PlatformType.SystemFloat64, 
+            InternFactory = host.InternFactory,               
+          };
+          expression = new MethodCall() { Arguments = new List<IExpression>(1) { operand }, IsStaticCall = true, Type = operand.Type, MethodToCall = chkfinite };
           break;
 
         case OperationCode.Constrained_:
@@ -1269,8 +1275,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           break;
 
         case OperationCode.Jmp:
-          Debug.Assert(false); //if code out there actually uses this, I need to know sooner rather than later.
-          //TODO: need a code model statement for this instruction.
+          expression = new MethodCall() { IsJumpCall = true, MethodToCall = (IMethodReference)currentOperation.Value };
           break;
 
         case OperationCode.Ldarg:

@@ -78,8 +78,8 @@ namespace Microsoft.Cci.Contracts {
     /// <returns></returns>
     public IMethodContract/*?*/ GetMethodContractFor(object method) {
 
-      IMethodContract contract = this.contractProviderCache.GetMethodContractFor(method);
-      if (contract != null) return contract == ContractDummy.MethodContract ? null : contract;
+      var cachedContract = this.contractProviderCache.GetMethodContractFor(method);
+      if (cachedContract != null) return cachedContract == ContractDummy.MethodContract ? null : cachedContract;
 
       IMethodReference methodReference = method as IMethodReference;
       if (methodReference == null) {
@@ -91,10 +91,10 @@ namespace Microsoft.Cci.Contracts {
         this.contractProviderCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
         return null;
       }
+      var underlyingContract = this.underlyingContractProvider.GetMethodContractFor(method);
       if (!methodDefinition.IsAbstract) {
-        contract = this.underlyingContractProvider.GetMethodContractFor(method);
-        if (contract != null) {
-          return contract;
+        if (underlyingContract != null) {
+          return underlyingContract;
         } else {
           this.contractProviderCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
           return null;
@@ -107,24 +107,37 @@ namespace Microsoft.Cci.Contracts {
         this.contractProviderCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
         return null;
       }
+      MethodContract cumulativeContract = new MethodContract();
+      if (underlyingContract != null) {
+        ContractHelper.AddMethodContract(cumulativeContract, underlyingContract);
+      }
+
       ITypeDefinition contractClass;
       var specializedProxyMethod = proxyMethod as ISpecializedMethodDefinition;
       IMethodDefinition unspec = null;
+      IMethodContract proxyContract;
       if (specializedProxyMethod != null) {
         unspec = ContractHelper.UninstantiateAndUnspecialize(specializedProxyMethod).ResolvedMethod;
-        contract = this.underlyingContractProvider.GetMethodContractFor(unspec);
+        proxyContract = this.underlyingContractProvider.GetMethodContractFor(unspec);
         contractClass = unspec.ContainingTypeDefinition;
       } else {
-        contract = this.underlyingContractProvider.GetMethodContractFor(proxyMethod);
+        proxyContract = this.underlyingContractProvider.GetMethodContractFor(proxyMethod);
         contractClass = proxyMethod.ContainingTypeDefinition;
       }
-      if (contract == null) {
-        this.contractProviderCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
-        return null;
+      if (proxyContract == null) {
+        if (underlyingContract == null) {
+          // then there was nothing on the abstract method (like purity markings)
+          this.contractProviderCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
+          return null;
+        } else {
+          // nothing on proxy, but something on abstract method
+          this.contractProviderCache.AssociateMethodWithContract(method, cumulativeContract);
+          return cumulativeContract;
+        }
       }
       var cccc = new ConvertContractClassContract(this.host, contractClass, methodDefinition.ContainingTypeDefinition);
-      cccc.Traverse(contract);
-      contract = ContractHelper.CopyContract(this.host, contract, methodDefinition, specializedProxyMethod != null ? unspec : proxyMethod);
+      cccc.Traverse(proxyContract);
+      proxyContract = ContractHelper.CopyContract(this.host, proxyContract, methodDefinition, specializedProxyMethod != null ? unspec : proxyMethod);
       if (specializedProxyMethod != null || proxyMethod.IsGeneric || proxyMethod.ContainingTypeDefinition.IsGeneric) {
         var stdm = specializedProxyMethod as Immutable.SpecializedTypeDefinitionMember<IMethodDefinition>;
         var sourceTypeReferences = stdm == null ? 
@@ -132,11 +145,12 @@ namespace Microsoft.Cci.Contracts {
             IteratorHelper.GetConversionEnumerable<IGenericTypeParameter, ITypeReference>(methodDefinition.ContainingTypeDefinition.GenericParameters)
             : Enumerable<ITypeReference>.Empty)
           : stdm.ContainingGenericTypeInstance.GenericArguments;
-        contract = ContractHelper.SpecializeMethodContract(this.host, contract, unspec == null ? proxyMethod.ContainingTypeDefinition : unspec.ContainingTypeDefinition, unspec == null ? proxyMethod.ContainingTypeDefinition.GenericParameters : unspec.ContainingTypeDefinition.GenericParameters, sourceTypeReferences,
+        proxyContract = ContractHelper.SpecializeMethodContract(this.host, proxyContract, unspec == null ? proxyMethod.ContainingTypeDefinition : unspec.ContainingTypeDefinition, unspec == null ? proxyMethod.ContainingTypeDefinition.GenericParameters : unspec.ContainingTypeDefinition.GenericParameters, sourceTypeReferences,
           unspec == null ? proxyMethod.GenericParameters : unspec.GenericParameters, methodDefinition.GenericParameters);
       }
-      this.contractProviderCache.AssociateMethodWithContract(methodDefinition, contract);
-      return contract;
+      ContractHelper.AddMethodContract(cumulativeContract, proxyContract);
+      this.contractProviderCache.AssociateMethodWithContract(methodDefinition, cumulativeContract);
+      return cumulativeContract;
     }
 
 
@@ -345,8 +359,17 @@ namespace Microsoft.Cci.Contracts {
       }
 
       if (methodDefinition.IsAbstract || methodDefinition.IsExternal) { // precondition of Body getter
-        this.underlyingContractProvider.AssociateMethodWithContract(method, ContractDummy.MethodContract);
-        return null;
+        // Need to see if the method is marked with any attributes that impact the contract
+        if (ContractHelper.IsPure(this.host, methodDefinition)) {
+          var pureMC = new MethodContract() {
+            IsPure = true,
+          };
+          this.underlyingContractProvider.AssociateMethodWithContract(method, pureMC);
+          return pureMC;
+        } else {
+          this.underlyingContractProvider.AssociateMethodWithContract(method, ContractDummy.MethodContract);
+          return null;
+        }
       }
 
       IMethodBody methodBody = methodDefinition.Body;
@@ -421,7 +444,7 @@ namespace Microsoft.Cci.Contracts {
         return null;
       }
 
-      var contract = Microsoft.Cci.MutableContracts.ContractExtractor.GetObjectInvariant(this.host, typeDefinition, this.pdbReader, this.pdbReader);
+      var contract = Microsoft.Cci.MutableContracts.ContractExtractor.GetTypeContract(this.host, typeDefinition, this.pdbReader, this.pdbReader);
       if (contract == null) {
         this.underlyingContractProvider.AssociateTypeWithContract(type, ContractDummy.TypeContract); // so we don't try to extract more than once
         return null;

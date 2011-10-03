@@ -1202,6 +1202,13 @@ namespace Microsoft.Cci {
     IEnumerable<IExpression> Arguments { get; }
 
     /// <summary>
+    /// True if this method call terminates the calling method and reuses the arguments of the calling method as the arguments of the called method.
+    /// </summary>
+    bool IsJumpCall {
+      get;
+    }
+
+    /// <summary>
     /// True if the method to call is determined at run time, based on the runtime type of ThisArgument.
     /// </summary>
     bool IsVirtualCall {
@@ -1250,6 +1257,10 @@ namespace Microsoft.Cci {
         Contract.Ensures(Contract.Result<IEnumerable<IExpression>>() != null);
         throw new NotImplementedException(); 
       }
+    }
+
+    public bool IsJumpCall {
+      get { throw new NotImplementedException(); }
     }
 
     public bool IsVirtualCall {
