@@ -85,7 +85,7 @@ namespace CodeModelTestInput
 
         private void Method5(int[] xs, int x)
         {
-            if ((x < ((int)xs.Length)))
+            if ((x < xs.Length))
             {
                 xs[x] = 3;
             }
@@ -95,11 +95,11 @@ namespace CodeModelTestInput
 
         private void Method6(int[] xs, int x)
         {
-            if ((x < ((int)xs.Length)))
+            if ((x < xs.Length))
             {
                 xs[x] = 3;
             }
-            if ((0 < ((int)xs.Length)))
+            if ((0 < xs.Length))
             {
                 xs[0] = x;
             }
@@ -109,11 +109,11 @@ namespace CodeModelTestInput
 
         private void Method7(int[] xs, int x)
         {
-            if ((x < ((int)xs.Length)))
+            if ((x < xs.Length))
             {
                 xs[x] = 3;
             }
-            if ((0 < ((int)xs.Length)))
+            if ((0 < xs.Length))
             {
                 xs[0] = x;
             }
@@ -127,7 +127,7 @@ namespace CodeModelTestInput
 
         private void Method8(int[] xs, int x)
         {
-            if ((0 < ((int)xs.Length)))
+            if ((0 < xs.Length))
             {
                 xs[0] = x;
             }
@@ -135,7 +135,7 @@ namespace CodeModelTestInput
             {
                 xs = new int[3];
             }
-            if ((x < ((int)xs.Length)))
+            if ((x < xs.Length))
             {
                 xs[x] = 3;
             }
@@ -145,7 +145,7 @@ namespace CodeModelTestInput
 
         private void Method9(int[] xs, int x)
         {
-            if (!((0 >= ((int)xs.Length)) || (x >= ((int)xs.Length))))
+            if (!((0 >= xs.Length) || (x >= xs.Length)))
             {
                 xs[x] = 3;
             }
@@ -221,7 +221,7 @@ namespace CodeModelTestInput
                         CS$1$0000 = "2";
                         goto IL_007c;
                     }
-                    catch(object)
+                    catch
                     {
                         CS$1$0000 = "3";
                         goto IL_007c;
@@ -249,14 +249,14 @@ namespace CodeModelTestInput
                         CS$1$0000 = "6";
                         goto IL_007c;
                     }
-                    catch(object)
+                    catch
                     {
                         CS$1$0000 = "7";
                         goto IL_007c;
                     }
                 }
             }
-            catch(object)
+            catch
             {
                 CS$1$0000 = "8";
             }
