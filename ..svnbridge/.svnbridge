@@ -10,4 +10,10 @@ bin
 bin
 *.user
 </Value></Property><Property><Name>svn:externals</Name><Value>Metadata https://ccimetadata.svn.codeplex.com/svn
+</Value></Property><Property><Name>svn:externals</Name><Value>Metadata https://ccimetadata.svn.codeplex.com/svn
+</Value></Property><Property><Name>svn:ignore</Name><Value>*.sln.cache
+*.suo
+bin
+*.user
+_ReSharper.Ast
 </Value></Property></Properties></ItemProperties>
