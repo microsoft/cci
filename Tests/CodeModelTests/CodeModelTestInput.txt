@@ -1536,7 +1536,7 @@ namespace CodeModelTestInput
                 act2 = delegate () {
                     if (b)
                     {
-                        act1.Invoke();
+                        act1();
                     }
                     return;
 

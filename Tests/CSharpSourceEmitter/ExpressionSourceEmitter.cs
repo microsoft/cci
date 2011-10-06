@@ -760,17 +760,21 @@ namespace CSharpSourceEmitter {
 
     public override void TraverseChildren(IMethodCall methodCall) {
       NameFormattingOptions options = NameFormattingOptions.None;
+      bool delegateInvocation = false;
       if (!methodCall.IsStaticCall) {
         IAddressOf/*?*/ addressOf = methodCall.ThisArgument as IAddressOf;
         if (addressOf != null) {
           this.Traverse(addressOf.Expression);
         } else {
           this.Traverse(methodCall.ThisArgument);
+          var methodReference = methodCall.MethodToCall;
+          delegateInvocation = methodReference.Name.Value == "Invoke" && methodReference.ContainingType.ResolvedType.IsDelegate;
         }
-        this.PrintToken(CSharpToken.Dot);
+        if (!delegateInvocation) this.PrintToken(CSharpToken.Dot);
         options |= NameFormattingOptions.OmitContainingNamespace|NameFormattingOptions.OmitContainingType;
       }
-      this.PrintMethodReferenceName(methodCall.MethodToCall, options);
+      if (!delegateInvocation)
+        this.PrintMethodReferenceName(methodCall.MethodToCall, options);
       this.PrintArgumentList(methodCall.Arguments);
     }
 
@@ -970,9 +974,18 @@ namespace CSharpSourceEmitter {
       if (local != null)
         this.PrintLocalName(local);
       else {
-        INamedEntity/*?*/ ne = targetExpression.Definition as INamedEntity;
-        if (ne != null)
-          this.sourceEmitterOutput.Write(ne.Name.Value);
+        IFieldReference/*?*/ field = targetExpression.Definition as IFieldReference;
+        if (field != null) {
+          if (field.IsStatic) {
+            this.PrintTypeReference(field.ContainingType);
+            this.sourceEmitterOutput.Write(".");
+          }
+          this.sourceEmitterOutput.Write(field.Name.Value);
+        } else {
+          INamedEntity/*?*/ ne = targetExpression.Definition as INamedEntity;
+          if (ne != null)
+            this.sourceEmitterOutput.Write(ne.Name.Value);
+        }
       }
     }
 
