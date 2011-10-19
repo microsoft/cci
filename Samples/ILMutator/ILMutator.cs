@@ -54,9 +54,9 @@ namespace ILMutator {
 
           var outputFileName = Path.GetFileNameWithoutExtension(outputPath);
 
-          using (var outputStream = File.Create(outputPath)) {
+          using (var peStream = File.Create(outputPath)) {
             using (var pdbWriter = new PdbWriter(outputFileName + ".pdb", pdbReader)) {
-              PeWriter.WritePeToStream(module, host, outputStream, pdbReader, localScopeProvider, pdbWriter);
+              PeWriter.WritePeToStream(module, host, peStream, pdbReader, localScopeProvider, pdbWriter);
             }
           }
         }
@@ -312,6 +312,7 @@ namespace ILMutator {
           case OperationCode.Stloc_2:
           case OperationCode.Stloc_3:
           case OperationCode.Stloc_S:
+            generator.Emit(op.OperationCode);
             EmitStoreLocal(generator, op);
             break;
           default:
@@ -451,7 +452,6 @@ namespace ILMutator {
             generator.Emit(OperationCode.Ldstr, localName);
             generator.Emit(OperationCode.Call, this.consoleDotWriteLine);
           }
-          generator.Emit(op.OperationCode, loc);
           break;
 
         case OperationCode.Stloc_0:
@@ -461,7 +461,6 @@ namespace ILMutator {
             generator.Emit(OperationCode.Ldstr, localName);
             generator.Emit(OperationCode.Call, this.consoleDotWriteLine);
           }
-          generator.Emit(op.OperationCode);
           break;
 
         case OperationCode.Stloc_1:
@@ -471,7 +470,6 @@ namespace ILMutator {
             generator.Emit(OperationCode.Ldstr, localName);
             generator.Emit(OperationCode.Call, this.consoleDotWriteLine);
           }
-          generator.Emit(op.OperationCode);
           break;
 
         case OperationCode.Stloc_2:
@@ -481,7 +479,6 @@ namespace ILMutator {
             generator.Emit(OperationCode.Ldstr, localName);
             generator.Emit(OperationCode.Call, this.consoleDotWriteLine);
           }
-          generator.Emit(op.OperationCode);
           break;
 
         case OperationCode.Stloc_3:
@@ -491,7 +488,6 @@ namespace ILMutator {
             generator.Emit(OperationCode.Ldstr, localName);
             generator.Emit(OperationCode.Call, this.consoleDotWriteLine);
           }
-          generator.Emit(op.OperationCode);
           break;
 
         default:
