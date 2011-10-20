@@ -46,16 +46,19 @@ namespace ILMutator {
           ILMutator mutator = new ILMutator(host, pdbReader);
           module = mutator.Rewrite(module);
 
-          string outputPath;
-          if (args.Length == 2)
-            outputPath = args[1];
-          else
-            outputPath = module.Location + ".pe";
+          string newName;
+          if (args.Length == 2) {
+            newName = args[1];
+          } else {
+            var loc = module.Location;
+            var path = Path.GetDirectoryName(loc);
+            var fileName = Path.GetFileNameWithoutExtension(loc);
+            var ext = Path.GetExtension(loc);
+            newName = Path.Combine(path, fileName + "1" + ext);
+          }
 
-          var outputFileName = Path.GetFileNameWithoutExtension(outputPath);
-
-          using (var peStream = File.Create(outputPath)) {
-            using (var pdbWriter = new PdbWriter(outputFileName + ".pdb", pdbReader)) {
+          using (var peStream = File.Create(newName)) {
+            using (var pdbWriter = new PdbWriter(Path.ChangeExtension(newName, ".pdb"), pdbReader)) {
               PeWriter.WritePeToStream(module, host, peStream, pdbReader, localScopeProvider, pdbWriter);
             }
           }
