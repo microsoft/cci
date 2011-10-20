@@ -381,7 +381,6 @@ namespace Microsoft.Cci.Contracts {
 
       ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody == null) {
-        //sourceMethodBody = new Microsoft.Cci.ILToCodeModel.SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader);
         sourceMethodBody = Decompiler.GetCodeModelFromMetadataModel(this.host, methodBody, this.pdbReader, DecompilerOptions.AnonymousDelegates);
       }
 
@@ -389,13 +388,15 @@ namespace Microsoft.Cci.Contracts {
       var methodContract = result.MethodContract;
 
       #region Auto-properties get their contract from mining the invariant
-      var tc = this.GetTypeContractFor(methodDefinition.ContainingTypeDefinition);
-      MethodContract mc = ContractHelper.GetAutoPropertyContract(this.host, tc, methodDefinition);
-      if (mc != null) {
-        if (methodContract == null)
-          methodContract = mc;
-        else
-          ContractHelper.AddMethodContract(mc, methodContract);
+      if (ContractHelper.IsAutoPropertyMember(host, methodDefinition)) {
+        var tc = this.GetTypeContractFor(methodDefinition.ContainingTypeDefinition);
+        MethodContract mc = ContractHelper.GetAutoPropertyContract(this.host, tc, methodDefinition);
+        if (mc != null) {
+          if (methodContract == null)
+            methodContract = mc;
+          else
+            ContractHelper.AddMethodContract(mc, methodContract);
+        }
       }
       #endregion
 
@@ -519,10 +520,21 @@ namespace Microsoft.Cci.Contracts {
       var rewriter = new ActualMutator(host, targetUnit, sourceUnitIdentity);
       return rewriter.Rewrite(result);
     }
-    public ITypeContract Map(ITypeContract typeContract) {
+    public ITypeContract Map(ITypeDefinition newParentTypeDefinition, ITypeContract typeContract) {
       var result = new CodeAndContractDeepCopier(host).Copy(typeContract);
+      // Need to reparent any ContractFields and ContractMethods so that their ContainingTypeDefinition
+      // points to the correct type
+      foreach (var m in result.ContractMethods) {
+        var mutableMethod = (MethodDefinition)m;
+        mutableMethod.ContainingTypeDefinition = newParentTypeDefinition;
+      }
+      foreach (var f in result.ContractFields) {
+        var mutableField = (FieldDefinition)f;
+        mutableField.ContainingTypeDefinition = newParentTypeDefinition;
+      }
       var rewriter = new ActualMutator(host, targetUnit, sourceUnitIdentity);
-      return rewriter.Rewrite(result);
+      var iTypeContract = rewriter.Rewrite(result);
+      return iTypeContract;
     }
 
     private class ActualMutator : CodeAndContractRewriter {
@@ -765,7 +777,7 @@ namespace Microsoft.Cci.Contracts {
           if (oobContract == null) continue;
 
           MappingMutator oobToPrimaryMapper = this.mapperForOobToPrimary[oobProvider];
-          oobContract = oobToPrimaryMapper.Map(oobContract);
+          oobContract = oobToPrimaryMapper.Map(typeReference.ResolvedType, oobContract);
           ContractHelper.AddTypeContract(result, oobContract);
           found = true;
 

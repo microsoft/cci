@@ -352,7 +352,7 @@ namespace Microsoft.Cci.MutableContracts {
       if (foundAttribute == null) return null;
       var args = new List<IMetadataExpression>(foundAttribute.Arguments);
       if (args.Count < 1) return null;
-      var mdc = args[0] as MetadataConstant;
+      var mdc = args[0] as IMetadataConstant;
       if (mdc == null) return null;
       string arg = mdc.Value as string;
       return arg;
@@ -832,39 +832,6 @@ namespace Microsoft.Cci.MutableContracts {
       return fromMethodContract;
     }
 
-    public static MethodContract InlineAndStuff(IMetadataHost host, IMethodContract methodContract, IMethodDefinition toMethod, IMethodDefinition fromMethod,
-      List<IExpression> expressions) {
-      var specializedFromMethod = fromMethod as ISpecializedMethodDefinition;
-      if (specializedFromMethod != null) {
-        fromMethod = UninstantiateAndUnspecialize(fromMethod).ResolvedMethod;
-      }
-
-      MethodContract fromMethodContract = (MethodContract)new CodeAndContractDeepCopier(host).Copy(methodContract);
-      BetaReducer brewriter = new BetaReducer(host, fromMethod, toMethod, expressions);
-      fromMethodContract = (MethodContract)brewriter.Rewrite(fromMethodContract);
-
-      IGenericMethodInstance gmi = fromMethod as IGenericMethodInstance;
-      if (gmi != null) fromMethod = gmi.GenericMethod.ResolvedMethod;
-      if (specializedFromMethod != null || fromMethod.IsGeneric) {
-        var stdm = specializedFromMethod as Immutable.SpecializedTypeDefinitionMember<IMethodDefinition>;
-        var sourceTypeReferences = stdm == null ? Enumerable<ITypeReference>.Empty : stdm.ContainingGenericTypeInstance.GenericArguments;
-        var targetTypeParameters = fromMethod.ContainingTypeDefinition.GenericParameters;
-        var justToSee = fromMethod.InternedKey;
-        fromMethodContract = (MethodContract)SpecializeMethodContract(
-          host,
-          fromMethodContract,
-          fromMethod.ContainingTypeDefinition,
-          targetTypeParameters,
-          sourceTypeReferences,
-          fromMethod.GenericParameters,
-          toMethod.GenericParameters
-          );
-        return fromMethodContract;
-      }
-
-      return fromMethodContract;
-    }
-
     internal static IMethodContract SpecializeMethodContract(IMetadataHost host, IMethodContract contract, ITypeDefinition typeDefinition,
       IEnumerable<IGenericTypeParameter> targetTypeParameters, IEnumerable<ITypeReference> sourceTypeReferences,
       IEnumerable<IGenericMethodParameter> targetMethodTypeParameters, IEnumerable<IGenericMethodParameter> sourceMethodTypeParameters
@@ -948,7 +915,6 @@ namespace Microsoft.Cci.MutableContracts {
       }
 
     }
-
 
     /// <summary>
     /// Given a mutable module that is a "declarative" module, i.e., it has contracts expressed as contract calls
@@ -1272,6 +1238,12 @@ namespace Microsoft.Cci.MutableContracts {
         var derivedPostConditions = new List<IPostcondition>();
         foreach (var i in typeContract.Invariants) {
           if (!MemberFinder.ExpressionContains(i.Condition, getter)) continue;
+
+          var v = Visibility.MostRestrictiveVisibility(host, i.Condition);
+          var currentVisibility = getter.Visibility;
+          var intersection = TypeHelper.VisibilityIntersection(v, currentVisibility);
+          if (intersection != currentVisibility) continue;
+
           derivedPostConditions.Add(
             new Postcondition() {
               Condition = ReplaceAutoPropGetter.MakeEnsures(host, getter, i.Condition),
@@ -1289,6 +1261,12 @@ namespace Microsoft.Cci.MutableContracts {
         var derivedPreconditions = new List<IPrecondition>();
         foreach (var i in typeContract.Invariants) {
           if (!MemberFinder.ExpressionContains(i.Condition, getter)) continue;
+
+          var v = Visibility.MostRestrictiveVisibility(host, i.Condition);
+          var currentVisibility = setter.Visibility;
+          var intersection = TypeHelper.VisibilityIntersection(v, currentVisibility);
+          if (intersection != currentVisibility) continue;
+
           derivedPreconditions.Add(
             new Precondition() {
               Condition = ReplaceAutoPropGetter.MakeRequires(host, getter, setter, i.Condition),
@@ -1529,10 +1507,47 @@ namespace Microsoft.Cci.MutableContracts {
     }
   }
 
+  public class CodeSpecializer2 : CodeAndContractRewriter {
+    Dictionary<uint, ITypeReference> typeRefMap;// = new Dictionary<uint, ITypeReference>();
+    public CodeSpecializer2(IMetadataHost host, Dictionary<uint, ITypeReference> typeRefMap)
+      : base(host) {
+      this.typeRefMap = typeRefMap;
+    }
+    private ITypeReference/*?*/ TryMap(ITypeReference typeReference) {
+      ITypeReference mappedTo;
+      if (this.typeRefMap.TryGetValue(typeReference.InternedKey, out mappedTo))
+        return mappedTo;
+      else
+        return null;
+    }
+
+    public override ITypeReference Rewrite(IGenericMethodParameterReference genericMethodParameterReference) {
+      var result = this.TryMap(genericMethodParameterReference);
+      return result ?? base.Rewrite(genericMethodParameterReference);
+    }
+    public override ITypeReference Rewrite(IGenericTypeInstanceReference genericTypeInstanceReference) {
+      var result = this.TryMap(genericTypeInstanceReference);
+      return result ?? base.Rewrite(genericTypeInstanceReference);
+    }
+
+    public override void RewriteChildren(SpecializedFieldReference fieldReference) {
+      fieldReference.ContainingType = this.Rewrite(fieldReference.ContainingType);
+      fieldReference.Type = this.Rewrite(fieldReference.Type);
+    }
+    public override void RewriteChildren(SpecializedMethodReference specializedMethodReference) {
+      specializedMethodReference.ContainingType = this.Rewrite(specializedMethodReference.ContainingType);
+      specializedMethodReference.Parameters = this.Rewrite(specializedMethodReference.Parameters);
+      specializedMethodReference.Type = this.Rewrite(specializedMethodReference.Type);
+    }
+    public override void RewriteChildren(SpecializedNestedTypeReference specializedNestedTypeReference) {
+      specializedNestedTypeReference.ContainingType = this.Rewrite(specializedNestedTypeReference.ContainingType);
+    }
+  }
+
   internal class SimpleHostEnvironment : MetadataReaderHost, IContractAwareHost {
     PeReader peReader;
-    public SimpleHostEnvironment(INameTable nameTable)
-      : base(nameTable, new InternFactory(), 0, null, false) {
+    public SimpleHostEnvironment(INameTable nameTable, IInternFactory internFactory)
+      : base(nameTable, internFactory, 0, null, false) {
       this.peReader = new PeReader(this);
     }
 
@@ -1865,7 +1880,7 @@ namespace Microsoft.Cci.MutableContracts {
               }
               if (referenceUnit != null && loadedAssembly.AssemblyIdentity.Equals(this.CoreAssemblySymbolicIdentity)) {
                 // Need to use a separate host because the reference assembly for the core assembly thinks *it* is the core assembly
-                var separateHost = new SimpleHostEnvironment(this.NameTable);
+                var separateHost = new SimpleHostEnvironment(this.NameTable, this.InternFactory);
                 this.disposableObjectAllocatedByThisHost.Add(separateHost);
                 referenceUnit = separateHost.LoadUnitFrom(referenceUnit.Location);
                 hostForReferenceAssembly = separateHost;
@@ -1875,7 +1890,7 @@ namespace Microsoft.Cci.MutableContracts {
               #region Load reference assembly
               if (loadedAssembly.AssemblyIdentity.Equals(this.CoreAssemblySymbolicIdentity)) {
                 // Need to use a separate host because the reference assembly for the core assembly thinks *it* is the core assembly
-                var separateHost = new SimpleHostEnvironment(this.NameTable);
+                var separateHost = new SimpleHostEnvironment(this.NameTable, this.InternFactory);
                 this.disposableObjectAllocatedByThisHost.Add(separateHost);
                 referenceUnit = separateHost.LoadUnitFrom(referenceAssemblyIdentity.Location);
                 hostForReferenceAssembly = separateHost;

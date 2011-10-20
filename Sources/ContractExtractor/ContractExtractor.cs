@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using Microsoft.Cci.Contracts;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.MutableCodeModel.Contracts;
+using Microsoft.Cci.ILToCodeModel;
 
 namespace Microsoft.Cci.MutableContracts {
 
@@ -68,7 +69,7 @@ namespace Microsoft.Cci.MutableContracts {
         IMethodBody methodBody = invariantMethod.Body;
         ISourceMethodBody/*?*/ sourceMethodBody = methodBody as ISourceMethodBody;
         if (sourceMethodBody == null) {
-          sourceMethodBody = new Microsoft.Cci.ILToCodeModel.SourceMethodBody(methodBody, host, pdbReader, localScopeProvider);
+          sourceMethodBody = Decompiler.GetCodeModelFromMetadataModel(host, methodBody, pdbReader, DecompilerOptions.AnonymousDelegates);
         }
         var e = new Microsoft.Cci.MutableContracts.ContractExtractor(sourceMethodBody, host, pdbReader);
         BlockStatement b = sourceMethodBody.Block as BlockStatement;
@@ -142,34 +143,15 @@ namespace Microsoft.Cci.MutableContracts {
     /// </summary>
     private ITypeReference/*?*/ extractingFromAMethodInAContractClass;
 
-    private ITypeReference contractClass;
-    private ITypeReference contractClassDefinedInReferenceAssembly;
-
     private bool methodIsInReferenceAssembly;
-
-    private static ITypeReference/*?*/ TemporaryKludge(IEnumerable<ICustomAttribute> attributes, string attributeTypeName) {
-      foreach (ICustomAttribute attribute in attributes) {
-        if (TypeHelper.GetTypeName(attribute.Type) == attributeTypeName) {
-
-          List<IMetadataExpression> args = new List<IMetadataExpression>(attribute.Arguments);
-          if (args.Count < 1) continue;
-          IMetadataTypeOf abstractTypeMD = args[0] as IMetadataTypeOf;
-          if (abstractTypeMD == null) continue;
-          ITypeReference referencedTypeReference = ContractHelper.Unspecialized(abstractTypeMD.TypeToGet);
-          ITypeDefinition referencedTypeDefinition = referencedTypeReference.ResolvedType;
-          return referencedTypeDefinition;
-
-        }
-      }
-      return null;
-    }
 
     internal bool IsContractMethod(IMethodReference/*?*/ method) {
       if (method == null) return false;
-      if (method.ContainingType.InternedKey == this.contractClass.InternedKey) return true;
-      // Reference assemblies define their own internal versions of the contract methods
-      return this.contractClassDefinedInReferenceAssembly != null &&
-        (method.ContainingType.InternedKey == this.contractClassDefinedInReferenceAssembly.InternedKey);
+      // Just use name matching: pre-v4 assemblies can have the method defined in many places
+      // It might not even be the same for all of the assemblies loaded by the host this extractor
+      // is using.
+      var t = method.ContainingType;
+      return (TypeHelper.GetTypeName(t).Equals("System.Diagnostics.Contracts.Contract"));
     }
 
     private ContractExtractor(
@@ -181,61 +163,39 @@ namespace Microsoft.Cci.MutableContracts {
       this.contractAwarehost = host;
       this.pdbReader = pdbReader;
 
+      this.currentMethod = sourceMethodBody.MethodDefinition;
+ 
       // TODO: these fields make sense only if extracting a method contract and not a type contract.
 
-      var definingUnit = TypeHelper.GetDefiningUnit(sourceMethodBody.MethodDefinition.ContainingType.ResolvedType);
+      var definingUnit = TypeHelper.GetDefiningUnit(this.currentMethod.ContainingType.ResolvedType);
 
       this.methodIsInReferenceAssembly = definingUnit == null ? false : ContractHelper.IsContractReferenceAssembly(this.host, definingUnit);
 
-      var contractAssemblyReference = new Immutable.AssemblyReference(host, this.host.ContractAssemblySymbolicIdentity);
-      this.contractClass = ContractHelper.CreateTypeReference(this.host, contractAssemblyReference, "System.Diagnostics.Contracts.Contract");
-
-      IUnitReference/*?*/ ur = TypeHelper.GetDefiningUnitReference(sourceMethodBody.MethodDefinition.ContainingType);
-      IAssemblyReference ar = ur as IAssemblyReference;
-      if (ar != null) {
-        // Check for the attribute which is defined in the assembly that defines the contract class.
-        var refAssemblyAttribute = ContractHelper.CreateTypeReference(this.host, contractAssemblyReference, "System.Diagnostics.Contracts.ContractReferenceAssemblyAttribute");
-        if (AttributeHelper.Contains(ar.Attributes, refAssemblyAttribute)) {
-          // then we're extracting contracts from a reference assembly
-          var contractTypeAsDefinedInReferenceAssembly = ContractHelper.CreateTypeReference(this.host, ar, "System.Diagnostics.Contracts.Contract");
-          this.contractClassDefinedInReferenceAssembly = contractTypeAsDefinedInReferenceAssembly;
-        } else {
-          // If that fails, check for the attribute which is defined in the assembly itself
-          refAssemblyAttribute = ContractHelper.CreateTypeReference(this.host, ar, "System.Diagnostics.Contracts.ContractReferenceAssemblyAttribute");
-          if (AttributeHelper.Contains(ar.Attributes, refAssemblyAttribute)) {
-            // then we're extracting contracts from a reference assembly
-            var contractTypeAsDefinedInReferenceAssembly = ContractHelper.CreateTypeReference(this.host, ar, "System.Diagnostics.Contracts.Contract");
-            this.contractClassDefinedInReferenceAssembly = contractTypeAsDefinedInReferenceAssembly;
-          }
-        }
-
-      }
-
       #region Set contract purity based on whether the method definition has the pure attribute
-      if (ContractHelper.IsPure(this.host, sourceMethodBody.MethodDefinition)) {
+      if (ContractHelper.IsPure(this.host, this.currentMethod)) {
         this.CurrentMethodContract.IsPure = true;
       }
       #endregion Set contract purity based on whether the method definition has the pure attribute
 
-      this.oldAndResultExtractor = new OldAndResultExtractor(this.host, sourceMethodBody, this.referenceCache, this.contractClass);
+      this.oldAndResultExtractor = new OldAndResultExtractor(this.host, sourceMethodBody, this.referenceCache, this.IsContractMethod);
 
       this.extractingFromACtorInAClass =
-        sourceMethodBody.MethodDefinition.IsConstructor
+        this.currentMethod.IsConstructor
         &&
-        !sourceMethodBody.MethodDefinition.ContainingType.IsValueType;
-
-      // TODO: this should be true only if it is a contract class for an interface
-      this.extractingFromAMethodInAContractClass =
-        TemporaryKludge(sourceMethodBody.MethodDefinition.ContainingType.Attributes, "System.Diagnostics.Contracts.ContractClassForAttribute");
+        !this.currentMethod.ContainingType.IsValueType;
 
     }
 
     private MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(IBlockStatement blockStatement) {
       // Don't start with an empty contract because the ctor may have set some things in it
       var bs = this.Visit(blockStatement);
-      bs = new AssertAssumeExtractor(this, this.sourceMethodBody, this.host, this.pdbReader).Visit(bs);
-      if (this.currentMethodContract != null)
-        this.currentMethodContract = ReplacePrivateFieldsThatHavePublicProperties(this.host, this.sourceMethodBody.MethodDefinition.ContainingTypeDefinition, this.currentMethodContract);
+      if (false) { // TODO: remove this once the clients that care can extract the assert/assume calls themselves
+        bs = new AssertAssumeExtractor(this.sourceMethodBody, this.host, this.pdbReader).Visit(bs);
+      }
+      if (this.currentMethodContract != null) {
+        this.currentMethodContract = ReplacePrivateFieldsThatHavePublicProperties(this.host, this.currentMethod.ContainingTypeDefinition, this.currentMethodContract);
+        ContractChecker.CheckMethodContract(this.host, this.currentMethod, this.currentMethodContract);
+      }
       return new MethodContractAndMethodBody(this.currentMethodContract, bs);
     }
 
@@ -598,20 +558,39 @@ namespace Microsoft.Cci.MutableContracts {
               return;
             }
           } else if (IsValidatorOrAbbreviator(expressionStatement)) {
-            var gmir = methodToCall as IGenericMethodInstanceReference;
-            IMethodDefinition abbreviatorDef;
-            if (gmir != null)
-              abbreviatorDef = gmir.GenericMethod.ResolvedMethod;
-            else
-              abbreviatorDef = methodToCall.ResolvedMethod;
+            var abbreviatorDef = methodToCall.ResolvedMethod;
             var mc = ContractHelper.GetMethodContractFor(this.contractAwarehost, abbreviatorDef);
             if (mc != null) {
-              var mutableMC = ContractHelper.InlineAndStuff(this.host, mc, this.sourceMethodBody.MethodDefinition, abbreviatorDef, new List<IExpression>(methodCall.Arguments));
-              mutableMC.Locations.InsertRange(0, methodCall.Locations);
+
+              var copier = new CodeAndContractDeepCopier(this.host);
+              var copyOfContract = copier.Copy(mc);
+
+              var gmir = methodToCall as IGenericMethodInstanceReference;
+              if (gmir != null) {
+                // If there are any references to the abbreviator's parameters in the contract,
+                // then they are to the unspecialized parameters. So the abbreviatorDef needs
+                // to get unspecialized so that the BetaReducer can get the right parameters
+                // out of it to use in its mapping table.
+                abbreviatorDef = gmir.GenericMethod.ResolvedMethod;
+              }
+
+              var brewriter = new BetaReducer(host, abbreviatorDef, this.currentMethod, new List<IExpression>(methodCall.Arguments));
+              brewriter.RewriteChildren(copyOfContract);
+
+              if (gmir != null) {
+                var typeMap = new Dictionary<uint, ITypeReference>();
+                IteratorHelper.Zip(abbreviatorDef.GenericParameters, gmir.GenericArguments,
+                  (i, j) => typeMap.Add(i.InternedKey, j));
+
+                var cs2 = new CodeSpecializer2(this.host, typeMap);
+                cs2.RewriteChildren(copyOfContract);
+              }
+              copyOfContract.Locations.InsertRange(0, methodCall.Locations);
               if (this.currentMethodContract == null)
-                this.currentMethodContract = new MethodContract(mutableMC);
+                this.currentMethodContract = new MethodContract(copyOfContract);
               else
-                ContractHelper.AddMethodContract(this.currentMethodContract, mutableMC);
+                ContractHelper.AddMethodContract(this.currentMethodContract, copyOfContract);
+
             }
           }
         }
@@ -843,19 +822,25 @@ namespace Microsoft.Cci.MutableContracts {
       if (!TryGetSourceText(pdbReader, locations, out sourceText, out startColumn)) return false;
       int firstSourceTextIndex = sourceText.IndexOf('(');
       firstSourceTextIndex = firstSourceTextIndex == -1 ? 0 : firstSourceTextIndex + 1; // the +1 is to skip the opening paren
-      int lastSourceTextIndex;
-      if (numArgs == 1) {
-        lastSourceTextIndex = sourceText.LastIndexOf(')'); // supposedly the character after the first (and only) argument
-      } else {
-        lastSourceTextIndex = IndexOfWhileSkippingBalancedThings(sourceText, firstSourceTextIndex, ','); // supposedly the character after the first argument
+      int lastSourceTextIndex = sourceText.LastIndexOf(')'); // hopefully the closing paren of the contract method call
+      if (numArgs != 1) {
+        // need to back up to the character after the first argument to the contract method call
+        lastSourceTextIndex = IndexOfWhileSkippingBalancedThings(sourceText, lastSourceTextIndex, ',');
       }
-      if (lastSourceTextIndex <= firstSourceTextIndex) {
+      var len = lastSourceTextIndex - firstSourceTextIndex;
+      // check precondition of Substring
+      if (lastSourceTextIndex <= firstSourceTextIndex || firstSourceTextIndex + len >= sourceText.Length) {
         //Console.WriteLine(sourceText);
-        lastSourceTextIndex = sourceText.Length; // if something went wrong, at least get the whole source text.
+        len = sourceText.Length - firstSourceTextIndex; // if something went wrong, at least get the whole source text.
       }
-      sourceText = sourceText.Substring(firstSourceTextIndex, lastSourceTextIndex - firstSourceTextIndex);
-      var indentSize = firstSourceTextIndex + startColumn;
-      sourceText = AdjustIndentationOfMultilineSourceText(sourceText, indentSize);
+      sourceText = sourceText.Substring(firstSourceTextIndex, len);
+      if (sourceText != null) {
+        sourceText = new System.Text.RegularExpressions.Regex(@"\s+").Replace(sourceText, " ");
+        sourceText = sourceText.Trim();
+      }
+      // This commented-out code was used when we wanted the text to be formatted as it was in the source file, line breaks and all
+      //var indentSize = firstSourceTextIndex + startColumn;
+      //sourceText = AdjustIndentationOfMultilineSourceText(sourceText, indentSize);
       return true;
     }
     internal static bool TryGetSourceText(PdbReader pdbReader, IEnumerable<ILocation> locations, out string/*?*/ sourceText, out int startColumn) {
@@ -873,17 +858,26 @@ namespace Microsoft.Cci.MutableContracts {
       }
       return sourceText != null;
     }
-    internal static int IndexOfWhileSkippingBalancedThings(string source, int startIndex, char targetChar) {
-      int i = startIndex;
-      while (i < source.Length) {
+    internal static int IndexOfWhileSkippingBalancedThings(string source, int endIndex, char targetChar) {
+      int i = endIndex;
+      while (0 <= i) {
         if (source[i] == targetChar) break;
-        else if (source[i] == '(') i = IndexOfWhileSkippingBalancedThings(source, i + 1, ')') + 1;
-        else if (source[i] == '"') i = IndexOfWhileSkippingBalancedThings(source, i + 1, '"') + 1;
-        else i++;
+        else if (source[i] == '"') i = IndexOfWhileSkippingBalancedThings(source, i - 1, '"') - 1;
+        else if (source[i] == '>') i = IndexOfWhileSkippingBalancedThings(source, i - 1, '<') - 1;
+        else if (targetChar != '"' && source[i] == '\'') {
+          // then we're not within a string, so assume this is the end of a character
+          // skip the closing single quote, the char, and the open single quote
+          if (source[i - 2] == '\\') { // then source[i-1] is an escaped character, need to skip one more position
+            i -= 4;
+          } else {
+            i -= 3;
+          }
+        } else i--;
       }
       return i;
     }
     internal static char[] WhiteSpace = { ' ', '\t' };
+    private IMethodDefinition currentMethod;
     internal static string AdjustIndentationOfMultilineSourceText(string sourceText, int trimLength) {
       if (!sourceText.Contains("\n")) return sourceText;
       var lines = sourceText.Split('\n');
@@ -1060,20 +1054,17 @@ namespace Microsoft.Cci.MutableContracts {
       }
     }
 
-    private sealed class AssertAssumeExtractor : MethodBodyCodeMutator {
+    public sealed class AssertAssumeExtractor : MethodBodyCodeMutator {
 
-      ContractExtractor parent;
       ISourceMethodBody sourceMethodBody;
       PdbReader/*?*/ pdbReader;
 
-      internal AssertAssumeExtractor(
-        ContractExtractor parent,
+      public AssertAssumeExtractor(
         ISourceMethodBody sourceMethodBody,
         IMetadataHost host,
         PdbReader/*?*/ pdbReader
         )
         : base(host, true, pdbReader) {
-        this.parent = parent;
         this.sourceMethodBody = sourceMethodBody;
         this.pdbReader = pdbReader;
       }
@@ -1082,7 +1073,9 @@ namespace Microsoft.Cci.MutableContracts {
         IMethodCall/*?*/ methodCall = expressionStatement.Expression as IMethodCall;
         if (methodCall == null) goto JustVisit;
         IMethodReference methodToCall = methodCall.MethodToCall;
-        if (!parent.IsContractMethod(methodToCall)) goto JustVisit;
+        var containingType = methodToCall.ContainingType;
+        var typeName = TypeHelper.GetTypeName(containingType);
+        if (!(typeName.Equals("System.Diagnostics.Contracts.Contract"))) goto JustVisit;
         string mname = methodToCall.Name.Value;
         List<IExpression> arguments = new List<IExpression>(methodCall.Arguments);
         List<ILocation> locations = new List<ILocation>(methodCall.Locations);
@@ -1146,7 +1139,8 @@ namespace Microsoft.Cci.MutableContracts {
       }
       if (0 < field2Getter.Count) {
         SubstitutePropertyGetterForField s = new SubstitutePropertyGetterForField(host, sourceType, field2Getter);
-        methodContract = (MethodContract)s.Visit(methodContract);
+        methodContract.Preconditions = (List<IPrecondition>)s.Visit(methodContract.Preconditions);
+        //methodContract = (MethodContract)s.Visit(methodContract);
       }
       return methodContract;
     }
@@ -1250,14 +1244,15 @@ namespace Microsoft.Cci.MutableContracts {
 
   internal class OldAndResultExtractor : MethodBodyCodeMutator {
     ISourceMethodBody sourceMethodBody;
-    ITypeReference contractClass;
     AnonymousDelegate/*?*/ currentAnonymousDelegate;
-    internal OldAndResultExtractor(IMetadataHost host, ISourceMethodBody sourceMethodBody, Dictionary<IReference, IReference>/*?*/ referenceCache, ITypeReference contractClass)
+    private Predicate<IMethodReference> isContractMethod;
+
+    internal OldAndResultExtractor(IMetadataHost host, ISourceMethodBody sourceMethodBody, Dictionary<IReference, IReference>/*?*/ referenceCache, Predicate<IMethodReference> isContractMethod)
       : base(host, true) {
       this.sourceMethodBody = sourceMethodBody;
       if (referenceCache != null)
         this.referenceCache = referenceCache;
-      this.contractClass = contractClass;
+      this.isContractMethod = isContractMethod;
     }
 
     public override IExpression Visit(AnonymousDelegate anonymousDelegate) {
@@ -1271,7 +1266,7 @@ namespace Microsoft.Cci.MutableContracts {
     public override IExpression Visit(MethodCall methodCall) {
       IGenericMethodInstanceReference/*?*/ methodToCall = methodCall.MethodToCall as IGenericMethodInstanceReference;
       if (methodToCall != null) {
-        if (methodToCall.GenericMethod.ContainingType.InternedKey == this.contractClass.InternedKey) {
+        if (this.isContractMethod(methodToCall)) {
           //TODO: exists, forall
           if (methodToCall.GenericMethod.Name.Value == "Result") {
             ReturnValue returnValue = new ReturnValue() {

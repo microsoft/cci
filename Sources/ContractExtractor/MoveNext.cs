@@ -410,9 +410,7 @@ namespace Microsoft.Cci.MutableContracts {
         //if (!FindAnyContract.Find(methodBody.Block)) return null;
         var definingUnit = TypeHelper.GetDefiningUnit(methodBody.MethodDefinition.ContainingType.ResolvedType);
         var methodIsInReferenceAssembly = ContractHelper.IsContractReferenceAssembly(contractAwareHost, definingUnit);
-        var contractAssemblyReference = new Immutable.AssemblyReference(contractAwareHost, definingUnit.ContractAssemblySymbolicIdentity);
-        var contractClass = ContractHelper.CreateTypeReference(contractAwareHost, contractAssemblyReference, "System.Diagnostics.Contracts.Contract");
-        var oldAndResultExtractor = new OldAndResultExtractor(contractAwareHost, methodBody, null, contractClass);
+        var oldAndResultExtractor = new OldAndResultExtractor(contractAwareHost, methodBody, null, extractor.IsContractMethod);
         var har = new HermansAlwaysRight(contractAwareHost, extractor, methodBody, methodIsInReferenceAssembly, oldAndResultExtractor, pdbReader);
         har.Visit(methodBody);
         return har.currentMethodContract;
@@ -655,19 +653,37 @@ namespace Microsoft.Cci.MutableContracts {
                 return;
               }
             } else if (ContractExtractor.IsValidatorOrAbbreviator(expressionStatement)) {
+
+              var abbreviatorDef = methodToCall.ResolvedMethod;
               var gmir = methodToCall as IGenericMethodInstanceReference;
-              IMethodDefinition abbreviatorDef;
-              if (gmir != null)
+              if (gmir != null) {
+                // If there are any references to the abbreviator's parameters in the contract,
+                // then they are to the unspecialized parameters. So the abbreviatorDef needs
+                // to get unspecialized so that the BetaReducer can get the right parameters
+                // out of it to use in its mapping table.
                 abbreviatorDef = gmir.GenericMethod.ResolvedMethod;
-              else
-                abbreviatorDef = methodToCall.ResolvedMethod;
+              }
               var mc = ContractHelper.GetMethodContractFor(this.contractAwareHost, abbreviatorDef);
               if (mc != null) {
-                mc = ContractHelper.InlineAndStuff(this.contractAwareHost, mc, this.sourceMethodBody.MethodDefinition, abbreviatorDef, new List<IExpression>(methodCall.Arguments));
+                var copier = new CodeAndContractDeepCopier(this.contractAwareHost);
+                var copyOfContract = copier.Copy(mc);
+
+                var brewriter = new BetaReducer(this.contractAwareHost, abbreviatorDef, this.sourceMethodBody.MethodDefinition, new List<IExpression>(methodCall.Arguments));
+                brewriter.RewriteChildren(copyOfContract);
+
+                if (gmir != null) {
+                  var typeMap = new Dictionary<uint, ITypeReference>();
+                  IteratorHelper.Zip(abbreviatorDef.GenericParameters, gmir.GenericArguments,
+                    (i, j) => typeMap.Add(i.InternedKey, j));
+
+                  var cs2 = new CodeSpecializer2(this.contractAwareHost, typeMap);
+                  cs2.RewriteChildren(copyOfContract);
+                }
+                copyOfContract.Locations.InsertRange(0, methodCall.Locations);
                 if (this.currentMethodContract == null)
-                  this.currentMethodContract = new MethodContract(mc);
+                  this.currentMethodContract = new MethodContract(copyOfContract);
                 else
-                  ContractHelper.AddMethodContract(this.currentMethodContract, mc);
+                  ContractHelper.AddMethodContract(this.currentMethodContract, copyOfContract);
               }
             }
           }

@@ -70,6 +70,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ContractChecker.cs" />
     <Compile Include="ContractExtractor.cs" />
     <Compile Include="ContractHelper.cs" />
     <Compile Include="ContractProviders.cs" />
