@@ -85,6 +85,16 @@ namespace Microsoft.Cci {
   public delegate R Function<P, R>(P p);
 
   /// <summary>
+  /// A Function that takes an argument of type P, an argument of type Q, and returns a value of type R.
+  /// </summary>
+  public delegate R Function<P, Q, R>(P p, Q q);
+
+  /// <summary>
+  /// An action that takes an argument of type P and an argument of type R.
+  /// </summary>
+  public delegate void Action<P, R>(P p, R r);
+
+  /// <summary>
   /// A container for static helper methods that are used for manipulating and computing iterators.
   /// </summary>
   public static class IteratorHelper {
@@ -446,6 +456,34 @@ namespace Microsoft.Cci {
         foreach (T e in right)
           yield return e;
     }
+
+    /// <summary>
+    /// A zip join implementation that walks two enumerables performing some function
+    /// on corresponding elements and returning an enumerable of the result of the
+    /// function.
+    /// </summary>
+    public static IEnumerable<TResult> Zip<TFirst, TSecond, TResult>(IEnumerable<TFirst> first, IEnumerable<TSecond> second, Function<TFirst, TSecond, TResult> resultSelector) {
+      Contract.Requires(first != null);
+      Contract.Requires(second != null);
+      Contract.Requires(resultSelector != null);
+      using (IEnumerator<TFirst> e1 = first.GetEnumerator())
+      using (IEnumerator<TSecond> e2 = second.GetEnumerator())
+        while (e1.MoveNext() && e2.MoveNext())
+          yield return resultSelector(e1.Current, e2.Current);
+    }
+    /// <summary>
+    /// A zip join implementation that walks two enumerables performing some action
+    /// on corresponding elements.
+    /// </summary>
+    public static void Zip<TFirst, TSecond>(IEnumerable<TFirst> first, IEnumerable<TSecond> second, Action<TFirst, TSecond> action) {
+      Contract.Requires(first != null);
+      Contract.Requires(second != null);
+      Contract.Requires(action != null);
+      using (IEnumerator<TFirst> e1 = first.GetEnumerator())
+      using (IEnumerator<TSecond> e2 = second.GetEnumerator())
+        while (e1.MoveNext() && e2.MoveNext())
+          action(e1.Current, e2.Current);
+    } 
 
   }
 
