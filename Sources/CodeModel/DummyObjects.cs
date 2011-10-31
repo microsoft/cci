@@ -41,6 +41,7 @@ namespace Microsoft.Cci {
 
     public static IBlockStatement Block {
       get {
+        Contract.Ensures(Contract.Result<IBlockStatement>() != null);
         if (CodeDummy.block == null)
           Interlocked.CompareExchange(ref CodeDummy.block, new DummyBlock(), null);
         return CodeDummy.block;

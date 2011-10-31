@@ -137,11 +137,11 @@ namespace Microsoft.Cci.MutableContracts {
     private IContractAwareHost contractAwarehost;
     private OldAndResultExtractor oldAndResultExtractor;
     private bool extractingFromACtorInAClass;
-    /// <summary>
-    /// When not null, this is the abstract type for which the contract class
-    /// is holding the contracts for.
-    /// </summary>
-    private ITypeReference/*?*/ extractingFromAMethodInAContractClass;
+    ///// <summary>
+    ///// When not null, this is the abstract type for which the contract class
+    ///// is holding the contracts for.
+    ///// </summary>
+    //private ITypeReference/*?*/ extractingFromAMethodInAContractClass;
 
     private bool methodIsInReferenceAssembly;
 
@@ -189,9 +189,9 @@ namespace Microsoft.Cci.MutableContracts {
     private MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(IBlockStatement blockStatement) {
       // Don't start with an empty contract because the ctor may have set some things in it
       var bs = this.Visit(blockStatement);
-      if (false) { // TODO: remove this once the clients that care can extract the assert/assume calls themselves
-        bs = new AssertAssumeExtractor(this.sourceMethodBody, this.host, this.pdbReader).Visit(bs);
-      }
+      //if (false) { // TODO: remove this once the clients that care can extract the assert/assume calls themselves
+      //  bs = new AssertAssumeExtractor(this.sourceMethodBody, this.host, this.pdbReader).Visit(bs);
+      //}
       if (this.currentMethodContract != null) {
         this.currentMethodContract = ReplacePrivateFieldsThatHavePublicProperties(this.host, this.currentMethod.ContainingTypeDefinition, this.currentMethodContract);
         ContractChecker.CheckMethodContract(this.host, this.currentMethod, this.currentMethodContract);
@@ -1300,18 +1300,18 @@ namespace Microsoft.Cci.MutableContracts {
       return base.Visit(methodCall);
     }
   }
-  internal class FindModelMembers : BaseCodeTraverser {
+  internal class FindModelMembers : CodeTraverser {
     private bool foundModelMember = false;
     private FindModelMembers() { }
     public static bool ContainsModelMembers(IExpression expression) {
       var fmm = new FindModelMembers();
-      fmm.Visit(expression);
+      fmm.Traverse(expression);
       return fmm.foundModelMember;
     }
-    public override void Visit(IMethodCall methodCall) {
+    public override void TraverseChildren(IMethodCall methodCall) {
       if (ContractHelper.IsModel(methodCall.MethodToCall) != null)
         this.foundModelMember = true;
-      base.Visit(methodCall);
+      base.TraverseChildren(methodCall);
     }
   }
   internal static class BrianGru {

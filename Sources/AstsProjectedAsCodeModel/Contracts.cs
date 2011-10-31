@@ -816,7 +816,7 @@ namespace Microsoft.Cci.Ast {
 
     #endregion
 
-    private class ErrorForOutParameterReporter : BaseCodeTraverser {
+    private class ErrorForOutParameterReporter : CodeTraverser {
       private bool OutParameterFound = false;
       private readonly LanguageSpecificCompilationHelper helper;
       private readonly ISourceItem defaultSourceItemForErrorReporting;
@@ -826,7 +826,7 @@ namespace Microsoft.Cci.Ast {
         this.defaultSourceItemForErrorReporting = defaultSourceItemForErrorReporting;
       }
 
-      public override void Visit(IBoundExpression boundExpression) {
+      public override void TraverseChildren(IBoundExpression boundExpression) {
         IParameterDefinition par = boundExpression.Definition as IParameterDefinition;
         if (par != null && par.IsOut) {
           ISourceItem sourceItem = boundExpression as ISourceItem;
@@ -834,12 +834,12 @@ namespace Microsoft.Cci.Ast {
           this.helper.ReportError(new AstErrorMessage(sourceItem, Error.OutParameterReferenceNotAllowedHere, par.Name.Value));
           OutParameterFound = true;
         }
-        base.Visit(boundExpression);
+        base.TraverseChildren(boundExpression);
       }
 
       internal static bool CheckAndReturnTrueIfFound(Expression expression, LanguageSpecificCompilationHelper helper) {
         ErrorForOutParameterReporter er = new ErrorForOutParameterReporter(helper, expression);
-        expression.Dispatch(er);
+        er.Traverse((IExpression)expression);
         return er.OutParameterFound;
       }
     }

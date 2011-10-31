@@ -802,26 +802,26 @@ namespace Microsoft.Cci.MutableContracts {
       /// <summary>
       /// TODO: Don't use string comparisons
       /// </summary>
-      private class FindAnyContract : BaseCodeTraverser {
+      private class FindAnyContract : CodeTraverser {
         bool found = false;
         public static bool Find(IBlockStatement block) {
           var fac = new FindAnyContract();
-          fac.Visit(block);
+          fac.Traverse(block);
           return fac.found;
         }
         private FindAnyContract() {
         }
-        public override void Visit(IMethodCall methodCall) {
+        public override void TraverseChildren(IMethodCall methodCall) {
           var ct = TypeHelper.GetTypeName(methodCall.MethodToCall.ContainingType);
           if (ct.Equals("System.Diagnostics.Contracts")) {
             var mName = methodCall.MethodToCall.Name.Value;
             if (mName.Equals("Requires") || mName.Equals("Ensures") || mName.Equals("EndContractBlock")) {
               this.found = true;
-              this.stopTraversal = true;
+              this.StopTraversal = true;
               return;
             }
           }
-          base.Visit(methodCall);
+          base.TraverseChildren(methodCall);
         }
       }
 

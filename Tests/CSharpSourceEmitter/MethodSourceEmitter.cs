@@ -64,17 +64,61 @@ namespace CSharpSourceEmitter {
         Traverse(methodDefinition.GenericParameters);
       }
       Traverse(methodDefinition.Parameters);
+      if (methodDefinition.IsGeneric)
+        PrintConstraints(methodDefinition.GenericParameters);
       if (!methodDefinition.IsAbstract && !methodDefinition.IsExternal)
         Traverse(methodDefinition.Body);
       else
         PrintToken(CSharpToken.Semicolon);
     }
 
+    private void PrintConstraints(IEnumerable<IGenericMethodParameter> genericParameters) {
+      this.sourceEmitterOutput.IncreaseIndent();
+      foreach (var genpar in genericParameters) {
+        bool first = true;
+        if (genpar.MustBeReferenceType) {
+          this.sourceEmitterOutput.WriteLine("");
+          this.sourceEmitterOutput.Write("where " + genpar.Name.Value + ": class", true);
+          first = false;
+        }
+        if (genpar.MustBeValueType) {
+          this.sourceEmitterOutput.WriteLine("");
+          this.sourceEmitterOutput.Write("where " + genpar.Name.Value + ": struct", true);
+          first = false;
+        }
+        foreach (var c in genpar.Constraints) {
+          if (TypeHelper.TypesAreEquivalent(c, c.PlatformType.SystemValueType)) continue;
+          if (first) {
+            this.sourceEmitterOutput.WriteLine("");
+            this.sourceEmitterOutput.Write("where " + genpar.Name.Value + ": ", true);
+            first = false;
+          } else {
+            this.sourceEmitterOutput.Write(", ");
+          }
+          this.PrintTypeReference(c);
+        }
+        if (genpar.MustHaveDefaultConstructor && !genpar.MustBeValueType) {
+          if (first) {
+            this.sourceEmitterOutput.WriteLine("");
+            this.sourceEmitterOutput.Write("where " + genpar.Name.Value + ": new ()", true);
+          } else {
+            this.sourceEmitterOutput.Write(", new ()");
+          }
+        }
+      }
+      this.sourceEmitterOutput.DecreaseIndent();
+    }
+
+    private void foo<T, U>()
+      where T : class
+      where U : struct {
+    }
+
     public virtual void PrintMethodDefinitionVisibility(IMethodDefinition methodDefinition) {
       if (!IsDestructor(methodDefinition) &&
         !methodDefinition.ContainingTypeDefinition.IsInterface &&
-        IteratorHelper.EnumerableIsEmpty(MemberHelper.GetExplicitlyOverriddenMethods(methodDefinition))) 
-          PrintTypeMemberVisibility(methodDefinition.Visibility);
+        IteratorHelper.EnumerableIsEmpty(MemberHelper.GetExplicitlyOverriddenMethods(methodDefinition)))
+        PrintTypeMemberVisibility(methodDefinition.Visibility);
     }
 
     public virtual bool IsMethodUnsafe(IMethodDefinition methodDefinition) {
@@ -137,11 +181,10 @@ namespace CSharpSourceEmitter {
 
       if (IsDestructor(methodDefinition))
         return;
-      
+
       if (methodDefinition.IsStatic) {
         PrintKeywordStatic();
-      }
-      else if (methodDefinition.IsVirtual) {
+      } else if (methodDefinition.IsVirtual) {
         if (methodDefinition.IsNewSlot && 
           (IteratorHelper.EnumerableIsNotEmpty(MemberHelper.GetImplicitlyImplementedInterfaceMethods(methodDefinition)) ||
             IteratorHelper.EnumerableIsNotEmpty(MemberHelper.GetExplicitlyOverriddenMethods(methodDefinition)))) {
@@ -150,12 +193,11 @@ namespace CSharpSourceEmitter {
             PrintKeywordAbstract();
           else if (!methodDefinition.IsSealed)
             PrintKeywordVirtual();
-        }
-        else {
+        } else {
           // Instance method on a class
           if (methodDefinition.IsAbstract)
             PrintKeywordAbstract();
-          
+
           if (methodDefinition.IsNewSlot) {
             // Only overrides (or interface impls) can be sealed in C#.  If this is
             // a new sealed virtual then just emit as non-virtual which is a similar thing.
@@ -185,13 +227,13 @@ namespace CSharpSourceEmitter {
         PrintTypeDefinitionName(methodDefinition.ContainingTypeDefinition);
       else if (IsOperator(methodDefinition)) {
         sourceEmitterOutput.Write(MapOperatorNameToCSharp(methodDefinition));
-      } else 
+      } else
         PrintIdentifier(methodDefinition.Name);
     }
 
     public virtual string MapOperatorNameToCSharp(IMethodDefinition methodDefinition) {
       // ^ requires IsOperator(methodDefinition)
-      switch(methodDefinition.Name.Value) {
+      switch (methodDefinition.Name.Value) {
         case "op_Decrement": return "operator --";
         case "op_Increment": return "operator ++";
         case "op_UnaryNegation": return "operator -";
@@ -223,6 +265,8 @@ namespace CSharpSourceEmitter {
     }
     public virtual void PrintMethodReferenceName(IMethodReference methodReference, NameFormattingOptions options) {
       string signature = MemberHelper.GetMethodSignature(methodReference, options|NameFormattingOptions.ContractNullable|NameFormattingOptions.UseTypeKeywords);
+      if (signature.EndsWith(".get") || signature.EndsWith(".set"))
+        signature = signature.Substring(0, signature.Length-4);
       if (methodReference.Name.Value == ".ctor")
         PrintTypeReferenceName(methodReference.ContainingType);
       else

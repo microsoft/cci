@@ -1753,10 +1753,20 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the given list of statements.
     /// </summary>
     /// <param name="statements"></param>
-    public virtual List<IStatement>/*?*/ Rewrite(List<IStatement>/*?*/ statements) {
-      if (statements == null) return null;
-      for (int i = 0, n = statements.Count; i < n; i++)
-        statements[i] = this.Rewrite(statements[i]);
+    public virtual List<IStatement> Rewrite(List<IStatement> statements) {
+      Contract.Requires(statements != null);
+      Contract.Ensures(Contract.Result<List<IStatement>>() != null);
+
+      var n = statements.Count;
+      var j = 0;
+      for (int i = 0; i < n; i++) {
+        Contract.Assume(statements[i] != null);
+        var s = this.Rewrite(statements[i]);
+        if (s == CodeDummy.Block) continue;
+        Contract.Assume(j <= i);
+        statements[j++] = s;
+      }
+      if (j < n) statements.RemoveRange(j, n-j);
       return statements;
     }
 
@@ -1765,6 +1775,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="addition"></param>
     public virtual void RewriteChildren(Addition addition) {
+      Contract.Requires(addition != null);
+
       this.RewriteChildren((BinaryOperation)addition);
     }
 
@@ -1773,6 +1785,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="addressableExpression"></param>
     public virtual void RewriteChildren(AddressableExpression addressableExpression) {
+      Contract.Requires(addressableExpression != null);
+
       this.RewriteChildren((Expression)addressableExpression);
       var local = addressableExpression.Definition as ILocalDefinition;
       if (local != null)
@@ -1791,17 +1805,12 @@ namespace Microsoft.Cci.MutableCodeModel {
               addressableExpression.Definition = this.Rewrite(arrayIndexer);
               return; //do not rewrite Instance again
             } else {
-              var addressDereference = addressableExpression.Definition as IAddressDereference;
-              if (addressDereference != null)
-                addressableExpression.Definition = this.Rewrite(addressDereference);
+              var methodReference = addressableExpression.Definition as IMethodReference;
+              if (methodReference != null)
+                addressableExpression.Definition = this.Rewrite(methodReference);
               else {
-                var methodReference = addressableExpression.Definition as IMethodReference;
-                if (methodReference != null)
-                  addressableExpression.Definition = this.Rewrite(methodReference);
-                else {
-                  var thisReference = (IThisReference)addressableExpression.Definition;
-                  addressableExpression.Definition = this.Rewrite(thisReference);
-                }
+                var expression = (IExpression)addressableExpression.Definition;
+                addressableExpression.Definition = this.Rewrite(expression);
               }
             }
           }
@@ -1816,6 +1825,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="addressDereference"></param>
     public virtual void RewriteChildren(AddressDereference addressDereference) {
+      Contract.Requires(addressDereference != null);
+
       this.RewriteChildren((Expression)addressDereference);
       addressDereference.Address = this.Rewrite(addressDereference.Address);
     }
@@ -1825,6 +1836,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="addressOf"></param>
     public virtual void RewriteChildren(AddressOf addressOf) {
+      Contract.Requires(addressOf != null);
+
       this.RewriteChildren((Expression)addressOf);
       addressOf.Expression = this.Rewrite((AddressableExpression)addressOf.Expression);
     }
@@ -1834,6 +1847,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="anonymousDelegate"></param>
     public virtual void RewriteChildren(AnonymousDelegate anonymousDelegate) {
+      Contract.Requires(anonymousDelegate != null);
+
       this.RewriteChildren((Expression)anonymousDelegate);
       anonymousDelegate.Parameters = this.Rewrite(anonymousDelegate.Parameters);
       anonymousDelegate.Body = this.Rewrite((BlockStatement)anonymousDelegate.Body);
@@ -1847,6 +1862,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="arrayIndexer"></param>
     public virtual void RewriteChildren(ArrayIndexer arrayIndexer) {
+      Contract.Requires(arrayIndexer != null);
+
       this.RewriteChildren((Expression)arrayIndexer);
       arrayIndexer.IndexedObject = this.Rewrite(arrayIndexer.IndexedObject);
       arrayIndexer.Indices = this.Rewrite(arrayIndexer.Indices);
@@ -1857,6 +1874,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="assertStatement"></param>
     public virtual void RewriteChildren(AssertStatement assertStatement) {
+      Contract.Requires(assertStatement != null);
+
       this.RewriteChildren((Statement)assertStatement);
       assertStatement.Condition = this.Rewrite(assertStatement.Condition);
       if (assertStatement.Description != null)
@@ -1868,6 +1887,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="assignment"></param>
     public virtual void RewriteChildren(Assignment assignment) {
+      Contract.Requires(assignment != null);
+
       this.RewriteChildren((Expression)assignment);
       assignment.Target = this.Rewrite(assignment.Target);
       assignment.Source = this.Rewrite(assignment.Source);
@@ -1878,6 +1899,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="assumeStatement"></param>
     public virtual void RewriteChildren(AssumeStatement assumeStatement) {
+      Contract.Requires(assumeStatement != null);
+
       this.RewriteChildren((Statement)assumeStatement);
       assumeStatement.Condition = this.Rewrite(assumeStatement.Condition);
       if (assumeStatement.Description != null)
@@ -1888,6 +1911,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Called from the type specific rewrite method to rewrite the common part of all binary operation expressions.
     /// </summary>
     public virtual void RewriteChildren(BinaryOperation binaryOperation) {
+      Contract.Requires(binaryOperation != null);
+
       this.RewriteChildren((Expression)binaryOperation);
       binaryOperation.LeftOperand = this.Rewrite(binaryOperation.LeftOperand);
       binaryOperation.RightOperand = this.Rewrite(binaryOperation.RightOperand);
@@ -1897,6 +1922,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given bitwise and expression.
     /// </summary>
     public virtual void RewriteChildren(BitwiseAnd bitwiseAnd) {
+      Contract.Requires(bitwiseAnd != null);
+
       this.RewriteChildren((BinaryOperation)bitwiseAnd);
     }
 
@@ -1904,6 +1931,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given bitwise or expression.
     /// </summary>
     public virtual void RewriteChildren(BitwiseOr bitwiseOr) {
+      Contract.Requires(bitwiseOr != null);
+
       this.RewriteChildren((BinaryOperation)bitwiseOr);
     }
 
@@ -1911,6 +1940,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given block expression.
     /// </summary>
     public virtual void RewriteChildren(BlockExpression blockExpression) {
+      Contract.Requires(blockExpression != null);
+
       this.RewriteChildren((Expression)blockExpression);
       blockExpression.BlockStatement = this.Rewrite((BlockStatement)blockExpression.BlockStatement);
       blockExpression.Expression = this.Rewrite(blockExpression.Expression);
@@ -1920,6 +1951,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given statement block.
     /// </summary>
     public virtual void RewriteChildren(BlockStatement block) {
+      Contract.Requires(block != null);
+
       block.Statements = this.Rewrite(block.Statements);
     }
 
@@ -1927,6 +1960,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given bound expression.
     /// </summary>
     public virtual void RewriteChildren(BoundExpression boundExpression) {
+      Contract.Requires(boundExpression != null);
+
       this.RewriteChildren((Expression)boundExpression);
       if (boundExpression.Instance != null)
         boundExpression.Instance = this.Rewrite(boundExpression.Instance);
@@ -1948,6 +1983,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given break statement.
     /// </summary>
     public virtual void RewriteChildren(BreakStatement breakStatement) {
+      Contract.Requires(breakStatement != null);
+
       this.RewriteChildren((Statement)breakStatement);
     }
 
@@ -1955,6 +1992,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the cast-if-possible expression.
     /// </summary>
     public virtual void RewriteChildren(CastIfPossible castIfPossible) {
+      Contract.Requires(castIfPossible != null);
+
       this.RewriteChildren((Expression)castIfPossible);
       castIfPossible.ValueToCast = this.Rewrite(castIfPossible.ValueToCast);
       castIfPossible.TargetType = this.Rewrite(castIfPossible.TargetType);
@@ -1964,6 +2003,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given catch clause.
     /// </summary>
     public virtual void RewriteChildren(CatchClause catchClause) {
+      Contract.Requires(catchClause != null);
+
       catchClause.ExceptionType = this.Rewrite(catchClause.ExceptionType);
       if (catchClause.ExceptionContainer != Dummy.LocalVariable)
         catchClause.ExceptionContainer = this.Rewrite(catchClause.ExceptionContainer);
@@ -1976,6 +2017,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given check-if-instance expression.
     /// </summary>
     public virtual void RewriteChildren(CheckIfInstance checkIfInstance) {
+      Contract.Requires(checkIfInstance != null);
+
       this.RewriteChildren((Expression)checkIfInstance);
       checkIfInstance.Operand = this.Rewrite(checkIfInstance.Operand);
       checkIfInstance.TypeToCheck = this.Rewrite(checkIfInstance.TypeToCheck);
@@ -1985,6 +2028,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given compile time constant.
     /// </summary>
     public virtual void RewriteChildren(CompileTimeConstant constant) {
+      Contract.Requires(constant != null);
+
       this.RewriteChildren((Expression)constant);
     }
 
@@ -1993,6 +2038,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="constructorOrMethodCall"></param>
     public virtual void RewriteChildren(ConstructorOrMethodCall constructorOrMethodCall) {
+      Contract.Requires(constructorOrMethodCall != null);
+
       this.RewriteChildren((Expression)constructorOrMethodCall);
       constructorOrMethodCall.Arguments = this.Rewrite(constructorOrMethodCall.Arguments);
       constructorOrMethodCall.MethodToCall = this.Rewrite(constructorOrMethodCall.MethodToCall);
@@ -2002,6 +2049,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given conditional expression.
     /// </summary>
     public virtual void RewriteChildren(Conditional conditional) {
+      Contract.Requires(conditional != null);
+
       this.RewriteChildren((Expression)conditional);
       conditional.Condition = this.Rewrite(conditional.Condition);
       conditional.ResultIfTrue = this.Rewrite(conditional.ResultIfTrue);
@@ -2012,6 +2061,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given conditional statement.
     /// </summary>
     public virtual void RewriteChildren(ConditionalStatement conditionalStatement) {
+      Contract.Requires(conditionalStatement != null);
+
       this.RewriteChildren((Statement)conditionalStatement);
       conditionalStatement.Condition = this.Rewrite(conditionalStatement.Condition);
       conditionalStatement.TrueBranch = this.Rewrite(conditionalStatement.TrueBranch);
@@ -2022,6 +2073,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given continue statement.
     /// </summary>
     public virtual void RewriteChildren(ContinueStatement continueStatement) {
+      Contract.Requires(continueStatement != null);
+
       this.RewriteChildren((Statement)continueStatement);
     }
 
@@ -2029,6 +2082,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given conversion expression.
     /// </summary>
     public virtual void RewriteChildren(Conversion conversion) {
+      Contract.Requires(conversion != null);
+
       this.RewriteChildren((Expression)conversion);
       conversion.ValueToConvert = this.Rewrite(conversion.ValueToConvert);
       conversion.TypeAfterConversion = this.Rewrite(conversion.TypeAfterConversion);
@@ -2038,6 +2093,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given copy memory statement.
     /// </summary>
     public virtual void RewriteChildren(CopyMemoryStatement copyMemoryStatement) {
+      Contract.Requires(copyMemoryStatement != null);
+
       this.RewriteChildren((Statement)copyMemoryStatement);
       copyMemoryStatement.TargetAddress = this.Rewrite(copyMemoryStatement.TargetAddress);
       copyMemoryStatement.SourceAddress = this.Rewrite(copyMemoryStatement.SourceAddress);
@@ -2048,6 +2105,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given array creation expression.
     /// </summary>
     public virtual void RewriteChildren(CreateArray createArray) {
+      Contract.Requires(createArray != null);
+
       this.RewriteChildren((Expression)createArray);
       createArray.ElementType = this.Rewrite(createArray.ElementType);
       createArray.Sizes = this.Rewrite(createArray.Sizes);
@@ -2058,6 +2117,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the anonymous object creation expression.
     /// </summary>
     public virtual void RewriteChildren(CreateDelegateInstance createDelegateInstance) {
+      Contract.Requires(createDelegateInstance != null);
+
       this.RewriteChildren((Expression)createDelegateInstance);
       if (createDelegateInstance.Instance != null)
         createDelegateInstance.Instance = this.Rewrite(createDelegateInstance.Instance);
@@ -2068,6 +2129,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given constructor call expression.
     /// </summary>
     public virtual void RewriteChildren(CreateObjectInstance createObjectInstance) {
+      Contract.Requires(createObjectInstance != null);
+
       this.RewriteChildren((ConstructorOrMethodCall)createObjectInstance);
     }
 
@@ -2075,6 +2138,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given debugger break statement.
     /// </summary>
     public virtual void RewriteChildren(DebuggerBreakStatement debuggerBreakStatement) {
+      Contract.Requires(debuggerBreakStatement != null);
+
       this.RewriteChildren((Statement)debuggerBreakStatement);
     }
 
@@ -2082,6 +2147,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given defalut value expression.
     /// </summary>
     public virtual void RewriteChildren(DefaultValue defaultValue) {
+      Contract.Requires(defaultValue != null);
+
       this.RewriteChildren((Expression)defaultValue);
       defaultValue.DefaultValueType = this.Rewrite(defaultValue.DefaultValueType);
     }
@@ -2090,6 +2157,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given division expression.
     /// </summary>
     public virtual void RewriteChildren(Division division) {
+      Contract.Requires(division != null);
+
       this.RewriteChildren((BinaryOperation)division);
     }
 
@@ -2097,6 +2166,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given do until statement.
     /// </summary>
     public virtual void RewriteChildren(DoUntilStatement doUntilStatement) {
+      Contract.Requires(doUntilStatement != null);
+
       this.RewriteChildren((Statement)doUntilStatement);
       doUntilStatement.Body = this.Rewrite(doUntilStatement.Body);
       doUntilStatement.Condition = this.Rewrite(doUntilStatement.Condition);
@@ -2106,6 +2177,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given dup value expression.
     /// </summary>
     public virtual void RewriteChildren(DupValue dupValue) {
+      Contract.Requires(dupValue != null);
+
       this.RewriteChildren((Expression)dupValue);
     }
 
@@ -2113,6 +2186,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given empty statement.
     /// </summary>
     public virtual void RewriteChildren(EmptyStatement emptyStatement) {
+      Contract.Requires(emptyStatement != null);
+
       this.RewriteChildren((Statement)emptyStatement);
     }
 
@@ -2120,6 +2195,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given equality expression.
     /// </summary>
     public virtual void RewriteChildren(Equality equality) {
+      Contract.Requires(equality != null);
+
       this.RewriteChildren((BinaryOperation)equality);
     }
 
@@ -2127,6 +2204,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given exclusive or expression.
     /// </summary>
     public virtual void RewriteChildren(ExclusiveOr exclusiveOr) {
+      Contract.Requires(exclusiveOr != null);
+
       this.RewriteChildren((BinaryOperation)exclusiveOr);
     }
 
@@ -2134,6 +2213,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Called from the type specific rewrite method to rewrite the common part of all expressions.
     /// </summary>
     public virtual void RewriteChildren(Expression expression) {
+      Contract.Requires(expression != null);
+
       expression.Type = this.Rewrite(expression.Type);
     }
 
@@ -2141,6 +2222,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given expression statement.
     /// </summary>
     public virtual void RewriteChildren(ExpressionStatement expressionStatement) {
+      Contract.Requires(expressionStatement != null);
+
       this.RewriteChildren((Statement)expressionStatement);
       expressionStatement.Expression = this.Rewrite(expressionStatement.Expression);
     }
@@ -2149,6 +2232,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given fill memory statement.
     /// </summary>
     public virtual void RewriteChildren(FillMemoryStatement fillMemoryStatement) {
+      Contract.Requires(fillMemoryStatement != null);
+
       this.RewriteChildren((Statement)fillMemoryStatement);
       fillMemoryStatement.TargetAddress = this.Rewrite(fillMemoryStatement.TargetAddress);
       fillMemoryStatement.FillValue = this.Rewrite(fillMemoryStatement.FillValue);
@@ -2159,6 +2244,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given foreach statement.
     /// </summary>
     public virtual void RewriteChildren(ForEachStatement forEachStatement) {
+      Contract.Requires(forEachStatement != null);
+
       this.RewriteChildren((Statement)forEachStatement);
       forEachStatement.Variable = this.Rewrite((LocalDefinition)forEachStatement.Variable);
       forEachStatement.Collection = this.Rewrite(forEachStatement.Collection);
@@ -2169,6 +2256,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given for statement.
     /// </summary>
     public virtual void RewriteChildren(ForStatement forStatement) {
+      Contract.Requires(forStatement != null);
+
       this.RewriteChildren((Statement)forStatement);
       forStatement.InitStatements = this.Rewrite(forStatement.InitStatements);
       forStatement.Condition = this.Rewrite(forStatement.Condition);
@@ -2180,6 +2269,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given get type of typed reference expression.
     /// </summary>
     public virtual void RewriteChildren(GetTypeOfTypedReference getTypeOfTypedReference) {
+      Contract.Requires(getTypeOfTypedReference != null);
+
       this.RewriteChildren((Expression)getTypeOfTypedReference);
       getTypeOfTypedReference.TypedReference = this.Rewrite(getTypeOfTypedReference.TypedReference);
     }
@@ -2188,6 +2279,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given get value of typed reference expression.
     /// </summary>
     public virtual void RewriteChildren(GetValueOfTypedReference getValueOfTypedReference) {
+      Contract.Requires(getValueOfTypedReference != null);
+
       this.RewriteChildren((Expression)getValueOfTypedReference);
       getValueOfTypedReference.TypedReference = this.Rewrite(getValueOfTypedReference.TypedReference);
       getValueOfTypedReference.TargetType = this.Rewrite(getValueOfTypedReference.TargetType);
@@ -2197,6 +2290,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given goto statement.
     /// </summary>
     public virtual void RewriteChildren(GotoStatement gotoStatement) {
+      Contract.Requires(gotoStatement != null);
+
       this.RewriteChildren((Statement)gotoStatement);
     }
 
@@ -2204,6 +2299,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given goto switch case statement.
     /// </summary>
     public virtual void RewriteChildren(GotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      Contract.Requires(gotoSwitchCaseStatement != null);
+
       this.RewriteChildren((Statement)gotoSwitchCaseStatement);
     }
 
@@ -2211,6 +2308,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given greater-than expression.
     /// </summary>
     public virtual void RewriteChildren(GreaterThan greaterThan) {
+      Contract.Requires(greaterThan != null);
+
       this.RewriteChildren((BinaryOperation)greaterThan);
     }
 
@@ -2218,6 +2317,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given greater-than-or-equal expression.
     /// </summary>
     public virtual void RewriteChildren(GreaterThanOrEqual greaterThanOrEqual) {
+      Contract.Requires(greaterThanOrEqual != null);
+
       this.RewriteChildren((BinaryOperation)greaterThanOrEqual);
     }
 
@@ -2225,6 +2326,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given labeled statement.
     /// </summary>
     public virtual void RewriteChildren(LabeledStatement labeledStatement) {
+      Contract.Requires(labeledStatement != null);
+
       this.RewriteChildren((Statement)labeledStatement);
       labeledStatement.Statement = this.Rewrite(labeledStatement.Statement);
     }
@@ -2233,6 +2336,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given left shift expression.
     /// </summary>
     public virtual void RewriteChildren(LeftShift leftShift) {
+      Contract.Requires(leftShift != null);
+
       this.RewriteChildren((BinaryOperation)leftShift);
     }
 
@@ -2240,6 +2345,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given less-than expression.
     /// </summary>
     public virtual void RewriteChildren(LessThan lessThan) {
+      Contract.Requires(lessThan != null);
+
       this.RewriteChildren((BinaryOperation)lessThan);
     }
 
@@ -2247,6 +2354,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given less-than-or-equal expression.
     /// </summary>
     public virtual void RewriteChildren(LessThanOrEqual lessThanOrEqual) {
+      Contract.Requires(lessThanOrEqual != null);
+
       this.RewriteChildren((BinaryOperation)lessThanOrEqual);
     }
 
@@ -2254,6 +2363,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given local declaration statement.
     /// </summary>
     public virtual void RewriteChildren(LocalDeclarationStatement localDeclarationStatement) {
+      Contract.Requires(localDeclarationStatement != null);
+
       this.RewriteChildren((Statement)localDeclarationStatement);
       localDeclarationStatement.LocalVariable = this.Rewrite(localDeclarationStatement.LocalVariable);
       if (localDeclarationStatement.InitialValue != null)
@@ -2264,6 +2375,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given lock statement.
     /// </summary>
     public virtual void RewriteChildren(LockStatement lockStatement) {
+      Contract.Requires(lockStatement != null);
+
       this.RewriteChildren((Statement)lockStatement);
       lockStatement.Guard = this.Rewrite(lockStatement.Guard);
       lockStatement.Body = this.Rewrite(lockStatement.Body);
@@ -2273,6 +2386,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given logical not expression.
     /// </summary>
     public virtual void RewriteChildren(LogicalNot logicalNot) {
+      Contract.Requires(logicalNot != null);
+
       this.RewriteChildren((UnaryOperation)logicalNot);
     }
 
@@ -2280,6 +2395,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given make typed reference expression.
     /// </summary>
     public virtual void RewriteChildren(MakeTypedReference makeTypedReference) {
+      Contract.Requires(makeTypedReference != null);
+
       this.RewriteChildren((Expression)makeTypedReference);
       makeTypedReference.Operand = this.Rewrite(makeTypedReference.Operand);
     }
@@ -2288,15 +2405,19 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given method call.
     /// </summary>
     public virtual void RewriteChildren(MethodCall methodCall) {
-      this.RewriteChildren((ConstructorOrMethodCall)methodCall);
+      Contract.Requires(methodCall != null);
+
       if (!methodCall.IsStaticCall)
         methodCall.ThisArgument = this.Rewrite(methodCall.ThisArgument);
+      this.RewriteChildren((ConstructorOrMethodCall)methodCall);
     }
 
     /// <summary>
     /// Rewrites the children of the given modulus expression.
     /// </summary>
     public virtual void RewriteChildren(Modulus modulus) {
+      Contract.Requires(modulus != null);
+
       this.RewriteChildren((BinaryOperation)modulus);
     }
 
@@ -2304,6 +2425,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given multiplication expression.
     /// </summary>
     public virtual void RewriteChildren(Multiplication multiplication) {
+      Contract.Requires(multiplication != null);
+
       this.RewriteChildren((BinaryOperation)multiplication);
     }
 
@@ -2311,6 +2434,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given named argument expression.
     /// </summary>
     public virtual void RewriteChildren(NamedArgument namedArgument) {
+      Contract.Requires(namedArgument != null);
+
       this.RewriteChildren((Expression)namedArgument);
       namedArgument.ArgumentValue = this.Rewrite(namedArgument.ArgumentValue);
     }
@@ -2319,6 +2444,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given not equality expression.
     /// </summary>
     public virtual void RewriteChildren(NotEquality notEquality) {
+      Contract.Requires(notEquality != null);
+
       this.RewriteChildren((BinaryOperation)notEquality);
     }
 
@@ -2326,6 +2453,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given old value expression.
     /// </summary>
     public virtual void RewriteChildren(OldValue oldValue) {
+      Contract.Requires(oldValue != null);
+
       this.RewriteChildren((Expression)oldValue);
       oldValue.Expression = this.Rewrite(oldValue.Expression);
     }
@@ -2334,6 +2463,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given one's complement expression.
     /// </summary>
     public virtual void RewriteChildren(OnesComplement onesComplement) {
+      Contract.Requires(onesComplement != null);
+
       this.RewriteChildren((UnaryOperation)onesComplement);
     }
 
@@ -2341,6 +2472,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given out argument expression.
     /// </summary>
     public virtual void RewriteChildren(OutArgument outArgument) {
+      Contract.Requires(outArgument != null);
+
       this.RewriteChildren((Expression)outArgument);
       outArgument.Expression = (ITargetExpression)this.Rewrite((TargetExpression)outArgument.Expression);
     }
@@ -2349,6 +2482,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given pointer call.
     /// </summary>
     public virtual void RewriteChildren(PointerCall pointerCall) {
+      Contract.Requires(pointerCall != null);
+
       this.RewriteChildren((Expression)pointerCall);
       pointerCall.Pointer = this.Rewrite(pointerCall.Pointer);
       pointerCall.Arguments = this.Rewrite(pointerCall.Arguments);
@@ -2358,6 +2493,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given pop value expression.
     /// </summary>
     public virtual void RewriteChildren(PopValue popValue) {
+      Contract.Requires(popValue != null);
+
       this.RewriteChildren((Expression)popValue);
     }
 
@@ -2365,6 +2502,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given push statement.
     /// </summary>
     public virtual void RewriteChildren(PushStatement pushStatement) {
+      Contract.Requires(pushStatement != null);
+
       this.RewriteChildren((Statement)pushStatement);
       pushStatement.ValueToPush = this.Rewrite(pushStatement.ValueToPush);
     }
@@ -2373,6 +2512,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given ref argument expression.
     /// </summary>
     public virtual void RewriteChildren(RefArgument refArgument) {
+      Contract.Requires(refArgument != null);
+
       this.RewriteChildren((Expression)refArgument);
       refArgument.Expression = this.Rewrite((AddressableExpression)refArgument.Expression);
     }
@@ -2381,6 +2522,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given resource usage statement.
     /// </summary>
     public virtual void RewriteChildren(ResourceUseStatement resourceUseStatement) {
+      Contract.Requires(resourceUseStatement != null);
+
       this.RewriteChildren((Statement)resourceUseStatement);
       resourceUseStatement.ResourceAcquisitions = this.Rewrite(resourceUseStatement.ResourceAcquisitions);
       resourceUseStatement.Body = this.Rewrite(resourceUseStatement.Body);
@@ -2390,6 +2533,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the rethrow statement.
     /// </summary>
     public virtual void RewriteChildren(RethrowStatement rethrowStatement) {
+      Contract.Requires(rethrowStatement != null);
+
       this.RewriteChildren((Statement)rethrowStatement);
     }
 
@@ -2397,6 +2542,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the return statement.
     /// </summary>
     public virtual void RewriteChildren(ReturnStatement returnStatement) {
+      Contract.Requires(returnStatement != null);
+
       this.RewriteChildren((Statement)returnStatement);
       if (returnStatement.Expression != null)
         returnStatement.Expression = this.Rewrite(returnStatement.Expression);
@@ -2406,6 +2553,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given return value expression.
     /// </summary>
     public virtual void RewriteChildren(ReturnValue returnValue) {
+      Contract.Requires(returnValue != null);
+
       this.RewriteChildren((Expression)returnValue);
     }
 
@@ -2413,6 +2562,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given right shift expression.
     /// </summary>
     public virtual void RewriteChildren(RightShift rightShift) {
+      Contract.Requires(rightShift != null);
+
       this.RewriteChildren((BinaryOperation)rightShift);
     }
 
@@ -2420,6 +2571,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given runtime argument handle expression.
     /// </summary>
     public virtual void RewriteChildren(RuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+      Contract.Requires(runtimeArgumentHandleExpression != null);
+
       this.RewriteChildren((Expression)runtimeArgumentHandleExpression);
     }
 
@@ -2427,6 +2580,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given sizeof() expression.
     /// </summary>
     public virtual void RewriteChildren(SizeOf sizeOf) {
+      Contract.Requires(sizeOf != null);
+
       this.RewriteChildren((Expression)sizeOf);
       sizeOf.TypeToSize = this.Rewrite(sizeOf.TypeToSize);
     }
@@ -2435,6 +2590,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the the given source method body.
     /// </summary>
     public virtual void RewriteChildren(SourceMethodBody sourceMethodBody) {
+      Contract.Requires(sourceMethodBody != null);
+
       sourceMethodBody.Block = this.Rewrite((BlockStatement)sourceMethodBody.Block);
     }
 
@@ -2442,6 +2599,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given stack array create expression.
     /// </summary>
     public virtual void RewriteChildren(StackArrayCreate stackArrayCreate) {
+      Contract.Requires(stackArrayCreate != null);
+
       this.RewriteChildren((Expression)stackArrayCreate);
       stackArrayCreate.ElementType = this.Rewrite(stackArrayCreate.ElementType);
       stackArrayCreate.Size = this.Rewrite(stackArrayCreate.Size);
@@ -2458,6 +2617,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given subtraction expression.
     /// </summary>
     public virtual void RewriteChildren(Subtraction subtraction) {
+      Contract.Requires(subtraction != null);
+
       this.RewriteChildren((BinaryOperation)subtraction);
     }
 
@@ -2465,6 +2626,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given switch case.
     /// </summary>
     public virtual void RewriteChildren(SwitchCase switchCase) {
+      Contract.Requires(switchCase != null);
+
       if (!switchCase.IsDefault)
         switchCase.Expression = this.Rewrite((CompileTimeConstant)switchCase.Expression);
       switchCase.Body = this.Rewrite(switchCase.Body);
@@ -2474,6 +2637,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given switch statement.
     /// </summary>
     public virtual void RewriteChildren(SwitchStatement switchStatement) {
+      Contract.Requires(switchStatement != null);
+
       this.RewriteChildren((Statement)switchStatement);
       switchStatement.Expression = this.Rewrite(switchStatement.Expression);
       switchStatement.Cases = this.Rewrite(switchStatement.Cases);
@@ -2483,6 +2648,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given target expression.
     /// </summary>
     public virtual void RewriteChildren(TargetExpression targetExpression) {
+      Contract.Requires(targetExpression != null);
+
       this.RewriteChildren((Expression)targetExpression);
       var local = targetExpression.Definition as ILocalDefinition;
       if (local != null)
@@ -2525,6 +2692,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given this reference expression.
     /// </summary>
     public virtual void RewriteChildren(ThisReference thisReference) {
+      Contract.Requires(thisReference != null);
+
       this.RewriteChildren((Expression)thisReference);
     }
 
@@ -2532,6 +2701,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the throw statement.
     /// </summary>
     public virtual void RewriteChildren(ThrowStatement throwStatement) {
+      Contract.Requires(throwStatement != null);
+
       this.RewriteChildren((Statement)throwStatement);
       throwStatement.Exception = this.Rewrite(throwStatement.Exception);
     }
@@ -2540,6 +2711,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given tokenof() expression.
     /// </summary>
     public virtual void RewriteChildren(TokenOf tokenOf) {
+      Contract.Requires(tokenOf != null);
+
       this.RewriteChildren((Expression)tokenOf);
       var fieldReference = tokenOf.Definition as IFieldReference;
       if (fieldReference != null)
@@ -2559,6 +2732,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the try-catch-filter-finally statement.
     /// </summary>
     public virtual void RewriteChildren(TryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+      Contract.Requires(tryCatchFilterFinallyStatement != null);
+
       this.RewriteChildren((Statement)tryCatchFilterFinallyStatement);
       tryCatchFilterFinallyStatement.TryBody = this.Rewrite((BlockStatement)tryCatchFilterFinallyStatement.TryBody);
       tryCatchFilterFinallyStatement.CatchClauses = this.Rewrite(tryCatchFilterFinallyStatement.CatchClauses);
@@ -2572,6 +2747,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given typeof() expression.
     /// </summary>
     public virtual void RewriteChildren(TypeOf typeOf) {
+      Contract.Requires(typeOf != null);
+
       this.RewriteChildren((Expression)typeOf);
       typeOf.TypeToGet = this.Rewrite(typeOf.TypeToGet);
     }
@@ -2580,6 +2757,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given unary negation expression.
     /// </summary>
     public virtual void RewriteChildren(UnaryNegation unaryNegation) {
+      Contract.Requires(unaryNegation != null);
+
       this.RewriteChildren((UnaryOperation)unaryNegation);
     }
 
@@ -2587,6 +2766,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Called from the type specific rewrite method to rewrite the common part of all unary operation expressions.
     /// </summary>
     public virtual void RewriteChildren(UnaryOperation unaryOperation) {
+      Contract.Requires(unaryOperation != null);
+
       this.RewriteChildren((Expression)unaryOperation);
       unaryOperation.Operand = this.Rewrite(unaryOperation.Operand);
     }
@@ -2595,6 +2776,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given unary plus expression.
     /// </summary>
     public virtual void RewriteChildren(UnaryPlus unaryPlus) {
+      Contract.Requires(unaryPlus != null);
+
       this.RewriteChildren((UnaryOperation)unaryPlus);
     }
 
@@ -2602,6 +2785,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given vector length expression.
     /// </summary>
     public virtual void RewriteChildren(VectorLength vectorLength) {
+      Contract.Requires(vectorLength != null);
+
       this.RewriteChildren((Expression)vectorLength);
       vectorLength.Vector = this.Rewrite(vectorLength.Vector);
     }
@@ -2610,6 +2795,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given while do statement.
     /// </summary>
     public virtual void RewriteChildren(WhileDoStatement whileDoStatement) {
+      Contract.Requires(whileDoStatement != null);
+
       this.RewriteChildren((Statement)whileDoStatement);
       whileDoStatement.Condition = this.Rewrite(whileDoStatement.Condition);
       whileDoStatement.Body = this.Rewrite(whileDoStatement.Body);
@@ -2619,6 +2806,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given yield break statement.
     /// </summary>
     public virtual void RewriteChildren(YieldBreakStatement yieldBreakStatement) {
+      Contract.Requires(yieldBreakStatement != null);
+
       this.RewriteChildren((Statement)yieldBreakStatement);
     }
 
@@ -2626,6 +2815,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the children of the given yield return statement.
     /// </summary>
     public virtual void RewriteChildren(YieldReturnStatement yieldReturnStatement) {
+      Contract.Requires(yieldReturnStatement != null);
+
       this.RewriteChildren((Statement)yieldReturnStatement);
       yieldReturnStatement.Expression = this.Rewrite(yieldReturnStatement.Expression);
     }
@@ -3936,7 +4127,9 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #endregion Methods that take an immutable type and return a type-specific mutable object, either by using the internal visitor, or else directly
 
+#pragma warning disable 618
     private class CreateMutableType : BaseCodeVisitor, ICodeVisitor {
+#pragma warning restore 618
 
       internal CodeMutator myCodeMutator;
 
@@ -4830,6 +5023,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// This class has overrides for Visit(IFieldReference), Visit(IMethodReference), 
   /// Visit(ITypeReference), VisitReferenceTo(ILocalDefinition) and VisitReferenceTo(IParameterDefinition) that make sure to not modify the references.
   /// </summary>
+  [Obsolete("Please use CodeRewriter")]
   public class MethodBodyCodeMutator : CodeMutatingVisitor {
 
     /// <summary>
@@ -4918,6 +5112,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// Uses the inherited methods from MetadataMutatingVisitor to walk everything down to the method body level,
   /// then takes over and define Visit methods for all of the structures in the code model that pertain to method bodies.
   /// </summary>
+  [Obsolete("Please use CodeRewriter")]
   public class CodeMutatingVisitor : MutatingVisitor {
 
     /// <summary>
@@ -6207,7 +6402,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// can dispatch the visits automatically. The result of a visit is either an IExpression or
     /// an IStatement stored in the resultExpression or resultStatement fields. 
     /// </summary>
+#pragma warning disable 618
     private class CreateMutableType : BaseCodeVisitor, ICodeVisitor {
+#pragma warning restore 618
 
       /// <summary>
       /// Code mutator to be called back. 
@@ -7627,6 +7824,8 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// </summary>
     /// <param name="contractElement"></param>
     public virtual void RewriteChildren(ContractElement contractElement) {
+      Contract.Requires(contractElement != null);
+
       contractElement.Condition = this.Rewrite(contractElement.Condition);
       if (contractElement.Description != null)
         contractElement.Description = this.Rewrite(contractElement.Description);
@@ -7636,6 +7835,8 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Rewrites the children of the given loop contract.
     /// </summary>
     public virtual void RewriteChildren(LoopContract loopContract) {
+      Contract.Requires(loopContract != null);
+
       loopContract.Invariants = this.Rewrite(loopContract.Invariants);
       loopContract.Variants = this.Rewrite(loopContract.Variants);
       loopContract.Writes = this.Rewrite(loopContract.Writes);
@@ -7645,6 +7846,8 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Rewrites the children of the given loop invariant.
     /// </summary>
     public virtual void RewriteChildren(LoopInvariant loopInvariant) {
+      Contract.Requires(loopInvariant != null);
+
       this.RewriteChildren((ContractElement)loopInvariant);
     }
 
@@ -7652,6 +7855,8 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Rewrites the children of the given method contract.
     /// </summary>
     public virtual void RewriteChildren(MethodContract methodContract) {
+      Contract.Requires(methodContract != null);
+
       methodContract.Allocates = this.Rewrite(methodContract.Allocates);
       methodContract.Frees = this.Rewrite(methodContract.Frees);
       methodContract.ModifiedVariables = this.Rewrite(methodContract.ModifiedVariables);
@@ -7666,6 +7871,8 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Rewrites the children of the given pre condition.
     /// </summary>
     public virtual void RewriteChildren(Precondition precondition) {
+      Contract.Requires(precondition != null);
+
       this.RewriteChildren((ContractElement)precondition);
       if (precondition.ExceptionToThrow != null)
         precondition.ExceptionToThrow = this.Rewrite(precondition.ExceptionToThrow);
@@ -7675,6 +7882,8 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Rewrites the children of the given thrown exception.
     /// </summary>
     public virtual void RewriteChildren(ThrownException thrownException) {
+      Contract.Requires(thrownException != null);
+
       thrownException.ExceptionType = this.Rewrite(thrownException.ExceptionType);
       thrownException.Postcondition = this.Rewrite((Postcondition)thrownException.Postcondition);
     }
@@ -7683,6 +7892,8 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Rewrites the children of the given type contract.
     /// </summary>
     public virtual void RewriteChildren(TypeContract typeContract) {
+      Contract.Requires(typeContract != null);
+
       typeContract.ContractFields = this.Rewrite(typeContract.ContractFields);
       typeContract.ContractMethods = this.Rewrite(typeContract.ContractMethods);
       typeContract.Invariants = this.Rewrite(typeContract.Invariants);
@@ -7692,11 +7903,12 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Rewrites the children of the given type invariant.
     /// </summary>
     public virtual void RewriteChildren(TypeInvariant typeInvariant) {
+      Contract.Requires(typeInvariant != null);
+
       this.RewriteChildren((ContractElement)typeInvariant);
     }
 
   }
-
 
   /// <summary>
   /// Uses the inherited methods from MetadataMutator to walk everything down to the method body level,
@@ -8196,6 +8408,7 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
   /// This class has overrides for Visit(IFieldReference), Visit(IMethodReference), and
   /// Visit(ITypeReference) that make sure to not modify the references.
   /// </summary>
+  [Obsolete("Please use CodeAndContractRewriter")]
   public class MethodBodyCodeAndContractMutator : CodeAndContractMutatingVisitor {
     /// <summary>
     /// 
@@ -8281,6 +8494,7 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
   /// <summary>
   /// 
   /// </summary>
+  [Obsolete("Please use CodeAndContractRewriter")]
   public class CodeAndContractMutatingVisitor : CodeMutatingVisitor {
     /// <summary>
     /// An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.

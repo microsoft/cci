@@ -38,6 +38,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An expression that denotes a value that has an address in memory, such as a local variable, parameter, field, array element, pointer target, or method.
   /// </summary>
+  [ContractClass(typeof(IAddressableExpressionContract))]
   public interface IAddressableExpression : IExpression {
 
     /// <summary>
@@ -45,8 +46,7 @@ namespace Microsoft.Cci {
     /// </summary>
     object Definition {
       get;
-      //^ ensures result is ILocalDefinition || result is IParameterDefinition || result is IFieldReference || result is IArrayIndexer 
-      //^   || result is IAddressDereference || result is IMethodReference || result is IThisReference;
+      //^ ensures result is ILocalDefinition || result is IParameterDefinition || result is IFieldReference || result is IMethodReference || result is IExpression;
     }
 
     /// <summary>
@@ -55,6 +55,48 @@ namespace Microsoft.Cci {
     IExpression/*?*/ Instance { get; }
 
   }
+
+  #region IAdddressableExpression contract binding
+  [ContractClassFor(typeof(IAddressableExpression))]
+  abstract class IAddressableExpressionContract : IAddressableExpression {
+    #region IAddressableExpression Members
+
+    public object Definition {
+      get {
+        Contract.Ensures(Contract.Result<object>() is ILocalDefinition || Contract.Result<object>()  is IParameterDefinition ||
+          Contract.Result<object>() is IFieldReference || Contract.Result<object>() is IMethodReference || Contract.Result<object>() is IExpression);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IExpression Instance {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IExpression Members
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public ITypeReference Type {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// An expression that takes the address of a target expression.
@@ -977,12 +1019,50 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An expression that results in the default value of a given type.
   /// </summary>
+  [ContractClass(typeof(IDefaultValueContract))]
   public interface IDefaultValue : IExpression {
     /// <summary>
     /// The type whose default value is the result of this expression.
     /// </summary>
     ITypeReference DefaultValueType { get; }
   }
+
+  #region IDefaultValue contract binding
+  [ContractClassFor(typeof(IDefaultValue))]
+  abstract class IDefaultValueContract : IDefaultValue {
+    #region IDefaultValue Members
+
+    public ITypeReference DefaultValueType {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+
+    #region IExpression Members
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public ITypeReference Type {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// An expression that divides the value of the left operand by the value of the right operand. 
@@ -1630,6 +1710,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An expression that can be the target of an assignment statement or that can be passed an argument to an out parameter.
   /// </summary>
+  [ContractClass(typeof(ITargetExpressionContract))]
   public interface ITargetExpression : IExpression {
 
     /// <summary>
@@ -1670,6 +1751,66 @@ namespace Microsoft.Cci {
     bool IsVolatile { get; }
 
   }
+
+  #region ITargetExpression contract binding
+  [ContractClassFor(typeof(ITargetExpression))]
+  abstract class ITargetExpressionContract : ITargetExpression {
+    #region ITargetExpression Members
+
+    public byte Alignment {
+      get {
+        Contract.Requires(this.IsUnaligned);
+        Contract.Ensures(Contract.Result<byte>() == 1 || Contract.Result<byte>() == 2 || Contract.Result<byte>() == 4);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public object Definition {
+      get {
+        Contract.Ensures(Contract.Result<object>() is ILocalDefinition || Contract.Result<object>() is IParameterDefinition || 
+          Contract.Result<object>() is IFieldReference || Contract.Result<object>() is IArrayIndexer || 
+          Contract.Result<object>() is IAddressDereference || Contract.Result<object>() is IPropertyDefinition);
+        Contract.Ensures(!(Contract.Result<object>() is IPropertyDefinition) || ((IPropertyDefinition)Contract.Result<object>()).Setter != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IExpression Instance {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsUnaligned {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsVolatile {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IExpression Members
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public ITypeReference Type {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// Wraps an expression that represents a storage location that can be assigned to or whose address can be computed and passed as a parameter.

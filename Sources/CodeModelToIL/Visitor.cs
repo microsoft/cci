@@ -889,9 +889,10 @@ namespace Microsoft.Cci {
         this.generator.MarkLabel(falseCase);
       }
       this.Traverse(conditionalStatement.FalseBranch);
-      if (endif != null)
+      if (endif != null) {
         this.generator.MarkLabel(endif);
-      this.lastStatementWasUnconditionalTransfer = false;
+        this.lastStatementWasUnconditionalTransfer = false;
+      }
     }
 
     internal bool LabelIsOutsideCurrentExceptionBlock(ILGeneratorLabel label) {
@@ -1452,8 +1453,14 @@ namespace Microsoft.Cci {
         this.GetLocalIndex(localDeclarationStatement.LocalVariable);
         this.generator.AddVariableToCurrentScope(localDeclarationStatement.LocalVariable);
         if (localDeclarationStatement.InitialValue != null) {
-          this.Traverse(localDeclarationStatement.InitialValue);
-          this.VisitAssignmentTo(localDeclarationStatement.LocalVariable);
+          if (localDeclarationStatement.InitialValue is IDefaultValue) {
+            //TODO: avoid doing this for reference types and primitive types
+            this.LoadAddressOf(localDeclarationStatement.LocalVariable, null);
+            this.generator.Emit(OperationCode.Initobj, localDeclarationStatement.LocalVariable.Type);
+          } else {
+            this.Traverse(localDeclarationStatement.InitialValue);
+            this.VisitAssignmentTo(localDeclarationStatement.LocalVariable);
+          }
         }
       }
       this.lastStatementWasUnconditionalTransfer = false;

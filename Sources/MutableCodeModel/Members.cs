@@ -54,11 +54,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IBlockStatement Block {
       get {
+        Contract.Ensures(Contract.Result<IBlockStatement>() != null);
         if (this.block == null)
           this.block = this.GetBlock();
         return this.block;
       }
-      set { this.block = value; this.ilWasGenerated = false; }
+      set {
+        Contract.Requires(value != null);
+        this.block = value; 
+        this.ilWasGenerated = false; 
+      }
     }
     IBlockStatement/*?*/ block;
 
@@ -292,6 +297,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.privateHelperTypes = value; }
     }
     List<ITypeDefinition>/*?*/ privateHelperTypes;
+
+    /// <summary>
+    /// The ISourceLocationProvider instance that is used when then body is compiled to IL. May be null.
+    /// </summary>
+    public ISourceLocationProvider/*?*/ SourceLocationProvider {
+      get { return this.sourceLocationProvider; }
+    }
 
 
     #region IMethodBody Members

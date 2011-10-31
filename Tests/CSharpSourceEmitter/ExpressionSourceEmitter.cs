@@ -69,8 +69,8 @@ namespace CSharpSourceEmitter {
         this.sourceEmitterOutput.Write(MemberHelper.GetMethodSignature(method, NameFormattingOptions.Signature));
         return;
       }
-      Debug.Assert(addressableExpression.Definition is IThisReference);
-      this.sourceEmitterOutput.Write("this");
+      Debug.Assert(addressableExpression.Definition is IExpression);
+      this.Traverse((IExpression)addressableExpression.Definition);
     }
 
     public override bool Equals(object obj) {
@@ -775,7 +775,26 @@ namespace CSharpSourceEmitter {
       }
       if (!delegateInvocation)
         this.PrintMethodReferenceName(methodCall.MethodToCall, options);
-      this.PrintArgumentList(methodCall.Arguments);
+      if (methodCall.MethodToCall.Name.Value.StartsWith("get_")) {
+        if (methodCall.MethodToCall.ParameterCount > 0) {
+          this.sourceEmitterOutput.Write("[");
+          this.Traverse(methodCall.Arguments);
+          this.sourceEmitterOutput.Write("]");
+        }
+      } else if (methodCall.MethodToCall.Name.Value.StartsWith("set_") && methodCall.MethodToCall.ParameterCount > 0) {
+        var argList = new List<IExpression>(methodCall.Arguments);
+        if (argList.Count > 1) {
+          this.sourceEmitterOutput.Write("[");
+          for (int i = 0, n = argList.Count-1; i < n; i++) {
+            if (i > 0) this.sourceEmitterOutput.Write(", ");
+            this.Traverse(argList[i]);
+          }
+          this.sourceEmitterOutput.Write("]");
+        }
+        this.sourceEmitterOutput.Write(" = ");
+        this.Traverse(argList[argList.Count-1]);
+      } else 
+        this.PrintArgumentList(methodCall.Arguments);
     }
 
     private void PrintArgumentList(IEnumerable<IExpression> arguments) {

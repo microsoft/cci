@@ -992,7 +992,7 @@ namespace Microsoft.Cci.Ast {
           if (addrDeref != null) {
             if (addrDeref.HasErrors)
               return true;
-            if (allowAssignment && DerefConstVisitor.Check(addrDeref)) {
+            if (allowAssignment && DerefConstFinder.Check(addrDeref)) {
               this.Helper.ReportError(new AstErrorMessage(this, Error.AssignmentLeftHandValueExpected, addrDeref.Locations));
               return true;
             }
@@ -1017,37 +1017,34 @@ namespace Microsoft.Cci.Ast {
       return this.Expression.HasErrors;
     }
 
-    private class DerefConstVisitor : BaseCodeVisitor {
+    private class DerefConstFinder : CodeTraverser {
+
       public static bool Check(IExpression expr) {
-        var visitor = new DerefConstVisitor();
-        visitor.Visit(expr);
+        var visitor = new DerefConstFinder();
+        visitor.Traverse(expr);
         return visitor.result;
 
       }
 
       private bool result = false;
 
-      public override void Visit(IExpression expr) {
-        expr.Dispatch(this);
+      public override void TraverseChildren(IAddressDereference addressDereference) {
+        this.TraverseChildren(addressDereference.Address);
       }
 
-      public override void Visit(IAddressDereference addressDereference) {
-        this.Visit(addressDereference.Address);
+      public override void TraverseChildren(IAddition addition) {
+        this.TraverseChildren(addition.LeftOperand);
       }
 
-      public override void Visit(IAddition addition) {
-        this.Visit(addition.LeftOperand);
+      public override void TraverseChildren(IConversion conversion) {
+        this.TraverseChildren(conversion.ValueToConvert);
       }
 
-      public override void Visit(IConversion conversion) {
-        this.Visit(conversion.ValueToConvert);
+      public override void TraverseChildren(IAddressOf addressOf) {
+        this.TraverseChildren(addressOf.Expression);
       }
 
-      public override void Visit(IAddressOf addressOf) {
-        this.Visit(addressOf.Expression);
-      }
-
-      public override void Visit(IAddressableExpression addressableExpression) {
+      public override void TraverseChildren(IAddressableExpression addressableExpression) {
         IFieldDefinition fieldDef = addressableExpression.Definition as IFieldDefinition;
         if (fieldDef != null && fieldDef.IsReadOnly)
           this.result = true;

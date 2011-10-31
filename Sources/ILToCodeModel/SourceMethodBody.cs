@@ -533,8 +533,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     private Statement ParseAssignment(IOperation currentOperation) {
       TargetExpression target = new TargetExpression();
       ITypeReference/*?*/ elementType = null;
-      target.Alignment = this.alignment;
-      target.Definition = currentOperation.Value;
+      if (this.alignment > 0) target.Alignment = this.alignment;
       target.IsVolatile = this.sawVolatile;
       Assignment assignment = new Assignment();
       assignment.Target = target;
@@ -544,6 +543,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       switch (currentOperation.OperationCode) {
         case OperationCode.Stfld:
           target.Instance = this.PopOperandStack();
+          Contract.Assume(currentOperation.Value is IFieldReference);
+          var field = (IFieldReference)currentOperation.Value;
+          target.Definition = field;
+          assignment.Type = field.Type;
           break;
         case OperationCode.Stelem:
         case OperationCode.Stelem_I:
@@ -595,12 +598,16 @@ namespace Microsoft.Cci.ILToCodeModel {
         case OperationCode.Stloc_2:
         case OperationCode.Stloc_3:
         case OperationCode.Stloc_S:
-          var local = this.GetLocalWithSourceName((ILocalDefinition)target.Definition);
+          Contract.Assume(currentOperation.Value is ILocalDefinition);
+          var local = this.GetLocalWithSourceName((ILocalDefinition)currentOperation.Value);
           target.Definition = local;
           this.numberOfAssignments[local] =
             this.numberOfAssignments.ContainsKey(local) ?
             this.numberOfAssignments[local] + 1 :
             1;
+          break;
+        default:
+          target.Definition = currentOperation.Value;
           break;
       }
       this.alignment = 0;

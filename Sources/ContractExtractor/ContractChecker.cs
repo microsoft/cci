@@ -17,7 +17,7 @@ using Microsoft.Cci.MutableContracts;
 
 namespace Microsoft.Cci.Contracts {
 
-  internal class Visibility : BaseCodeTraverser {
+  internal class Visibility : CodeTraverser {
 
     private IMetadataHost host;
     private TypeMemberVisibility currentVisibility = TypeMemberVisibility.Public;
@@ -33,11 +33,11 @@ namespace Microsoft.Cci.Contracts {
     /// </summary>
     public static TypeMemberVisibility MostRestrictiveVisibility(IMetadataHost host, IExpression expression) {
       var v = new Visibility(host);
-      v.Visit(expression);
+      v.Traverse(expression);
       return v.currentVisibility;
     }
 
-    public override void Visit(IBoundExpression boundExpression) {
+    public override void TraverseChildren(IBoundExpression boundExpression) {
       var tm = boundExpression.Definition as ITypeMemberReference;
       if (tm != null) {
         var resolvedMember = tm.ResolvedTypeDefinitionMember;
@@ -50,7 +50,7 @@ namespace Microsoft.Cci.Contracts {
           this.currentVisibility = TypeHelper.VisibilityIntersection(this.currentVisibility, resolvedMember.Visibility);
         }
       }
-      base.Visit(boundExpression);
+      base.TraverseChildren(boundExpression);
     }
 
   }

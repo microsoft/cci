@@ -418,6 +418,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="addition"></param>
     public Addition Copy(IAddition addition) {
+      Contract.Requires(addition != null);
+      Contract.Ensures(Contract.Result<Addition>() != null);
+
       return new Addition(addition);
     }
 
@@ -426,6 +429,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="addressableExpression"></param>
     public AddressableExpression Copy(IAddressableExpression addressableExpression) {
+      Contract.Requires(addressableExpression != null);
+      Contract.Ensures(Contract.Result<AddressableExpression>() != null);
+
       return new AddressableExpression(addressableExpression);
     }
 
@@ -434,6 +440,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="addressDereference"></param>
     public AddressDereference Copy(IAddressDereference addressDereference) {
+      Contract.Requires(addressDereference != null);
+      Contract.Ensures(Contract.Result<AddressDereference>() != null);
+
       return new AddressDereference(addressDereference);
     }
 
@@ -442,6 +451,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="addressOf"></param>
     public AddressOf Copy(IAddressOf addressOf) {
+      Contract.Requires(addressOf != null);
+      Contract.Ensures(Contract.Result<AddressOf>() != null);
+
       return new AddressOf(addressOf);
     }
 
@@ -450,6 +462,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="anonymousDelegate"></param>
     public AnonymousDelegate Copy(IAnonymousDelegate anonymousDelegate) {
+      Contract.Requires(anonymousDelegate != null);
+      Contract.Ensures(Contract.Result<AnonymousDelegate>() != null);
+
       return new AnonymousDelegate(anonymousDelegate);
     }
 
@@ -458,6 +473,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="arrayIndexer"></param>
     public ArrayIndexer Copy(IArrayIndexer arrayIndexer) {
+      Contract.Requires(arrayIndexer != null);
+      Contract.Ensures(Contract.Result<ArrayIndexer>() != null);
+
       return new ArrayIndexer(arrayIndexer);
     }
 
@@ -466,6 +484,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="assertStatement"></param>
     public AssertStatement Copy(IAssertStatement assertStatement) {
+      Contract.Requires(assertStatement != null);
+      Contract.Ensures(Contract.Result<AssertStatement>() != null);
+
       return new AssertStatement(assertStatement);
     }
 
@@ -474,6 +495,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="assignment"></param>
     public Assignment Copy(IAssignment assignment) {
+      Contract.Requires(assignment != null);
+      Contract.Ensures(Contract.Result<Assignment>() != null);
+
       return new Assignment(assignment);
     }
 
@@ -482,6 +506,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="assumeStatement"></param>
     public AssumeStatement Copy(IAssumeStatement assumeStatement) {
+      Contract.Requires(assumeStatement != null);
+      Contract.Ensures(Contract.Result<AssumeStatement>() != null);
+
       return new AssumeStatement(assumeStatement);
     }
 
@@ -490,6 +517,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="bitwiseAnd"></param>
     public BitwiseAnd Copy(IBitwiseAnd bitwiseAnd) {
+      Contract.Requires(bitwiseAnd != null);
+      Contract.Ensures(Contract.Result<BitwiseAnd>() != null);
+
       return new BitwiseAnd(bitwiseAnd);
     }
 
@@ -498,6 +528,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="bitwiseOr"></param>
     public BitwiseOr Copy(IBitwiseOr bitwiseOr) {
+      Contract.Requires(bitwiseOr != null);
+      Contract.Ensures(Contract.Result<BitwiseOr>() != null);
+
       return new BitwiseOr(bitwiseOr);
     }
 
@@ -506,6 +539,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="blockExpression"></param>
     public BlockExpression Copy(IBlockExpression blockExpression) {
+      Contract.Requires(blockExpression != null);
+      Contract.Ensures(Contract.Result<BlockExpression>() != null);
+
       return new BlockExpression(blockExpression);
     }
 
@@ -514,6 +550,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="block"></param>
     public BlockStatement Copy(IBlockStatement block) {
+      Contract.Requires(block != null);
+      Contract.Ensures(Contract.Result<BlockStatement>() != null);
+
       return new BlockStatement(block);
     }
 
@@ -522,6 +561,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="breakStatement"></param>
     public BreakStatement Copy(IBreakStatement breakStatement) {
+      Contract.Requires(breakStatement != null);
+      Contract.Ensures(Contract.Result<BreakStatement>() != null);
+
       return new BreakStatement(breakStatement);
     }
 
@@ -530,6 +572,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="castIfPossible"></param>
     public CastIfPossible Copy(ICastIfPossible castIfPossible) {
+      Contract.Requires(castIfPossible != null);
+      Contract.Ensures(Contract.Result<CastIfPossible>() != null);
+
       return new CastIfPossible(castIfPossible);
     }
 
@@ -538,6 +583,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="catchClause"></param>
     public CatchClause Copy(ICatchClause catchClause) {
+      Contract.Requires(catchClause != null);
+      Contract.Ensures(Contract.Result<CatchClause>() != null);
+
       return new CatchClause(catchClause);
     }
 
@@ -546,6 +594,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="checkIfInstance"></param>
     public CheckIfInstance Copy(ICheckIfInstance checkIfInstance) {
+      Contract.Requires(checkIfInstance != null);
+      Contract.Ensures(Contract.Result<CheckIfInstance>() != null);
+
       return new CheckIfInstance(checkIfInstance);
     }
 
@@ -554,6 +605,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="constant"></param>
     public CompileTimeConstant Copy(ICompileTimeConstant constant) {
+      Contract.Requires(constant != null);
+      Contract.Ensures(Contract.Result<CompileTimeConstant>() != null);
+
       return new CompileTimeConstant(constant);
     }
 
@@ -562,6 +616,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="conversion"></param>
     public Conversion Copy(IConversion conversion) {
+      Contract.Requires(conversion != null);
+      Contract.Ensures(Contract.Result<Conversion>() != null);
+
       return new Conversion(conversion);
     }
 
@@ -570,6 +627,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="conditional"></param>
     public Conditional Copy(IConditional conditional) {
+      Contract.Requires(conditional != null);
+      Contract.Ensures(Contract.Result<Conditional>() != null);
+
       return new Conditional(conditional);
     }
 
@@ -578,6 +638,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="conditionalStatement"></param>
     public ConditionalStatement Copy(IConditionalStatement conditionalStatement) {
+      Contract.Requires(conditionalStatement != null);
+      Contract.Ensures(Contract.Result<ConditionalStatement>() != null);
+
       return new ConditionalStatement(conditionalStatement);
     }
 
@@ -586,6 +649,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="continueStatement"></param>
     public ContinueStatement Copy(IContinueStatement continueStatement) {
+      Contract.Requires(continueStatement != null);
+      Contract.Ensures(Contract.Result<ContinueStatement>() != null);
+
       return new ContinueStatement(continueStatement);
     }
 
@@ -594,6 +660,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="copyMemoryStatement"></param>
     public CopyMemoryStatement Copy(ICopyMemoryStatement copyMemoryStatement) {
+      Contract.Requires(copyMemoryStatement != null);
+      Contract.Ensures(Contract.Result<CopyMemoryStatement>() != null);
+
       return new CopyMemoryStatement(copyMemoryStatement);
     }
 
@@ -602,6 +671,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="createArray"></param>
     public CreateArray Copy(ICreateArray createArray) {
+      Contract.Requires(createArray != null);
+      Contract.Ensures(Contract.Result<CreateArray>() != null);
+
       return new CreateArray(createArray);
     }
 
@@ -610,6 +682,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="createObjectInstance"></param>
     public CreateObjectInstance Copy(ICreateObjectInstance createObjectInstance) {
+      Contract.Requires(createObjectInstance != null);
+      Contract.Ensures(Contract.Result<CreateObjectInstance>() != null);
+
       return new CreateObjectInstance(createObjectInstance);
     }
 
@@ -618,6 +693,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="createDelegateInstance"></param>
     public CreateDelegateInstance Copy(ICreateDelegateInstance createDelegateInstance) {
+      Contract.Requires(createDelegateInstance != null);
+      Contract.Ensures(Contract.Result<CreateDelegateInstance>() != null);
+
       return new CreateDelegateInstance(createDelegateInstance);
     }
 
@@ -626,6 +704,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="defaultValue"></param>
     public DefaultValue Copy(IDefaultValue defaultValue) {
+      Contract.Requires(defaultValue != null);
+      Contract.Ensures(Contract.Result<DefaultValue>() != null);
+
       return new DefaultValue(defaultValue);
     }
 
@@ -634,6 +715,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="division"></param>
     public Division Copy(IDivision division) {
+      Contract.Requires(division != null);
+      Contract.Ensures(Contract.Result<Division>() != null);
+
       return new Division(division);
     }
 
@@ -642,6 +726,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="doUntilStatement"></param>
     public DoUntilStatement Copy(IDoUntilStatement doUntilStatement) {
+      Contract.Requires(doUntilStatement != null);
+      Contract.Ensures(Contract.Result<DoUntilStatement>() != null);
+
       return new DoUntilStatement(doUntilStatement);
     }
 
@@ -650,6 +737,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="dupValue"></param>
     public DupValue Copy(IDupValue dupValue) {
+      Contract.Requires(dupValue != null);
+      Contract.Ensures(Contract.Result<DupValue>() != null);
+
       return new DupValue(dupValue);
     }
 
@@ -658,6 +748,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="emptyStatement"></param>
     public EmptyStatement Copy(IEmptyStatement emptyStatement) {
+      Contract.Requires(emptyStatement != null);
+      Contract.Ensures(Contract.Result<EmptyStatement>() != null);
+
       return new EmptyStatement(emptyStatement);
     }
 
@@ -666,6 +759,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="equality"></param>
     public Equality Copy(IEquality equality) {
+      Contract.Requires(equality != null);
+      Contract.Ensures(Contract.Result<Equality>() != null);
+
       return new Equality(equality);
     }
 
@@ -674,6 +770,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="exclusiveOr"></param>
     public ExclusiveOr Copy(IExclusiveOr exclusiveOr) {
+      Contract.Requires(exclusiveOr != null);
+      Contract.Ensures(Contract.Result<ExclusiveOr>() != null);
+
       return new ExclusiveOr(exclusiveOr);
     }
 
@@ -682,6 +781,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="boundExpression"></param>
     public BoundExpression Copy(IBoundExpression boundExpression) {
+      Contract.Requires(boundExpression != null);
+      Contract.Ensures(Contract.Result<BoundExpression>() != null);
+
       return new BoundExpression(boundExpression);
     }
 
@@ -690,6 +792,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="debuggerBreakStatement"></param>
     public DebuggerBreakStatement Copy(IDebuggerBreakStatement debuggerBreakStatement) {
+      Contract.Requires(debuggerBreakStatement != null);
+      Contract.Ensures(Contract.Result<DebuggerBreakStatement>() != null);
+
       return new DebuggerBreakStatement(debuggerBreakStatement);
     }
 
@@ -698,6 +803,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="expression"></param>
     public Expression Copy(IExpression expression) {
+      Contract.Requires(expression != null);
+      Contract.Ensures(Contract.Result<Expression>() != null);
+
       expression.Dispatch(this.Dispatcher);
       return (Expression)this.Dispatcher.result;
     }
@@ -707,6 +815,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="expressionStatement"></param>
     public ExpressionStatement Copy(IExpressionStatement expressionStatement) {
+      Contract.Requires(expressionStatement != null);
+      Contract.Ensures(Contract.Result<ExpressionStatement>() != null);
+
       return new ExpressionStatement(expressionStatement);
     }
 
@@ -715,6 +826,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="fillMemoryStatement"></param>
     public FillMemoryStatement Copy(IFillMemoryStatement fillMemoryStatement) {
+      Contract.Requires(fillMemoryStatement != null);
+      Contract.Ensures(Contract.Result<FillMemoryStatement>() != null);
+
       return new FillMemoryStatement(fillMemoryStatement);
     }
 
@@ -723,6 +837,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="forEachStatement"></param>
     public ForEachStatement Copy(IForEachStatement forEachStatement) {
+      Contract.Requires(forEachStatement != null);
+      Contract.Ensures(Contract.Result<ForEachStatement>() != null);
+
       return new ForEachStatement(forEachStatement);
     }
 
@@ -731,6 +848,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="forStatement"></param>
     public ForStatement Copy(IForStatement forStatement) {
+      Contract.Requires(forStatement != null);
+      Contract.Ensures(Contract.Result<ForStatement>() != null);
+
       return new ForStatement(forStatement);
     }
 
@@ -739,6 +859,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="getTypeOfTypedReference"></param>
     public GetTypeOfTypedReference Copy(IGetTypeOfTypedReference getTypeOfTypedReference) {
+      Contract.Requires(getTypeOfTypedReference != null);
+      Contract.Ensures(Contract.Result<GetTypeOfTypedReference>() != null);
+
       return new GetTypeOfTypedReference(getTypeOfTypedReference);
     }
 
@@ -747,6 +870,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="getValueOfTypedReference"></param>
     public GetValueOfTypedReference Copy(IGetValueOfTypedReference getValueOfTypedReference) {
+      Contract.Requires(getValueOfTypedReference != null);
+      Contract.Ensures(Contract.Result<GetValueOfTypedReference>() != null);
+
       return new GetValueOfTypedReference(getValueOfTypedReference);
     }
 
@@ -755,6 +881,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="gotoStatement"></param>
     public GotoStatement Copy(IGotoStatement gotoStatement) {
+      Contract.Requires(gotoStatement != null);
+      Contract.Ensures(Contract.Result<GotoStatement>() != null);
+
       return new GotoStatement(gotoStatement);
     }
 
@@ -763,6 +892,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="gotoSwitchCaseStatement"></param>
     public GotoSwitchCaseStatement Copy(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      Contract.Requires(gotoSwitchCaseStatement != null);
+      Contract.Ensures(Contract.Result<GotoSwitchCaseStatement>() != null);
+
       return new GotoSwitchCaseStatement(gotoSwitchCaseStatement);
     }
 
@@ -771,6 +903,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="greaterThan"></param>
     public GreaterThan Copy(IGreaterThan greaterThan) {
+      Contract.Requires(greaterThan != null);
+      Contract.Ensures(Contract.Result<GreaterThan>() != null);
+
       return new GreaterThan(greaterThan);
     }
 
@@ -779,6 +914,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="greaterThanOrEqual"></param>
     public GreaterThanOrEqual Copy(IGreaterThanOrEqual greaterThanOrEqual) {
+      Contract.Requires(greaterThanOrEqual != null);
+      Contract.Ensures(Contract.Result<GreaterThanOrEqual>() != null);
+
       return new GreaterThanOrEqual(greaterThanOrEqual);
     }
 
@@ -787,6 +925,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="labeledStatement"></param>
     public LabeledStatement Copy(ILabeledStatement labeledStatement) {
+      Contract.Requires(labeledStatement != null);
+      Contract.Ensures(Contract.Result<LabeledStatement>() != null);
+
       return new LabeledStatement(labeledStatement);
     }
 
@@ -795,6 +936,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="leftShift"></param>
     public LeftShift Copy(ILeftShift leftShift) {
+      Contract.Requires(leftShift != null);
+      Contract.Ensures(Contract.Result<LeftShift>() != null);
+
       return new LeftShift(leftShift);
     }
 
@@ -803,6 +947,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="lessThan"></param>
     public LessThan Copy(ILessThan lessThan) {
+      Contract.Requires(lessThan != null);
+      Contract.Ensures(Contract.Result<LessThan>() != null);
+
       return new LessThan(lessThan);
     }
 
@@ -811,6 +958,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="lessThanOrEqual"></param>
     public LessThanOrEqual Copy(ILessThanOrEqual lessThanOrEqual) {
+      Contract.Requires(lessThanOrEqual != null);
+      Contract.Ensures(Contract.Result<LessThanOrEqual>() != null);
+
       return new LessThanOrEqual(lessThanOrEqual);
     }
 
@@ -819,6 +969,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="localDeclarationStatement"></param>
     public LocalDeclarationStatement Copy(ILocalDeclarationStatement localDeclarationStatement) {
+      Contract.Requires(localDeclarationStatement != null);
+      Contract.Ensures(Contract.Result<LocalDeclarationStatement>() != null);
+
       return new LocalDeclarationStatement(localDeclarationStatement);
     }
 
@@ -827,6 +980,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="lockStatement"></param>
     public LockStatement Copy(ILockStatement lockStatement) {
+      Contract.Requires(lockStatement != null);
+      Contract.Ensures(Contract.Result<LockStatement>() != null);
+
       return new LockStatement(lockStatement);
     }
 
@@ -835,6 +991,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="logicalNot"></param>
     public LogicalNot Copy(ILogicalNot logicalNot) {
+      Contract.Requires(logicalNot != null);
+      Contract.Ensures(Contract.Result<LogicalNot>() != null);
+
       return new LogicalNot(logicalNot);
     }
 
@@ -843,6 +1002,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="makeTypedReference"></param>
     public MakeTypedReference Copy(IMakeTypedReference makeTypedReference) {
+      Contract.Requires(makeTypedReference != null);
+      Contract.Ensures(Contract.Result<MakeTypedReference>() != null);
+
       return new MakeTypedReference(makeTypedReference);
     }
 
@@ -851,6 +1013,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="methodCall"></param>
     public MethodCall Copy(IMethodCall methodCall) {
+      Contract.Requires(methodCall != null);
+      Contract.Ensures(Contract.Result<MethodCall>() != null);
+
       return new MethodCall(methodCall);
     }
 
@@ -859,6 +1024,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="modulus"></param>
     public Modulus Copy(IModulus modulus) {
+      Contract.Requires(modulus != null);
+      Contract.Ensures(Contract.Result<Modulus>() != null);
+
       return new Modulus(modulus);
     }
 
@@ -867,6 +1035,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="multiplication"></param>
     public Multiplication Copy(IMultiplication multiplication) {
+      Contract.Requires(multiplication != null);
+      Contract.Ensures(Contract.Result<Multiplication>() != null);
+
       return new Multiplication(multiplication);
     }
 
@@ -875,6 +1046,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="namedArguments">The named arguments.</param>
     public virtual void Visit(IEnumerable<INamedArgument> namedArguments) {
+      Contract.Requires(namedArguments != null);
     }
 
     /// <summary>
@@ -882,6 +1054,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="namedArgument"></param>
     public NamedArgument Copy(INamedArgument namedArgument) {
+      Contract.Requires(namedArgument != null);
+      Contract.Ensures(Contract.Result<NamedArgument>() != null);
+
       return new NamedArgument(namedArgument);
     }
 
@@ -890,6 +1065,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="notEquality"></param>
     public NotEquality Copy(INotEquality notEquality) {
+      Contract.Requires(notEquality != null);
+      Contract.Ensures(Contract.Result<NotEquality>() != null);
+
       return new NotEquality(notEquality);
     }
 
@@ -898,6 +1076,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="oldValue"></param>
     public OldValue Copy(IOldValue oldValue) {
+      Contract.Requires(oldValue != null);
+      Contract.Ensures(Contract.Result<OldValue>() != null);
+
       return new OldValue(oldValue);
     }
 
@@ -906,6 +1087,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="onesComplement"></param>
     public OnesComplement Copy(IOnesComplement onesComplement) {
+      Contract.Requires(onesComplement != null);
+      Contract.Ensures(Contract.Result<OnesComplement>() != null);
+
       return new OnesComplement(onesComplement);
     }
 
@@ -914,6 +1098,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="outArgument"></param>
     public OutArgument Copy(IOutArgument outArgument) {
+      Contract.Requires(outArgument != null);
+      Contract.Ensures(Contract.Result<OutArgument>() != null);
+
       return new OutArgument(outArgument);
     }
 
@@ -922,6 +1109,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="pointerCall"></param>
     public PointerCall Copy(IPointerCall pointerCall) {
+      Contract.Requires(pointerCall != null);
+      Contract.Ensures(Contract.Result<PointerCall>() != null);
+
       return new PointerCall(pointerCall);
     }
 
@@ -930,6 +1120,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="popValue"></param>
     public PopValue Copy(IPopValue popValue) {
+      Contract.Requires(popValue != null);
+      Contract.Ensures(Contract.Result<PopValue>() != null);
+
       return new PopValue(popValue);
     }
 
@@ -938,6 +1131,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="pushStatement"></param>
     public PushStatement Copy(IPushStatement pushStatement) {
+      Contract.Requires(pushStatement != null);
+      Contract.Ensures(Contract.Result<PushStatement>() != null);
+
       return new PushStatement(pushStatement);
     }
 
@@ -946,6 +1142,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="refArgument"></param>
     public RefArgument Copy(IRefArgument refArgument) {
+      Contract.Requires(refArgument != null);
+      Contract.Ensures(Contract.Result<RefArgument>() != null);
+
       return new RefArgument(refArgument);
     }
 
@@ -954,6 +1153,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="resourceUseStatement"></param>
     public ResourceUseStatement Copy(IResourceUseStatement resourceUseStatement) {
+      Contract.Requires(resourceUseStatement != null);
+      Contract.Ensures(Contract.Result<ResourceUseStatement>() != null);
+
       return new ResourceUseStatement(resourceUseStatement);
     }
 
@@ -962,6 +1164,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="rethrowStatement"></param>
     public RethrowStatement Copy(IRethrowStatement rethrowStatement) {
+      Contract.Requires(rethrowStatement != null);
+      Contract.Ensures(Contract.Result<RethrowStatement>() != null);
+
       return new RethrowStatement(rethrowStatement);
     }
 
@@ -970,6 +1175,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="returnStatement"></param>
     public ReturnStatement Copy(IReturnStatement returnStatement) {
+      Contract.Requires(returnStatement != null);
+      Contract.Ensures(Contract.Result<ReturnStatement>() != null);
+
       return new ReturnStatement(returnStatement);
     }
 
@@ -978,6 +1186,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="returnValue"></param>
     public ReturnValue Copy(IReturnValue returnValue) {
+      Contract.Requires(returnValue != null);
+      Contract.Ensures(Contract.Result<ReturnValue>() != null);
+
       return new ReturnValue(returnValue);
     }
 
@@ -986,6 +1197,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="rightShift"></param>
     public RightShift Copy(IRightShift rightShift) {
+      Contract.Requires(rightShift != null);
+      Contract.Ensures(Contract.Result<RightShift>() != null);
+
       return new RightShift(rightShift);
     }
 
@@ -994,6 +1208,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="stackArrayCreate"></param>
     public StackArrayCreate Copy(IStackArrayCreate stackArrayCreate) {
+      Contract.Requires(stackArrayCreate != null);
+      Contract.Ensures(Contract.Result<StackArrayCreate>() != null);
+
       return new StackArrayCreate(stackArrayCreate);
     }
 
@@ -1002,6 +1219,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="runtimeArgumentHandleExpression"></param>
     public RuntimeArgumentHandleExpression Copy(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+      Contract.Requires(runtimeArgumentHandleExpression != null);
+      Contract.Ensures(Contract.Result<RuntimeArgumentHandleExpression>() != null);
+
       return new RuntimeArgumentHandleExpression(runtimeArgumentHandleExpression);
     }
 
@@ -1010,6 +1230,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="sizeOf"></param>
     public SizeOf Copy(ISizeOf sizeOf) {
+      Contract.Requires(sizeOf != null);
+      Contract.Ensures(Contract.Result<SizeOf>() != null);
+
       return new SizeOf(sizeOf);
     }
 
@@ -1018,6 +1241,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="sourceMethodBody"></param>
     public SourceMethodBody Copy(ISourceMethodBody sourceMethodBody) {
+      Contract.Requires(sourceMethodBody != null);
+      Contract.Ensures(Contract.Result<SourceMethodBody>() != null);
+
       var copy = new SourceMethodBody(this.targetHost, this.sourceLocationProvider);
       copy.Block = sourceMethodBody.Block;
       copy.LocalsAreZeroed = sourceMethodBody.LocalsAreZeroed;
@@ -1037,6 +1263,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="statement">The statement.</param>
     public Statement Copy(IStatement statement) {
+      Contract.Requires(statement != null);
+      Contract.Ensures(Contract.Result<Statement>() != null);
+
       statement.Dispatch(this.Dispatcher);
       return (Statement)this.Dispatcher.result;
     }
@@ -1046,6 +1275,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="subtraction"></param>
     public Subtraction Copy(ISubtraction subtraction) {
+      Contract.Requires(subtraction != null);
+      Contract.Ensures(Contract.Result<Subtraction>() != null);
+
       return new Subtraction(subtraction);
     }
 
@@ -1054,6 +1286,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="switchCases">The switch cases.</param>
     public virtual void Visit(IEnumerable<ISwitchCase> switchCases) {
+      Contract.Requires(switchCases != null);
     }
 
     /// <summary>
@@ -1061,6 +1294,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="switchCase"></param>
     public SwitchCase Copy(ISwitchCase switchCase) {
+      Contract.Requires(switchCase != null);
+      Contract.Ensures(Contract.Result<SwitchCase>() != null);
+
       return new SwitchCase(switchCase);
     }
 
@@ -1069,6 +1305,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="switchStatement"></param>
     public SwitchStatement Copy(ISwitchStatement switchStatement) {
+      Contract.Requires(switchStatement != null);
+      Contract.Ensures(Contract.Result<SwitchStatement>() != null);
+
       return new SwitchStatement(switchStatement);
     }
 
@@ -1077,6 +1316,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="targetExpression"></param>
     public TargetExpression Copy(ITargetExpression targetExpression) {
+      Contract.Requires(targetExpression != null);
+      Contract.Ensures(Contract.Result<TargetExpression>() != null);
+
       return new TargetExpression(targetExpression);
     }
 
@@ -1085,6 +1327,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="thisReference"></param>
     public ThisReference Copy(IThisReference thisReference) {
+      Contract.Requires(thisReference != null);
+      Contract.Ensures(Contract.Result<ThisReference>() != null);
+
       return new ThisReference(thisReference);
     }
 
@@ -1093,6 +1338,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="throwStatement"></param>
     public ThrowStatement Copy(IThrowStatement throwStatement) {
+      Contract.Requires(throwStatement != null);
+      Contract.Ensures(Contract.Result<ThrowStatement>() != null);
+
       return new ThrowStatement(throwStatement);
     }
 
@@ -1101,6 +1349,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="tryCatchFilterFinallyStatement"></param>
     public TryCatchFinallyStatement Copy(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+      Contract.Requires(tryCatchFilterFinallyStatement != null);
+      Contract.Ensures(Contract.Result<TryCatchFinallyStatement>() != null);
+
       return new TryCatchFinallyStatement(tryCatchFilterFinallyStatement);
     }
 
@@ -1109,6 +1360,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="tokenOf"></param>
     public TokenOf Copy(ITokenOf tokenOf) {
+      Contract.Requires(tokenOf != null);
+      Contract.Ensures(Contract.Result<TokenOf>() != null);
+
       return new TokenOf(tokenOf);
     }
 
@@ -1117,6 +1371,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="typeOf"></param>
     public TypeOf Copy(ITypeOf typeOf) {
+      Contract.Requires(typeOf != null);
+      Contract.Ensures(Contract.Result<TypeOf>() != null);
+
       return new TypeOf(typeOf);
     }
 
@@ -1125,6 +1382,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="unaryNegation"></param>
     public UnaryNegation Copy(IUnaryNegation unaryNegation) {
+      Contract.Requires(unaryNegation != null);
+      Contract.Ensures(Contract.Result<UnaryNegation>() != null);
+
       return new UnaryNegation(unaryNegation);
     }
 
@@ -1133,6 +1393,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="unaryPlus"></param>
     public UnaryPlus Copy(IUnaryPlus unaryPlus) {
+      Contract.Requires(unaryPlus != null);
+      Contract.Ensures(Contract.Result<UnaryPlus>() != null);
+
       return new UnaryPlus(unaryPlus);
     }
 
@@ -1141,6 +1404,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="vectorLength"></param>
     public VectorLength Copy(IVectorLength vectorLength) {
+      Contract.Requires(vectorLength != null);
+      Contract.Ensures(Contract.Result<VectorLength>() != null);
+
       return new VectorLength(vectorLength);
     }
 
@@ -1149,6 +1415,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="whileDoStatement"></param>
     public WhileDoStatement Copy(IWhileDoStatement whileDoStatement) {
+      Contract.Requires(whileDoStatement != null);
+      Contract.Ensures(Contract.Result<WhileDoStatement>() != null);
+
       return new WhileDoStatement(whileDoStatement);
     }
 
@@ -1157,6 +1426,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="yieldBreakStatement"></param>
     public YieldBreakStatement Copy(IYieldBreakStatement yieldBreakStatement) {
+      Contract.Requires(yieldBreakStatement != null);
+      Contract.Ensures(Contract.Result<YieldBreakStatement>() != null);
+
       return new YieldBreakStatement(yieldBreakStatement);
     }
 
@@ -1165,6 +1437,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="yieldReturnStatement"></param>
     public YieldReturnStatement Copy(IYieldReturnStatement yieldReturnStatement) {
+      Contract.Requires(yieldReturnStatement != null);
+      Contract.Ensures(Contract.Result<YieldReturnStatement>() != null);
+
       return new YieldReturnStatement(yieldReturnStatement);
     }
 
@@ -1182,6 +1457,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="sourceLocationProvider"></param>
     public CodeDeepCopier(IMetadataHost targetHost, ISourceLocationProvider sourceLocationProvider = null)
       : this(targetHost, new CodeShallowCopier(targetHost, sourceLocationProvider)) {
+      Contract.Requires(targetHost != null);
     }
 
     /// <summary>
@@ -1192,6 +1468,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="sourceLocationProvider"></param>
     public CodeDeepCopier(IMetadataHost targetHost, IUnit targetUnit, ISourceLocationProvider sourceLocationProvider = null)
       : this(targetHost, new CodeShallowCopier(targetHost, targetUnit, sourceLocationProvider)) {
+      Contract.Requires(targetHost != null);
+      Contract.Requires(targetUnit != null);
     }
 
     /// <summary>
@@ -1201,6 +1479,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="shallowCopier"></param>
     protected CodeDeepCopier(IMetadataHost targetHost, CodeShallowCopier shallowCopier)
       : base(targetHost, shallowCopier) {
+      Contract.Requires(targetHost != null);
+      Contract.Requires(shallowCopier != null);
       this.shallowCopier = shallowCopier;
     }
 
@@ -1587,16 +1867,25 @@ namespace Microsoft.Cci.MutableCodeModel {
     Dictionary<ILocalDefinition, ILocalDefinition> localsInsideCone;
 
     private new IFieldReference Copy(IFieldReference fieldReference) {
+      Contract.Requires(fieldReference != null);
+      Contract.Ensures(Contract.Result<IFieldReference>() != null);
+
       if (fieldReference is Dummy) return fieldReference;
       return base.Copy(fieldReference);
     }
 
     private new IMethodReference Copy(IMethodReference methodReference) {
+      Contract.Requires(methodReference != null);
+      Contract.Ensures(Contract.Result<IMethodReference>() != null);
+
       if (methodReference is Dummy) return methodReference;
       return base.Copy(methodReference);
     }
 
     private new ITypeReference Copy(ITypeReference typeReference) {
+      Contract.Requires(typeReference != null);
+      Contract.Ensures(Contract.Result<ITypeReference>() != null);
+
       if (typeReference is Dummy) return typeReference;
       return base.Copy(typeReference);
     }
@@ -1606,6 +1895,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="addition"></param>
     public Addition Copy(IAddition addition) {
+      Contract.Requires(addition != null);
+      Contract.Ensures(Contract.Result<Addition>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(addition);
       this.CopyChildren((BinaryOperation)mutableCopy);
       return mutableCopy;
@@ -1616,6 +1908,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="addressableExpression"></param>
     public AddressableExpression Copy(IAddressableExpression addressableExpression) {
+      Contract.Requires(addressableExpression != null);
+      Contract.Ensures(Contract.Result<AddressableExpression>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(addressableExpression);
       this.CopyChildren((Expression)mutableCopy);
       if (mutableCopy.Instance != null)
@@ -1636,17 +1931,12 @@ namespace Microsoft.Cci.MutableCodeModel {
             if (arrayIndexer != null)
               mutableCopy.Definition = this.Copy(arrayIndexer);
             else {
-              var addressDereference = mutableCopy.Definition as IAddressDereference;
-              if (addressDereference != null)
-                mutableCopy.Definition = this.Copy(addressDereference);
+              var methodReference = addressableExpression.Definition as IMethodReference;
+              if (methodReference != null)
+                mutableCopy.Definition = this.Copy(methodReference);
               else {
-                var methodReference = mutableCopy.Definition as IMethodReference;
-                if (methodReference != null)
-                  mutableCopy.Definition = this.Copy(methodReference);
-                else {
-                  var thisReference = (IThisReference)mutableCopy.Definition;
-                  mutableCopy.Definition = this.Copy(thisReference);
-                }
+                var expression = (IExpression)mutableCopy.Definition;
+                mutableCopy.Definition = this.Copy(expression);
               }
             }
           }
@@ -1660,6 +1950,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="addressDereference"></param>
     public AddressDereference Copy(IAddressDereference addressDereference) {
+      Contract.Requires(addressDereference != null);
+      Contract.Ensures(Contract.Result<AddressDereference>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(addressDereference);
       mutableCopy.Address = this.Copy(mutableCopy.Address);
       return mutableCopy;
@@ -1670,6 +1963,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="addressOf"></param>
     public AddressOf Copy(IAddressOf addressOf) {
+      Contract.Requires(addressOf != null);
+      Contract.Ensures(Contract.Result<AddressOf>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(addressOf);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.Expression = this.Copy(mutableCopy.Expression);
@@ -1681,6 +1977,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="anonymousDelegate"></param>
     public AnonymousDelegate Copy(IAnonymousDelegate anonymousDelegate) {
+      Contract.Requires(anonymousDelegate != null);
+      Contract.Ensures(Contract.Result<AnonymousDelegate>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(anonymousDelegate);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.Parameters = this.Copy(mutableCopy.Parameters);
@@ -1696,6 +1995,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="arrayIndexer"></param>
     public ArrayIndexer Copy(IArrayIndexer arrayIndexer) {
+      Contract.Requires(arrayIndexer != null);
+      Contract.Ensures(Contract.Result<ArrayIndexer>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(arrayIndexer);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.IndexedObject = this.Copy(mutableCopy.IndexedObject);
@@ -1708,6 +2010,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="assertStatement"></param>
     public AssertStatement Copy(IAssertStatement assertStatement) {
+      Contract.Requires(assertStatement != null);
+      Contract.Ensures(Contract.Result<AssertStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(assertStatement);
       mutableCopy.Condition = this.Copy(mutableCopy.Condition);
       if (mutableCopy.Description != null)
@@ -1720,6 +2025,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="assignment"></param>
     public Assignment Copy(IAssignment assignment) {
+      Contract.Requires(assignment != null);
+      Contract.Ensures(Contract.Result<Assignment>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(assignment);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.Target = this.Copy(mutableCopy.Target);
@@ -1732,6 +2040,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="assumeStatement"></param>
     public AssumeStatement Copy(IAssumeStatement assumeStatement) {
+      Contract.Requires(assumeStatement != null);
+      Contract.Ensures(Contract.Result<AssumeStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(assumeStatement);
       mutableCopy.Condition = this.Copy(mutableCopy.Condition);
       if (mutableCopy.Description != null)
@@ -1744,6 +2055,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="bitwiseAnd"></param>
     public BitwiseAnd Copy(IBitwiseAnd bitwiseAnd) {
+      Contract.Requires(bitwiseAnd != null);
+      Contract.Ensures(Contract.Result<BitwiseAnd>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(bitwiseAnd);
       this.CopyChildren((BinaryOperation)mutableCopy);
       return mutableCopy;
@@ -1754,6 +2068,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="bitwiseOr"></param>
     public BitwiseOr Copy(IBitwiseOr bitwiseOr) {
+      Contract.Requires(bitwiseOr != null);
+      Contract.Ensures(Contract.Result<BitwiseOr>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(bitwiseOr);
       this.CopyChildren((BinaryOperation)mutableCopy);
       return mutableCopy;
@@ -1764,6 +2081,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="blockExpression"></param>
     public BlockExpression Copy(IBlockExpression blockExpression) {
+      Contract.Requires(blockExpression != null);
+      Contract.Ensures(Contract.Result<BlockExpression>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(blockExpression);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.BlockStatement = this.Copy((BlockStatement)mutableCopy.BlockStatement);
@@ -1776,6 +2096,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="block"></param>
     public BlockStatement Copy(IBlockStatement block) {
+      Contract.Requires(block != null);
+      Contract.Ensures(Contract.Result<BlockStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(block);
       mutableCopy.Statements = this.Copy(mutableCopy.Statements);
       return mutableCopy;
@@ -1786,6 +2109,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="breakStatement"></param>
     public BreakStatement Copy(IBreakStatement breakStatement) {
+      Contract.Requires(breakStatement != null);
+      Contract.Ensures(Contract.Result<BreakStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(breakStatement);
       return mutableCopy;
     }
@@ -1795,6 +2121,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="boundExpression"></param>
     public BoundExpression Copy(IBoundExpression boundExpression) {
+      Contract.Requires(boundExpression != null);
+      Contract.Ensures(Contract.Result<BoundExpression>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(boundExpression);
       this.CopyChildren((Expression)mutableCopy);
       if (mutableCopy.Instance != null)
@@ -1819,6 +2148,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="castIfPossible"></param>
     public CastIfPossible Copy(ICastIfPossible castIfPossible) {
+      Contract.Requires(castIfPossible != null);
+      Contract.Ensures(Contract.Result<CastIfPossible>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(castIfPossible);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.ValueToCast = this.Copy(mutableCopy.ValueToCast);
@@ -1831,6 +2163,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="catchClause"></param>
     public CatchClause Copy(ICatchClause catchClause) {
+      Contract.Requires(catchClause != null);
+      Contract.Ensures(Contract.Result<CatchClause>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(catchClause);
       mutableCopy.ExceptionType = this.Copy(mutableCopy.ExceptionType);
       if (mutableCopy.ExceptionContainer != Dummy.LocalVariable) {
@@ -1851,6 +2186,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="checkIfInstance"></param>
     public CheckIfInstance Copy(ICheckIfInstance checkIfInstance) {
+      Contract.Requires(checkIfInstance != null);
+      Contract.Ensures(Contract.Result<CheckIfInstance>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(checkIfInstance);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.Operand = this.Copy(mutableCopy.Operand);
@@ -1863,6 +2201,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="constant"></param>
     public CompileTimeConstant Copy(ICompileTimeConstant constant) {
+      Contract.Requires(constant != null);
+      Contract.Ensures(Contract.Result<CompileTimeConstant>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(constant);
       this.CopyChildren((Expression)mutableCopy);
       return mutableCopy;
@@ -1873,6 +2214,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="conversion"></param>
     public Conversion Copy(IConversion conversion) {
+      Contract.Requires(conversion != null);
+      Contract.Ensures(Contract.Result<Conversion>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(conversion);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.ValueToConvert = this.Copy(mutableCopy.ValueToConvert);
@@ -1885,6 +2229,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="conditional"></param>
     public Conditional Copy(IConditional conditional) {
+      Contract.Requires(conditional != null);
+      Contract.Ensures(Contract.Result<Conditional>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(conditional);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.Condition = this.Copy(mutableCopy.Condition);
@@ -1898,6 +2245,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="conditionalStatement"></param>
     public ConditionalStatement Copy(IConditionalStatement conditionalStatement) {
+      Contract.Requires(conditionalStatement != null);
+      Contract.Ensures(Contract.Result<ConditionalStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(conditionalStatement);
       mutableCopy.Condition = this.Copy(mutableCopy.Condition);
       mutableCopy.TrueBranch = this.Copy(mutableCopy.TrueBranch);
@@ -1910,6 +2260,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="continueStatement"></param>
     public ContinueStatement Copy(IContinueStatement continueStatement) {
+      Contract.Requires(continueStatement != null);
+      Contract.Ensures(Contract.Result<ContinueStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(continueStatement);
       return mutableCopy;
     }
@@ -1919,6 +2272,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="copyMemoryStatement"></param>
     public CopyMemoryStatement Copy(ICopyMemoryStatement copyMemoryStatement) {
+      Contract.Requires(copyMemoryStatement != null);
+      Contract.Ensures(Contract.Result<CopyMemoryStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(copyMemoryStatement);
       mutableCopy.TargetAddress = this.Copy(mutableCopy.TargetAddress);
       mutableCopy.SourceAddress = this.Copy(mutableCopy.SourceAddress);
@@ -1931,6 +2287,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="createArray"></param>
     public CreateArray Copy(ICreateArray createArray) {
+      Contract.Requires(createArray != null);
+      Contract.Ensures(Contract.Result<CreateArray>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(createArray);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.ElementType = this.Copy(mutableCopy.ElementType);
@@ -1944,6 +2303,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="createObjectInstance"></param>
     public CreateObjectInstance Copy(ICreateObjectInstance createObjectInstance) {
+      Contract.Requires(createObjectInstance != null);
+      Contract.Ensures(Contract.Result<CreateObjectInstance>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(createObjectInstance);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.MethodToCall = this.Copy(mutableCopy.MethodToCall);
@@ -1956,6 +2318,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="createDelegateInstance"></param>
     public CreateDelegateInstance Copy(ICreateDelegateInstance createDelegateInstance) {
+      Contract.Requires(createDelegateInstance != null);
+      Contract.Ensures(Contract.Result<CreateDelegateInstance>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(createDelegateInstance);
       this.CopyChildren((Expression)mutableCopy);
       if (mutableCopy.Instance != null)
@@ -1969,6 +2334,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="debuggerBreakStatement"></param>
     public DebuggerBreakStatement Copy(IDebuggerBreakStatement debuggerBreakStatement) {
+      Contract.Requires(debuggerBreakStatement != null);
+      Contract.Ensures(Contract.Result<DebuggerBreakStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(debuggerBreakStatement);
       return mutableCopy;
     }
@@ -1978,6 +2346,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="defaultValue"></param>
     public DefaultValue Copy(IDefaultValue defaultValue) {
+      Contract.Requires(defaultValue != null);
+      Contract.Ensures(Contract.Result<DefaultValue>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(defaultValue);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.DefaultValueType = this.Copy(mutableCopy.DefaultValueType);
@@ -1989,6 +2360,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="division"></param>
     public Division Copy(IDivision division) {
+      Contract.Requires(division != null);
+      Contract.Ensures(Contract.Result<Division>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(division);
       this.CopyChildren((BinaryOperation)mutableCopy);
       return mutableCopy;
@@ -1999,6 +2373,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="doUntilStatement"></param>
     public DoUntilStatement Copy(IDoUntilStatement doUntilStatement) {
+      Contract.Requires(doUntilStatement != null);
+      Contract.Ensures(Contract.Result<DoUntilStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(doUntilStatement);
       mutableCopy.Body = this.Copy(mutableCopy.Body);
       mutableCopy.Condition = this.Copy(mutableCopy.Condition);
@@ -2010,6 +2387,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="dupValue"></param>
     public DupValue Copy(IDupValue dupValue) {
+      Contract.Requires(dupValue != null);
+      Contract.Ensures(Contract.Result<DupValue>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(dupValue);
       this.CopyChildren((Expression)mutableCopy);
       return mutableCopy;
@@ -2020,6 +2400,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="emptyStatement"></param>
     public EmptyStatement Copy(IEmptyStatement emptyStatement) {
+      Contract.Requires(emptyStatement != null);
+      Contract.Ensures(Contract.Result<EmptyStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(emptyStatement);
       return mutableCopy;
     }
@@ -2029,6 +2412,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="equality"></param>
     public Equality Copy(IEquality equality) {
+      Contract.Requires(equality != null);
+      Contract.Ensures(Contract.Result<Equality>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(equality);
       this.CopyChildren((BinaryOperation)mutableCopy);
       return mutableCopy;
@@ -2039,6 +2425,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="exclusiveOr"></param>
     public ExclusiveOr Copy(IExclusiveOr exclusiveOr) {
+      Contract.Requires(exclusiveOr != null);
+      Contract.Ensures(Contract.Result<ExclusiveOr>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(exclusiveOr);
       this.CopyChildren((BinaryOperation)mutableCopy);
       return mutableCopy;
@@ -2049,6 +2438,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="expression"></param>
     public Expression Copy(IExpression expression) {
+      Contract.Requires(expression != null);
+      Contract.Ensures(Contract.Result<Expression>() != null);
+
       expression.Dispatch(this.Dispatcher);
       return (Expression)this.Dispatcher.result;
     }
@@ -2058,6 +2450,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="expressionStatement"></param>
     public ExpressionStatement Copy(IExpressionStatement expressionStatement) {
+      Contract.Requires(expressionStatement != null);
+      Contract.Ensures(Contract.Result<ExpressionStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(expressionStatement);
       mutableCopy.Expression = this.Copy(mutableCopy.Expression);
       return mutableCopy;
@@ -2068,6 +2463,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="fillMemoryStatement"></param>
     public FillMemoryStatement Copy(IFillMemoryStatement fillMemoryStatement) {
+      Contract.Requires(fillMemoryStatement != null);
+      Contract.Ensures(Contract.Result<FillMemoryStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(fillMemoryStatement);
       mutableCopy.TargetAddress = this.Copy(mutableCopy.TargetAddress);
       mutableCopy.FillValue = this.Copy(mutableCopy.FillValue);
@@ -2080,6 +2478,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="forEachStatement"></param>
     public ForEachStatement Copy(IForEachStatement forEachStatement) {
+      Contract.Requires(forEachStatement != null);
+      Contract.Ensures(Contract.Result<ForEachStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(forEachStatement);
       mutableCopy.Variable = this.Copy(mutableCopy.Variable);
       this.LocalsInsideCone.Add(forEachStatement.Variable, mutableCopy.Variable);
@@ -2093,6 +2494,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="forStatement"></param>
     public ForStatement Copy(IForStatement forStatement) {
+      Contract.Requires(forStatement != null);
+      Contract.Ensures(Contract.Result<ForStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(forStatement);
       mutableCopy.InitStatements = this.Copy(mutableCopy.InitStatements);
       mutableCopy.Condition = this.Copy(mutableCopy.Condition);
@@ -2106,6 +2510,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="getTypeOfTypedReference"></param>
     public GetTypeOfTypedReference Copy(IGetTypeOfTypedReference getTypeOfTypedReference) {
+      Contract.Requires(getTypeOfTypedReference != null);
+      Contract.Ensures(Contract.Result<GetTypeOfTypedReference>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(getTypeOfTypedReference);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.TypedReference = this.Copy(mutableCopy.TypedReference);
@@ -2117,6 +2524,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="getValueOfTypedReference"></param>
     public GetValueOfTypedReference Copy(IGetValueOfTypedReference getValueOfTypedReference) {
+      Contract.Requires(getValueOfTypedReference != null);
+      Contract.Ensures(Contract.Result<GetValueOfTypedReference>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(getValueOfTypedReference);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.TypedReference = this.Copy(mutableCopy.TypedReference);
@@ -2129,6 +2539,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="gotoStatement"></param>
     public GotoStatement Copy(IGotoStatement gotoStatement) {
+      Contract.Requires(gotoStatement != null);
+      Contract.Ensures(Contract.Result<GotoStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(gotoStatement);
       return mutableCopy;
     }
@@ -2138,6 +2551,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="gotoSwitchCaseStatement"></param>
     public GotoSwitchCaseStatement Copy(IGotoSwitchCaseStatement gotoSwitchCaseStatement) {
+      Contract.Requires(gotoSwitchCaseStatement != null);
+      Contract.Ensures(Contract.Result<GotoSwitchCaseStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(gotoSwitchCaseStatement);
       return mutableCopy;
     }
@@ -2147,6 +2563,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="greaterThan"></param>
     public GreaterThan Copy(IGreaterThan greaterThan) {
+      Contract.Requires(greaterThan != null);
+      Contract.Ensures(Contract.Result<GreaterThan>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(greaterThan);
       this.CopyChildren((BinaryOperation)mutableCopy);
       return mutableCopy;
@@ -2157,6 +2576,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="greaterThanOrEqual"></param>
     public GreaterThanOrEqual Copy(IGreaterThanOrEqual greaterThanOrEqual) {
+      Contract.Requires(greaterThanOrEqual != null);
+      Contract.Ensures(Contract.Result<GreaterThanOrEqual>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(greaterThanOrEqual);
       this.CopyChildren((BinaryOperation)mutableCopy);
       return mutableCopy;
@@ -2167,6 +2589,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="labeledStatement"></param>
     public LabeledStatement Copy(ILabeledStatement labeledStatement) {
+      Contract.Requires(labeledStatement != null);
+      Contract.Ensures(Contract.Result<LabeledStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(labeledStatement);
       return mutableCopy;
     }
@@ -2176,6 +2601,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="leftShift"></param>
     public LeftShift Copy(ILeftShift leftShift) {
+      Contract.Requires(leftShift != null);
+      Contract.Ensures(Contract.Result<LeftShift>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(leftShift);
       this.CopyChildren((BinaryOperation)mutableCopy);
       return mutableCopy;
@@ -2186,6 +2614,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="lessThan"></param>
     public LessThan Copy(ILessThan lessThan) {
+      Contract.Requires(lessThan != null);
+      Contract.Ensures(Contract.Result<LessThan>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(lessThan);
       this.CopyChildren((BinaryOperation)mutableCopy);
       return mutableCopy;
@@ -2196,6 +2627,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="lessThanOrEqual"></param>
     public LessThanOrEqual Copy(ILessThanOrEqual lessThanOrEqual) {
+      Contract.Requires(lessThanOrEqual != null);
+      Contract.Ensures(Contract.Result<LessThanOrEqual>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(lessThanOrEqual);
       this.CopyChildren((BinaryOperation)mutableCopy);
       return mutableCopy;
@@ -2206,6 +2640,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="localDeclarationStatement"></param>
     public LocalDeclarationStatement Copy(ILocalDeclarationStatement localDeclarationStatement) {
+      Contract.Requires(localDeclarationStatement != null);
+      Contract.Ensures(Contract.Result<LocalDeclarationStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(localDeclarationStatement);
       if (!this.LocalsInsideCone.ContainsKey(mutableCopy.LocalVariable)) { //work around bug in decompiler, for now
         mutableCopy.LocalVariable = this.Copy(mutableCopy.LocalVariable);
@@ -2221,6 +2658,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="lockStatement"></param>
     public LockStatement Copy(ILockStatement lockStatement) {
+      Contract.Requires(lockStatement != null);
+      Contract.Ensures(Contract.Result<LockStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(lockStatement);
       mutableCopy.Guard = this.Copy(mutableCopy.Guard);
       mutableCopy.Body = this.Copy(mutableCopy.Body);
@@ -2232,6 +2672,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="logicalNot"></param>
     public LogicalNot Copy(ILogicalNot logicalNot) {
+      Contract.Requires(logicalNot != null);
+      Contract.Ensures(Contract.Result<LogicalNot>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(logicalNot);
       this.CopyChildren((UnaryOperation)mutableCopy);
       return mutableCopy;
@@ -2242,6 +2685,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="makeTypedReference"></param>
     public MakeTypedReference Copy(IMakeTypedReference makeTypedReference) {
+      Contract.Requires(makeTypedReference != null);
+      Contract.Ensures(Contract.Result<MakeTypedReference>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(makeTypedReference);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.Operand = this.Copy(mutableCopy.Operand);
@@ -2253,6 +2699,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="methodCall"></param>
     public MethodCall Copy(IMethodCall methodCall) {
+      Contract.Requires(methodCall != null);
+      Contract.Ensures(Contract.Result<MethodCall>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(methodCall);
       this.CopyChildren((Expression)mutableCopy);
       if (!mutableCopy.IsStaticCall)
@@ -2267,6 +2716,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="modulus"></param>
     public Modulus Copy(IModulus modulus) {
+      Contract.Requires(modulus != null);
+      Contract.Ensures(Contract.Result<Modulus>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(modulus);
       this.CopyChildren((BinaryOperation)mutableCopy);
       return mutableCopy;
@@ -2277,6 +2729,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="multiplication"></param>
     public Multiplication Copy(IMultiplication multiplication) {
+      Contract.Requires(multiplication != null);
+      Contract.Ensures(Contract.Result<Multiplication>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(multiplication);
       this.CopyChildren((BinaryOperation)mutableCopy);
       return mutableCopy;
@@ -2287,6 +2742,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="namedArgument"></param>
     public NamedArgument Copy(INamedArgument namedArgument) {
+      Contract.Requires(namedArgument != null);
+      Contract.Ensures(Contract.Result<NamedArgument>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(namedArgument);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.ArgumentValue = this.Copy(mutableCopy.ArgumentValue);
@@ -2298,6 +2756,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="notEquality"></param>
     public NotEquality Copy(INotEquality notEquality) {
+      Contract.Requires(notEquality != null);
+      Contract.Ensures(Contract.Result<NotEquality>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(notEquality);
       this.CopyChildren((BinaryOperation)mutableCopy);
       return mutableCopy;
@@ -2308,6 +2769,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="oldValue"></param>
     public OldValue Copy(IOldValue oldValue) {
+      Contract.Requires(oldValue != null);
+      Contract.Ensures(Contract.Result<OldValue>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(oldValue);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.Expression = this.Copy(mutableCopy.Expression);
@@ -2319,6 +2783,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="onesComplement"></param>
     public OnesComplement Copy(IOnesComplement onesComplement) {
+      Contract.Requires(onesComplement != null);
+      Contract.Ensures(Contract.Result<OnesComplement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(onesComplement);
       this.CopyChildren((UnaryOperation)mutableCopy);
       return mutableCopy;
@@ -2329,6 +2796,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="outArgument"></param>
     public OutArgument Copy(IOutArgument outArgument) {
+      Contract.Requires(outArgument != null);
+      Contract.Ensures(Contract.Result<OutArgument>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(outArgument);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.Expression = this.Copy(mutableCopy.Expression);
@@ -2340,6 +2810,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="pointerCall"></param>
     public PointerCall Copy(IPointerCall pointerCall) {
+      Contract.Requires(pointerCall != null);
+      Contract.Ensures(Contract.Result<PointerCall>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(pointerCall);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.Pointer = this.Copy(mutableCopy.Pointer);
@@ -2352,6 +2825,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="popValue"></param>
     public PopValue Copy(IPopValue popValue) {
+      Contract.Requires(popValue != null);
+      Contract.Ensures(Contract.Result<PopValue>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(popValue);
       this.CopyChildren((Expression)popValue);
       return mutableCopy;
@@ -2362,6 +2838,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="pushStatement"></param>
     public PushStatement Copy(IPushStatement pushStatement) {
+      Contract.Requires(pushStatement != null);
+      Contract.Ensures(Contract.Result<PushStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(pushStatement);
       mutableCopy.ValueToPush = this.Copy(mutableCopy.ValueToPush);
       return mutableCopy;
@@ -2372,6 +2851,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="refArgument"></param>
     public RefArgument Copy(IRefArgument refArgument) {
+      Contract.Requires(refArgument != null);
+      Contract.Ensures(Contract.Result<RefArgument>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(refArgument);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.Expression = this.Copy(mutableCopy.Expression);
@@ -2383,6 +2865,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="resourceUseStatement"></param>
     public ResourceUseStatement Copy(IResourceUseStatement resourceUseStatement) {
+      Contract.Requires(resourceUseStatement != null);
+      Contract.Ensures(Contract.Result<ResourceUseStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(resourceUseStatement);
       mutableCopy.ResourceAcquisitions = this.Copy(mutableCopy.ResourceAcquisitions);
       mutableCopy.Body = this.Copy(mutableCopy.Body);
@@ -2394,6 +2879,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="rethrowStatement"></param>
     public RethrowStatement Copy(IRethrowStatement rethrowStatement) {
+      Contract.Requires(rethrowStatement != null);
+      Contract.Ensures(Contract.Result<RethrowStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(rethrowStatement);
       return mutableCopy;
     }
@@ -2403,6 +2891,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="returnStatement"></param>
     public ReturnStatement Copy(IReturnStatement returnStatement) {
+      Contract.Requires(returnStatement != null);
+      Contract.Ensures(Contract.Result<ReturnStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(returnStatement);
       if (mutableCopy.Expression != null)
         mutableCopy.Expression = this.Copy(mutableCopy.Expression);
@@ -2414,6 +2905,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="returnValue"></param>
     public ReturnValue Copy(IReturnValue returnValue) {
+      Contract.Requires(returnValue != null);
+      Contract.Ensures(Contract.Result<ReturnValue>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(returnValue);
       this.CopyChildren((Expression)mutableCopy);
       return mutableCopy;
@@ -2424,6 +2918,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="rightShift"></param>
     public RightShift Copy(IRightShift rightShift) {
+      Contract.Requires(rightShift != null);
+      Contract.Ensures(Contract.Result<RightShift>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(rightShift);
       this.CopyChildren((BinaryOperation)mutableCopy);
       return mutableCopy;
@@ -2434,6 +2931,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="stackArrayCreate"></param>
     public StackArrayCreate Copy(IStackArrayCreate stackArrayCreate) {
+      Contract.Requires(stackArrayCreate != null);
+      Contract.Ensures(Contract.Result<StackArrayCreate>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(stackArrayCreate);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.ElementType = this.Copy(mutableCopy.ElementType);
@@ -2446,6 +2946,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="runtimeArgumentHandleExpression"></param>
     public RuntimeArgumentHandleExpression Copy(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
+      Contract.Requires(runtimeArgumentHandleExpression != null);
+      Contract.Ensures(Contract.Result<RuntimeArgumentHandleExpression>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(runtimeArgumentHandleExpression);
       this.CopyChildren((Expression)mutableCopy);
       return mutableCopy;
@@ -2456,6 +2959,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="sizeOf"></param>
     public SizeOf Copy(ISizeOf sizeOf) {
+      Contract.Requires(sizeOf != null);
+      Contract.Ensures(Contract.Result<SizeOf>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(sizeOf);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.TypeToSize = this.Copy(mutableCopy.TypeToSize);
@@ -2467,6 +2973,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="sourceMethodBody"></param>
     public SourceMethodBody Copy(ISourceMethodBody sourceMethodBody) {
+      Contract.Requires(sourceMethodBody != null);
+      Contract.Ensures(Contract.Result<SourceMethodBody>() != null);
+
       return this.Copy(sourceMethodBody, sourceMethodBody.MethodDefinition);
     }
 
@@ -2482,6 +2991,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="statement">The statement.</param>
     public Statement Copy(IStatement statement) {
+      Contract.Requires(statement != null);
+      Contract.Ensures(Contract.Result<Statement>() != null);
+
       statement.Dispatch(this.Dispatcher);
       return (Statement)this.Dispatcher.result;
     }
@@ -2491,6 +3003,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="subtraction"></param>
     public Subtraction Copy(ISubtraction subtraction) {
+      Contract.Requires(subtraction != null);
+      Contract.Ensures(Contract.Result<Subtraction>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(subtraction);
       this.CopyChildren((BinaryOperation)mutableCopy);
       return mutableCopy;
@@ -2501,6 +3016,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="switchCase"></param>
     public SwitchCase Copy(ISwitchCase switchCase) {
+      Contract.Requires(switchCase != null);
+      Contract.Ensures(Contract.Result<SwitchCase>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(switchCase);
       if (!mutableCopy.IsDefault)
         mutableCopy.Expression = this.Copy(mutableCopy.Expression);
@@ -2513,6 +3031,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="switchStatement"></param>
     public SwitchStatement Copy(ISwitchStatement switchStatement) {
+      Contract.Requires(switchStatement != null);
+      Contract.Ensures(Contract.Result<SwitchStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(switchStatement);
       mutableCopy.Expression = this.Copy(mutableCopy.Expression);
       mutableCopy.Cases = this.Copy(mutableCopy.Cases);
@@ -2524,6 +3045,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="targetExpression"></param>
     public TargetExpression Copy(ITargetExpression targetExpression) {
+      Contract.Requires(targetExpression != null);
+      Contract.Ensures(Contract.Result<TargetExpression>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(targetExpression);
       this.CopyChildren((Expression)mutableCopy);
       if (mutableCopy.Instance != null) {
@@ -2564,6 +3088,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="thisReference"></param>
     public ThisReference Copy(IThisReference thisReference) {
+      Contract.Requires(thisReference != null);
+      Contract.Ensures(Contract.Result<ThisReference>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(thisReference);
       this.CopyChildren((Expression)mutableCopy);
       return mutableCopy;
@@ -2574,6 +3101,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="throwStatement"></param>
     public ThrowStatement Copy(IThrowStatement throwStatement) {
+      Contract.Requires(throwStatement != null);
+      Contract.Ensures(Contract.Result<ThrowStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(throwStatement);
       mutableCopy.Exception = this.Copy(mutableCopy.Exception);
       return mutableCopy;
@@ -2584,6 +3114,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="tryCatchFilterFinallyStatement"></param>
     public TryCatchFinallyStatement Copy(ITryCatchFinallyStatement tryCatchFilterFinallyStatement) {
+      Contract.Requires(tryCatchFilterFinallyStatement != null);
+      Contract.Ensures(Contract.Result<TryCatchFinallyStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(tryCatchFilterFinallyStatement);
       mutableCopy.TryBody = this.Copy(mutableCopy.TryBody);
       mutableCopy.CatchClauses = this.Copy(mutableCopy.CatchClauses);
@@ -2599,6 +3132,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="tokenOf"></param>
     public TokenOf Copy(ITokenOf tokenOf) {
+      Contract.Requires(tokenOf != null);
+      Contract.Ensures(Contract.Result<TokenOf>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(tokenOf);
       this.CopyChildren((Expression)mutableCopy);
       var fieldReference = mutableCopy.Definition as IFieldReference;
@@ -2621,6 +3157,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="typeOf"></param>
     public TypeOf Copy(ITypeOf typeOf) {
+      Contract.Requires(typeOf != null);
+      Contract.Ensures(Contract.Result<TypeOf>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(typeOf);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.TypeToGet = this.Copy(mutableCopy.TypeToGet);
@@ -2632,6 +3171,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="unaryNegation"></param>
     public UnaryNegation Copy(IUnaryNegation unaryNegation) {
+      Contract.Requires(unaryNegation != null);
+      Contract.Ensures(Contract.Result<UnaryNegation>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(unaryNegation);
       this.CopyChildren((UnaryOperation)mutableCopy);
       return mutableCopy;
@@ -2642,6 +3184,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="unaryPlus"></param>
     public UnaryPlus Copy(IUnaryPlus unaryPlus) {
+      Contract.Requires(unaryPlus != null);
+      Contract.Ensures(Contract.Result<UnaryPlus>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(unaryPlus);
       this.CopyChildren((UnaryOperation)mutableCopy);
       return mutableCopy;
@@ -2652,6 +3197,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="vectorLength"></param>
     public VectorLength Copy(IVectorLength vectorLength) {
+      Contract.Requires(vectorLength != null);
+      Contract.Ensures(Contract.Result<VectorLength>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(vectorLength);
       this.CopyChildren((Expression)mutableCopy);
       mutableCopy.Vector = this.Copy(mutableCopy.Vector);
@@ -2663,6 +3211,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="whileDoStatement"></param>
     public WhileDoStatement Copy(IWhileDoStatement whileDoStatement) {
+      Contract.Requires(whileDoStatement != null);
+      Contract.Ensures(Contract.Result<WhileDoStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(whileDoStatement);
       mutableCopy.Condition = this.Copy(mutableCopy.Condition);
       mutableCopy.Body = this.Copy(mutableCopy.Body);
@@ -2674,6 +3225,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="yieldBreakStatement"></param>
     public YieldBreakStatement Copy(IYieldBreakStatement yieldBreakStatement) {
+      Contract.Requires(yieldBreakStatement != null);
+      Contract.Ensures(Contract.Result<YieldBreakStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(yieldBreakStatement);
       return mutableCopy;
     }
@@ -2683,6 +3237,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="yieldReturnStatement"></param>
     public YieldReturnStatement Copy(IYieldReturnStatement yieldReturnStatement) {
+      Contract.Requires(yieldReturnStatement != null);
+      Contract.Ensures(Contract.Result<YieldReturnStatement>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(yieldReturnStatement);
       mutableCopy.Expression = this.Copy(mutableCopy.Expression);
       return mutableCopy;
@@ -2795,6 +3352,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// Provides copy of a method body, a statement, or an expression, in which the references to the nodes
   /// inside a cone is replaced. The cone is defined using the parent class. 
   /// </summary>
+  [Obsolete("Please use CodeDeepCopier of CodeShallowCopier")]
   public class CodeCopier : MetadataCopier {
     /// <summary>
     /// Provides copy of a method body, a statement, or an expression, in which the references to the nodes
@@ -4089,7 +4647,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// This class implements the ICodeVisitor interface for the code copier. 
     /// After a node is visited, the result is stored in resultExpression or resultStatement.
     /// </summary>
+#pragma warning disable 618
     private class CreateMutableType : BaseCodeVisitor, ICodeVisitor {
+#pragma warning restore 618
       /// <summary>
       /// The parent code copier.
       /// </summary>
@@ -4967,6 +5527,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// </summary>
     /// <param name="contractElement"></param>
     public virtual ContractElement Copy(IContractElement contractElement) {
+      Contract.Requires(contractElement != null);
+      Contract.Ensures(Contract.Result<ContractElement>() != null);
+
       contractElement.Dispatch(this.dispatchingVisitor);
       return (ContractElement)this.dispatchingVisitor.result;
     }
@@ -4975,6 +5538,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Makes a shallow copy of the given loop contract.
     /// </summary>
     public virtual LoopContract Copy(ILoopContract loopContract) {
+      Contract.Requires(loopContract != null);
+      Contract.Ensures(Contract.Result<LoopContract>() != null);
+
       return new LoopContract(loopContract);
     }
 
@@ -4982,6 +5548,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Makes a shallow copy of the given loop invariant.
     /// </summary>
     public virtual LoopInvariant Copy(ILoopInvariant loopInvariant) {
+      Contract.Requires(loopInvariant != null);
+      Contract.Ensures(Contract.Result<LoopInvariant>() != null);
+
       return new LoopInvariant(loopInvariant);
     }
 
@@ -4989,6 +5558,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Makes a shallow copy of the given method contract.
     /// </summary>
     public virtual MethodContract Copy(IMethodContract methodContract) {
+      Contract.Requires(methodContract != null);
+      Contract.Ensures(Contract.Result<MethodContract>() != null);
+
       return new MethodContract(methodContract);
     }
 
@@ -4996,6 +5568,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Makes a shallow copy of the given postCondition.
     /// </summary>
     public virtual Postcondition Copy(IPostcondition postCondition) {
+      Contract.Requires(postCondition != null);
+      Contract.Ensures(Contract.Result<Postcondition>() != null);
+
       return new Postcondition(postCondition);
     }
 
@@ -5003,6 +5578,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Makes a shallow copy of the given precondition.
     /// </summary>
     public virtual Precondition Copy(IPrecondition precondition) {
+      Contract.Requires(precondition != null);
+      Contract.Ensures(Contract.Result<Precondition>() != null);
+
       return new Precondition(precondition);
     }
 
@@ -5010,6 +5588,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Makes a shallow copy of the given thrown exception.
     /// </summary>
     public virtual ThrownException Copy(IThrownException thrownException) {
+      Contract.Requires(thrownException != null);
+      Contract.Ensures(Contract.Result<ThrownException>() != null);
+
       return new ThrownException(thrownException);
     }
 
@@ -5017,6 +5598,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Makes a shallow copy of the given type contract.
     /// </summary>
     public virtual TypeContract Copy(ITypeContract typeContract) {
+      Contract.Requires(typeContract != null);
+      Contract.Ensures(Contract.Result<TypeContract>() != null);
+
       return new TypeContract(typeContract);
     }
 
@@ -5024,6 +5608,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Makes a shallow copy of the given type invariant.
     /// </summary>
     public virtual TypeInvariant Copy(ITypeInvariant typeInvariant) {
+      Contract.Requires(typeInvariant != null);
+      Contract.Ensures(Contract.Result<TypeInvariant>() != null);
+
       return new TypeInvariant(typeInvariant);
     }
   }
@@ -5109,6 +5696,8 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// </summary>
     /// <param name="contractElement"></param>
     private void Copy(ContractElement contractElement) {
+      Contract.Requires(contractElement != null);
+
       contractElement.Condition = this.Copy(contractElement.Condition);
       if (contractElement.Description != null)
         contractElement.Description = this.Copy(contractElement.Description);
@@ -5211,6 +5800,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// </summary>
     /// <param name="contractElement"></param>
     public ContractElement Copy(IContractElement contractElement) {
+      Contract.Requires(contractElement != null);
+      Contract.Ensures(Contract.Result<ContractElement>() != null);
+
       contractElement.Dispatch(this.Dispatcher);
       return (ContractElement)this.Dispatcher.result;
     }
@@ -5219,6 +5811,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Makes a deep copy of the given loop contract.
     /// </summary>
     public LoopContract Copy(ILoopContract loopContract) {
+      Contract.Requires(loopContract != null);
+      Contract.Ensures(Contract.Result<LoopContract>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(loopContract);
       mutableCopy.Invariants = this.Copy(mutableCopy.Invariants);
       mutableCopy.Variants = this.Copy(mutableCopy.Variants);
@@ -5230,6 +5825,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Makes a deep copy of the given loop invariant.
     /// </summary>
     public LoopInvariant Copy(ILoopInvariant loopInvariant) {
+      Contract.Requires(loopInvariant != null);
+      Contract.Ensures(Contract.Result<LoopInvariant>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(loopInvariant);
       this.Copy((ContractElement)mutableCopy);
       return mutableCopy;
@@ -5239,6 +5837,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Makes a deep copy of the given method contract.
     /// </summary>
     public MethodContract Copy(IMethodContract methodContract) {
+      Contract.Requires(methodContract != null);
+      Contract.Ensures(Contract.Result<MethodContract>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(methodContract);
       mutableCopy.Allocates = this.Copy(mutableCopy.Allocates);
       mutableCopy.Frees = this.Copy(mutableCopy.Frees);
@@ -5255,6 +5856,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Makes a deep copy of the given postCondition.
     /// </summary>
     public Postcondition Copy(IPostcondition postCondition) {
+      Contract.Requires(postCondition != null);
+      Contract.Ensures(Contract.Result<Postcondition>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(postCondition);
       this.Copy((ContractElement)mutableCopy);
       return mutableCopy;
@@ -5264,6 +5868,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Makes a deep copy of the given precondition.
     /// </summary>
     public Precondition Copy(IPrecondition precondition) {
+      Contract.Requires(precondition != null);
+      Contract.Ensures(Contract.Result<Precondition>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(precondition);
       this.Copy((ContractElement)mutableCopy);
       if (mutableCopy.ExceptionToThrow != null)
@@ -5277,6 +5884,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Makes a deep copy of the given thrown exception.
     /// </summary>
     public ThrownException Copy(IThrownException thrownException) {
+      Contract.Requires(thrownException != null);
+      Contract.Ensures(Contract.Result<ThrownException>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(thrownException);
       mutableCopy.ExceptionType = this.Copy(mutableCopy.ExceptionType);
       mutableCopy.Postcondition = this.Copy(mutableCopy.Postcondition);
@@ -5287,6 +5897,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Makes a deep copy of the given type contract.
     /// </summary>
     public TypeContract Copy(ITypeContract typeContract) {
+      Contract.Requires(typeContract != null);
+      Contract.Ensures(Contract.Result<TypeContract>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(typeContract);
       mutableCopy.ContractFields = this.Copy(mutableCopy.ContractFields);
       mutableCopy.ContractMethods = this.Copy(mutableCopy.ContractMethods);
@@ -5298,6 +5911,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// Makes a deep copy of the given type invariant.
     /// </summary>
     public TypeInvariant Copy(ITypeInvariant typeInvariant) {
+      Contract.Requires(typeInvariant != null);
+      Contract.Ensures(Contract.Result<TypeInvariant>() != null);
+
       var mutableCopy = this.shallowCopier.Copy(typeInvariant);
       this.Copy((ContractElement)mutableCopy);
       return mutableCopy;
@@ -5308,6 +5924,7 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
   /// Provides copy of a method contract, method body, a statement, or an expression, in which the references to the nodes
   /// inside a cone is replaced. The cone is defined using the parent class. 
   /// </summary>
+  [Obsolete("Please use CodeAndContractDeepCopier or CodeAndContractShallowCopier")]
   public class CodeAndContractCopier : CodeCopier {
     /// <summary>
     /// Provides copy of a method contract, method body, a statement, or an expression, in which the references to the nodes

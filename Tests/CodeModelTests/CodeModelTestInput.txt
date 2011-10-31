@@ -536,7 +536,7 @@ namespace CodeModelTestInput
 
             public int Value()
             {
-                return this.s.Length.get();
+                return this.s.Length;
 
             }
 
@@ -589,7 +589,7 @@ namespace CodeModelTestInput
                 goto IL_00c4;
                 while (<>7__wrapf.MoveNext())
                 {
-                    T <t>5__e = <>7__wrapf.Current.get();
+                    T <t>5__e = <>7__wrapf.Current;
                     yield return <t>5__e;
 
                 IL_00c4:
@@ -605,7 +605,7 @@ namespace CodeModelTestInput
                 goto IL_0095;
                 while (<>7__wrap16.MoveNext())
                 {
-                    T <t>5__15 = <>7__wrap16.Current.get();
+                    T <t>5__15 = <>7__wrap16.Current;
                     yield return <t>5__15;
 
                 IL_0095:
@@ -624,7 +624,7 @@ namespace CodeModelTestInput
                 goto IL_00f6;
                 while (<>7__wrap21.MoveNext())
                 {
-                    int <i>5__20 = <>7__wrap21.Current.get();
+                    int <i>5__20 = <>7__wrap21.Current;
                     yield return ((max - <i>5__20) - 1);
 
                 IL_00f6:
@@ -649,6 +649,7 @@ namespace CodeModelTestInput
             }
 
             public System.Collections.Generic.IEnumerable<T> Test1h<T>(System.Collections.Generic.IEnumerable<T> input, int x, int y)
+                where T: CodeModelTestInput.Class2.IIncrementable<T>
             {
                 T CS$0$0002;
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(input, (T t) => (t.Value() > x)));
@@ -658,7 +659,7 @@ namespace CodeModelTestInput
                 {
                     while (<>7__wrap31.MoveNext())
                     {
-                        T <t>5__30 = <>7__wrap31.Current.get();
+                        T <t>5__30 = <>7__wrap31.Current;
                         CS$0$0002 = <t>5__30;
                         yield return CS$0$0002.IncrementBy(y);
 
@@ -725,7 +726,7 @@ namespace CodeModelTestInput
                 goto IL_00ea;
                 while (<>7__wrap43.MoveNext())
                 {
-                    T <t>5__42 = <>7__wrap43.Current.get();
+                    T <t>5__42 = <>7__wrap43.Current;
                     yield return <t>5__42;
 
                 IL_00ea:
@@ -735,6 +736,7 @@ namespace CodeModelTestInput
             }
 
             public System.Collections.Generic.IEnumerable<T1> Test1e<T1>(System.Collections.Generic.IEnumerable<T> input, T1 t)
+                where T1: CodeModelTestInput.Class2.IIncrementable<T1>
             {
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T>(input, (T s) => (s.Value() == t.Value())));
                 yield return t;
@@ -744,13 +746,14 @@ namespace CodeModelTestInput
             }
 
             public System.Collections.Generic.IEnumerable<T1> Test1g<T1>(System.Collections.Generic.IEnumerable<T1> ts, T x)
+                where T1: CodeModelTestInput.Class2.IIncrementable<T1>
             {
                 Microsoft.Contracts.Contract.Requires(Microsoft.Contracts.Contract.ForAll<T1>(ts, (T1 y) => this.foo<T1>(((object)y), x)));
                 System.Collections.Generic.IEnumerator<T1> <>7__wrap52 = ts.GetEnumerator();
                 goto IL_00c8;
                 while (<>7__wrap52.MoveNext())
                 {
-                    T1 <t1>5__51 = <>7__wrap52.Current.get();
+                    T1 <t1>5__51 = <>7__wrap52.Current;
                     yield return <t1>5__51;
 
                 IL_00c8:
@@ -811,6 +814,7 @@ namespace CodeModelTestInput
         }
 
         public static bool Method3_1<T>(T p1)
+            where T: class
         {
             System.Collections.Generic.List<T> list = new System.Collections.Generic.List<T>();
             T tmp = p1;
@@ -826,6 +830,7 @@ namespace CodeModelTestInput
         }
 
         public static bool Method3_3<T1>(T1 p1)
+            where T1: class
         {
             System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
             return list.TrueForAll((T1 t) => (((object)t) == null));
@@ -833,6 +838,7 @@ namespace CodeModelTestInput
         }
 
         public static bool Method3_4<T1>(T1 p1)
+            where T1: class
         {
             int j = 1;
             System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
@@ -841,6 +847,7 @@ namespace CodeModelTestInput
         }
 
         public bool Method3_5<T1>(T1 p1)
+            where T1: class
         {
             T1 tmp = p1;
             System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
@@ -856,6 +863,7 @@ namespace CodeModelTestInput
         }
 
         public bool Method3_7<T1>(T1 p1)
+            where T1: class
         {
             System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
             return list.TrueForAll((T1 t) => (((object)t) == null));
@@ -863,6 +871,7 @@ namespace CodeModelTestInput
         }
 
         public bool Method3_8<T1>(T1 p1)
+            where T1: class
         {
             int j = 1;
             System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
@@ -871,6 +880,7 @@ namespace CodeModelTestInput
         }
 
         public bool Method3_9<T1>(T1 p1)
+            where T1: class
         {
             int j = 1;
             System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
@@ -887,6 +897,7 @@ namespace CodeModelTestInput
         }
 
         public bool Method3_10<T1>(T1 p1)
+            where T1: class
         {
             int j = 1;
             System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
@@ -1151,6 +1162,7 @@ namespace CodeModelTestInput
         }
 
         public static bool Method4_1<T1>(T1 p1)
+            where T1: class
         {
             T1 tmp = p1;
             return CodeModelTestInput.Class4<T>.list.TrueForAll((T t) => (t.GetHashCode() == tmp.GetHashCode()));
@@ -1164,12 +1176,14 @@ namespace CodeModelTestInput
         }
 
         public static bool Method4_3<T1>(T1 p1)
+            where T1: class
         {
             return CodeModelTestInput.Class4<T>.list.TrueForAll((T t) => (((object)t) == null));
 
         }
 
         public static bool Method4_4<T1>(T1 p1)
+            where T1: class
         {
             int j = 1;
             return CodeModelTestInput.Class4<T>.list.TrueForAll((T t) => (t.GetHashCode() == (p1.GetHashCode() + j)));
@@ -1177,6 +1191,7 @@ namespace CodeModelTestInput
         }
 
         public bool Method4_5<T1>(T1 p1)
+            where T1: class
         {
             T1 tmp = p1;
             return CodeModelTestInput.Class4<T>.list.TrueForAll((T t) => (t.GetHashCode() == tmp.GetHashCode()));
@@ -1190,12 +1205,14 @@ namespace CodeModelTestInput
         }
 
         public bool Method4_7<T1>(T1 p1)
+            where T1: class
         {
             return CodeModelTestInput.Class4<T>.list.TrueForAll((T t) => (((object)t) == null));
 
         }
 
         public bool Method4_8<T1>(T1 p1)
+            where T1: class
         {
             int j = 1;
             return CodeModelTestInput.Class4<T>.list.TrueForAll((T t) => (t.GetHashCode() == (p1.GetHashCode() + j)));
@@ -1203,6 +1220,7 @@ namespace CodeModelTestInput
         }
 
         public bool Method4_9<T1>(T1 p1)
+            where T1: class
         {
             int j = 1;
             return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
@@ -1218,6 +1236,7 @@ namespace CodeModelTestInput
         }
 
         public bool Method4_10<T1>(T1 p1)
+            where T1: class
         {
             int j = 1;
             return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {

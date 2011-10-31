@@ -11,6 +11,7 @@
 using Microsoft.Cci.MutableCodeModel;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System;
 
 namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
@@ -134,7 +135,9 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// Copy a type reference used by an iterator method to a type reference used by the iterator closure. That is, replace
   /// occurences of the generic method parameters with corresponding generic type parameters. 
   /// </summary>
+#pragma warning disable 618
   internal class CopyTypeFromIteratorToClosure : MethodBodyMappingMutator {
+#pragma warning restore 618
 
     protected Dictionary<uint, IGenericTypeParameter> mapping;
 
@@ -164,6 +167,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// to be used as method body of method M2 in class C2. supporting the substitution of
   /// parameters as well as type parameters. 
   /// </summary>
+  [Obsolete("Please use CodeRewriter")]
   public class MethodBodyMappingMutator : CodeMutatingVisitor {
 
     /// <summary>

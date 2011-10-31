@@ -455,6 +455,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Represents a for statement, or a loop through a block of statements, using a test expression as a condition for continuing to loop.
   /// </summary>
+  [ContractClass(typeof(IForStatementContract))]
   public interface IForStatement : IStatement {
     /// <summary>
     /// The statements making up the body of the loop.
@@ -477,6 +478,60 @@ namespace Microsoft.Cci {
     IEnumerable<IStatement> InitStatements { get; }
 
   }
+
+  #region IForStatement contract binding
+  [ContractClassFor(typeof(IForStatement))]
+  abstract class IForStatementContract : IForStatement {
+    #region IForStatement Members
+
+    public IStatement Body {
+      get {
+        Contract.Ensures(Contract.Result<IStatement>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IExpression Condition {
+      get {
+        Contract.Ensures(Contract.Result<IExpression>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IEnumerable<IStatement> IncrementStatements {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IStatement>>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IEnumerable<IStatement> InitStatements {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IStatement>>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+
+    #region IStatement Members
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// Represents a goto statement.
@@ -888,6 +943,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// While condition do statements. Tests the condition before the body. Exits when the condition is true.
   /// </summary>
+  [ContractClass(typeof(IWhileDoStatementContract))]
   public interface IWhileDoStatement : IStatement {
     /// <summary>
     /// The body of the loop.
@@ -899,6 +955,47 @@ namespace Microsoft.Cci {
     /// </summary>
     IExpression Condition { get; }
   }
+
+  #region IWhileDoStatement contract binding
+
+  [ContractClassFor(typeof(IWhileDoStatement))]
+  abstract class IWhileDoStatementContract : IWhileDoStatement {
+    #region IWhileDoStatement Members
+
+    public IStatement Body {
+      get {
+        Contract.Ensures(Contract.Result<IStatement>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IExpression Condition {
+      get {
+        Contract.Ensures(Contract.Result<IExpression>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    #endregion
+
+    #region IStatement Members
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// Terminates the iteration of values produced by the iterator method containing this statement.

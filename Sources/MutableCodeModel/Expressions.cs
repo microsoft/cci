@@ -19,7 +19,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class Addition : BinaryOperation, IAddition {
+  public class Addition : BinaryOperation, IAddition {
 
     /// <summary>
     /// 
@@ -57,7 +57,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class AddressableExpression : Expression, IAddressableExpression {
+  public class AddressableExpression : Expression, IAddressableExpression {
 
     /// <summary>
     /// 
@@ -91,16 +91,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public object Definition {
       get { return this.definition; }
-      set
-        //^ requires value is ILocalDefinition || value is IParameterDefinition || value is IFieldReference || value is IArrayIndexer 
-        //^   || value is IAddressDereference || value is IMethodReference || value is IThisReference;
-      {
+      set {
+        Contract.Requires(value is ILocalDefinition || value is IParameterDefinition ||
+          value is IFieldReference || value is IMethodReference || value is IExpression);
         this.definition = value;
       }
     }
     object definition;
-    //^ invariant definition is ILocalDefinition || definition is IParameterDefinition || definition is IFieldReference || definition is IArrayIndexer
-    //^   || definition is IAddressDereference || definition is IMethodReference || definition is IThisReference;
 
     /// <summary>
     /// The instance to be used if this.Definition is an instance field/method or array indexer.
@@ -117,7 +114,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class AddressOf : Expression, IAddressOf {
+  public class AddressOf : Expression, IAddressOf {
 
     /// <summary>
     /// 
@@ -169,7 +166,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class AddressDereference : Expression, IAddressDereference {
+  public class AddressDereference : Expression, IAddressDereference {
 
     /// <summary>
     /// 
@@ -250,7 +247,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class AnonymousDelegate : Expression, IAnonymousDelegate {
+  public class AnonymousDelegate : Expression, IAnonymousDelegate {
 
     /// <summary>
     /// 
@@ -388,7 +385,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// An expression that represents an array element access.
   /// </summary>
-  public sealed class ArrayIndexer : Expression, IArrayIndexer {
+  public class ArrayIndexer : Expression, IArrayIndexer {
 
     /// <summary>
     /// 
@@ -460,7 +457,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class Assignment : Expression, IAssignment {
+  public class Assignment : Expression, IAssignment {
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Assignment"/> class.
@@ -563,7 +560,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class BitwiseAnd : BinaryOperation, IBitwiseAnd {
+  public class BitwiseAnd : BinaryOperation, IBitwiseAnd {
 
     /// <summary>
     /// 
@@ -591,7 +588,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class BitwiseOr : BinaryOperation, IBitwiseOr {
+  public class BitwiseOr : BinaryOperation, IBitwiseOr {
 
     /// <summary>
     /// 
@@ -619,7 +616,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class BlockExpression : Expression, IBlockExpression {
+  public class BlockExpression : Expression, IBlockExpression {
 
     /// <summary>
     /// 
@@ -674,7 +671,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class BoundExpression : Expression, IBoundExpression {
+  public class BoundExpression : Expression, IBoundExpression {
 
     /// <summary>
     /// 
@@ -779,7 +776,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class CastIfPossible : Expression, ICastIfPossible {
+  public class CastIfPossible : Expression, ICastIfPossible {
 
     /// <summary>
     /// 
@@ -831,7 +828,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class CheckIfInstance : Expression, ICheckIfInstance {
+  public class CheckIfInstance : Expression, ICheckIfInstance {
 
     /// <summary>
     /// 
@@ -883,7 +880,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class Conversion : Expression, IConversion {
+  public class Conversion : Expression, IConversion {
 
     /// <summary>
     /// 
@@ -947,7 +944,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// An expression that does not change its value at runtime and that can be evaluated at compile time.
   /// </summary>
-  public sealed class CompileTimeConstant : Expression, ICompileTimeConstant, IMetadataConstant {
+  public class CompileTimeConstant : Expression, ICompileTimeConstant, IMetadataConstant {
 
     /// <summary>
     /// 
@@ -1001,7 +998,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class Conditional : Expression, IConditional {
+  public class Conditional : Expression, IConditional {
 
     /// <summary>
     /// 
@@ -1141,7 +1138,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class CreateArray : Expression, ICreateArray, IMetadataCreateArray {
+  public class CreateArray : Expression, ICreateArray, IMetadataCreateArray {
 
     /// <summary>
     /// 
@@ -1323,7 +1320,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class CreateDelegateInstance : Expression, ICreateDelegateInstance {
+  public class CreateDelegateInstance : Expression, ICreateDelegateInstance {
 
     /// <summary>
     /// 
@@ -1389,7 +1386,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class CreateObjectInstance : ConstructorOrMethodCall, ICreateObjectInstance {
+  public class CreateObjectInstance : ConstructorOrMethodCall, ICreateObjectInstance {
 
     /// <summary>
     /// 
@@ -1428,7 +1425,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class DefaultValue : Expression, IDefaultValue {
+  public class DefaultValue : Expression, IDefaultValue {
 
     /// <summary>
     /// 
@@ -1452,7 +1449,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITypeReference DefaultValueType {
       get { return this.defaultValueType; }
-      set { this.defaultValueType = value; }
+      set { this.defaultValueType = this.Type = value; }
     }
     ITypeReference defaultValueType;
 
@@ -1468,7 +1465,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class Division : BinaryOperation, IDivision {
+  public class Division : BinaryOperation, IDivision {
 
     /// <summary>
     /// 
@@ -1501,7 +1498,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// An expression that results in the value on top of the implicit operand stack.
   /// </summary>
-  public sealed class DupValue : Expression, IDupValue {
+  public class DupValue : Expression, IDupValue {
 
     /// <summary>
     /// Allocates an expression that results in the value on top of the implicit operand stack.
@@ -1529,7 +1526,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class Equality : BinaryOperation, IEquality {
+  public class Equality : BinaryOperation, IEquality {
 
     /// <summary>
     /// 
@@ -1557,7 +1554,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class ExclusiveOr : BinaryOperation, IExclusiveOr {
+  public class ExclusiveOr : BinaryOperation, IExclusiveOr {
 
     /// <summary>
     /// 
@@ -1657,7 +1654,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class GetTypeOfTypedReference : Expression, IGetTypeOfTypedReference {
+  public class GetTypeOfTypedReference : Expression, IGetTypeOfTypedReference {
 
     /// <summary>
     /// 
@@ -1697,7 +1694,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class GetValueOfTypedReference : Expression, IGetValueOfTypedReference {
+  public class GetValueOfTypedReference : Expression, IGetValueOfTypedReference {
 
     /// <summary>
     /// 
@@ -1749,7 +1746,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class GreaterThan : BinaryOperation, IGreaterThan {
+  public class GreaterThan : BinaryOperation, IGreaterThan {
 
     /// <summary>
     /// 
@@ -1788,7 +1785,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class GreaterThanOrEqual : BinaryOperation, IGreaterThanOrEqual {
+  public class GreaterThanOrEqual : BinaryOperation, IGreaterThanOrEqual {
 
     /// <summary>
     /// 
@@ -1827,7 +1824,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class LeftShift : BinaryOperation, ILeftShift {
+  public class LeftShift : BinaryOperation, ILeftShift {
 
     /// <summary>
     /// 
@@ -1855,7 +1852,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class LessThan : BinaryOperation, ILessThan {
+  public class LessThan : BinaryOperation, ILessThan {
 
     /// <summary>
     /// 
@@ -1894,7 +1891,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class LessThanOrEqual : BinaryOperation, ILessThanOrEqual {
+  public class LessThanOrEqual : BinaryOperation, ILessThanOrEqual {
 
     /// <summary>
     /// 
@@ -1933,7 +1930,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class LogicalNot : UnaryOperation, ILogicalNot {
+  public class LogicalNot : UnaryOperation, ILogicalNot {
 
     /// <summary>
     /// 
@@ -1961,7 +1958,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class MakeTypedReference : Expression, IMakeTypedReference {
+  public class MakeTypedReference : Expression, IMakeTypedReference {
 
     /// <summary>
     /// 
@@ -2002,7 +1999,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// An expression that invokes a method.
   /// </summary>
-  public sealed class MethodCall : ConstructorOrMethodCall, IMethodCall {
+  public class MethodCall : ConstructorOrMethodCall, IMethodCall {
 
     /// <summary>
     /// 
@@ -2100,7 +2097,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class Modulus : BinaryOperation, IModulus {
+  public class Modulus : BinaryOperation, IModulus {
 
     /// <summary>
     /// 
@@ -2132,7 +2129,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class Multiplication : BinaryOperation, IMultiplication {
+  public class Multiplication : BinaryOperation, IMultiplication {
 
     /// <summary>
     /// 
@@ -2171,7 +2168,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class NamedArgument : Expression, INamedArgument, IMetadataNamedArgument {
+  public class NamedArgument : Expression, INamedArgument, IMetadataNamedArgument {
 
     /// <summary>
     /// 
@@ -2265,7 +2262,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class NotEquality : BinaryOperation, INotEquality {
+  public class NotEquality : BinaryOperation, INotEquality {
 
     /// <summary>
     /// 
@@ -2293,7 +2290,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class OldValue : Expression, IOldValue {
+  public class OldValue : Expression, IOldValue {
 
     /// <summary>
     /// 
@@ -2333,7 +2330,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class OutArgument : Expression, IOutArgument {
+  public class OutArgument : Expression, IOutArgument {
 
     /// <summary>
     /// 
@@ -2373,7 +2370,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class OnesComplement : UnaryOperation, IOnesComplement {
+  public class OnesComplement : UnaryOperation, IOnesComplement {
 
     /// <summary>
     /// 
@@ -2401,7 +2398,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class PointerCall : Expression, IPointerCall {
+  public class PointerCall : Expression, IPointerCall {
 
     /// <summary>
     /// 
@@ -2485,7 +2482,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// An expression that results in the value on top of the implicit operand stack and that also pops that value from the stack.
   /// </summary>
-  public sealed class PopValue : Expression, IPopValue {
+  public class PopValue : Expression, IPopValue {
 
     /// <summary>
     /// Allocates an expression that results in the value on top of the implicit operand stack and that also pops that value from the stack.
@@ -2513,7 +2510,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class RefArgument : Expression, IRefArgument {
+  public class RefArgument : Expression, IRefArgument {
 
     /// <summary>
     /// 
@@ -2554,7 +2551,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class ReturnValue : Expression, IReturnValue {
+  public class ReturnValue : Expression, IReturnValue {
 
     /// <summary>
     /// 
@@ -2582,7 +2579,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class RightShift : BinaryOperation, IRightShift {
+  public class RightShift : BinaryOperation, IRightShift {
 
     /// <summary>
     /// 
@@ -2610,7 +2607,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class RuntimeArgumentHandleExpression : Expression, IRuntimeArgumentHandleExpression {
+  public class RuntimeArgumentHandleExpression : Expression, IRuntimeArgumentHandleExpression {
 
     /// <summary>
     /// 
@@ -2638,7 +2635,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class SizeOf : Expression, ISizeOf {
+  public class SizeOf : Expression, ISizeOf {
 
     /// <summary>
     /// 
@@ -2678,7 +2675,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class StackArrayCreate : Expression, IStackArrayCreate {
+  public class StackArrayCreate : Expression, IStackArrayCreate {
 
     /// <summary>
     /// 
@@ -2730,7 +2727,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class Subtraction : BinaryOperation, ISubtraction {
+  public class Subtraction : BinaryOperation, ISubtraction {
 
     /// <summary>
     /// 
@@ -2769,7 +2766,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class TargetExpression : Expression, ITargetExpression {
+  public class TargetExpression : Expression, ITargetExpression {
 
     /// <summary>
     /// 
@@ -2796,6 +2793,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.isVolatile = targetExpression.IsVolatile;
     }
 
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.alignment == 0 || this.alignment == 1 || this.alignment == 2 || this.alignment == 4);
+      Contract.Invariant(this.IsUnaligned == (this.alignment != 0));
+    }
+
+
     /// <summary>
     /// If Definition is a field and the field is not aligned with natural size of its type, this property specifies the actual alignment.
     /// For example, if the field is byte aligned, then the result of this property is 1. Likewise, 2 for word (16-bit) alignment and 4 for
@@ -2803,22 +2807,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public byte Alignment {
-      get
-        //^^ requires !this.IsUnaligned;
-        //^^ ensures result == 1 || result == 2 || result == 4;
-      {
-        //^ assume this.alignment == 1 || this.alignment == 2 || this.alignment == 4;
+      get {
         return this.alignment;
       }
-      set
-        //^ requires value == 1 || value == 2 || value == 4;
-      {
+      set {
+        Contract.Requires(value == 1 || value == 2 || value == 4);
         this.alignment = value;
       }
     }
-    //^ [SpecPublic]
     byte alignment;
-    //^ invariant alignment == 0 || alignment == 1 || alignment == 2 || alignment == 4;
 
     /// <summary>
     /// Calls visitor.Visit(ITargetExpression).
@@ -2833,9 +2830,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public object Definition {
       get { return this.definition; }
-      set
-        //^ requires value is ILocalDefinition || value is IParameterDefinition || value is IFieldDefinition || value is IArrayIndexer || value is IAddressDereference;
-      {
+      set {
+        Contract.Requires(value is ILocalDefinition || value is IParameterDefinition || 
+          value is IFieldReference || value is IArrayIndexer || 
+          value is IAddressDereference || value is IPropertyDefinition);
+        //Contract.Requires(!(value is IPropertyDefinition) || ((IPropertyDefinition)value).Setter != null);
         this.definition = value;
       }
     }
@@ -2874,7 +2873,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class ThisReference : Expression, IThisReference {
+  public class ThisReference : Expression, IThisReference {
 
     /// <summary>
     /// 
@@ -2902,7 +2901,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class TokenOf : Expression, ITokenOf {
+  public class TokenOf : Expression, ITokenOf {
 
     /// <summary>
     /// 
@@ -2942,7 +2941,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class TypeOf : Expression, ITypeOf, IMetadataTypeOf {
+  public class TypeOf : Expression, ITypeOf, IMetadataTypeOf {
 
     /// <summary>
     /// 
@@ -2993,7 +2992,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class UnaryNegation : UnaryOperation, IUnaryNegation {
+  public class UnaryNegation : UnaryOperation, IUnaryNegation {
 
     /// <summary>
     /// 
@@ -3060,7 +3059,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class UnaryPlus : UnaryOperation, IUnaryPlus {
+  public class UnaryPlus : UnaryOperation, IUnaryPlus {
 
     /// <summary>
     /// 
@@ -3088,7 +3087,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class VectorLength : Expression, IVectorLength {
+  public class VectorLength : Expression, IVectorLength {
 
     /// <summary>
     /// 

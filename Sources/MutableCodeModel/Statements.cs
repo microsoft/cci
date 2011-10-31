@@ -398,7 +398,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IExpression Condition {
       get { return this.condition; }
-      set { this.condition = value; }
+      set {
+        Contract.Requires(value != null);
+        this.condition = value; 
+      }
     }
     IExpression condition;
 
@@ -416,7 +419,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IStatement FalseBranch {
       get { return this.falseBranch; }
-      set { this.falseBranch = value; }
+      set {
+        Contract.Requires(value != null);
+        this.falseBranch = value; 
+      }
     }
     IStatement falseBranch;
 
@@ -426,7 +432,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IStatement TrueBranch {
       get { return this.trueBranch; }
-      set { this.trueBranch = value; }
+      set {
+        Contract.Requires(value != null);
+        this.trueBranch = value; 
+      }
     }
     IStatement trueBranch;
 
@@ -848,13 +857,26 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.initStatements = new List<IStatement>(forStatement.InitStatements);
     }
 
+    [ContractInvariantMethod]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Justification = "Required for code contracts.")]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.body != null);
+      Contract.Invariant(this.condition != null);
+      Contract.Invariant(this.incrementStatements != null);
+      Contract.Invariant(this.initStatements != null);
+    }
+
+
     /// <summary>
     /// The statements making up the body of the loop.
     /// </summary>
     /// <value></value>
     public IStatement Body {
       get { return this.body; }
-      set { this.body = value; }
+      set {
+        Contract.Requires(value != null);
+        this.body = value;
+      }
     }
     IStatement body;
 
@@ -864,7 +886,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IExpression Condition {
       get { return this.condition; }
-      set { this.condition = value; }
+      set { 
+        Contract.Requires(value != null);
+        this.condition = value; 
+      }
     }
     IExpression condition;
 
@@ -881,8 +906,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public List<IStatement> IncrementStatements {
-      get { return this.incrementStatements; }
-      set { this.incrementStatements = value; }
+      get {
+        Contract.Ensures(Contract.Result<List<IStatement>>() != null);
+        return this.incrementStatements; 
+      }
+      set {
+        Contract.Requires(value != null);
+        this.incrementStatements = value; 
+      }
     }
     List<IStatement> incrementStatements;
 
@@ -891,8 +922,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public List<IStatement> InitStatements {
-      get { return this.initStatements; }
-      set { this.initStatements = value; }
+      get {
+        Contract.Ensures(Contract.Result<List<IStatement>>() != null);
+        return this.initStatements; 
+      }
+      set {
+        Contract.Requires(value != null);
+        this.initStatements = value; 
+      }
     }
     List<IStatement> initStatements;
 
@@ -1683,9 +1720,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="whileDoStatement"></param>
     public WhileDoStatement(IWhileDoStatement whileDoStatement)
       : base(whileDoStatement) {
+      Contract.Requires(whileDoStatement != null);
       this.body = whileDoStatement.Body;
       this.condition = whileDoStatement.Condition;
     }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.body != null);
+      Contract.Invariant(this.condition != null);
+    }
+
 
     /// <summary>
     /// The body of the loop.
@@ -1693,7 +1738,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IStatement Body {
       get { return this.body; }
-      set { this.body = value; }
+      set {
+        Contract.Requires(value != null);
+        this.body = value; 
+      }
     }
     IStatement body;
 
@@ -1703,7 +1751,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IExpression Condition {
       get { return this.condition; }
-      set { this.condition = value; }
+      set {
+        Contract.Requires(value != null);
+        this.condition = value; 
+      }
     }
     IExpression condition;
 

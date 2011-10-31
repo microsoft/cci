@@ -561,6 +561,8 @@ namespace Microsoft.Cci.MutableCodeModel {
         Type = anonymousDelegate.Type
       };
       if (!method.IsStatic) {
+        //TODO: if there is reason to believe the delegate will be constructed in a loop, but its closure is constructed before the loop, then cache the delegate in a local
+        //that is in the same scope as the closure instance
         if (method.ContainingType == this.currentClosureInstance)
           createDelegate.Instance = this.currentClosureObject;
         else //non static peer method

@@ -149,10 +149,15 @@ namespace CSharpSourceEmitter {
           if (localDeclarationStatement != null) {
             if (first) {
               this.PrintTypeReference(localDeclarationStatement.LocalVariable.Type);
+              this.sourceEmitterOutput.Write(" ");
             } else {
               this.sourceEmitterOutput.Write(", ");
             }
             this.sourceEmitterOutput.Write(localDeclarationStatement.LocalVariable.Name.Value);
+            if (localDeclarationStatement.InitialValue != null) {
+              this.sourceEmitterOutput.Write(" = ");
+              this.Traverse(localDeclarationStatement.InitialValue);
+            }
           } else
             this.Traverse(statement);
         }

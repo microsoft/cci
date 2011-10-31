@@ -1102,7 +1102,6 @@ namespace Microsoft.Cci {
   }
   #endregion
 
-
   /// <summary>
   /// Contains a specialized Visit routine for each standard type of object defined in the code and metadata model. 
   /// </summary>
@@ -3434,19 +3433,14 @@ namespace Microsoft.Cci {
             var arrayIndexer = addressableExpression.Definition as IArrayIndexer;
             if (arrayIndexer != null) {
               this.Traverse(arrayIndexer);
-              return; //do not traverser Instance again
+              return; //do not traverse Instance again
             } else {
-              var addressDereference = addressableExpression.Definition as IAddressDereference;
-              if (addressDereference != null)
-                this.Traverse(addressDereference);
+              var methodReference = addressableExpression.Definition as IMethodReference;
+              if (methodReference != null)
+                this.Traverse(methodReference);
               else {
-                var methodReference = addressableExpression.Definition as IMethodReference;
-                if (methodReference != null)
-                  this.Traverse(methodReference);
-                else {
-                  var thisReference = (IThisReference)addressableExpression.Definition;
-                  this.Traverse(thisReference);
-                }
+                var expression = (IExpression)addressableExpression.Definition;
+                this.Traverse(expression);
               }
             }
           }
@@ -4471,6 +4465,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A visitor base class that traverses the code model in depth first, left to right order.
   /// </summary>
+  [Obsolete("Please use CodeTraverser")]
   public class BaseCodeTraverser : BaseMetadataTraverser, ICodeVisitor {
 
     /// <summary>
@@ -6102,6 +6097,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A visitor base class that provides a dummy body for each method of ICodeVisitor.
   /// </summary>
+  [Obsolete("Please use CodeVisitor")]
   public class BaseCodeVisitor : BaseMetadataVisitor, ICodeVisitor {
 
     /// <summary>
@@ -8008,6 +8004,7 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// A visitor base class that traverses a code model in depth first, left to right order.
   /// </summary>
+  [Obsolete("Please use CodeAndContractVisitor")]
   public class BaseCodeAndContractTraverser : BaseCodeTraverser, ICodeAndContractVisitor {
 
     /// <summary>
@@ -8340,6 +8337,7 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// A visitor base class that provides a dummy body for each method of ICodeAndContractVisitor.
   /// </summary>
+  [Obsolete("Please use CodeAndContractVisitor")]
   public class BaseCodeAndContractVisitor : BaseCodeVisitor, ICodeAndContractVisitor {
 
     /// <summary>
