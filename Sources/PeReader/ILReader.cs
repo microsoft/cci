@@ -1131,7 +1131,8 @@ namespace Microsoft.Cci.MetadataReader {
     }
 
     /// <summary>
-    /// 
+    /// The location where this document was found, or where it should be stored.
+    /// This will also uniquely identify the source document within an instance of compilation host.
     /// </summary>
     public string Location {
       get { return this.method.PEFileToObjectModel.Module.ModuleIdentity.Location; }
@@ -1147,7 +1148,7 @@ namespace Microsoft.Cci.MetadataReader {
     }
 
     /// <summary>
-    /// 
+    /// The name of the document. For example the name of the file if the document corresponds to a file.
     /// </summary>
     public IName Name {
       get { return this.method.PEFileToObjectModel.Module.ModuleIdentity.Name; }

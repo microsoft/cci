@@ -36,7 +36,7 @@ namespace PeToText {
           string txtFile = Path.ChangeExtension(pdbFile, "txt");
           using (var writer = new StreamWriter(txtFile)) {
             SourceEmitter csSourceEmitter = new SourceEmitter(writer, host, pdbReader);
-            csSourceEmitter.Visit((INamespaceDefinition)module.UnitNamespaceRoot);
+            csSourceEmitter.Traverse((INamespaceDefinition)module.UnitNamespaceRoot);
             writer.Close();
           }
         }

@@ -116,6 +116,7 @@
     <Compile Include="PdbScope.cs" />
     <Compile Include="PdbSlot.cs" />
     <Compile Include="PdbSource.cs" />
+    <Compile Include="PdbTokenLine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SourceLocationProvider.cs" />
   </ItemGroup>

@@ -1003,6 +1003,18 @@ namespace ModuleReaderTests {
              [mscorlib]System.Collections.ICollection,
              [mscorlib]System.Collections.IEnumerable
 {
+  .custom instance void[mscorlib]System.Diagnostics.DebuggerDisplayAttribute::.ctor([mscorlib]System.String)
+  {
+    .argument const(""Count = {Count}"",[mscorlib]System.String)
+  }
+  .custom instance void[mscorlib]System.Diagnostics.DebuggerTypeProxyAttribute::.ctor([mscorlib]System.Type)
+  {
+    .argument typeof([mscorlib]System.Collections.Generic.Mscorlib_CollectionDebugView`1)
+  }
+  .custom instance void[mscorlib]System.Reflection.DefaultMemberAttribute::.ctor([mscorlib]System.String)
+  {
+    .argument const(""Item"",[mscorlib]System.String)
+  }
   .class Enumerator
   .field _defaultCapacity : int32
   .field _emptyArray : int32[]

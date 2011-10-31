@@ -4281,7 +4281,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     ) {
       typeName = mangledTypeName;
       genericParamCount = 0;
-      int index = mangledTypeName.IndexOf('`');
+      int index = mangledTypeName.LastIndexOf('`');
       if (index == -1 || index == mangledTypeName.Length - 1)
         return;
       typeName = mangledTypeName.Substring(0, index);

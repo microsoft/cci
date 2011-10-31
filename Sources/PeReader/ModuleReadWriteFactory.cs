@@ -18,6 +18,7 @@ using Microsoft.Cci.UtilityDataStructures;
 using System.Threading;
 using System.Text;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -186,10 +187,10 @@ namespace Microsoft.Cci {
     /// <param name="binaryDocument">The binary document that needes to be opened as an assembly.</param>
     /// <param name="assemblyIdentity">Contains the assembly identifier of the binary document in case it is an assembly.</param>
     /// <returns>Assembly that is loaded or Dummy.Assembly in case assembly could not be loaded.</returns>
-    public IAssembly OpenAssembly(
-      IBinaryDocument binaryDocument,
-      out AssemblyIdentity/*?*/ assemblyIdentity
-    ) {
+    public IAssembly OpenAssembly(IBinaryDocument binaryDocument, out AssemblyIdentity/*?*/ assemblyIdentity) {
+      Contract.Requires(binaryDocument != null);
+      Contract.Ensures(Contract.Result<IAssembly>() != null);
+
       assemblyIdentity = null;
       lock (GlobalLock.LockingObject) {
         IBinaryDocumentMemoryBlock/*?*/ binaryDocumentMemoryBlock = this.metadataReaderHost.OpenBinaryDocument(binaryDocument);
@@ -232,10 +233,10 @@ namespace Microsoft.Cci {
     /// <param name="binaryDocument">The binary document that needes to be opened as an module.</param>
     /// <param name="moduleIdentity">Contains the module identity of the binary document in case it is an module.</param>
     /// <returns>Module that is loaded or Dummy.Module in case module could not be loaded.</returns>
-    public IModule OpenModule(
-      IBinaryDocument binaryDocument,
-      out ModuleIdentity/*?*/ moduleIdentity
-    ) {
+    public IModule OpenModule(IBinaryDocument binaryDocument, out ModuleIdentity/*?*/ moduleIdentity) {
+      Contract.Requires(binaryDocument != null);
+      Contract.Ensures(Contract.Result<IModule>() != null);
+
       moduleIdentity = null;
       lock (GlobalLock.LockingObject) {
         IBinaryDocumentMemoryBlock/*?*/ binaryDocumentMemoryBlock = this.metadataReaderHost.OpenBinaryDocument(binaryDocument);
@@ -286,9 +287,10 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="binaryDocument">The binary document that needes to be opened as an assembly.</param>
     /// <returns>Assembly that is loaded or Dummy.Assembly in case assembly could not be loaded.</returns>
-    public IAssembly OpenAssembly(
-      IBinaryDocument binaryDocument
-    ) {
+    public IAssembly OpenAssembly(IBinaryDocument binaryDocument) {
+      Contract.Requires(binaryDocument != null);
+      Contract.Ensures(Contract.Result<IAssembly>() != null);
+
       AssemblyIdentity/*?*/ retAssemblyIdentity;
       return this.OpenAssembly(binaryDocument, out retAssemblyIdentity);
     }
@@ -299,9 +301,10 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="binaryDocument">The binary document that needes to be opened as an module.</param>
     /// <returns>Module that is loaded or Dummy.Module in case module could not be loaded.</returns>
-    public IModule OpenModule(
-      IBinaryDocument binaryDocument
-    ) {
+    public IModule OpenModule(IBinaryDocument binaryDocument) {
+      Contract.Requires(binaryDocument != null);
+      Contract.Ensures(Contract.Result<IModule>() != null);
+
       ModuleIdentity/*?*/ retModuleIdentity;
       return this.OpenModule(binaryDocument, out retModuleIdentity);
     }

@@ -39,6 +39,7 @@ namespace Microsoft.Cci.MetadataReader {
     internal readonly INameTable NameTable;
     internal readonly TypeCache typeCache;
     internal readonly byte pointerSize;
+    internal readonly MetadataObjectDocument document;
 
     readonly Hashtable<IName> StringIndexToNameTable;
     readonly Hashtable<IName> StringIndexToUnmangledNameTable;
@@ -89,6 +90,7 @@ namespace Microsoft.Cci.MetadataReader {
       //^ requires !(moduleIdentity.Location != null && moduleIdentity.Location.Length != 0);
     {
       this.pointerSize = pointerSize;
+      this.document = new MetadataObjectDocument(this);
       this.ModuleReader = peReader;
       this.PEFileReader = peFileReader;
       this.NameTable = peReader.metadataReaderHost.NameTable;
@@ -332,7 +334,7 @@ namespace Microsoft.Cci.MetadataReader {
       IName/*?*/ name = this.StringIndexToUnmangledNameTable.Find(offset);
       if (name == null) {
         string nameStr = this.PEFileReader.StringStream[offset];
-        int indx = nameStr.IndexOf('`');
+        int indx = nameStr.LastIndexOf('`');
         if (indx != -1) {
           nameStr = nameStr.Substring(0, indx);
         }

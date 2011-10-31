@@ -1342,6 +1342,19 @@ namespace Microsoft.Cci.Immutable {
     INamespaceTypeReference/*?*/ systemObject;
 
     /// <summary>
+    /// System.Reflection.AssemblySignatureKeyAttribute
+    /// </summary>
+    public INamespaceTypeReference SystemReflectionAssemblySignatureKeyAttribute {
+      get {
+        if (this.systemReflectionAssemblySignatureKeyAttribute == null) {
+          this.systemReflectionAssemblySignatureKeyAttribute = this.CreateReference(this.CoreAssemblyRef, true, "System", "Reflection", "AssemblySignatureKeyAttribute");
+        }
+        return this.systemReflectionAssemblySignatureKeyAttribute;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemReflectionAssemblySignatureKeyAttribute;
+
+    /// <summary>
     /// System.RuntimeArgumentHandle
     /// </summary>
     public INamespaceTypeReference SystemRuntimeArgumentHandle {

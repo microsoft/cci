@@ -2478,6 +2478,11 @@ namespace Microsoft.Cci {
     INamespaceTypeReference SystemObject { get; }
 
     /// <summary>
+    /// System.Reflection.AssemblySignatureKeyAttribute
+    /// </summary>
+    INamespaceTypeReference SystemReflectionAssemblySignatureKeyAttribute { get; }
+
+    /// <summary>
     /// System.RuntimeArgumentHandle
     /// </summary>
     INamespaceTypeReference SystemRuntimeArgumentHandle { get; }
@@ -2899,6 +2904,13 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
         throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemReflectionAssemblySignatureKeyAttribute {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        return Dummy.NamespaceTypeReference; 
       }
     }
 

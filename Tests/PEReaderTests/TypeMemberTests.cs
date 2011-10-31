@@ -426,6 +426,24 @@ namespace ModuleReaderTests {
   [mscorlib]System.Object[,] tn
 )cil managed
 {
+  .maxstack 6
+  .locals init(
+     V_0
+  )
+  IL_0000:  nop
+  IL_0001:  ldarg.0
+  IL_0002:  ldnull
+  IL_0003:  ldnull
+  IL_0004:  ldnull
+  IL_0005:  ldnull
+  IL_0006:  ldnull
+  IL_0007:  call instance[mscorlib]System.Object[MRW_Assembly]Assem::GenMethod([mscorlib]System.Object,[mscorlib]System.Collections.Generic.List`1<[mscorlib]System.Object>,[mscorlib]System.Object[],[mscorlib]System.Object[,],[mscorlib]System.Object[,])
+  IL_000c:  pop
+  IL_000d:  ldarg.1
+  IL_000e:  stloc.0
+  IL_000f:  br.s IL_0011
+  IL_0011:  ldloc.0
+  IL_0012:  ret
 }
 ";
       return result.Equals(stringPaper.Content);

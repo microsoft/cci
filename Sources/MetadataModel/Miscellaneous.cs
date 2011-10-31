@@ -580,6 +580,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A metadata custom attribute.
   /// </summary>
+  [ContractClass(typeof(ICustomAttributeContract))]
   public interface ICustomAttribute {
 
     /// <summary>
@@ -610,6 +611,50 @@ namespace Microsoft.Cci {
     /// </summary>
     ITypeReference Type { get; }
   }
+
+  #region ICustomAttribute contract binding
+  [ContractClassFor(typeof(ICustomAttribute))]
+  abstract class ICustomAttributeContract : ICustomAttribute {
+    #region ICustomAttribute Members
+
+    public IEnumerable<IMetadataExpression> Arguments {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IMetadataExpression>>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IMethodReference Constructor {
+      get {
+        Contract.Ensures(Contract.Result<IMethodReference>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IEnumerable<IMetadataNamedArgument> NamedArguments {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IMetadataNamedArgument>>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public ushort NumberOfNamedArguments {
+      get { 
+        throw new NotImplementedException();
+      }
+    }
+
+    public ITypeReference Type {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// Represents a file referenced by an assembly.

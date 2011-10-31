@@ -15,7 +15,7 @@ using Microsoft.Cci;
 using Microsoft.Cci.MetadataReader;
 
 namespace PeToText {
-  public class SourceEmitter : BaseMetadataTraverser {
+  public class SourceEmitter : MetadataTraverser {
 
     public SourceEmitter(TextWriter writer, IMetadataHost host, PdbReader/*?*/ pdbReader) {
       this.writer = writer;
@@ -27,17 +27,17 @@ namespace PeToText {
     IMetadataHost host;
     PdbReader/*?*/ pdbReader;
 
-    public override void Visit(IMethodDefinition method) {
+    public override void TraverseChildren(IMethodDefinition method) {
       this.writer.WriteLine(MemberHelper.GetMethodSignature(method, NameFormattingOptions.Signature));
       this.writer.WriteLine();
       if (!method.IsAbstract && !method.IsExternal)
-        this.Visit(method.Body);
+        this.Traverse(method.Body);
       this.writer.WriteLine();
       this.writer.WriteLine("*******************************************************************************");
       this.writer.WriteLine();
     }
 
-    public override void Visit(IMethodBody methodBody) {
+    public override void TraverseChildren(IMethodBody methodBody) {
       if (this.pdbReader != null)
         this.PrintScopes(methodBody);
       else

@@ -428,7 +428,7 @@ namespace Microsoft.Cci.MetadataReader {
     /// <param name="host">
     /// An object that provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.
     /// </param>
-    internal WindowsRuntimePlatform(IMetadataHost host)
+    internal WindowsRuntimePlatform(IMetadataHost host) 
       : base(host) {
     }
 

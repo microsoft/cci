@@ -20,6 +20,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A visitor base class that traverses the object model in depth first, left to right order.
   /// </summary>
+  [Obsolete("Please use MetadataTraverser")]
   public class BaseMetadataTraverser : IMetadataVisitor {
 
     /// <summary>
@@ -1695,6 +1696,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A visitor base class that provides a dummy body for each method of IVisit.
   /// </summary>
+  [Obsolete("Please use MetadataVisitor")]
   public class BaseMetadataVisitor : IMetadataVisitor {
 
     /// <summary>

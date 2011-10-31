@@ -19,6 +19,247 @@ using System.Diagnostics.Contracts;
 namespace Microsoft.Cci.Immutable {
 
   /// <summary>
+  /// A reference to a method used to access an array. These methods do not have definitions in metadata and cannot be resolved.
+  /// At runtime any calls to these methods are turned into appropriate code sequences that may invoke helper methods.
+  /// </summary>
+  public sealed class DummyArrayMethodReference : IMethodReference {
+
+    IArrayTypeReference arrayType;
+    OperationCode arrayOperation;
+    IPlatformType platformType;
+
+    /// <summary>
+    /// A reference to a method used to access an array. These methods do not have definitions in metadata and cannot be resolved.
+    /// They do exist at runtime.
+    /// </summary>
+    /// <param name="arrayType">The type of array whose elements the referenced method will access.</param>
+    /// <param name="arrayOperation">The kind of access the method will provide.
+    /// Must one of Array_Addr, Array_Createm, Array_Create_WithLowerBound, Array_Get or Array_Set.</param>
+    /// <param name="host">Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.</param>
+    public DummyArrayMethodReference(IArrayTypeReference arrayType, OperationCode arrayOperation, IMetadataHost host) {
+      Contract.Requires(arrayType != null);
+      Contract.Requires(arrayOperation == OperationCode.Array_Addr || arrayOperation == OperationCode.Array_Create || 
+        arrayOperation == OperationCode.Array_Create_WithLowerBound || arrayOperation == OperationCode.Array_Get || arrayOperation == OperationCode.Array_Set);
+      Contract.Requires(host != null);
+
+      this.arrayType = arrayType;
+      this.arrayOperation = arrayOperation;
+      this.platformType = host.PlatformType;
+      IName name = Dummy.Name;
+      switch (this.arrayOperation) {
+        case OperationCode.Array_Addr: name = host.NameTable.Address; break;
+        case OperationCode.Array_Create:
+        case OperationCode.Array_Create_WithLowerBound: name = host.NameTable.Ctor; break;
+        case OperationCode.Array_Get: name = host.NameTable.Get; break;
+        case OperationCode.Array_Set: name = host.NameTable.Set; break;
+      }
+      this.name = name;
+    }
+
+    /// <summary>
+    /// True if the call sites that references the method with this object supply extra arguments.
+    /// </summary>
+    public bool AcceptsExtraArguments {
+      get { return false; }
+    }
+
+    /// <summary>
+    /// The number of generic parameters of the method. Zero if the referenced method is not generic.
+    /// </summary>
+    public ushort GenericParameterCount {
+      get { return 0; }
+    }
+
+    /// <summary>
+    /// Always false.
+    /// </summary>
+    public bool IsGeneric {
+      get { return false; }
+    }
+
+    /// <summary>
+    /// Always false.
+    /// </summary>
+    public bool IsStatic {
+      get { return false; }
+    }
+
+    /// <summary>
+    /// The method being referred to.
+    /// </summary>
+    public IMethodDefinition ResolvedMethod {
+      get { return Dummy.Method; }
+    }
+
+    /// <summary>
+    /// Information about this types of the extra arguments supplied at the call sites that references the method with this object.
+    /// </summary>
+    public IEnumerable<IParameterTypeInformation> ExtraParameters {
+      get { return Enumerable<IParameterTypeInformation>.Empty; }
+    }
+
+    /// <summary>
+    /// Calling convention of the signature.
+    /// </summary>
+    public CallingConvention CallingConvention {
+      get { return CallingConvention.HasThis; }
+    }
+
+    /// <summary>
+    /// Does nothing.
+    /// </summary>
+    /// <param name="visitor"></param>
+    public void Dispatch(IMetadataVisitor visitor) {
+    }
+
+    /// <summary>
+    /// Does nothing.
+    /// </summary>
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+    }
+
+    /// <summary>
+    /// The parameters forming part of this signature.
+    /// </summary>
+    public IEnumerable<IParameterTypeInformation> Parameters {
+      get {
+        ushort n = (ushort)this.arrayType.Rank;
+        if (this.arrayOperation == OperationCode.Array_Create_WithLowerBound) n *= 2;
+        for (ushort i = 0; i < n; i++)
+          yield return new DummyArrayMethodParameter(this, i, this.platformType.SystemInt32);
+        if (this.arrayOperation == OperationCode.Array_Set)
+          yield return new DummyArrayMethodParameter(this, n, this.arrayType.ElementType);
+      }
+    }
+
+    /// <summary>
+    /// The number of required parameters of the method.
+    /// </summary>
+    public ushort ParameterCount {
+      get {
+        ushort n = (ushort)this.arrayType.Rank;
+        if (this.arrayOperation == OperationCode.Array_Create_WithLowerBound) n *= 2;
+        if (this.arrayOperation == OperationCode.Array_Set) n++;
+        return n;
+      }
+    }
+
+    /// <summary>
+    /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
+    /// </summary>
+    public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
+      get { return Enumerable<ICustomModifier>.Empty; }
+    }
+
+    /// <summary>
+    /// True if the return value is passed by reference (using a managed pointer).
+    /// </summary>
+    public bool ReturnValueIsByRef {
+      get { return this.arrayOperation == OperationCode.Array_Addr; }
+    }
+
+    /// <summary>
+    /// True if the return value has one or more custom modifiers associated with it.
+    /// </summary>
+    public bool ReturnValueIsModified {
+      get { return false; }
+    }
+
+    /// <summary>
+    /// The return type of the method or type of the property.
+    /// </summary>
+    public ITypeReference Type {
+      get {
+        if (this.arrayOperation == OperationCode.Array_Addr || this.arrayOperation == OperationCode.Array_Get)
+          return this.arrayType.ElementType;
+        else
+          return this.platformType.SystemVoid;
+      }
+    }
+
+    /// <summary>
+    /// A reference to the containing type of the referenced type member.
+    /// </summary>
+    public ITypeReference ContainingType {
+      get { return this.arrayType; }
+    }
+
+    /// <summary>
+    /// The type definition member this reference resolves to.
+    /// </summary>
+    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      get { return Dummy.Method; }
+    }
+
+    /// <summary>
+    /// A collection of metadata custom attributes that are associated with this definition.
+    /// </summary>
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { return Enumerable<ICustomAttribute>.Empty; }
+    }
+
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    public IEnumerable<ILocation> Locations {
+      get { return Enumerable<ILocation>.Empty; }
+    }
+
+    /// <summary>
+    /// The name of the entity.
+    /// </summary>
+    public IName Name {
+      get { return this.name; }
+    }
+    readonly IName name;
+
+    /// <summary>
+    /// Returns 0.
+    /// </summary>
+    public uint InternedKey {
+      get { return 0; }
+    }
+
+  }
+
+  internal class DummyArrayMethodParameter : IParameterTypeInformation {
+
+    internal DummyArrayMethodParameter(ISignature containingSignature, ushort index, ITypeReference type) {
+      this.containingSignature = containingSignature;
+      this.index = index;
+      this.type = type;
+    }
+
+    public ISignature ContainingSignature {
+      get { return this.containingSignature; }
+    }
+    ISignature containingSignature;
+
+    public IEnumerable<ICustomModifier> CustomModifiers {
+      get { return Enumerable<ICustomModifier>.Empty; }
+    }
+
+    public ushort Index {
+      get { return this.index; }
+    }
+    ushort index;
+
+    public bool IsByReference {
+      get { return false; }
+    }
+
+    public bool IsModified {
+      get { return false; }
+    }
+
+    public ITypeReference Type {
+      get { return type; }
+    }
+    ITypeReference type;
+
+  }
+
+  /// <summary>
   /// 
   /// </summary>
   public class GenericMethodInstance : IGenericMethodInstance {
@@ -42,8 +283,19 @@ namespace Microsoft.Cci.Immutable {
     /// </summary>
     /// <value></value>
     public IMethodBody Body {
-      get { return Dummy.MethodBody; }
+      get {
+        var result = this.body == null ? null : this.body.Target as IMethodBody;
+        if (result == null) {
+          result = new SpecializedMethodBody(this.genericMethod.Body, this, this.internFactory);
+          if (this.body == null)
+            this.body = new WeakReference(result);
+          else
+            this.body.Target = result;
+        }
+        return result;
+      }
     }
+    WeakReference/*?*/ body;
 
     /// <summary>
     /// Calling convention of the signature.
@@ -2104,7 +2356,7 @@ namespace Microsoft.Cci.Immutable {
         } else {
           var methodReference = unspecialized as IMethodReference;
           if (methodReference != null) {
-            var specializedContainingType = TypeHelper.SpecializeTypeReference(fieldReference.ContainingType, this.containingMethod, this.internFactory);
+            var specializedContainingType = TypeHelper.SpecializeTypeReference(methodReference.ContainingType, this.containingMethod, this.internFactory);
             specialized = new SpecializedMethodReference(specializedContainingType, methodReference, this.internFactory);
           } else
             return unspecialized;
@@ -2340,6 +2592,15 @@ namespace Microsoft.Cci.Immutable {
       partiallySpecializedTypeReference = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(partiallySpecializedTypeReference, this, this.ContainingGenericTypeInstance.InternFactory);
       return TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(partiallySpecializedTypeReference, this.ContainingGenericTypeInstance, this.ContainingGenericTypeInstance.InternFactory);
     }
+
+    #region ISpecializedMethodDefinition Members
+
+    IMethodDefinition ISpecializedMethodDefinition.UnspecializedVersion {
+      get { return this.UnspecializedVersion; }
+    }
+
+    #endregion
+
     #region IMethodDefinition Members
 
     /// <summary>
@@ -3896,7 +4157,10 @@ namespace Microsoft.Cci.Immutable {
     /// of this member.
     /// </summary>
     public MemberType/*!*/ UnspecializedVersion {
-      get { return this.unspecializedVersion; }
+      get {
+        Contract.Ensures(Contract.Result<MemberType>() != null);
+        return this.unspecializedVersion; 
+      }
     }
     readonly MemberType/*!*/ unspecializedVersion;
 

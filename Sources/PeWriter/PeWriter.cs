@@ -273,7 +273,23 @@ namespace Microsoft.Cci {
     private uint ComputeStrongNameSignatureSize() {
       IAssembly/*?*/ assembly = this.module as IAssembly;
       if (assembly == null) return 0;
-      uint keySize = IteratorHelper.EnumerableCount(assembly.PublicKey);
+      uint keySize = 0;
+      foreach (var attribute in assembly.AssemblyAttributes) {
+        if (TypeHelper.TypesAreEquivalent(attribute.Type, this.host.PlatformType.SystemReflectionAssemblySignatureKeyAttribute)) {
+          foreach (var arg in attribute.Arguments) {
+            var mconst = arg as IMetadataConstant;
+            if (mconst != null) {
+              var str = mconst.Value as string;
+              if (str != null) 
+                keySize = (uint)str.Length / 2;
+            }
+            break;
+          }
+          break;
+        }
+      }
+      if (keySize == 0)
+        keySize = IteratorHelper.EnumerableCount(assembly.PublicKey);
       if (keySize == 0) return 0;
       return keySize < 128+32 ? 128u : keySize-32;
     }
@@ -421,8 +437,10 @@ namespace Microsoft.Cci {
       this.CreateInitialExportedTypeIndex();
       this.CreateInitialTypeRefIndex();
       this.CreateInitialMemberRefIndex();
+      if (this.pdbWriter != null) this.pdbWriter.OpenTokenSourceLocationsScope();  
       foreach (INamedTypeDefinition typeDef in this.module.GetAllTypes())
         this.CreateIndicesFor(typeDef);
+      if (this.pdbWriter != null) this.pdbWriter.CloseTokenSourceLocationsScope();
       //Only the second pass is necessary. The first helps to make type reference tokens be more like C#.
       new ReferenceIndexer(this, false).Traverse(this.module);
       new ReferenceIndexer(this, true).Traverse(this.module);
@@ -452,19 +470,42 @@ namespace Microsoft.Cci {
         }
       }
       this.typeDefList.Add(typeDef);
+      if (this.pdbWriter != null && this.sourceLocationProvider != null) {
+        foreach (var location in this.sourceLocationProvider.GetPrimarySourceLocationsFor(typeDef.Locations))
+          this.pdbWriter.DefineTokenSourceLocation(0x02000000|(uint)this.typeDefList.Count, location);
+      }
       this.typeDefIndex.Add(typeDef.InternedKey, (uint)this.typeDefList.Count);
       foreach (IMethodImplementation methodImplementation in typeDef.ExplicitImplementationOverrides)
         this.methodImplList.Add(methodImplementation);
-      foreach (IEventDefinition eventDef in typeDef.Events)
+      foreach (IEventDefinition eventDef in typeDef.Events) {
         this.eventDefList.Add(eventDef);
+        if (this.pdbWriter != null && this.sourceLocationProvider != null) {
+          foreach (var location in this.sourceLocationProvider.GetPrimarySourceLocationsFor(eventDef.Locations))
+            this.pdbWriter.DefineTokenSourceLocation(0x14000000|(uint)this.eventDefList.Count, location);
+        }
+      }
       foreach (IFieldDefinition fieldDef in typeDef.Fields) {
         this.fieldDefList.Add(fieldDef);
+        if (this.pdbWriter != null && this.sourceLocationProvider != null) {
+          foreach (var location in this.sourceLocationProvider.GetPrimarySourceLocationsFor(fieldDef.Locations))
+            this.pdbWriter.DefineTokenSourceLocation(0x04000000|(uint)this.fieldDefList.Count, location);
+        }
         this.fieldDefIndex.Add(fieldDef.InternedKey, (uint)this.fieldDefList.Count);
       }
-      foreach (IMethodDefinition methodDef in typeDef.Methods)
+      foreach (IMethodDefinition methodDef in typeDef.Methods) {
         this.CreateIndicesFor(methodDef);
-      foreach (IPropertyDefinition propertyDef in typeDef.Properties)
+        if (this.pdbWriter != null && this.sourceLocationProvider != null) {
+          foreach (var location in this.sourceLocationProvider.GetPrimarySourceLocationsFor(methodDef.Locations))
+            this.pdbWriter.DefineTokenSourceLocation(0x06000000|(uint)this.methodDefList.Count, location);
+        }
+      }
+      foreach (IPropertyDefinition propertyDef in typeDef.Properties) {
         this.propertyDefList.Add(propertyDef);
+        if (this.pdbWriter != null && this.sourceLocationProvider != null) {
+          foreach (var location in this.sourceLocationProvider.GetPrimarySourceLocationsFor(propertyDef.Locations))
+            this.pdbWriter.DefineTokenSourceLocation(0x17000000|(uint)this.propertyDefList.Count, location);
+        }
+      }
       foreach (IMethodDefinition methodDef in typeDef.Methods) {
         if (!methodDef.IsAbstract && !methodDef.IsExternal) {
           //Evaluate the PrivateHelperTypes property for its side effect. See comment on typeDef.PrivateHelperMembers.
@@ -1265,7 +1306,7 @@ namespace Microsoft.Cci {
     }
 
     private uint GetMethodRefTokenFor(IArrayTypeReference arrayTypeReference, OperationCode operationCode) {
-      return 0x0A000000 | this.GetMemberRefIndex(new DummyArrayMethodReference(arrayTypeReference, operationCode, this.host.NameTable, this.module.PlatformType));
+      return 0x0A000000 | this.GetMemberRefIndex(new Microsoft.Cci.Immutable.DummyArrayMethodReference(arrayTypeReference, operationCode, this.host));
     }
 
     private static ushort GetParameterIndex(IParameterDefinition parameterDefinition) {
@@ -3027,7 +3068,7 @@ namespace Microsoft.Cci {
     private void SerializeAssemblyTable(BinaryWriter writer) {
       IAssembly/*?*/ assembly = this.module as IAssembly;
       if (assembly == null) return;
-      writer.WriteUint((uint)AssemblyHashAlgorithm.SHA1);
+      writer.WriteUint((uint)AssemblyHashAlgorithm.SHA1); //TODO: introduce new enum so that we can have SHA256 etc. Make this part of the object model.
       writer.WriteUshort((ushort)assembly.Version.Major);
       writer.WriteUshort((ushort)assembly.Version.Minor);
       writer.WriteUshort((ushort)assembly.Version.Build);
@@ -3763,12 +3804,12 @@ namespace Microsoft.Cci {
       writer.WriteString(this.GetSerializedTypeName(typeReference, ref isAssemblyQualified), false);
     }
 
-    private string GetSerializedTypeName(ITypeReference typeReference) {
+    private string GetSerializedTypeName(ITypeReference typeReference, bool omitTypeArguments = false) {
       bool isAssemblyQualified = false;
-      return this.GetSerializedTypeName(typeReference, ref isAssemblyQualified);
+      return this.GetSerializedTypeName(typeReference, ref isAssemblyQualified, omitTypeArguments);
     }
 
-    private string GetSerializedTypeName(ITypeReference typeReference, ref bool isAssemblyQualified) {
+    private string GetSerializedTypeName(ITypeReference typeReference, ref bool isAssemblyQualified, bool omitTypeArguments = false) {
       StringBuilder sb = new StringBuilder();
       IArrayTypeReference/*?*/ arrType = typeReference as IArrayTypeReference;
       if (arrType != null) {
@@ -3812,21 +3853,31 @@ namespace Microsoft.Cci {
       }
       INestedTypeReference/*?*/ neType = typeReference as INestedTypeReference;
       if (neType != null) {
-        sb.Append(this.GetSerializedTypeName(neType.ContainingType));
+        var sneType = neType as ISpecializedNestedTypeReference;
+        if (sneType != null)
+          sb.Append(this.GetSerializedTypeName(sneType.UnspecializedVersion.ContainingType, omitTypeArguments: true));
+        else
+          sb.Append(this.GetSerializedTypeName(neType.ContainingType));
         sb.Append('+');
         sb.Append(GetMangledAndEscapedName(neType));
+        if (!omitTypeArguments && sneType != null) {
+          while (true) {
+            var csneType = sneType.ContainingType as ISpecializedNestedTypeReference;
+            if (csneType != null) { sneType = csneType; continue; }
+            var genInst = (IGenericTypeInstanceReference)sneType.ContainingType;
+            sb.Append('[');
+            this.AppendSerializedTypeArguments(sb, genInst);
+            sb.Append(']');
+            break;
+          }
+        }
         goto done;
       }
       IGenericTypeInstanceReference/*?*/ instance = typeReference as IGenericTypeInstanceReference;
       if (instance != null) {
-        sb.Append(this.GetSerializedTypeName(instance.GenericType));
+        sb.Append(this.GetSerializedTypeName(instance.GenericType, omitTypeArguments: true));
         sb.Append('[');
-        bool first = true;
-        foreach (ITypeReference argument in instance.GenericArguments) {
-          if (first) first = false; else sb.Append(',');
-          bool isAssemQual = true;
-          this.AppendSerializedTypeName(sb, argument, ref isAssemQual);
-        }
+        this.AppendSerializedTypeArguments(sb, instance);
         sb.Append(']');
         goto done;
       }
@@ -3835,6 +3886,26 @@ namespace Microsoft.Cci {
       if (isAssemblyQualified)
         this.AppendAssemblyQualifierIfNecessary(sb, typeReference, out isAssemblyQualified);
       return sb.ToString();
+    }
+
+    private void AppendSerializedTypeArguments(StringBuilder sb, IGenericTypeInstanceReference instance) {
+      ITypeReference template = instance.GenericType;
+      while (true) {
+        var specializedTemplate = template as ISpecializedNestedTypeReference;
+        if (specializedTemplate == null) break;
+        template = specializedTemplate.ContainingType;
+      }
+      var templateInst = template as IGenericTypeInstanceReference;
+      bool first = true;
+      if (templateInst != null) {
+        this.AppendSerializedTypeArguments(sb, templateInst);
+        first = false;
+      }
+      foreach (ITypeReference argument in instance.GenericArguments) {
+        if (first) first = false; else sb.Append(',');
+        bool isAssemQual = true;
+        this.AppendSerializedTypeName(sb, argument, ref isAssemQual);
+      }
     }
 
     void AppendAssemblyQualifierIfNecessary(StringBuilder sb, ITypeReference typeReference, out bool isAssemQualified) {
@@ -4015,7 +4086,7 @@ namespace Microsoft.Cci {
         writer.WriteByte(0x1d); this.SerializeTypeReference(arrayTypeReference.ElementType, writer, noTokens); return;
       } else if ((genericMethodParameterReference = typeReference as IGenericMethodParameterReference) != null) {
         writer.WriteByte(0x1e); writer.WriteCompressedUInt(genericMethodParameterReference.Index); return;
-      } else if (IsTypeSpecification(typeReference)) {
+      } else if (IsTypeSpecification(typeReference) && !noTokens) {
         ITypeReference uninstantiatedTypeReference = GetUninstantiatedGenericType(typeReference);
         if (uninstantiatedTypeReference == typeReference) {
           //TODO: error
@@ -4818,166 +4889,6 @@ namespace Microsoft.Cci.PeWriterInternal {
   internal struct DirectoryEntry {
     internal uint RelativeVirtualAddress;
     internal uint Size;
-  }
-
-  internal class DummyArrayMethodReference : IMethodReference {
-
-    IArrayTypeReference arrayType;
-    OperationCode arrayOperation;
-    IPlatformType platformType;
-
-    internal DummyArrayMethodReference(IArrayTypeReference arrayType, OperationCode arrayOperation, INameTable nameTable, IPlatformType platformType) {
-      this.arrayType = arrayType;
-      this.arrayOperation = arrayOperation;
-      this.platformType = platformType;
-      IName name = Dummy.Name;
-      switch (this.arrayOperation) {
-        case OperationCode.Array_Addr: name = nameTable.Address; break;
-        case OperationCode.Array_Create:
-        case OperationCode.Array_Create_WithLowerBound: name = nameTable.Ctor; break;
-        case OperationCode.Array_Get: name = nameTable.Get; break;
-        case OperationCode.Array_Set: name = nameTable.Set; break;
-      }
-      this.name = name;
-    }
-
-    public bool AcceptsExtraArguments {
-      get { return false; }
-    }
-
-    public ushort GenericParameterCount {
-      get { return 0; }
-    }
-
-    public bool IsGeneric {
-      get { return false; }
-    }
-
-    public bool IsStatic {
-      get { return false; }
-    }
-
-    public IMethodDefinition ResolvedMethod {
-      get { return Dummy.Method; }
-    }
-
-    public IEnumerable<IParameterTypeInformation> ExtraParameters {
-      get { return Enumerable<IParameterTypeInformation>.Empty; }
-    }
-
-    public CallingConvention CallingConvention {
-      get { return CallingConvention.HasThis; }
-    }
-
-    public void Dispatch(IMetadataVisitor visitor) {
-    }
-
-    public void DispatchAsReference(IMetadataVisitor visitor) {
-    }
-
-    public IEnumerable<IParameterTypeInformation> Parameters {
-      get {
-        ushort n = (ushort)this.arrayType.Rank;
-        if (this.arrayOperation == OperationCode.Array_Create_WithLowerBound) n *= 2;
-        for (ushort i = 0; i < n; i++)
-          yield return new DummyArrayMethodParameter(this, i, this.platformType.SystemInt32);
-        if (this.arrayOperation == OperationCode.Array_Set)
-          yield return new DummyArrayMethodParameter(this, n, this.arrayType.ElementType);
-      }
-    }
-
-    public ushort ParameterCount {
-      get {
-        ushort n = (ushort)this.arrayType.Rank;
-        if (this.arrayOperation == OperationCode.Array_Create_WithLowerBound) n *= 2;
-        if (this.arrayOperation == OperationCode.Array_Set) n++;
-        return n;
-      }
-    }
-
-    public IEnumerable<ICustomModifier> ReturnValueCustomModifiers {
-      get { return Enumerable<ICustomModifier>.Empty; }
-    }
-
-    public bool ReturnValueIsByRef {
-      get { return this.arrayOperation == OperationCode.Array_Addr; }
-    }
-
-    public bool ReturnValueIsModified {
-      get { return false; }
-    }
-
-    public ITypeReference Type {
-      get {
-        if (this.arrayOperation == OperationCode.Array_Addr || this.arrayOperation == OperationCode.Array_Get)
-          return this.arrayType.ElementType;
-        else
-          return this.platformType.SystemVoid;
-      }
-    }
-
-    public ITypeReference ContainingType {
-      get { return this.arrayType; }
-    }
-
-    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
-      get { return Dummy.Method; }
-    }
-
-    public IEnumerable<ICustomAttribute> Attributes {
-      get { return Enumerable<ICustomAttribute>.Empty; }
-    }
-
-    public IEnumerable<ILocation> Locations {
-      get { return Enumerable<ILocation>.Empty; }
-    }
-
-    public IName Name {
-      get { return this.name; }
-    }
-    readonly IName name;
-
-    public uint InternedKey {
-      get { return 0; }
-    }
-
-  }
-
-  internal class DummyArrayMethodParameter : IParameterTypeInformation {
-
-    internal DummyArrayMethodParameter(ISignature containingSignature, ushort index, ITypeReference type) {
-      this.containingSignature = containingSignature;
-      this.index = index;
-      this.type = type;
-    }
-
-    public ISignature ContainingSignature {
-      get { return this.containingSignature; }
-    }
-    ISignature containingSignature;
-
-    public IEnumerable<ICustomModifier> CustomModifiers {
-      get { return Enumerable<ICustomModifier>.Empty; }
-    }
-
-    public ushort Index {
-      get { return this.index; }
-    }
-    ushort index;
-
-    public bool IsByReference {
-      get { return false; }
-    }
-
-    public bool IsModified {
-      get { return false; }
-    }
-
-    public ITypeReference Type {
-      get { return type; }
-    }
-    ITypeReference type;
-
   }
 
   internal class DummyReturnValueParameter : IParameterDefinition {

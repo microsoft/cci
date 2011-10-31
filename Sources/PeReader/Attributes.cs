@@ -1283,8 +1283,14 @@ namespace Microsoft.Cci.MetadataReader {
             string/*?*/ typeName = this.GetSerializedString();
             if (typeName == null)
               return null;
-            var result = (TypeNameTypeReference)this.PEFileToObjectModel.GetSerializedTypeNameAsTypeReference(typeName);
-            if (result != null) result.IsEnum = true;
+            var result = this.PEFileToObjectModel.GetSerializedTypeNameAsTypeReference(typeName);
+            var tnr = result as TypeNameTypeReference;
+            if (tnr == null) {
+              var specializedNestedType = result as ISpecializedNestedTypeReference;
+              if (specializedNestedType != null)
+                tnr = specializedNestedType.UnspecializedVersion as TypeNameTypeReference;
+            }
+            if (tnr != null) tnr.IsEnum = true;
             return result;
           }
       }

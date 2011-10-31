@@ -493,6 +493,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An object corresponding to reference to a metadata entity such as a type or a field.
   /// </summary>
+  [ContractClass(typeof(IReferenceContract))]
   public interface IReference : IObjectWithLocations {
 
     /// <summary>
@@ -515,6 +516,41 @@ namespace Microsoft.Cci {
     void DispatchAsReference(IMetadataVisitor visitor);
 
   }
+
+  #region IReference contract binding
+  [ContractClassFor(typeof(IReference))]
+  abstract class IReferenceContract : IReference {
+    #region IReference Members
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ICustomAttribute>>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      Contract.Requires(visitor != null);
+      throw new NotImplementedException();
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      Contract.Requires(visitor != null);
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// An object that represents a document. This can be either source or binary or designer surface etc
@@ -749,6 +785,18 @@ namespace Microsoft.Cci {
     /// Offset into the IL Stream.
     /// </summary>
     uint Offset { get; }
+  }
+
+  /// <summary>
+  /// A location that represents a metadata object with a token.
+  /// </summary>
+  public interface IMetadataLocation : ILocation {
+
+    /// <summary>
+    /// The metadata object whose definition contains this location.
+    /// </summary>
+    IMetadataObjectWithToken Definition { get; }
+
   }
 
   /// <summary>

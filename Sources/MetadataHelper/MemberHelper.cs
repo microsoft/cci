@@ -450,6 +450,23 @@ namespace Microsoft.Cci {
     /// A static instance of type ParameterInformationComparer that will resolve types during the comparison.
     /// </summary>
     public readonly static ParameterInformationComparer ResolvingParameterInformationComparer = new ParameterInformationComparer(true);
+
+    /// <summary>
+    /// If the given method definition has been specialized, either by being a generic method instance or by being a member of a generic type instance, return
+    /// the original unspecialized method definition as stored in the module.
+    /// </summary>
+    public static IMethodDefinition Unspecialize(IMethodDefinition potentiallySpecializedMethod) {
+      Contract.Requires(potentiallySpecializedMethod != null);
+      Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+
+      IGenericMethodInstance genericMethodInstance = potentiallySpecializedMethod as IGenericMethodInstance;
+      if (genericMethodInstance != null)
+        potentiallySpecializedMethod = genericMethodInstance.GenericMethod.ResolvedMethod;
+      ISpecializedMethodDefinition specializedMethodDefinition = potentiallySpecializedMethod as ISpecializedMethodDefinition;
+      if (specializedMethodDefinition != null)
+        return specializedMethodDefinition.UnspecializedVersion;
+      return potentiallySpecializedMethod;
+    }
   }
 
   /// <summary>

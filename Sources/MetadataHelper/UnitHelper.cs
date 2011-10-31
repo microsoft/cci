@@ -152,6 +152,8 @@ namespace Microsoft.Cci {
       }
       if (assemblyReference.IsRetargetable)
         sb.Append(", Retargetable=Yes");
+      if (assemblyReference.ContainsForeignTypes)
+        sb.Append(", ContentType = WindowsRuntime");
       return sb.ToString();
     }
 

@@ -994,6 +994,20 @@ namespace Microsoft.Cci.UtilityDataStructures {
     }
 
     /// <summary>
+    /// Removes all entries from the table.
+    /// </summary>
+    public void Clear() {
+      if (this.count == 0) return;
+      var table = this.keyValueTable;
+      int len = table.Length;
+      for (int i = 0; i < len; ++i) {
+        table[i].Key = 0;
+        table[i].Value = null;
+      }
+      this.count = 0;
+    }
+
+    /// <summary>
     /// Find element in the Hashtable. Returns null if the element is not found.
     /// </summary>
     /// <param name="key"></param>
@@ -1627,9 +1641,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
   }
 
   /// <summary>
-  /// A hash table used to keep track of a set of objects, providing methods to add objects to the set and to determine if an objet is a member of the set.
+  /// A hash table used to keep track of a set of objects, providing methods to add objects to the set and to determine if an object is a member of the set.
   /// </summary>
-  public sealed class SetOfObjects { //Provide a Values enumeration
+  public sealed class SetOfObjects {
     object[] elements;
     uint size;
     uint resizeCount;
@@ -1929,7 +1943,10 @@ namespace Microsoft.Cci.UtilityDataStructures {
     /// The number of elements in this list.
     /// </summary>
     public int Count {
-      get { return this.count; }
+      get {
+        Contract.Ensures(Contract.Result<int>() >= 0);
+        return this.count; 
+      }
     }
 
     /// <summary>

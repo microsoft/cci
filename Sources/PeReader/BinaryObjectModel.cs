@@ -30,12 +30,13 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   /// This is used in maintaining type spec cache.
   /// </summary>
   internal abstract class MetadataObject : IReference, IMetadataObjectWithToken {
+
     internal PEFileToObjectModel PEFileToObjectModel;
-    protected MetadataObject(
-      PEFileToObjectModel peFileToObjectModel
-    ) {
+
+    protected MetadataObject(PEFileToObjectModel peFileToObjectModel) {
       this.PEFileToObjectModel = peFileToObjectModel;
     }
+
     internal abstract uint TokenValue { get; }
 
     public IPlatformType PlatformType {
@@ -88,11 +89,87 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   /// Base class of Namespaces/Types/TypeMembers.
   /// </summary>
   internal abstract class MetadataDefinitionObject : MetadataObject, IDefinition {
-    protected MetadataDefinitionObject(
-      PEFileToObjectModel peFileToObjectModel
-    )
+
+    protected MetadataDefinitionObject(PEFileToObjectModel peFileToObjectModel)
       : base(peFileToObjectModel) {
+      this.locations = IteratorHelper.GetSingletonEnumerable<ILocation>(new MetadataLocation(peFileToObjectModel.document, this));
     }
+
+    public override IEnumerable<ILocation> Locations {
+      get {
+        return this.locations;
+      }
+    }
+    IEnumerable<ILocation> locations;
+
+  }
+
+  /// <summary>
+  /// 
+  /// </summary>
+  internal sealed class MetadataObjectDocument : IDocument {
+
+    internal MetadataObjectDocument(PEFileToObjectModel peFileToObjectModel) {
+      this.peFileToObjectModel = peFileToObjectModel;
+    }
+
+    PEFileToObjectModel peFileToObjectModel;
+
+    /// <summary>
+    /// The location where this document was found, or where it should be stored.
+    /// This will also uniquely identify the source document within an instance of compilation host.
+    /// </summary>
+    public string Location {
+      get { return this.peFileToObjectModel.Module.ModuleIdentity.Location; }
+    }
+
+    /// <summary>
+    /// The name of the document. For example the name of the file if the document corresponds to a file.
+    /// </summary>
+    public IName Name {
+      get { return this.peFileToObjectModel.Module.ModuleIdentity.Name; }
+    }
+
+  }
+
+  /// <summary>
+  /// 
+  /// </summary>
+  internal sealed class MetadataLocation : IMetadataLocation {
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="document"></param>
+    /// <param name="definition"></param>
+    internal MetadataLocation(IDocument document, IMetadataObjectWithToken definition) {
+      this.document = document;
+      this.definition = definition;
+    }
+
+    #region IMetadataLocation Members
+
+    /// <summary>
+    /// The metadata object whose definition contains this location.
+    /// </summary>
+    public IMetadataObjectWithToken Definition {
+      get { return this.definition; }
+    }
+    IMetadataObjectWithToken definition;
+
+    #endregion
+
+    #region ILocation Members
+
+    /// <summary>
+    /// The document containing this location.
+    /// </summary>
+    public IDocument Document {
+      get { return this.document; }
+    }
+    IDocument document;
+
+    #endregion
   }
 
   internal enum ContainerState : byte {

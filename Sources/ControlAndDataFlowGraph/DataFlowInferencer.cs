@@ -202,9 +202,9 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
         case OperationCode.Sub_Ovf:
         case OperationCode.Sub_Ovf_Un:
         case OperationCode.Xor:
-          instruction.Operand2 = stack.Pop();
-          instruction.Operand1 = stack.Pop();
-          stack.Push(instruction);
+          instruction.Operand2 = this.stack.Pop();
+          instruction.Operand1 = this.stack.Pop();
+          this.stack.Push(instruction);
           break;
 
         case OperationCode.Arglist:
@@ -246,24 +246,24 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
         case OperationCode.Ldstr:
         case OperationCode.Ldtoken:
         case OperationCode.Sizeof:
-          stack.Push(instruction);
+          this.stack.Push(instruction);
           break;
 
         case OperationCode.Array_Addr:
         case OperationCode.Array_Get:
           Contract.Assume(instruction.Operation.Value is IArrayTypeReference); //This is an informally specified property of the Metadata model.
-          InitializeArrayIndexerInstruction(instruction, stack, (IArrayTypeReference)instruction.Operation.Value);
+          InitializeArrayIndexerInstruction(instruction, this.stack, (IArrayTypeReference)instruction.Operation.Value);
           break;
 
         case OperationCode.Array_Create:
         case OperationCode.Array_Create_WithLowerBound:
         case OperationCode.Newarr:
-          InitializeArrayCreateInstruction(instruction, stack, instruction.Operation);
+          InitializeArrayCreateInstruction(instruction, this.stack, instruction.Operation);
           break;
 
         case OperationCode.Array_Set:
           Contract.Assume(instruction.Operation.Value is IArrayTypeReference); //This is an informally specified property of the Metadata model.
-          InitializeArraySetInstruction(instruction, stack, (IArrayTypeReference)instruction.Operation.Value);
+          InitializeArraySetInstruction(instruction, this.stack, (IArrayTypeReference)instruction.Operation.Value);
           break;
 
         case OperationCode.Beq:
@@ -286,8 +286,8 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
         case OperationCode.Blt_Un_S:
         case OperationCode.Bne_Un:
         case OperationCode.Bne_Un_S:
-          instruction.Operand2 = stack.Pop();
-          instruction.Operand1 = stack.Pop();
+          instruction.Operand2 = this.stack.Pop();
+          instruction.Operand1 = this.stack.Pop();
           break;
 
         case OperationCode.Box:
@@ -351,34 +351,34 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
         case OperationCode.Refanyval:
         case OperationCode.Unbox:
         case OperationCode.Unbox_Any:
-          instruction.Operand1 = stack.Pop();
-          stack.Push(instruction);
+          instruction.Operand1 = this.stack.Pop();
+          this.stack.Push(instruction);
           break;
 
         case OperationCode.Brfalse:
         case OperationCode.Brfalse_S:
         case OperationCode.Brtrue:
         case OperationCode.Brtrue_S:
-          instruction.Operand1 = stack.Pop();
+          instruction.Operand1 = this.stack.Pop();
           break;
 
         case OperationCode.Call:
           var signature = instruction.Operation.Value as ISignature;
           Contract.Assume(signature != null); //This is an informally specified property of the Metadata model.
-          if (!signature.IsStatic) instruction.Operand1 = stack.Pop();
-          InitializeArgumentsAndPushReturnResult(instruction, stack, signature);
+          if (!signature.IsStatic) instruction.Operand1 = this.stack.Pop();
+          InitializeArgumentsAndPushReturnResult(instruction, this.stack, signature);
           break;
 
         case OperationCode.Callvirt:
-          instruction.Operand1 = stack.Pop();
+          instruction.Operand1 = this.stack.Pop();
           Contract.Assume(instruction.Operation.Value is ISignature); //This is an informally specified property of the Metadata model.
-          InitializeArgumentsAndPushReturnResult(instruction, stack, (ISignature)instruction.Operation.Value);
+          InitializeArgumentsAndPushReturnResult(instruction, this.stack, (ISignature)instruction.Operation.Value);
           break;
 
         case OperationCode.Calli:
           Contract.Assume(instruction.Operation.Value is ISignature); //This is an informally specified property of the Metadata model.
-          InitializeArgumentsAndPushReturnResult(instruction, stack, (ISignature)instruction.Operation.Value);
-          instruction.Operand1 = stack.Pop();
+          InitializeArgumentsAndPushReturnResult(instruction, this.stack, (ISignature)instruction.Operation.Value);
+          instruction.Operand1 = this.stack.Pop();
           break;
 
         case OperationCode.Cpobj:
@@ -392,8 +392,8 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
         case OperationCode.Stind_R8:
         case OperationCode.Stind_Ref:
         case OperationCode.Stobj:
-          instruction.Operand2 = stack.Pop();
-          instruction.Operand1 = stack.Pop();
+          instruction.Operand2 = this.stack.Pop();
+          instruction.Operand1 = this.stack.Pop();
           break;
 
         case OperationCode.Cpblk:
@@ -408,17 +408,17 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
         case OperationCode.Stelem_R8:
         case OperationCode.Stelem_Ref:
           var indexAndValue = new Instruction[2];
-          indexAndValue[1] = stack.Pop();
-          indexAndValue[0] = stack.Pop();
+          indexAndValue[1] = this.stack.Pop();
+          indexAndValue[0] = this.stack.Pop();
           instruction.Operand2 = indexAndValue;
-          instruction.Operand1 = stack.Pop();
+          instruction.Operand1 = this.stack.Pop();
           break;
 
         case OperationCode.Dup:
-          var dupop = stack.Pop();
+          var dupop = this.stack.Pop();
           instruction.Operand1 = dupop;
-          stack.Push(dupop);
-          stack.Push(instruction);
+          this.stack.Push(dupop);
+          this.stack.Push(instruction);
           break;
 
         case OperationCode.Endfilter:
@@ -435,7 +435,7 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
         case OperationCode.Stsfld:
         case OperationCode.Throw:
         case OperationCode.Switch:
-          instruction.Operand1 = stack.Pop();
+          instruction.Operand1 = this.stack.Pop();
           break;
 
         case OperationCode.Leave:
@@ -445,13 +445,13 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
 
         case OperationCode.Newobj:
           Contract.Assume(instruction.Operation.Value is ISignature); //This is an informally specified property of the Metadata model.
-          InitializeArgumentsAndPushReturnResult(instruction, stack, (ISignature)instruction.Operation.Value); //won't push anything
-          stack.Push(instruction);
+          InitializeArgumentsAndPushReturnResult(instruction, this.stack, (ISignature)instruction.Operation.Value); //won't push anything
+          this.stack.Push(instruction);
           break;
 
         case OperationCode.Ret:
           if (this.cdfg.MethodBody.MethodDefinition.Type.TypeCode != PrimitiveTypeCode.Void)
-            instruction.Operand1 = stack.Pop();
+            instruction.Operand1 = this.stack.Pop();
           break;
       }
     }

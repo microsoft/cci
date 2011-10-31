@@ -641,6 +641,20 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns true if the given type, one of its containing types, has the System.Runtime.CompilerServices.CompilerGeneratedAttribute.
+    /// </summary>
+    public static bool IsCompilerGenerated(ITypeDefinition type) {
+      Contract.Requires(type != null);
+
+      while (true) {
+        if (AttributeHelper.Contains(type.Attributes, type.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute)) return true;
+        var nestedType = type as INestedTypeDefinition;
+        if (nestedType == null) return false;
+        type = nestedType.ContainingTypeDefinition;
+      }
+    }
+
+    /// <summary>
     /// Returns true a value of this type can be treated as a compile time constant.
     /// Such values need not be stored in memory in order to be representable. For example, they can appear as part of a CLR instruction.
     /// </summary>
@@ -886,6 +900,22 @@ namespace Microsoft.Cci {
         }
       }
       return result;
+    }
+
+    /// <summary>
+    /// If the given type is a generic type instance, return the unspecialized version of the generic type.
+    /// If the given type is a specialized nested type, return its unspecialized version. 
+    /// Otherwise just return the type itself.
+    /// </summary>
+    public static ITypeReference UninstantiateAndUnspecialize(ITypeReference type) {
+      Contract.Requires(type != null);
+      Contract.Ensures(Contract.Result<ITypeReference>() != null);
+
+      var genericTypeInstance = type as IGenericTypeInstance;
+      if (genericTypeInstance != null) return TypeHelper.UninstantiateAndUnspecialize(genericTypeInstance.GenericType);
+      var specializedNestedType = type as ISpecializedNestedTypeReference;
+      if (specializedNestedType != null) return specializedNestedType.UnspecializedVersion;
+      return type;
     }
 
     /// <summary>
