@@ -309,13 +309,16 @@ namespace ILMutator {
             break;
           #endregion Branches
           #region Everything else
-          case OperationCode.Stloc:
           case OperationCode.Stloc_0:
           case OperationCode.Stloc_1:
           case OperationCode.Stloc_2:
           case OperationCode.Stloc_3:
-          case OperationCode.Stloc_S:
             generator.Emit(op.OperationCode);
+            EmitStoreLocal(generator, op);
+            break;
+          case OperationCode.Stloc:
+          case OperationCode.Stloc_S:
+            generator.Emit(op.OperationCode, op.Value);
             EmitStoreLocal(generator, op);
             break;
           default:
