@@ -110,31 +110,26 @@ namespace ILMutator {
     Stack<ILocalScope> scopeStack = new Stack<ILocalScope>();
 
     public override IMethodBody Rewrite(IMethodBody methodBody) {
+      this.currentLocals = new List<ILocalDefinition>(methodBody.LocalVariables);
+
       try {
-        base.Rewrite(methodBody);
+        ProcessOperations(methodBody);
         var newBody = new ILGeneratorMethodBody(this.currentGenerator, methodBody.LocalsAreZeroed, (ushort)(methodBody.MaxStack + 1),
           methodBody.MethodDefinition, this.currentLocals ?? new List<ILocalDefinition>(), Enumerable<ITypeDefinition>.Empty);
         return newBody;
+      } catch (ILMutatorException) {
+        Console.WriteLine("Internal error during IL mutation for the method '{0}'.",
+          MemberHelper.GetMemberSignature(methodBody.MethodDefinition, NameFormattingOptions.SmartTypeName));
+        return methodBody;
       } finally {
         this.currentLocals = null;
       }
     }
 
-    public override void RewriteChildren(MethodBody methodBody) {
-      this.currentLocals = methodBody.LocalVariables;
+    private void ProcessOperations(IMethodBody methodBody) {
 
-      try {
-        ProcessOperations(methodBody);
-      } catch (ILMutatorException) {
-        Console.WriteLine("Internal error during IL mutation for the method '{0}'.",
-          MemberHelper.GetMemberSignature(methodBody.MethodDefinition, NameFormattingOptions.SmartTypeName));
-      }
-    }
-
-    private void ProcessOperations(MethodBody methodBody) {
-
-      List<IOperation> operations = methodBody.Operations??new List<IOperation>();
-      int count = methodBody.Operations.Count;
+      List<IOperation> operations = ((methodBody.Operations == null) ? new List<IOperation>(): new List<IOperation>(methodBody.Operations));
+      int count = operations.Count;
 
       ILGenerator generator = new ILGenerator(this.host, methodBody.MethodDefinition);
       if (this.pdbReader != null) {
