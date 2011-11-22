@@ -589,13 +589,18 @@ namespace Microsoft.Cci.Contracts {
 
     private IUnit unit;
     private IContractExtractor primaryExtractor;
-    private List<IContractProvider> oobExtractors;
+    private List<IContractProvider>/*?*/ oobExtractors;
     ContractProvider underlyingContractProvider; // used just because it provides a store so this provider can cache its results
     IMetadataHost host;
     private Dictionary<IContractProvider, MappingMutator> mapperForOobToPrimary = new Dictionary<IContractProvider, MappingMutator>();
     private Dictionary<IContractProvider, MappingMutator> mapperForPrimaryToOob = new Dictionary<IContractProvider, MappingMutator>();
 
     private List<object> methodsBeingExtracted = new List<object>();
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant(){
+      Contract.Invariant(this.oobExtractors == null || 0 < this.oobExtractors.Count);
+    }
 
     /// <summary>
     /// The constructor for creating an aggregating extractor.
@@ -618,7 +623,7 @@ namespace Microsoft.Cci.Contracts {
       this.underlyingContractProvider = new ContractProvider(primaryExtractor.ContractMethods, primaryUnit);
       this.host = host;
 
-      if (oobExtractorsAndHosts != null) {
+      if (oobExtractorsAndHosts != null && IteratorHelper.EnumerableIsNotEmpty(oobExtractorsAndHosts)) {
         this.oobExtractors = new List<IContractProvider>();
         foreach (var oobProviderAndHost in oobExtractorsAndHosts) {
           var oobProvider = oobProviderAndHost.Key;
@@ -649,10 +654,12 @@ namespace Microsoft.Cci.Contracts {
     private void Close() {
       var primaryDisposable = this.primaryExtractor as IDisposable;
       if (primaryDisposable != null) primaryDisposable.Dispose();
-      foreach (var oobProvider in this.oobExtractors) {
-        var oobDisposable = oobProvider as IDisposable;
-        if (oobDisposable != null)
-          oobDisposable.Dispose();
+      if (this.oobExtractors != null) {
+        foreach (var oobProvider in this.oobExtractors) {
+          var oobDisposable = oobProvider as IDisposable;
+          if (oobDisposable != null)
+            oobDisposable.Dispose();
+        }
       }
     }
 
@@ -688,7 +695,10 @@ namespace Microsoft.Cci.Contracts {
         if (contract != null) return contract == ContractDummy.MethodContract ? null : contract;
 
         MethodContract result = new MethodContract();
-        IMethodContract primaryContract = this.primaryExtractor.GetMethodContractFor(method);
+        IMethodContract primaryContract = null;
+        if (this.oobExtractors == null) {
+          primaryContract = this.primaryExtractor.GetMethodContractFor(method);
+        }
         bool found = false;
         if (primaryContract != null) {
           found = true;
@@ -754,7 +764,10 @@ namespace Microsoft.Cci.Contracts {
       if (contract != null) return contract == ContractDummy.TypeContract ? null : contract;
 
       TypeContract result = new TypeContract();
-      ITypeContract primaryContract = this.primaryExtractor.GetTypeContractFor(type);
+      ITypeContract primaryContract = null;
+      if (this.oobExtractors == null) {
+        primaryContract = this.primaryExtractor.GetTypeContractFor(type);
+      }
       bool found = false;
       if (primaryContract != null) {
         found = true;

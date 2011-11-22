@@ -1523,7 +1523,7 @@ namespace Microsoft.Cci.MutableContracts {
     private Dictionary<string, IUnit> location2Unit = new Dictionary<string, IUnit>();
 
     // A table that maps each unit, U, to all of the units that have a reference to U.
-    private Dictionary<IUnitReference, List<IUnitReference>> unit2DependentUnits = new Dictionary<IUnitReference, List<IUnitReference>>();
+    private Dictionary<UnitIdentity, List<IUnitReference>> unit2DependentUnits = new Dictionary<UnitIdentity, List<IUnitReference>>();
     // A table that maps each unit, U, to all of the reference assemblies for U.
     private Dictionary<IUnitReference, List<IUnitReference>> unit2ReferenceAssemblies = new Dictionary<IUnitReference, List<IUnitReference>>();
     #endregion
@@ -1693,21 +1693,23 @@ namespace Microsoft.Cci.MutableContracts {
         location = pathFromTable;
       }
 
-      var timeOfLastModification = UnloadPreviouslyLoadedUnitIfLocationIsNewer(location);
+      var unloadedOrFirstTime = UnloadPreviouslyLoadedUnitIfLocationIsNewer(location);
       IUnit result = this.peReader.OpenModule(BinaryDocument.GetBinaryDocumentForFile(Path.GetFullPath(location), this));
 
       this.RegisterAsLatest(result);
 
-      foreach (var d in result.UnitReferences) {
-        if (!this.unit2DependentUnits.ContainsKey(d)) {
-          this.unit2DependentUnits[d] = new List<IUnitReference>();
+      if (unloadedOrFirstTime) {
+        foreach (var d in result.UnitReferences) {
+          var key = d.UnitIdentity;
+          if (!this.unit2DependentUnits.ContainsKey(key)) {
+            this.unit2DependentUnits[key] = new List<IUnitReference>();
+          }
+          this.unit2DependentUnits[key].Add(result);
         }
-        this.unit2DependentUnits[d].Add(result);
-      }
 
-      this.AttachContractExtractorAndLoadReferenceAssembliesFor(result);
-      this.location2LastModificationTime[location] = timeOfLastModification;
-      this.location2Unit[location] = result;
+        this.unit2ContractExtractor.Add(result.UnitIdentity, null); // a marker to communicate with GetContractExtractor
+        this.location2Unit[result.Location] = result;
+      }
       return result;
     }
 
@@ -1720,13 +1722,19 @@ namespace Microsoft.Cci.MutableContracts {
     /// for reading in all future units.
     /// </summary>
     /// <returns>
-    /// the last write time of the file found at location.
+    /// true iff (unit was unloaded or this is the first time this location has been seen)
+    /// the latter case should be for the first time the unit has been loaded.
     /// </returns>
-    private DateTime UnloadPreviouslyLoadedUnitIfLocationIsNewer(string location) {
+    private bool UnloadPreviouslyLoadedUnitIfLocationIsNewer(string location) {
+      location = Path.GetFullPath(location);
       var timeOfLastModification = File.GetLastWriteTime(location);
       DateTime previousTime;
-      if (this.location2LastModificationTime.TryGetValue(location, out previousTime)) {
-        if (previousTime.CompareTo(timeOfLastModification) < 0) {
+      if (!this.location2LastModificationTime.TryGetValue(location, out previousTime)) {
+        this.location2LastModificationTime.Add(location, timeOfLastModification);
+        return true;
+      }
+      if (!(previousTime.CompareTo(timeOfLastModification) < 0))
+        return false;
           // file has been modified. Need to throw away PeReader because it caches based on identity and
           // won't actually read in and construct an object model from the file. Even though at this
           // point we don't even know what assembly is at this location. Maybe it isn't even an updated
@@ -1737,7 +1745,7 @@ namespace Microsoft.Cci.MutableContracts {
 
           // Need to dump all units that depended on this one because their reference is now stale.
           List<IUnitReference> referencesToDependentUnits;
-          if (this.unit2DependentUnits.TryGetValue(unit, out referencesToDependentUnits)) {
+          if (this.unit2DependentUnits.TryGetValue(unit.UnitIdentity, out referencesToDependentUnits)) {
             foreach (var d in referencesToDependentUnits) {
               this.RemoveUnit(d.UnitIdentity);
             }
@@ -1747,7 +1755,7 @@ namespace Microsoft.Cci.MutableContracts {
           // it *was* dependent on in case the newer version has a changed list of
           // dependencies.
           foreach (var d in unit.UnitReferences) {
-            this.unit2DependentUnits[d].Remove(unit);
+            this.unit2DependentUnits[d.UnitIdentity].Remove(unit);
           }
 
           // Dump all reference assemblies for this unit.
@@ -1760,9 +1768,7 @@ namespace Microsoft.Cci.MutableContracts {
 
           // Dump stale version from cache
           this.RemoveUnit(unit.UnitIdentity);
-        }
-      }
-      return timeOfLastModification;
+          return true;
     }
 
     /// <summary>
@@ -1772,7 +1778,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// Each contract extractor is actually a composite comprising a code-contracts
     /// extractor layered on top of a lazy extractor.
     /// </summary>
-    private void AttachContractExtractorAndLoadReferenceAssembliesFor(IUnit alreadyLoadedUnit) {
+    protected void AttachContractExtractorAndLoadReferenceAssembliesFor(IUnit alreadyLoadedUnit) {
 
       // Because of unification, the "alreadyLoadedUnit" might have actually already been loaded previously
       // and gone through here (and so already has a contract provider attached to it).
@@ -1873,11 +1879,18 @@ namespace Microsoft.Cci.MutableContracts {
     /// </summary>
     public IContractExtractor/*?*/ GetContractExtractor(UnitIdentity unitIdentity) {
       IContractExtractor cp;
-      if (this.unit2ContractExtractor.TryGetValue(unitIdentity, out cp)) {
-        return cp;
-      } else {
+      if (!this.unit2ContractExtractor.TryGetValue(unitIdentity, out cp))
         return null;
+      if (cp == null) {
+        foreach (var u in this.LoadedUnits) {
+          if (u.UnitIdentity.Equals(unitIdentity)) {
+            this.AttachContractExtractorAndLoadReferenceAssembliesFor(u);
+            cp = this.unit2ContractExtractor[unitIdentity];
+            break;
+          }
+        }
       }
+      return cp;
     }
 
     /// <summary>

@@ -1056,16 +1056,13 @@ namespace Microsoft.Cci.MutableContracts {
 
     public sealed class AssertAssumeExtractor : MethodBodyCodeMutator {
 
-      ISourceMethodBody sourceMethodBody;
       PdbReader/*?*/ pdbReader;
 
       public AssertAssumeExtractor(
-        ISourceMethodBody sourceMethodBody,
         IMetadataHost host,
         PdbReader/*?*/ pdbReader
         )
         : base(host, true, pdbReader) {
-        this.sourceMethodBody = sourceMethodBody;
         this.pdbReader = pdbReader;
       }
 
