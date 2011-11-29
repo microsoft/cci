@@ -5180,9 +5180,15 @@ namespace Microsoft.Cci.MutableCodeModel {
             addressableExpression.Definition = this.Visit(field);
           else {
             IArrayIndexer/*?*/ indexer = def as IArrayIndexer;
-            if (indexer != null)
+            if (indexer != null) {
               addressableExpression.Definition = this.Visit(indexer);
-            else {
+              indexer = addressableExpression.Definition as IArrayIndexer;
+              if (indexer != null) {
+                addressableExpression.Instance = indexer.IndexedObject;
+                addressableExpression.Type = indexer.Type;
+                return addressableExpression;
+              }
+            } else {
               IAddressDereference/*?*/ adr = def as IAddressDereference;
               if (adr != null)
                 addressableExpression.Definition = this.Visit(adr);
