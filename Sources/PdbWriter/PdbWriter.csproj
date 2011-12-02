@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.Cci</RootNamespace>
     <AssemblyName>Microsoft.Cci.PdbWriter</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>
     </SccProjectName>
@@ -37,6 +37,7 @@
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <CodeContractsAssemblyMode>0</CodeContractsAssemblyMode>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -101,10 +102,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.Contracts\Microsoft.Contracts.csproj">
-      <Project>{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}</Project>
-      <Name>Microsoft.Contracts</Name>
-    </ProjectReference>
     <ProjectReference Include="..\PeWriter\PeWriter.csproj">
       <Project>{304A8B0B-851B-4AA6-A17D-5F87F39C5E5C}</Project>
       <Name>PeWriter</Name>

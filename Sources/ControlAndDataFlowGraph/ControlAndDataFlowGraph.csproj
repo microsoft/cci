@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.Cci</RootNamespace>
     <AssemblyName>CFG and SSE</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <CodeContractsAssemblyMode>0</CodeContractsAssemblyMode>
     <TargetFrameworkProfile />
@@ -68,10 +68,6 @@
     <Compile Include="TypeInferencer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.Contracts\Microsoft.Contracts.csproj">
-      <Project>{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}</Project>
-      <Name>Microsoft.Contracts</Name>
-    </ProjectReference>
     <ProjectReference Include="..\MetadataHelper\MetadataHelper.csproj">
       <Project>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</Project>
       <Name>MetadataHelper</Name>
