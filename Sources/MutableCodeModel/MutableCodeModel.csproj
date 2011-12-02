@@ -21,7 +21,7 @@
     <OldToolsVersion>2.0</OldToolsVersion>
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
@@ -151,10 +151,6 @@
     <ProjectReference Include="..\..\Metadata\Sources\ILGenerator\ILGenerator.csproj">
       <Project>{08156C78-403A-4112-AD81-8646AC51CD2F}</Project>
       <Name>ILGenerator</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Metadata\Sources\Microsoft.Contracts\Microsoft.Contracts.csproj">
-      <Project>{B114E5FF-F2A2-4BE7-8AF1-936FC87030F0}</Project>
-      <Name>Microsoft.Contracts</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\metadata\Sources\MutableMetadataModel\MutableMetadataModel.csproj">
       <Project>{319E151C-8F33-49E7-81C9-30F02F9BA90A}</Project>
