@@ -21,6 +21,7 @@ namespace PeToText {
       this.writer = writer;
       this.host = host;
       this.pdbReader = pdbReader;
+      this.TraverseIntoMethodBodies = true;
     }
 
     TextWriter writer;
