@@ -807,7 +807,7 @@ namespace Microsoft.Cci {
     /// <remarks>When overridding this method, be sure to add any disposable objects to this.disposableObjectAllocatedByThisHost.</remarks>
     public virtual IBinaryDocumentMemoryBlock/*?*/ OpenBinaryDocument(IBinaryDocument sourceDocument) {
       try {
-#if !COMPACTFX
+#if !COMPACTFX && !__MonoCS__
         IBinaryDocumentMemoryBlock binDocMemoryBlock = MemoryMappedFile.CreateMemoryMappedFile(sourceDocument.Location, sourceDocument);
 #else
         IBinaryDocumentMemoryBlock binDocMemoryBlock = UnmanagedBinaryMemoryBlock.CreateUnmanagedBinaryMemoryBlock(sourceDocument.Location, sourceDocument);
@@ -836,7 +836,7 @@ namespace Microsoft.Cci {
         string directory = Path.GetDirectoryName(parentSourceDocument.Location);
         string fullPath = Path.Combine(directory, childDocumentName);
         IBinaryDocument newBinaryDocument = BinaryDocument.GetBinaryDocumentForFile(fullPath, this);
-#if !COMPACTFX
+#if !COMPACTFX && !__MonoCS__
         IBinaryDocumentMemoryBlock binDocMemoryBlock = MemoryMappedFile.CreateMemoryMappedFile(newBinaryDocument.Location, newBinaryDocument);
 #else
         IBinaryDocumentMemoryBlock binDocMemoryBlock = UnmanagedBinaryMemoryBlock.CreateUnmanagedBinaryMemoryBlock(newBinaryDocument.Location, newBinaryDocument);

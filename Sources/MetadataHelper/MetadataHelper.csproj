@@ -125,6 +125,7 @@
     <Compile Include="GlobalAssemblyCache.cs" />
     <Compile Include="MemberHelper.cs" />
     <Compile Include="Members.cs" />
+    <Compile Include="MonoAssemblyCache.cs" />
     <Compile Include="PlatformTypes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Types.cs" />

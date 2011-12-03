@@ -19,7 +19,7 @@ using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci {
 
-#if !COMPACTFX
+#if !COMPACTFX && !__MonoCS__
   /// <summary>
   /// A managed wrapper for an unmanaged memory mapped file.
   /// Important: each instance of this class holds a read-lock on a file. Instances should be explicitly disposed as soon as they become inactive.
