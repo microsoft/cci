@@ -61,12 +61,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EdgeProfiler", "Samples\Edg
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILGarbageCollect", "Samples\ILGarbageCollect\ILGarbageCollect.csproj", "{60CD0C85-1E4A-4068-A4EC-D15B7981A908}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestILGarbageCollector", "Tests\TestILGarbageCollector\TestILGarbageCollector.csproj", "{3F88E4B2-E937-43A5-9EC6-A31C9CBD4741}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 1
+		SccNumberOfProjects = 2
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs10
 		SccLocalPath0 = .
+		SccProjectUniqueName1 = Tests\\TestILGarbageCollector\\TestILGarbageCollector.csproj
+		SccProjectTopLevelParentUniqueName1 = Metadata.sln
+		SccProjectName1 = Tests/TestILGarbageCollector
+		SccLocalPath1 = Tests\\TestILGarbageCollector
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -325,6 +331,16 @@ Global
 		{60CD0C85-1E4A-4068-A4EC-D15B7981A908}.Release|Mixed Platforms.Build.0 = Release|x86
 		{60CD0C85-1E4A-4068-A4EC-D15B7981A908}.Release|x86.ActiveCfg = Release|x86
 		{60CD0C85-1E4A-4068-A4EC-D15B7981A908}.Release|x86.Build.0 = Release|x86
+		{3F88E4B2-E937-43A5-9EC6-A31C9CBD4741}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F88E4B2-E937-43A5-9EC6-A31C9CBD4741}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F88E4B2-E937-43A5-9EC6-A31C9CBD4741}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{3F88E4B2-E937-43A5-9EC6-A31C9CBD4741}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{3F88E4B2-E937-43A5-9EC6-A31C9CBD4741}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3F88E4B2-E937-43A5-9EC6-A31C9CBD4741}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F88E4B2-E937-43A5-9EC6-A31C9CBD4741}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F88E4B2-E937-43A5-9EC6-A31C9CBD4741}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{3F88E4B2-E937-43A5-9EC6-A31C9CBD4741}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{3F88E4B2-E937-43A5-9EC6-A31C9CBD4741}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -341,6 +357,7 @@ Global
 		{60CD0C85-1E4A-4068-A4EC-D15B7981A908} = {26711007-2037-41A8-834A-890A44BCA53F}
 		{A6BABD10-C384-4F9F-93D7-99B935A41719} = {9CA09159-EA0B-4970-BB23-5ED6DACEAE69}
 		{71B89CE8-CD33-4BC1-A411-4002D367F38D} = {9CA09159-EA0B-4970-BB23-5ED6DACEAE69}
+		{3F88E4B2-E937-43A5-9EC6-A31C9CBD4741} = {9CA09159-EA0B-4970-BB23-5ED6DACEAE69}
 		{3063ACB6-B548-457C-983C-8BA3560E1409} = {0FC2FA29-F7A5-47FC-BC72-01943A4C5627}
 		{97EE0D3C-C2F1-4756-A373-66683EC13B58} = {0FC2FA29-F7A5-47FC-BC72-01943A4C5627}
 	EndGlobalSection
