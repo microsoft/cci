@@ -80,6 +80,9 @@
     <WarningLevel>4</WarningLevel>
     <AssemblyOriginatorKeyFile>..\Common\InterimKey.snk</AssemblyOriginatorKeyFile>
     <DocumentationFile>bin\Release\Microsoft.Cci.MetadataHelper.xml</DocumentationFile>
+    <WarningsAsErrors>1591</WarningsAsErrors>
+    <NoWarn>
+    </NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'NightlyDebug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

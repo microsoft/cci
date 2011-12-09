@@ -1886,7 +1886,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
   /// A list of elements represented as a sublist of a master list. Use this to avoid allocating lots of little list objects.
   /// </summary>
   [ContractVerification(true)]
-  [DebuggerTypeProxy(typeof(Sublist<>.SublistView))]
+#if !__MonoCS__
+   [DebuggerTypeProxy(typeof(Sublist<>.SublistView))]
+#endif
   public struct Sublist<T> {
 
     /// <summary>

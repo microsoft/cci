@@ -234,7 +234,8 @@ namespace Microsoft.Cci {
   }
 
 #if !COMPACTFX
-  internal class AssemblyName {
+#pragma warning disable 1591
+  public class AssemblyName {
     IAssemblyName assemblyName;
 
     internal AssemblyName(IAssemblyName assemblyName) {
@@ -281,7 +282,7 @@ namespace Microsoft.Cci {
     }
     internal string/*?*/ GetLocation() {
 #if __MonoCS__
-      IAssemblyEnum assemblyCache = new MonoAssemblyCache();
+      IAssemblyCache assemblyCache = new MonoAssemblyCache();
 #else
       IAssemblyCache assemblyCache;
       CreateAssemblyCache(out assemblyCache, 0);
@@ -395,6 +396,7 @@ namespace Microsoft.Cci {
       int InstallAssembly(uint dwFlags, [MarshalAs(UnmanagedType.LPWStr)] string pszManifestFilePath, IntPtr pvReserved);
     }
   }
+#pragma warning restore 1591
   [ComImport(), Guid("CD193BC0-B4BC-11D2-9833-00C04FC31D2E"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
   interface IAssemblyName {
     [PreserveSig()]

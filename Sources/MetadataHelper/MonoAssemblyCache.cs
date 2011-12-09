@@ -1,6 +1,13 @@
 ﻿//Contributed by YodaSkywalker under the MSPL license.
 
 #if __MonoCS__
+using System;
+using System.Text;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
+using Microsoft.Cci;
+
 	class MonoGACHelpers
 	{
 		public static string GetGACDir()
