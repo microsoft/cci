@@ -3930,6 +3930,10 @@ namespace Microsoft.Cci {
     /// </summary>
     CoverageData,
     /// <summary>
+    /// Section for initialized writable data, called .datax rather than .sdata for some or other reason.
+    /// </summary>
+    ExtendedData,
+    /// <summary>
     /// Section for intialized writable data.
     /// </summary>
     StaticData,

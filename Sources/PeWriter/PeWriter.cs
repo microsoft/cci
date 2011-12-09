@@ -16,15 +16,12 @@ using System.Diagnostics.Contracts;
 using System.Text;
 using Microsoft.Cci.UtilityDataStructures;
 
-//^ using Microsoft.Contracts;
-
 namespace Microsoft.Cci {
   using Microsoft.Cci.PeWriterInternal;
   using Microsoft.Cci.WriterUtilities;
 
   public class PeWriter : ITokenProvider {
 
-    //^ [NotDelayed]
     private PeWriter(IModule module, IMetadataHost host, System.IO.Stream peStream,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, IPdbWriter/*?*/ pdbWriter,
       params CustomSectionProvider[]/*?*/ customSectionProviders) {
@@ -57,6 +54,8 @@ namespace Microsoft.Cci {
     CustomSectionProvider[]/*?*/ customSectionProviders;
     PeDebugDirectory/*?*/ debugDirectory;
     bool emitRuntimeStartupStub;
+    BinaryWriter extendedDataWriter = new BinaryWriter(new MemoryStream());
+    SectionHeader extendedDataSection = new SectionHeader();
     List<IEventDefinition> eventDefList = new List<IEventDefinition>();
     MemoryStream emptyStream = new MemoryStream(0);
     Hashtable exportedTypeIndex = new Hashtable();
@@ -126,6 +125,7 @@ namespace Microsoft.Cci {
     SectionHeader tlsSection = new SectionHeader();
     BinaryWriter tlsDataWriter = new BinaryWriter(new MemoryStream());
     uint tokenOfFirstMethodWithDebugInfo;
+    IEnumerable<INamespaceScope> lastUsingInfo;
     uint tokenOfLastMethodWithUsingInfo;
     Hashtable typeDefIndex = new Hashtable();
     internal List<ITypeDefinition> typeDefList = new List<ITypeDefinition>();
@@ -259,7 +259,7 @@ namespace Microsoft.Cci {
       writer.WriteUninterpretedSections();
 
       if (pdbWriter != null) {
-        if (module.EntryPoint != Dummy.MethodReference)
+        if (!(module.EntryPoint is Dummy))
           pdbWriter.SetEntryPoint(writer.GetMethodToken(module.EntryPoint));
       }
     }
@@ -280,7 +280,7 @@ namespace Microsoft.Cci {
             var mconst = arg as IMetadataConstant;
             if (mconst != null) {
               var str = mconst.Value as string;
-              if (str != null) 
+              if (str != null)
                 keySize = (uint)str.Length / 2;
             }
             break;
@@ -400,6 +400,7 @@ namespace Microsoft.Cci {
       if (this.rdataWriter.BaseStream.Length > 0) numberOfSections++; //.rdata
       if (this.sdataWriter.BaseStream.Length > 0) numberOfSections++; //.sdata
       if (this.coverageDataWriter.BaseStream.Length > 0) numberOfSections++; //.cover
+      if (this.extendedDataWriter.BaseStream.Length > 0) numberOfSections++; //.datax
       if (!IteratorHelper.EnumerableIsEmpty(this.module.Win32Resources)) numberOfSections++; //.rsrc;
 
       this.ntHeader.NumberOfSections = numberOfSections;
@@ -437,7 +438,7 @@ namespace Microsoft.Cci {
       this.CreateInitialExportedTypeIndex();
       this.CreateInitialTypeRefIndex();
       this.CreateInitialMemberRefIndex();
-      if (this.pdbWriter != null) this.pdbWriter.OpenTokenSourceLocationsScope();  
+      if (this.pdbWriter != null) this.pdbWriter.OpenTokenSourceLocationsScope();
       foreach (INamedTypeDefinition typeDef in this.module.GetAllTypes())
         this.CreateIndicesFor(typeDef);
       if (this.pdbWriter != null) this.pdbWriter.CloseTokenSourceLocationsScope();
@@ -554,9 +555,9 @@ namespace Microsoft.Cci {
     }
 
     private void CreateIndicesFor(IMethodDefinition methodDef) {
-      if (methodDef.IsForwardReference && !(methodDef.IsAbstract || methodDef.IsExternal) && (methodDef.Body == Dummy.MethodBody)) return;
+      if (methodDef.IsForwardReference && !(methodDef.IsAbstract || methodDef.IsExternal) && (methodDef.Body is Dummy)) return;
       this.parameterListIndex.Add(methodDef, (uint)this.parameterDefList.Count+1);
-      if (methodDef.ReturnValueIsMarshalledExplicitly || IteratorHelper.EnumerableIsNotEmpty(methodDef.ReturnValueAttributes) || methodDef.ReturnValueName != Dummy.Name)
+      if (methodDef.ReturnValueIsMarshalledExplicitly || IteratorHelper.EnumerableIsNotEmpty(methodDef.ReturnValueAttributes) || !(methodDef.ReturnValueName is Dummy))
         this.parameterDefList.Add(new DummyReturnValueParameter(methodDef));
       foreach (IParameterDefinition parDef in methodDef.Parameters) {
         // No explicit param row is needed if param has no flags (other than optionally IN),
@@ -660,7 +661,7 @@ namespace Microsoft.Cci {
       ClrHeader clrHeader = this.clrHeader;
       clrHeader.codeManagerTable.RelativeVirtualAddress = 0;
       clrHeader.codeManagerTable.Size = 0;
-      if (this.module.EntryPoint == Dummy.MethodReference)
+      if (this.module.EntryPoint is Dummy)
         clrHeader.entryPointToken = 0;
       else
         clrHeader.entryPointToken = this.GetMethodToken(this.module.EntryPoint);
@@ -797,14 +798,25 @@ namespace Microsoft.Cci {
       this.sdataSection.SizeOfRawData = Aligned(this.sdataWriter.BaseStream.Length, this.module.FileAlignment);
       this.sdataSection.VirtualSize = this.sdataWriter.BaseStream.Length;
 
+      this.extendedDataSection.Characteristics = 0xC0000040; //section is write + read + initialized 
+      this.extendedDataSection.Name = ".datax";
+      this.extendedDataSection.NumberOfLinenumbers = 0;
+      this.extendedDataSection.NumberOfRelocations = 0;
+      this.extendedDataSection.PointerToLinenumbers = 0;
+      this.extendedDataSection.PointerToRawData = this.sdataSection.PointerToRawData+this.sdataSection.SizeOfRawData;
+      this.extendedDataSection.PointerToRelocations = 0;
+      this.extendedDataSection.RelativeVirtualAddress = Aligned(this.sdataSection.RelativeVirtualAddress+this.sdataSection.VirtualSize, 0x2000);
+      this.extendedDataSection.SizeOfRawData = Aligned(this.extendedDataWriter.BaseStream.Length, this.module.FileAlignment);
+      this.extendedDataSection.VirtualSize = this.extendedDataWriter.BaseStream.Length;
+
       this.coverSection.Characteristics = 0xC8000040; //section is not paged + write + read + initialized 
       this.coverSection.Name = ".cover";
       this.coverSection.NumberOfLinenumbers = 0;
       this.coverSection.NumberOfRelocations = 0;
       this.coverSection.PointerToLinenumbers = 0;
-      this.coverSection.PointerToRawData = this.sdataSection.PointerToRawData+this.sdataSection.SizeOfRawData;
+      this.coverSection.PointerToRawData = this.extendedDataSection.PointerToRawData+this.sdataSection.SizeOfRawData;
       this.coverSection.PointerToRelocations = 0;
-      this.coverSection.RelativeVirtualAddress = Aligned(this.sdataSection.RelativeVirtualAddress+this.sdataSection.VirtualSize, 0x2000);
+      this.coverSection.RelativeVirtualAddress = Aligned(this.extendedDataSection.RelativeVirtualAddress+this.extendedDataSection.VirtualSize, 0x2000);
       this.coverSection.SizeOfRawData = Aligned(this.coverageDataWriter.BaseStream.Length, this.module.FileAlignment);
       this.coverSection.VirtualSize = this.coverageDataWriter.BaseStream.Length;
 
@@ -999,6 +1011,7 @@ namespace Microsoft.Cci {
       switch (sectionBlock.PESectionKind) {
         case PESectionKind.ConstantData: sectionWriter = this.rdataWriter; break;
         case PESectionKind.CoverageData: sectionWriter = this.coverageDataWriter; break;
+        case PESectionKind.ExtendedData: sectionWriter = this.extendedDataWriter; break;
         case PESectionKind.StaticData: sectionWriter = this.sdataWriter; break;
         case PESectionKind.Text: sectionWriter = this.textDataWriter; break;
         case PESectionKind.ThreadLocalStorage: sectionWriter = this.tlsDataWriter; break;
@@ -1064,7 +1077,7 @@ namespace Microsoft.Cci {
       if (fieldDef.IsSpecialName) result |= 0x0200;
       if (fieldDef.IsRuntimeSpecial) result |= 0x0400;
       if (fieldDef.IsMarshalledExplicitly) result |= 0x1000;
-      if (fieldDef.CompileTimeValue != Dummy.Constant) result |= 0x8000;
+      if (!(fieldDef.CompileTimeValue is Dummy)) result |= 0x8000;
       return result;
     }
 
@@ -1196,9 +1209,7 @@ namespace Microsoft.Cci {
     }
 
     internal uint GetMemberRefIndex(ITypeMemberReference memberRef) {
-      if (memberRef == Dummy.MethodReference || memberRef == Dummy.FieldReference || memberRef == Dummy.Method || memberRef == Dummy.Field) {
-        return 0;
-      }
+      if (memberRef is Dummy) return 0;
       uint methodRefIndex = 0;
       if (this.memberRefInstanceIndex.TryGetValue(memberRef, out methodRefIndex))
         return methodRefIndex;
@@ -1629,7 +1640,7 @@ namespace Microsoft.Cci {
     }
 
     internal void RecordTypeReference(ITypeReference typeReference) {
-      if (typeReference == Dummy.TypeReference) return;
+      if (typeReference is Dummy) return;
       var nsTr = typeReference as INamespaceTypeReference;
       if ((nsTr == null || !nsTr.KeepDistinctFromDefinition) && this.typeDefIndex.ContainsKey(typeReference.InternedKey))
         return;
@@ -1640,7 +1651,7 @@ namespace Microsoft.Cci {
     }
 
     internal uint GetTypeToken(ITypeReference typeReference) {
-      if (typeReference == Dummy.TypeReference || typeReference == Dummy.Type) return 0;
+      if (typeReference is Dummy) return 0;
       var nsTr = typeReference as INamespaceTypeReference;
       if (nsTr == null || !nsTr.KeepDistinctFromDefinition) {
         uint typeDefIndex = 0;
@@ -2031,7 +2042,7 @@ namespace Microsoft.Cci {
       uint fieldDefIndex = 0;
       foreach (IFieldDefinition fieldDef in this.fieldDefList) {
         fieldDefIndex++;
-        if (fieldDef.CompileTimeValue == Dummy.Constant) continue;
+        if (fieldDef.CompileTimeValue is Dummy) continue;
         ConstantRow r = new ConstantRow();
         r.Type = GetTypeCodeByteFor(fieldDef.CompileTimeValue.Value);
         r.Parent = fieldDefIndex<<2;
@@ -2137,7 +2148,7 @@ namespace Microsoft.Cci {
         CustomAttributeRow r = new CustomAttributeRow();
         r.Parent = (parentIndex<<5)|tag;
         foreach (ICustomAttribute customAttribute in parent.Attributes) {
-          if (customAttribute.Constructor == Dummy.MethodReference) {
+          if (customAttribute.Constructor is Dummy) {
             //TODO: error
           }
           r.Type = this.GetCustomAttributeTypeCodedIndex(customAttribute.Constructor);
@@ -3275,7 +3286,7 @@ namespace Microsoft.Cci {
 
     private void SerializeNamespaceScopes(IMethodBody methodBody) {
       IEnumerable<INamespaceScope> scopes = this.localScopeProvider.GetNamespaceScopes(methodBody);
-      if (this.tokenOfLastMethodWithUsingInfo != 0 && IteratorHelper.EnumerableIsEmpty(scopes))
+      if (this.tokenOfLastMethodWithUsingInfo != 0 && (this.lastUsingInfo == scopes || IteratorHelper.EnumerableIsEmpty(scopes)))
         return;
       this.tokenOfLastMethodWithUsingInfo = this.GetMethodToken(methodBody.MethodDefinition);
       foreach (INamespaceScope nsScope in scopes) {
@@ -3323,11 +3334,12 @@ namespace Microsoft.Cci {
         this.SerializeReferenceToIteratorClass(methodBody);
         return;
       }
-      IEnumerable<INamespaceScope> scopes = this.localScopeProvider.GetNamespaceScopes(methodBody);
-      if (this.tokenOfLastMethodWithUsingInfo != 0 && IteratorHelper.EnumerableIsEmpty(scopes)) {
+      var scopes = this.localScopeProvider.GetNamespaceScopes(methodBody);
+      if (this.tokenOfLastMethodWithUsingInfo != 0 && (scopes == this.lastUsingInfo || IteratorHelper.EnumerableIsEmpty(scopes))) {
         this.SerializeReferenceToLastMethodWithUsingInfo();
         return;
       }
+      this.lastUsingInfo = scopes;
       MemoryStream customMetadata = new MemoryStream();
       List<ushort> usingCounts = new List<ushort>();
       BinaryWriter cmw = new BinaryWriter(customMetadata);
@@ -3783,7 +3795,7 @@ namespace Microsoft.Cci {
             if (marshallingInformation.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_DISPATCH ||
                  marshallingInformation.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_UNKNOWN ||
                  marshallingInformation.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_RECORD)
-              if (marshallingInformation.SafeArrayElementUserDefinedSubtype != Dummy.TypeReference)
+              if (!(marshallingInformation.SafeArrayElementUserDefinedSubtype is Dummy))
                 this.SerializeTypeName(marshallingInformation.SafeArrayElementUserDefinedSubtype, writer);
           }
           break;

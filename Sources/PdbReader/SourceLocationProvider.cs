@@ -322,10 +322,22 @@ namespace Microsoft.Cci {
     /// </summary>
     public IEnumerable<INamespaceScope> GetNamespaceScopes(IMethodBody methodBody) {
       PdbFunction/*?*/ pdbFunction = this.GetPdbFunctionFor(methodBody);
-      if (pdbFunction != null && pdbFunction.usingCounts != null) {
-        if (pdbFunction.namespaceScopes != null) return pdbFunction.namespaceScopes;
-        foreach (PdbScope pdbScope in pdbFunction.scopes) {
-          return pdbFunction.namespaceScopes = this.GetNamespaceScopes(pdbFunction.usingCounts, pdbScope).AsReadOnly();
+      if (pdbFunction != null) {
+        if (pdbFunction.usingCounts != null) {
+          if (pdbFunction.namespaceScopes != null) return pdbFunction.namespaceScopes;
+          foreach (PdbScope pdbScope in pdbFunction.scopes) {
+            return pdbFunction.namespaceScopes = this.GetNamespaceScopes(pdbFunction.usingCounts, pdbScope).AsReadOnly();
+          }
+        } else if (pdbFunction.tokenOfMethodWhoseUsingInfoAppliesToThisMethod > 0) {
+          PdbFunction func = null;
+          if (this.pdbFunctionMap.TryGetValue(pdbFunction.tokenOfMethodWhoseUsingInfoAppliesToThisMethod, out func)) {
+            if (func.usingCounts != null) {
+              if (func.namespaceScopes != null) return func.namespaceScopes;
+              foreach (PdbScope pdbScope in func.scopes) {
+                return func.namespaceScopes = this.GetNamespaceScopes(func.usingCounts, pdbScope).AsReadOnly();
+              }
+            }
+          }
         }
       }
       return Enumerable<INamespaceScope>.Empty;
@@ -752,7 +764,7 @@ namespace Microsoft.Cci.Pdb {
           var doc = mbLocation.Document as MethodBodyDocument;
           if (doc != null) {
             ITypeReference result = doc.GetTypeFromToken(this.pdbConstant.token);
-            if (result == Dummy.TypeReference) {
+            if (result is Dummy) {
               //TODO: error
               continue;
             }
