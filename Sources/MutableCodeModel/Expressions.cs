@@ -967,11 +967,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Calls visitor.Visit(ICompileTimeConstant).
     /// </summary>
     public override void Dispatch(ICodeVisitor visitor) {
-      visitor.Visit(this);
+      visitor.Visit((ICompileTimeConstant)this);
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(ICompileTimeConstant) method.
+    /// Calls the visitor.Visit(IMetadataConstant) method.
     /// </summary>
     public void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
@@ -1177,11 +1177,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Calls visitor.Visit(ICreateArray).
     /// </summary>
     public override void Dispatch(ICodeVisitor visitor) {
-      visitor.Visit(this);
+      visitor.Visit((ICreateArray)this);
     }
 
     /// <summary>
-    /// Calls the visitor.Visit(ICreateArray) method.
+    /// Calls the visitor.Visit(IMetadataCreateArray) method.
     /// </summary>
     public void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
@@ -2194,7 +2194,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Calls visitor.Visit(INamedArgument).
     /// </summary>
     public override void Dispatch(ICodeVisitor visitor) {
-      visitor.Visit(this);
+      visitor.Visit((INamedArgument)this);
     }
 
     /// <summary>
@@ -2963,7 +2963,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Calls visitor.Visit(ITypeOf).
     /// </summary>
     public override void Dispatch(ICodeVisitor visitor) {
-      visitor.Visit(this);
+      visitor.Visit((ITypeOf)this);
     }
 
     /// <summary>
