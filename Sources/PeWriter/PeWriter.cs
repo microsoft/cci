@@ -814,7 +814,7 @@ namespace Microsoft.Cci {
       this.coverSection.NumberOfLinenumbers = 0;
       this.coverSection.NumberOfRelocations = 0;
       this.coverSection.PointerToLinenumbers = 0;
-      this.coverSection.PointerToRawData = this.extendedDataSection.PointerToRawData+this.sdataSection.SizeOfRawData;
+      this.coverSection.PointerToRawData = this.extendedDataSection.PointerToRawData+this.extendedDataSection.SizeOfRawData;
       this.coverSection.PointerToRelocations = 0;
       this.coverSection.RelativeVirtualAddress = Aligned(this.extendedDataSection.RelativeVirtualAddress+this.extendedDataSection.VirtualSize, 0x2000);
       this.coverSection.SizeOfRawData = Aligned(this.coverageDataWriter.BaseStream.Length, this.module.FileAlignment);
