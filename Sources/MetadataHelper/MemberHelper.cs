@@ -452,20 +452,73 @@ namespace Microsoft.Cci {
     public readonly static ParameterInformationComparer ResolvingParameterInformationComparer = new ParameterInformationComparer(true);
 
     /// <summary>
+    /// If the given event definition has been specialized, return its unspecialized version. Otherwise just return the given definition.
+    /// </summary>
+    public static IEventDefinition Unspecialize(IEventDefinition potentiallySpecializedEventDefinition) {
+      var specializedEventDefinition = potentiallySpecializedEventDefinition as ISpecializedEventDefinition;
+      if (specializedEventDefinition != null) return specializedEventDefinition.UnspecializedVersion;
+      return potentiallySpecializedEventDefinition;
+    }
+
+    /// <summary>
+    /// If the given field reference has been specialized, return its unspecialized version. Otherwise just return the given reference.
+    /// </summary>
+    public static IFieldReference Unspecialize(IFieldReference potentiallySpecializedFieldReference) {
+      var specializedFieldReference = potentiallySpecializedFieldReference as ISpecializedFieldReference;
+      if (specializedFieldReference != null) return specializedFieldReference.UnspecializedVersion;
+      return potentiallySpecializedFieldReference;
+    }
+
+    /// <summary>
+    /// If the given field definition has been specialized, return its unspecialized version. Otherwise just return the given definition.
+    /// </summary>
+    public static IFieldDefinition Unspecialize(IFieldDefinition potentiallySpecializedFieldDefinition) {
+      var specializedFieldDefinition = potentiallySpecializedFieldDefinition as ISpecializedFieldDefinition;
+      if (specializedFieldDefinition != null) return specializedFieldDefinition.UnspecializedVersion;
+      return potentiallySpecializedFieldDefinition;
+    }
+
+    /// <summary>
+    /// If the given method reference has been specialized, return the unspecialized method reference. For the purposes of this method, a generic method instance
+    /// reference counts as a specialized method reference and its unspecialized version is the generic method itself. The returned value is fully unspecialized.
+    /// </summary>
+    public static IMethodReference UninstantiateAndUnspecialize(IMethodReference potentiallySpecializedMethodReference) {
+      Contract.Requires(potentiallySpecializedMethodReference != null);
+      Contract.Ensures(Contract.Result<IMethodReference>() != null);
+
+      var genericMethodInstanceReference = potentiallySpecializedMethodReference as IGenericMethodInstanceReference;
+      if (genericMethodInstanceReference != null)
+        potentiallySpecializedMethodReference = genericMethodInstanceReference.GenericMethod;
+      var specializedMethodReference = potentiallySpecializedMethodReference as ISpecializedMethodReference;
+      if (specializedMethodReference != null)
+        return specializedMethodReference.UnspecializedVersion;
+      return potentiallySpecializedMethodReference;
+    }
+
+    /// <summary>
     /// If the given method definition has been specialized, either by being a generic method instance or by being a member of a generic type instance, return
     /// the original unspecialized method definition as stored in the module.
     /// </summary>
-    public static IMethodDefinition Unspecialize(IMethodDefinition potentiallySpecializedMethod) {
+    public static IMethodDefinition UninstantiateAndUnspecialize(IMethodDefinition potentiallySpecializedMethod) {
       Contract.Requires(potentiallySpecializedMethod != null);
       Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
 
-      IGenericMethodInstance genericMethodInstance = potentiallySpecializedMethod as IGenericMethodInstance;
+      var genericMethodInstance = potentiallySpecializedMethod as IGenericMethodInstance;
       if (genericMethodInstance != null)
         potentiallySpecializedMethod = genericMethodInstance.GenericMethod.ResolvedMethod;
-      ISpecializedMethodDefinition specializedMethodDefinition = potentiallySpecializedMethod as ISpecializedMethodDefinition;
+      var specializedMethodDefinition = potentiallySpecializedMethod as ISpecializedMethodDefinition;
       if (specializedMethodDefinition != null)
         return specializedMethodDefinition.UnspecializedVersion;
       return potentiallySpecializedMethod;
+    }
+
+    /// <summary>
+    /// If the given property definition has been specialized, return its unspecialized version. Otherwise just return the given definition.
+    /// </summary>
+    public static IPropertyDefinition Unspecialize(IPropertyDefinition potentiallySpecializedPropertyDefinition) {
+      var specializedPropertyDefinition = potentiallySpecializedPropertyDefinition as ISpecializedPropertyDefinition;
+      if (specializedPropertyDefinition != null) return specializedPropertyDefinition.UnspecializedVersion;
+      return potentiallySpecializedPropertyDefinition;
     }
   }
 

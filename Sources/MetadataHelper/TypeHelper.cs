@@ -911,7 +911,7 @@ namespace Microsoft.Cci {
       Contract.Requires(type != null);
       Contract.Ensures(Contract.Result<ITypeReference>() != null);
 
-      var genericTypeInstance = type as IGenericTypeInstance;
+      var genericTypeInstance = type as IGenericTypeInstanceReference;
       if (genericTypeInstance != null) return TypeHelper.UninstantiateAndUnspecialize(genericTypeInstance.GenericType);
       var specializedNestedType = type as ISpecializedNestedTypeReference;
       if (specializedNestedType != null) return specializedNestedType.UnspecializedVersion;
