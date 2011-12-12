@@ -251,6 +251,7 @@ namespace Microsoft.Cci {
       writer.WriteTextSection();
       writer.WriteRdataSection();
       writer.WriteSdataSection();
+      writer.WriteExtendedDataSection();
       writer.WriteCoverSection();
       writer.WriteTlsSection();
       writer.WriteResourceSection();
@@ -399,8 +400,8 @@ namespace Microsoft.Cci {
       if (this.tlsDataWriter.BaseStream.Length > 0) numberOfSections++; //.tls
       if (this.rdataWriter.BaseStream.Length > 0) numberOfSections++; //.rdata
       if (this.sdataWriter.BaseStream.Length > 0) numberOfSections++; //.sdata
-      if (this.coverageDataWriter.BaseStream.Length > 0) numberOfSections++; //.cover
       if (this.extendedDataWriter.BaseStream.Length > 0) numberOfSections++; //.datax
+      if (this.coverageDataWriter.BaseStream.Length > 0) numberOfSections++; //.cover
       if (!IteratorHelper.EnumerableIsEmpty(this.module.Win32Resources)) numberOfSections++; //.rsrc;
 
       this.ntHeader.NumberOfSections = numberOfSections;
@@ -691,7 +692,7 @@ namespace Microsoft.Cci {
       ntHeader.BaseOfData = this.rdataSection.RelativeVirtualAddress;
       ntHeader.PointerToSymbolTable = 0;
       ntHeader.SizeOfCode = this.textSection.SizeOfRawData;
-      ntHeader.SizeOfInitializedData = this.rdataSection.SizeOfRawData + this.coverSection.SizeOfRawData + this.sdataSection.SizeOfRawData + this.tlsSection.SizeOfRawData + this.resourceSection.SizeOfRawData + this.relocSection.SizeOfRawData;
+      ntHeader.SizeOfInitializedData = this.rdataSection.SizeOfRawData + this.coverSection.SizeOfRawData + this.extendedDataSection.SizeOfRawData + this.sdataSection.SizeOfRawData + this.tlsSection.SizeOfRawData + this.resourceSection.SizeOfRawData + this.relocSection.SizeOfRawData;
       ntHeader.SizeOfHeaders = Aligned(this.ComputeSizeOfPeHeaders(numberOfSections), this.module.FileAlignment);
       ntHeader.SizeOfImage = Aligned(this.relocSection.RelativeVirtualAddress+this.relocSection.VirtualSize, 0x2000);
       ntHeader.SizeOfUninitializedData = 0;
@@ -1452,6 +1453,7 @@ namespace Microsoft.Cci {
       switch (section) {
         case PESectionKind.ConstantData: return this.rdataSection;
         case PESectionKind.CoverageData: return this.coverSection;
+        case PESectionKind.ExtendedData: return this.extendedDataSection;
         case PESectionKind.StaticData: return this.sdataSection;
         case PESectionKind.ThreadLocalStorage: return this.tlsSection;
         default: return this.textDataSection;
@@ -4423,6 +4425,7 @@ namespace Microsoft.Cci {
       WriteSectionHeader(this.textSection, writer);
       WriteSectionHeader(this.rdataSection, writer);
       WriteSectionHeader(this.sdataSection, writer);
+      WriteSectionHeader(this.extendedDataSection, writer);
       WriteSectionHeader(this.coverSection, writer);
       WriteSectionHeader(this.resourceSection, writer);
       WriteSectionHeader(this.relocSection, writer);
@@ -4635,6 +4638,12 @@ namespace Microsoft.Cci {
       if (this.coverageDataWriter.BaseStream.Length == 0) return;
       this.peStream.Position = this.coverSection.PointerToRawData;
       this.coverageDataWriter.BaseStream.WriteTo(this.peStream);
+    }
+
+    private void WriteExtendedDataSection() {
+      if (this.extendedDataWriter.BaseStream.Length == 0) return;
+      this.peStream.Position = this.extendedDataSection.PointerToRawData;
+      this.extendedDataWriter.BaseStream.WriteTo(this.peStream);
     }
 
     private void WriteRdataSection() {
