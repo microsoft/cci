@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{3F88E4B2-E937-43A5-9EC6-A31C9CBD4741}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TestILGarbageCollector</RootNamespace>
+    <AssemblyName>TestILGarbageCollector</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <CodeAnalysisDependentAssemblyPaths Condition=" '$(VS100COMNTOOLS)' != '' " Include="$(VS100COMNTOOLS)..\IDE\PrivateAssemblies">
+      <Visible>False</Visible>
+    </CodeAnalysisDependentAssemblyPaths>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="SourceInputs\DeadField.cs" />
+    <EmbeddedResource Include="SourceInputs\DeadMethod.cs" />
+    <Compile Include="RapidTypeAnalysisTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Sources\PeReader\PeReader.csproj">
+      <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
+      <Name>PeReader</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\PeWriter\PeWriter.csproj">
+      <Project>{304A8B0B-851B-4AA6-A17D-5F87F39C5E5C}</Project>
+      <Name>PeWriter</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\MutableMetadataModel\MutableMetadataModel.csproj">
+      <Project>{319E151C-8F33-49E7-81C9-30F02F9BA90A}</Project>
+      <Name>MutableMetadataModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\MetadataHelper\MetadataHelper.csproj">
+      <Project>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</Project>
+      <Name>MetadataHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\MetadataModel\MetadataModel.csproj">
+      <Project>{33CAB640-0D03-43DF-81BD-22CDC6C0A597}</Project>
+      <Name>MetadataModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\PdbReader\PdbReader.csproj">
+      <Project>{A6A31B03-7C3D-4DE6-AA73-BE88116BC40A}</Project>
+      <Name>PdbReader</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\PdbWriter\PdbWriter.csproj">
+      <Project>{6D83F687-ABB5-40B3-915E-CA53DA0EB7F3}</Project>
+      <Name>PdbWriter</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\SourceModel\SourceModel.csproj">
+      <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
+      <Name>SourceModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Samples\ILGarbageCollect\ILGarbageCollect.csproj">
+      <Project>{60CD0C85-1E4A-4068-A4EC-D15B7981A908}</Project>
+      <Name>ILGarbageCollect</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
