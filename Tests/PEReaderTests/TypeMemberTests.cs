@@ -437,7 +437,7 @@ namespace ModuleReaderTests {
   IL_0004:  ldnull
   IL_0005:  ldnull
   IL_0006:  ldnull
-  IL_0007:  call instance[mscorlib]System.Object[MRW_Assembly]Assem::GenMethod([mscorlib]System.Object,[mscorlib]System.Collections.Generic.List`1<[mscorlib]System.Object>,[mscorlib]System.Object[],[mscorlib]System.Object[,],[mscorlib]System.Object[,])
+  IL_0007:  call instance!!0[MRW_Assembly]Assem::GenMethod<[mscorlib]System.Object>(!!0,[mscorlib]System.Collections.Generic.List`1<!!0>,!!0[],!!0[,],!!0[,])
   IL_000c:  pop
   IL_000d:  ldarg.1
   IL_000e:  stloc.0
