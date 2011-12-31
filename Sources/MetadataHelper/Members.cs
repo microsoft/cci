@@ -2359,6 +2359,8 @@ namespace Microsoft.Cci.Immutable {
           var methodReference = unspecialized as IMethodReference;
           if (methodReference != null) {
             var specializedContainingType = TypeHelper.SpecializeTypeReference(methodReference.ContainingType, this.containingMethod, this.internFactory);
+            var specializedMethod = methodReference as ISpecializedMethodReference;
+            if (specializedMethod != null) methodReference = specializedMethod.UnspecializedVersion;
             specialized = new SpecializedMethodReference(specializedContainingType, methodReference, this.internFactory);
           } else
             return unspecialized;
@@ -3042,6 +3044,8 @@ namespace Microsoft.Cci.Immutable {
     /// It is specialized because any occurrences of the type parameters have been replaced with the corresponding type arguments from the instance.
     /// </summary>
     public SpecializedMethodReference(ITypeReference containingType, IMethodReference unspecializedVersion, IInternFactory internFactory) {
+      Contract.Requires(!(unspecializedVersion is ISpecializedMethodReference));
+
       this.containingType = containingType;
       this.unspecializedVersion = unspecializedVersion;
       this.internFactory = internFactory;
