@@ -36,16 +36,37 @@ namespace CdfgToText {
       foreach (var t in assembly.GetAllTypes()) this.Traverse(t);
     }
 
-    public override void Traverse(IMethodBody methodBody) {
-      sourceEmitterOutput.WriteLine(MemberHelper.GetMethodSignature(methodBody.MethodDefinition, NameFormattingOptions.Signature));
-      sourceEmitterOutput.WriteLine();
+    public override void TraverseChildren(ITypeDefinition typeDefinition) {
+      if (this.PrintDefinitionSourceLocations(typeDefinition))
+        this.sourceEmitterOutput.WriteLine(TypeHelper.GetTypeName(typeDefinition));
+      base.TraverseChildren(typeDefinition);
+    }
 
+    public override void TraverseChildren(ITypeDefinitionMember typeMember) {
+      if (this.PrintDefinitionSourceLocations(typeMember))
+        this.sourceEmitterOutput.WriteLine(MemberHelper.GetMemberSignature(typeMember, NameFormattingOptions.DocumentationId));
+      base.TraverseChildren(typeMember);
+    }
+
+    private bool PrintDefinitionSourceLocations(IDefinition definition) {
+      bool result = false;
+      if (this.pdbReader != null) {
+        foreach (var psLoc in this.pdbReader.GetPrimarySourceLocationsFor(definition.Locations)) {
+          this.PrintSourceLocation(psLoc);
+          result = true;
+        }
+      }
+      return result;
+    }
+
+    public override void Traverse(IMethodBody methodBody) {
+      sourceEmitterOutput.WriteLine("");
       if (this.pdbReader != null)
         PrintScopes(methodBody);
       else
         PrintLocals(methodBody.LocalVariables);
 
-      this.cdfg = ControlAndDataFlowGraph<BasicBlock<Instruction>, Instruction>.GetControlAndDataFlowGraphFor(host, methodBody);
+      this.cdfg = ControlAndDataFlowGraph<BasicBlock<Instruction>, Instruction>.GetControlAndDataFlowGraphFor(host, methodBody, this.pdbReader);
       var numberOfBlocks = this.cdfg.BlockFor.Count;
 
       foreach (var block in this.cdfg.AllBlocks) {
@@ -122,7 +143,7 @@ namespace CdfgToText {
     }
 
     private void PrintFlowFrom(Instruction instruction) {
-      if (instruction.Operation == Dummy.Operation)
+      if (instruction.Operation is Dummy)
         sourceEmitterOutput.Write("stack");
       else
         sourceEmitterOutput.Write(instruction.Operation.Offset.ToString("x4"));

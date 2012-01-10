@@ -13,8 +13,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics.Contracts;
 
-//^ using Microsoft.Contracts;
-
 namespace Microsoft.Cci.MutableCodeModel {
 
   /// <summary>
@@ -333,7 +331,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool IsMapped {
-      get { return this.fieldMapping != Dummy.SectionBlock; }
+      get { return !(this.fieldMapping is Dummy); }
     }
 
     /// <summary>
@@ -341,7 +339,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool IsMarshalledExplicitly {
-      get { return this.marshallingInformation != Dummy.MarshallingInformation; }
+      get { return !(this.marshallingInformation is Dummy); }
     }
 
     /// <summary>
@@ -753,7 +751,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public GlobalFieldDefinition() {
-      this.containingNamespace = Dummy.RootUnitNamespace;
+      this.containingNamespace = Dummy.NamespaceDefinition;
     }
 
     /// <summary>
@@ -790,6 +788,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.ContainingNamespace; }
     }
 
+    IName IContainerMember<INamespaceDefinition>.Name {
+      get { return this.Name; }
+    }
+
     #endregion
 
     #region IScopeMember<IScope<INamespaceMember>> Members
@@ -810,7 +812,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public GlobalMethodDefinition() {
-      this.containingNamespace = Dummy.RootUnitNamespace;
+      this.containingNamespace = Dummy.NamespaceDefinition;
     }
 
     /// <summary>
@@ -845,6 +847,10 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     INamespaceDefinition IContainerMember<INamespaceDefinition>.Container {
       get { return this.ContainingNamespace; }
+    }
+
+    IName IContainerMember<INamespaceDefinition>.Name {
+      get { return this.Name; }
     }
 
     #endregion
@@ -938,11 +944,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// The definition of a type parameter of a generic method.
     /// </summary>
-    //^ [NotDelayed]
     public GenericMethodParameter() {
-      this.definingMethod = Dummy.Method;
-      //^ base;
-      //^ assume this.definingMethod.IsGeneric; //TODO: define a dummy generic method
+      this.definingMethod = Dummy.MethodDefinition;
     }
 
     /// <summary>
@@ -963,14 +966,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       get {
         return this.definingMethod;
       }
-      set
-        //^ requires value.IsGeneric;
-      {
+      set {
         this.definingMethod = value;
       }
     }
     IMethodDefinition definingMethod;
-    //^ invariant definingMethod.IsGeneric;
 
     /// <summary>
     /// Calls visitor.Visit(IGenericMethodParameter).
@@ -1015,7 +1015,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.isPinned = false;
       this.isReference = false;
       this.locations = null;
-      this.methodDefinition = Dummy.Method;
+      this.methodDefinition = Dummy.MethodDefinition;
       this.name = Dummy.Name;
       this.type = Dummy.TypeReference;
     }
@@ -1080,7 +1080,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool IsConstant {
-      get { return this.compileTimeValue != Dummy.Constant; }
+      get { return !(this.compileTimeValue is Dummy); }
     }
 
     /// <summary>
@@ -1192,7 +1192,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.localsAreZeroed = true;
       this.localVariables = null;
       this.maxStack = 0;
-      this.methodDefinition = Dummy.Method;
+      this.methodDefinition = Dummy.MethodDefinition;
       this.operationExceptionInformation = null;
       this.operations = null;
       this.privateHelperTypes = null;
@@ -2515,7 +2515,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public ParameterDefinition() {
       this.attributes = null;
-      this.containingSignature = Dummy.Method;
+      this.containingSignature = Dummy.Signature;
       this.customModifiers = null;
       this.defaultValue = Dummy.Constant;
       this.index = 0;
@@ -2627,7 +2627,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool HasDefaultValue {
-      get { return this.defaultValue != Dummy.Constant; }
+      get { return !(this.defaultValue is Dummy); }
     }
 
     /// <summary>
@@ -2673,7 +2673,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool IsMarshalledExplicitly {
-      get { return this.marshallingInformation != Dummy.MarshallingInformation; }
+      get { return (this.marshallingInformation is Dummy); }
     }
 
     /// <summary>
@@ -2717,7 +2717,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool IsParameterArray {
-      get { return this.paramArrayElementType != Dummy.TypeReference; }
+      get { return !(this.paramArrayElementType is Dummy); }
     }
 
     /// <summary>
@@ -2825,7 +2825,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public ParameterTypeInformation() {
-      this.containingSignature = Dummy.Method;
+      this.containingSignature = Dummy.Signature;
       this.customModifiers = null;
       this.index = 0;
       this.isByReference = false;
@@ -3029,7 +3029,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool HasDefaultValue {
-      get { return this.defaultValue != Dummy.Constant; }
+      get { return !(this.defaultValue is Dummy); }
     }
 
     /// <summary>
@@ -3392,7 +3392,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     internal TypeDefinitionMember() {
       this.attributes = null;
-      this.containingTypeDefinition = Dummy.Type;
+      this.containingTypeDefinition = Dummy.TypeDefinition;
       this.locations = null;
       this.name = Dummy.Name;
       this.flags = 0;
@@ -3504,7 +3504,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     ITypeReference ITypeMemberReference.ContainingType {
       get {
-        if (this.ContainingTypeDefinition == Dummy.Type) return Dummy.TypeReference;
+        if (this.ContainingTypeDefinition is Dummy) return Dummy.TypeReference;
         return this.ContainingTypeDefinition;
       }
     }

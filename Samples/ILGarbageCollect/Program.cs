@@ -588,7 +588,7 @@ namespace ILGarbageCollect {
         if (File.Exists(pathAsDLL)) {
           IAssembly localVersion = base.LoadUnitFrom(pathAsDLL) as IAssembly;
 
-          if (localVersion != null && localVersion != Dummy.Assembly) {
+          if (localVersion != null && !(localVersion is Dummy)) {
 
             //Console.WriteLine("!!!Loading local version of DLL {0}", localVersion); 
             return localVersion;

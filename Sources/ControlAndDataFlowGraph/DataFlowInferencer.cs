@@ -363,22 +363,16 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
           break;
 
         case OperationCode.Call:
+        case OperationCode.Callvirt:
           var signature = instruction.Operation.Value as ISignature;
           Contract.Assume(signature != null); //This is an informally specified property of the Metadata model.
-          if (!signature.IsStatic) instruction.Operand1 = this.stack.Pop();
           InitializeArgumentsAndPushReturnResult(instruction, this.stack, signature);
           break;
 
-        case OperationCode.Callvirt:
-          instruction.Operand1 = this.stack.Pop();
-          Contract.Assume(instruction.Operation.Value is ISignature); //This is an informally specified property of the Metadata model.
-          InitializeArgumentsAndPushReturnResult(instruction, this.stack, (ISignature)instruction.Operation.Value);
-          break;
-
         case OperationCode.Calli:
-          Contract.Assume(instruction.Operation.Value is ISignature); //This is an informally specified property of the Metadata model.
-          InitializeArgumentsAndPushReturnResult(instruction, this.stack, (ISignature)instruction.Operation.Value);
-          instruction.Operand1 = this.stack.Pop();
+          var funcPointer = instruction.Operation.Value as IFunctionPointerTypeReference;
+          Contract.Assume(funcPointer != null); //This is an informally specified property of the Metadata model.
+          InitializeArgumentsAndPushReturnResult(instruction, this.stack, funcPointer);
           break;
 
         case OperationCode.Cpobj:
@@ -445,7 +439,12 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
 
         case OperationCode.Newobj:
           Contract.Assume(instruction.Operation.Value is ISignature); //This is an informally specified property of the Metadata model.
-          InitializeArgumentsAndPushReturnResult(instruction, this.stack, (ISignature)instruction.Operation.Value); //won't push anything
+          signature = (ISignature)instruction.Operation.Value;
+          var numArguments = (int)IteratorHelper.EnumerableCount(signature.Parameters);
+          var arguments = new Instruction[numArguments];
+          instruction.Operand2 = arguments;
+          for (var i = numArguments-1; i >= 0; i--)
+            arguments[i] = stack.Pop();
           this.stack.Push(instruction);
           break;
 
@@ -460,12 +459,31 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
       Contract.Requires(instruction != null);
       Contract.Requires(stack != null);
       Contract.Requires(signature != null);
+
       var numArguments = IteratorHelper.EnumerableCount(signature.Parameters);
       var arguments = new Instruction[numArguments];
       instruction.Operand2 = arguments;
       for (var i = numArguments; i > 0; i--)
         arguments[i-1] = stack.Pop();
+      if (!signature.IsStatic)
+        instruction.Operand1 = stack.Pop();
       if (signature.Type.TypeCode != PrimitiveTypeCode.Void)
+        stack.Push(instruction);
+    }
+
+    private static void InitializeArgumentsAndPushReturnResult(Instruction instruction, Stack<Instruction> stack, IFunctionPointerTypeReference funcPointer) {
+      Contract.Requires(instruction != null);
+      Contract.Requires(stack != null);
+      Contract.Requires(funcPointer != null);
+
+      instruction.Operand1 = stack.Pop(); //the function pointer
+      var numArguments = IteratorHelper.EnumerableCount(funcPointer.Parameters);
+      if (!funcPointer.IsStatic) numArguments++;
+      var arguments = new Instruction[numArguments];
+      instruction.Operand2 = arguments;
+      for (var i = numArguments; i > 0; i--)
+        arguments[i-1] = stack.Pop();
+      if (funcPointer.Type.TypeCode != PrimitiveTypeCode.Void)
         stack.Push(instruction);
     }
 

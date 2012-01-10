@@ -116,8 +116,11 @@ namespace Microsoft.Cci {
           if (mdLocation != null) {
             PdbTokenLine lineInfo;
             if (!this.tokenToSourceMapping.TryGetValue(mdLocation.Definition.TokenValue, out lineInfo)) yield break;
-            PdbSourceDocument psDoc = this.GetPrimarySourceDocumentFor(lineInfo.sourceFile);
-            yield return new PdbSourceLineLocation(psDoc, (int)lineInfo.line, (int)lineInfo.column, (int)lineInfo.endLine, (int)lineInfo.endColumn);
+            do {
+              PdbSourceDocument psDoc = this.GetPrimarySourceDocumentFor(lineInfo.sourceFile);
+              yield return new PdbSourceLineLocation(psDoc, (int)lineInfo.line, (int)lineInfo.column, (int)lineInfo.endLine, (int)lineInfo.endColumn);
+              lineInfo = lineInfo.nextLine;
+            } while (lineInfo != null);
           }
         }
       }

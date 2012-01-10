@@ -490,7 +490,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.Host == null) return Dummy.Assembly;
       var unifiedIdentity = this.UnifiedAssemblyIdentity;
       var result = this.Host.FindAssembly(unifiedIdentity);
-      if (result != Dummy.Assembly) return result;
+      if (!(result is Dummy)) return result;
       if (this.ReferringUnit != null && (String.IsNullOrEmpty(unifiedIdentity.Location) || unifiedIdentity.Location.Equals("unknown://location")))
         unifiedIdentity = this.Host.ProbeAssemblyReference(this.ReferringUnit, unifiedIdentity);
       return this.Host.LoadAssembly(unifiedIdentity);
@@ -1440,7 +1440,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.Host == null) return Dummy.Module;
       var identity = this.ModuleIdentity;
       var result = this.Host.FindModule(identity);
-      if (result != Dummy.Module) return result;
+      if (!(result is Dummy)) return result;
       if (identity.Location == null && this.ReferringUnit != null)
         identity = this.Host.ProbeModuleReference(this.ReferringUnit, identity);
       return this.Host.LoadModule(identity);

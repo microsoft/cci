@@ -26,7 +26,7 @@ namespace ILMutator {
 
       using (var host = new PeReader.DefaultHost()) {
         IModule/*?*/ module = host.LoadUnitFrom(args[0]) as IModule;
-        if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
+        if (module == null || module is Dummy) {
           Console.WriteLine(args[0] + " is not a PE file containing a CLR assembly, or an error occurred when loading it.");
           return 1;
         }
@@ -51,7 +51,7 @@ namespace ILMutator {
             newName = args[1];
           } else {
             var loc = module.Location;
-            var path = Path.GetDirectoryName(loc);
+            var path = Path.GetDirectoryName(loc)??"";
             var fileName = Path.GetFileNameWithoutExtension(loc);
             var ext = Path.GetExtension(loc);
             newName = Path.Combine(path, fileName + "1" + ext);

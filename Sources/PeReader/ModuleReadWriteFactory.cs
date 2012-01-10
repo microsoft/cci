@@ -130,8 +130,6 @@ namespace Microsoft.Cci {
       get {
         if (this.coreAssembly == null)
           this.coreAssembly = this.LookupAssembly(null, this.metadataReaderHost.CoreAssemblySymbolicIdentity) as Assembly;
-        if (this.coreAssembly == Dummy.Assembly)
-          return null;
         return this.coreAssembly;
       }
     }

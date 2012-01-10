@@ -415,7 +415,9 @@ namespace Microsoft.Cci {
     public AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
       Contract.Requires(referringUnit != null);
       Contract.Requires(referencedAssembly != null);
+      Contract.Requires(referringUnit.Location.Length > 0);
       Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
+
       throw new NotImplementedException();
     }
 
@@ -472,6 +474,7 @@ namespace Microsoft.Cci {
   /// Implemented by types whose instances belong to a specific type of container (see IContainer&lt;MemberType&gt;).
   /// </summary>
   /// <typeparam name="ContainerType">The type of the container that has members of this type.</typeparam>
+  [ContractClass(typeof(IContainerMemberContract<>))]
   public interface IContainerMember<ContainerType> : INamedEntity {
     /// <summary>
     /// The container instance with a Members collection that includes this instance.
@@ -483,6 +486,38 @@ namespace Microsoft.Cci {
     /// </summary>
     new IName Name { get; }
   }
+
+  #region IContainerMember<ContainerType> contract binding
+  [ContractClassFor(typeof(IContainerMember<>))]
+  abstract class IContainerMemberContract<ContainerType> : IContainerMember<ContainerType> {
+    #region IContainerMember<ContainerType> Members
+
+    public ContainerType Container {
+      get {
+        Contract.Ensures(Contract.Result<ContainerType>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    IName IContainerMember<ContainerType>.Name {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+
+    #region INamedEntity Members
+
+    IName INamedEntity.Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// An object corresponding to a metadata entity such as a type or a field.
@@ -816,6 +851,7 @@ namespace Microsoft.Cci {
   /// The association is based on the identities of the entities and the factory does not retain
   /// references to the given metadata model objects.
   /// </summary>
+  [ContractClass(typeof(IInternFactoryContract))]
   public interface IInternFactory {
     /// <summary>
     /// Returns the interned key corresponding to given assembly. The assembly is unified using ICompilationHostEnvironment.UnifyAssembly.
@@ -897,6 +933,119 @@ namespace Microsoft.Cci {
     /// </summary>
     uint GetTypeReferenceInternedKey(ITypeReference typeReference);
   }
+
+  #region IInternFactory contract binding
+  [ContractClassFor(typeof(IInternFactory))]
+  abstract class IInternFactoryContract : IInternFactory {
+    #region IInternFactory Members
+
+    public uint GetAssemblyInternedKey(AssemblyIdentity assemblyIdentity) {
+      Contract.Requires(assemblyIdentity != null);
+      throw new NotImplementedException();
+    }
+
+    public uint GetFieldInternedKey(IFieldReference fieldReference) {
+      Contract.Requires(fieldReference != null);
+      Contract.Requires(!(fieldReference is Dummy));
+      throw new NotImplementedException();
+    }
+
+    public uint GetMethodInternedKey(IMethodReference methodReference) {
+      Contract.Requires(methodReference != null);
+      Contract.Requires(!(methodReference is Dummy));
+      throw new NotImplementedException();
+    }
+
+    public uint GetModuleInternedKey(ModuleIdentity moduleIdentity) {
+      Contract.Requires(moduleIdentity != null);
+      throw new NotImplementedException();
+    }
+
+    public uint GetNamespaceTypeReferenceInternedKey(IUnitNamespaceReference containingUnitNamespace, IName typeName, uint genericParameterCount) {
+      Contract.Requires(containingUnitNamespace != null);
+      Contract.Requires(!(containingUnitNamespace is Dummy));
+      Contract.Requires(typeName != null);
+      throw new NotImplementedException();
+    }
+
+    public uint GetNestedTypeReferenceInternedKey(ITypeReference containingTypeReference, IName typeName, uint genericParameterCount) {
+      Contract.Requires(containingTypeReference != null);
+      Contract.Requires(!(containingTypeReference is Dummy));
+      Contract.Requires(typeName != null);
+      throw new NotImplementedException();
+    }
+
+    public uint GetVectorTypeReferenceInternedKey(ITypeReference elementTypeReference) {
+      Contract.Requires(elementTypeReference != null);
+      Contract.Requires(!(elementTypeReference is Dummy));
+      throw new NotImplementedException();
+    }
+
+    public uint GetMatrixTypeReferenceInternedKey(ITypeReference elementTypeReference, int rank, IEnumerable<ulong> sizes, IEnumerable<int> lowerBounds) {
+      Contract.Requires(elementTypeReference != null);
+      Contract.Requires(!(elementTypeReference is Dummy));
+      Contract.Requires(sizes != null);
+      Contract.Requires(lowerBounds != null);
+      throw new NotImplementedException();
+    }
+
+    public uint GetGenericTypeInstanceReferenceInternedKey(ITypeReference genericTypeReference, IEnumerable<ITypeReference> genericArguments) {
+      Contract.Requires(genericTypeReference != null);
+      Contract.Requires(!(genericTypeReference is Dummy));
+      Contract.Requires(genericArguments != null);
+      throw new NotImplementedException();
+    }
+
+    public uint GetPointerTypeReferenceInternedKey(ITypeReference targetTypeReference) {
+      Contract.Requires(targetTypeReference != null);
+      Contract.Requires(!(targetTypeReference is Dummy));
+      throw new NotImplementedException();
+    }
+
+    public uint GetManagedPointerTypeReferenceInternedKey(ITypeReference targetTypeReferece) {
+      Contract.Requires(targetTypeReferece != null);
+      Contract.Requires(!(targetTypeReferece is Dummy));
+      throw new NotImplementedException();
+    }
+
+    public uint GetGenericTypeParameterReferenceInternedKey(ITypeReference definingTypeReference, int index) {
+      Contract.Requires(definingTypeReference != null);
+      Contract.Requires(!(definingTypeReference is Dummy));
+      throw new NotImplementedException();
+    }
+
+    public uint GetGenericMethodParameterReferenceInternedKey(IMethodReference defininingMethodReference, int index) {
+      Contract.Requires(defininingMethodReference != null);
+      Contract.Requires(!(defininingMethodReference is Dummy));
+      throw new NotImplementedException();
+    }
+
+    public uint GetFunctionPointerTypeReferenceInternedKey(CallingConvention callingConvention, IEnumerable<IParameterTypeInformation> parameters, IEnumerable<IParameterTypeInformation> extraArgumentTypes, IEnumerable<ICustomModifier> returnValueCustomModifiers, bool returnValueIsByRef, ITypeReference returnType) {
+      Contract.Requires(parameters != null);
+      Contract.Requires(extraArgumentTypes != null);
+      Contract.Requires(returnValueCustomModifiers != null);
+      Contract.Requires(returnType != null);
+      Contract.Requires(!(returnType is Dummy));
+      throw new NotImplementedException();
+    }
+
+    public uint GetModifiedTypeReferenceInternedKey(ITypeReference typeReference, IEnumerable<ICustomModifier> customModifiers) {
+      Contract.Requires(typeReference != null);
+      Contract.Requires(!(typeReference is Dummy));
+      Contract.Requires(customModifiers != null);
+      throw new NotImplementedException();
+    }
+
+    public uint GetTypeReferenceInternedKey(ITypeReference typeReference) {
+      Contract.Requires(typeReference != null);
+      Contract.Requires(!(typeReference is Dummy));
+      throw new NotImplementedException();
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// Implemented by classes that visit nodes of object graphs via a double dispatch mechanism, usually performing some computation of a subset of the nodes in the graph.

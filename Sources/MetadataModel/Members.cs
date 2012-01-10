@@ -286,6 +286,7 @@ namespace Microsoft.Cci {
     public IMarshallingInformation MarshallingInformation {
       get {
         Contract.Requires(this.IsMarshalledExplicitly);
+        Contract.Ensures(Contract.Result<IMarshallingInformation>() != null);
         throw new NotImplementedException(); 
       }
     }
@@ -424,8 +425,8 @@ namespace Microsoft.Cci {
     public IEnumerable<ICustomModifier> CustomModifiers {
       get {
         Contract.Requires(this.IsModified);
-        Contract.Ensures(Contract.Result<IEnumerable<IFieldReferenceContract>>() != null);
-        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<IFieldReferenceContract>>(), x => x != null));
+        Contract.Ensures(Contract.Result<IEnumerable<ICustomModifier>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ICustomModifier>>(), x => x != null));
         throw new NotImplementedException();
       }
     }

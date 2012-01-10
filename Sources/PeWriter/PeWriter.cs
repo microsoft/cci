@@ -2215,7 +2215,7 @@ namespace Microsoft.Cci {
     List<DeclSecurityRow> declSecurityTable = new List<DeclSecurityRow>();
 
     private void PopulateEventMapTableRows() {
-      ITypeDefinition lastParent = Dummy.Type;
+      ITypeDefinition lastParent = Dummy.TypeDefinition;
       uint eventIndex = 0;
       foreach (IEventDefinition eventDef in this.eventDefList) {
         eventIndex++;
@@ -2481,7 +2481,7 @@ namespace Microsoft.Cci {
           if (nsTypeDef != null)
             r.Attributes = nsTypeDef.AttributesFor(interfaceRef);
           else
-            r.Attributes = Dummy.Type.Attributes;
+            r.Attributes = Dummy.TypeDefinition.Attributes;
           this.interfaceImplTable.Add(r);
         }
       }
@@ -2493,7 +2493,7 @@ namespace Microsoft.Cci {
       public uint Interface;
 
       public IEnumerable<ICustomAttribute> Attributes { get; set; }
-      public IEnumerable<ILocation> Locations { get { return Dummy.Type.Locations; } }
+      public IEnumerable<ILocation> Locations { get { return Dummy.TypeDefinition.Locations; } }
       public void Dispatch(IMetadataVisitor visitor) { }
       public void DispatchAsReference(IMetadataVisitor visitor) { }
     }
@@ -2686,7 +2686,7 @@ namespace Microsoft.Cci {
     List<ParamRow> paramTable = new List<ParamRow>();
 
     private void PopulatePropertyMapTableRows() {
-      ITypeDefinition lastParent = Dummy.Type;
+      ITypeDefinition lastParent = Dummy.TypeDefinition;
       uint propertyIndex = 0;
       foreach (IPropertyDefinition propertyDef in this.propertyDefList) {
         propertyIndex++;

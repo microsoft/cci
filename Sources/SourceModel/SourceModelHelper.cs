@@ -14,8 +14,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Globalization;
 
-//^ using Microsoft.Contracts;
-
 namespace Microsoft.Cci {
   /// <summary>
   /// A provider that aggregates a set of providers in order to
@@ -116,7 +114,7 @@ namespace Microsoft.Cci {
 
     #region Helper methods
 
-    private IMethodDefinition lastUsedMethod = Dummy.Method;
+    private IMethodDefinition lastUsedMethod = Dummy.MethodDefinition;
     private ISourceLocationProvider lastUsedProvider = default(ISourceLocationProvider);
     private ISourceLocationProvider/*?*/ GetProvider(IMethodDefinition methodDefinition) {
       if (methodDefinition == lastUsedMethod) return lastUsedProvider;
@@ -278,7 +276,7 @@ namespace Microsoft.Cci {
 
     #region Helper methods
 
-    private IMethodDefinition lastUsedMethod = Dummy.Method;
+    private IMethodDefinition lastUsedMethod = Dummy.MethodDefinition;
     private ILocalScopeProvider lastUsedProvider = null;
     private ILocalScopeProvider/*?*/ GetProvider(IMethodDefinition methodDefinition) {
       if (methodDefinition == lastUsedMethod) return lastUsedProvider;

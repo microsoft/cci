@@ -28,7 +28,14 @@ namespace Microsoft.Cci {
     /// <summary>
     /// An empty enumerable of element type T.
     /// </summary>
-    public static IEnumerable<T> Empty = new EmptyEnumerable();
+    public static IEnumerable<T> Empty {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<T>>() != null);
+        Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<T>>(), x => x != null));
+        return empty;
+      }
+    }
+    static IEnumerable<T> empty = new EmptyEnumerable();
 
     sealed class EmptyEnumerable : IEnumerable<T>, IEnumerator<T> {
       #region IEnumerable<T> Members
@@ -173,6 +180,8 @@ namespace Microsoft.Cci {
     /// <typeparam name="T">The element type of the array.</typeparam>
     /// <param name="array">The array to wrap. May be null.</param>
     public static IEnumerable<T>/*?*/ GetReadonly<T>(T[]/*?*/ array) {
+      Contract.Ensures(array == null || Contract.Result<IEnumerable<T>>() != null);
+
       if (array == null) return null;
       if (array.Length == 1) return IteratorHelper.GetSingletonEnumerable(array[0]);
       return new ReaonlyOnlyArrayWrapper<T>(array);
@@ -3726,6 +3735,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Information that describes how a method from the underlying Platform is to be invoked.
   /// </summary>
+  [ContractClass(typeof(IPlatformInvokeInformationContract))]
   public interface IPlatformInvokeInformation {
     /// <summary>
     /// Name of the method/field providing the implementation.
@@ -3768,6 +3778,54 @@ namespace Microsoft.Cci {
     bool? ThrowExceptionForUnmappableChar { get; }
 
   }
+
+  #region IPlatformInvokeInformation contract binding
+  [ContractClassFor(typeof(IPlatformInvokeInformation))]
+  abstract class IPlatformInvokeInformationContract : IPlatformInvokeInformation {
+    #region IPlatformInvokeInformation Members
+
+    public IName ImportName {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IModuleReference ImportModule {
+      get {
+        Contract.Ensures(Contract.Result<IModuleReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public StringFormatKind StringFormat {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool NoMangle {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PInvokeCallingConvention PInvokeCallingConvention {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool SupportsLastError {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool? UseBestFit {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool? ThrowExceptionForUnmappableChar {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// A resource file formatted according to Win32 API conventions and typically obtained from a Portable Executable (PE) file.
@@ -3844,6 +3902,7 @@ namespace Microsoft.Cci {
   /// is written out unchanged by metadata writers. Presumably it is meaningful in some way and is 
   /// thus exposed for use by other tools.
   /// </summary>
+  [ContractClass(typeof(IPESectionContract))]
   public interface IPESection {
 
     /// <summary>
@@ -3881,6 +3940,46 @@ namespace Microsoft.Cci {
 
 
   }
+
+  #region IPESection contract binding
+  [ContractClassFor(typeof(IPESection))]
+  abstract class IPESectionContract : IPESection {
+    #region IPESection Members
+
+    public IName SectionName {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public PESectionCharacteristics Characteristics {
+      get { throw new NotImplementedException(); }
+    }
+
+    public int VirtualAddress {
+      get { throw new NotImplementedException(); }
+    }
+
+    public int VirtualSize {
+      get { throw new NotImplementedException(); }
+    }
+
+    public int SizeOfRawData {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<byte> Rawdata {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<byte>>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// A set of bits that describes the purpose of a section and how it behaves when loaded.

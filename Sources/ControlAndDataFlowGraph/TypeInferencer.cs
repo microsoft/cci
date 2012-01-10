@@ -111,7 +111,7 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
       for (int i = 0, n = this.stack.Top; i <= n; i++) {
         var producer = this.stack.Peek(i);
         var consumer = successor.OperandStack[i];
-        if (consumer.Type == Dummy.Type)
+        if (consumer.Type is Dummy)
           consumer.Type = producer.Type;
         else
           consumer.Type = TypeHelper.MergedType(consumer.Type, producer.Type);
@@ -256,17 +256,29 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
           instruction.Type = this.platformType.SystemVoid;
           break;
         case OperationCode.Call:
-        case OperationCode.Calli:
         case OperationCode.Callvirt:
           var signature = instruction.Operation.Value as ISignature;
           Contract.Assume(signature != null); //This is an informally specified property of the Metadata model.
-          if (instruction.Operation.OperationCode != OperationCode.Call || !signature.IsStatic)
-            this.stack.Pop();
           var numArguments = IteratorHelper.EnumerableCount(signature.Parameters);
           for (var i = numArguments; i > 0; i--)
             this.stack.Pop();
+          if (!signature.IsStatic)
+            this.stack.Pop();
           instruction.Type = signature.Type;
           if (signature.Type.TypeCode != PrimitiveTypeCode.Void)
+            this.stack.Push(instruction);
+          break;
+        case OperationCode.Calli:
+          var funcPointer = instruction.Operation.Value as IFunctionPointerTypeReference;
+          Contract.Assume(funcPointer != null); //This is an informally specified property of the Metadata model.
+          this.stack.Pop(); //The function pointer
+          numArguments = IteratorHelper.EnumerableCount(funcPointer.Parameters);
+          for (var i = numArguments; i > 0; i--)
+            this.stack.Pop();
+          if (!funcPointer.IsStatic)
+            this.stack.Pop();
+          instruction.Type = funcPointer.Type;
+          if (funcPointer.Type.TypeCode != PrimitiveTypeCode.Void)
             this.stack.Push(instruction);
           break;
         case OperationCode.Castclass:
@@ -665,7 +677,7 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
         case OperationCode.Newarr:
           this.stack.Pop();
           Contract.Assume(instruction.Operation.Value is ITypeReference); //This is an informally specified property of the Metadata model.
-          instruction.Type = Vector.GetVector((ITypeReference)instruction.Operation.Value, this.internFactory);
+          instruction.Type = (ITypeReference)instruction.Operation.Value;
           this.stack.Push(instruction);
           break;
         case OperationCode.Newobj:

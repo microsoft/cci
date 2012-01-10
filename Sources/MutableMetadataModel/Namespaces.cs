@@ -82,7 +82,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     #endregion
 
-    #region IContainerMember<INamespace> Members
+    #region IContainerMember<INamespaceDefinition> Members
 
     /// <summary>
     /// The container instance with a Members collection that includes this instance.
@@ -90,6 +90,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public INamespaceDefinition Container {
       get { return this.ContainingUnitNamespace; }
+    }
+
+    IName IContainerMember<INamespaceDefinition>.Name {
+      get { return this.Name; }
     }
 
     #endregion

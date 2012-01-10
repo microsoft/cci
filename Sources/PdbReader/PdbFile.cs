@@ -440,7 +440,13 @@ namespace Microsoft.Cci.Pdb {
                 bits.ReadUInt32(out column);
                 bits.ReadUInt32(out endLine);
                 bits.ReadUInt32(out endColumn);
-                tokenToSourceMapping.Add(token, new PdbTokenLine(token, file_id, line, column, endLine, endColumn));
+                PdbTokenLine tokenLine;
+                if (!tokenToSourceMapping.TryGetValue(token, out tokenLine))
+                  tokenToSourceMapping.Add(token, new PdbTokenLine(token, file_id, line, column, endLine, endColumn));
+                else {
+                  while (tokenLine.nextLine != null) tokenLine = tokenLine.nextLine;
+                  tokenLine.nextLine = new PdbTokenLine(token, file_id, line, column, endLine, endColumn);
+                }
               }
               bits.Position = stop;
               break;

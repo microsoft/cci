@@ -1935,7 +1935,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       internal IFieldDefinition Substitute(IFieldDefinition fieldDefinition) {
         if (fieldDefinition is Dummy) return fieldDefinition;
         var mutableCopy = (FieldDefinition)this.DefinitionCache[fieldDefinition];
-        this.Substitute(mutableCopy);
+        if (!(mutableCopy is IGlobalFieldDefinition)) this.Substitute(mutableCopy);
         return mutableCopy;
       }
 
@@ -2042,6 +2042,20 @@ namespace Microsoft.Cci.MutableCodeModel {
         return mutableCopy;
       }
 
+      internal IGlobalFieldDefinition Substitute(IGlobalFieldDefinition globalFieldDefinition) {
+        if (globalFieldDefinition is Dummy) return globalFieldDefinition;
+        var mutableCopy = (GlobalFieldDefinition)this.DefinitionCache[globalFieldDefinition];
+        this.Substitute(mutableCopy);
+        return mutableCopy;
+      }
+
+      internal IGlobalMethodDefinition Substitute(IGlobalMethodDefinition globalMethodDefinition) {
+        if (globalMethodDefinition is Dummy) return globalMethodDefinition;
+        var mutableCopy = (GlobalMethodDefinition)this.DefinitionCache[globalMethodDefinition];
+        this.Substitute(mutableCopy);
+        return mutableCopy;
+      }
+
       internal ILocalDefinition Substitute(ILocalDefinition localDefinition) {
         if (localDefinition is Dummy) return localDefinition;
         var mutableCopy = this.shallowCopier.Copy(localDefinition);
@@ -2134,7 +2148,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       internal IMethodDefinition Substitute(IMethodDefinition method) {
         if (method is Dummy) return method;
         var mutableCopy = (MethodDefinition)this.DefinitionCache[method];
-        this.Substitute(mutableCopy);
+        if (!(mutableCopy is IGlobalMethodDefinition)) this.Substitute(mutableCopy);
         return mutableCopy;
       }
 
@@ -2477,6 +2491,20 @@ namespace Microsoft.Cci.MutableCodeModel {
         mutableCopy.Type = this.SubstituteViaDispatcher(mutableCopy.Type);
       }
 
+      private void Substitute(GlobalFieldDefinition mutableCopy) {
+        this.Substitute((FieldDefinition)mutableCopy);
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.ContainingNamespace, out copy))
+          mutableCopy.ContainingNamespace = (INamespaceDefinition)copy;
+      }
+
+      private void Substitute(GlobalMethodDefinition mutableCopy) {
+        this.Substitute((MethodDefinition)mutableCopy);
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.ContainingNamespace, out copy))
+          mutableCopy.ContainingNamespace = (INamespaceDefinition)copy;
+      }
+
       private void Substitute(FieldReference mutableCopy) {
         this.SubstituteElements(mutableCopy.Attributes);
         mutableCopy.ContainingType = this.SubstituteViaDispatcher(mutableCopy.ContainingType);
@@ -2540,7 +2568,10 @@ namespace Microsoft.Cci.MutableCodeModel {
         mutableCopy.PlatformType = this.host.PlatformType;
         mutableCopy.UnitNamespaceRoot = this.Substitute(mutableCopy.UnitNamespaceRoot);
         var allTypes = mutableCopy.AllTypes;
-        for (int i = 0, n = allTypes.Count; i < n; i++) {
+        var n = allTypes.Count;
+        INamedTypeDefinition moduleType = null;
+        if (n > 0) moduleType = allTypes[0];
+        for (int i = 0; i < n; i++) {
           var type = allTypes[i];
           object copy;
           if (this.DefinitionCache.TryGetValue(type, out copy))
@@ -2548,10 +2579,11 @@ namespace Microsoft.Cci.MutableCodeModel {
           else {
             //Dealing with a type that cannot be reached via UnitNamespaceRoot. Typically this is the <Module> type.
             var mutableType = this.shallowCopier.Copy(type);
-            this.Substitute(mutableType);
+            if (i != 0) this.Substitute(mutableType);
             allTypes[i] = mutableType;
           }
         }
+        if (moduleType != null) this.Substitute(moduleType); //This will not have been visited via Substitute(mutableCopy.UnitNamespaceRoot);
         var typeReferences = mutableCopy.TypeReferences;
         if (typeReferences != null) {
           for (int i = 0; i < typeReferences.Count; i++) {
@@ -4853,7 +4885,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="assemblyReference">The assembly reference.</param>
     /// <returns></returns>
     protected virtual AssemblyReference DeepCopy(AssemblyReference assemblyReference) {
-      if (assemblyReference.ResolvedAssembly != Dummy.Assembly) { //TODO: make AssemblyReference smart enough to resolve itself.
+      if (!(assemblyReference.ResolvedAssembly is Dummy)) { //TODO: make AssemblyReference smart enough to resolve itself.
         object/*?*/ mutatedResolvedAssembly = null;
         if (this.cache.TryGetValue(assemblyReference.ResolvedAssembly, out mutatedResolvedAssembly)) {
           assemblyReference.ResolvedAssembly = (IAssembly)mutatedResolvedAssembly;
@@ -5186,7 +5218,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.cache.TryGetValue(fieldReference, out copy)) {
         return (IFieldReference)copy;
       }
-      if (fieldReference == Dummy.FieldReference || fieldReference == Dummy.Field) return Dummy.FieldReference;
+      if (fieldReference is Dummy) return Dummy.FieldReference;
       ISpecializedFieldReference/*?*/ specializedFieldReference = fieldReference as ISpecializedFieldReference;
       if (specializedFieldReference != null)
         return this.DeepCopy(this.GetMutableShallowCopy(specializedFieldReference));
@@ -5297,7 +5329,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.cache.TryGetValue(methodReference, out cachedValue)) {
         return (IMethodReference)cachedValue;
       }
-      if (methodReference == Dummy.MethodReference || methodReference == Dummy.Method) return Dummy.MethodReference;
+      if (methodReference is Dummy) return Dummy.MethodReference;
       ISpecializedMethodReference/*?*/ specializedMethodReference = methodReference as ISpecializedMethodReference;
       if (specializedMethodReference != null)
         return this.DeepCopy(this.GetMutableShallowCopy(specializedMethodReference));
@@ -5920,7 +5952,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (globalsType != null && globalsType.Name.Value == "__Globals__")
           this.DeepCopy(this.GetMutableShallowCopy(globalsType));
       }
-      if (module.EntryPoint != Dummy.MethodReference)
+      if (!(module.EntryPoint is Dummy))
         module.EntryPoint = this.DeepCopy(module.EntryPoint);
       this.VisitPrivateHelperMembers(this.flatListOfTypes);
       this.flatListOfTypes.Sort(new TypeOrderPreserver(module.AllTypes));
@@ -5937,7 +5969,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="moduleReference">The module reference.</param>
     /// <returns></returns>
     protected virtual ModuleReference DeepCopy(ModuleReference moduleReference) {
-      if (moduleReference.ResolvedModule != Dummy.Module) {
+      if (!(moduleReference.ResolvedModule is Dummy)) {
         object/*?*/ mutatedResolvedModule = null;
         if (this.cache.TryGetValue(moduleReference.ResolvedModule, out mutatedResolvedModule))
           moduleReference.ResolvedModule = (IModule)mutatedResolvedModule;

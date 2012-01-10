@@ -278,7 +278,7 @@ namespace ILGarbageCollect.Sweep {
     private static bool MethodOverridesAbstractMethod(IMethodDefinition method) {
       IMethodDefinition overridenBaseClassMethod = MemberHelper.GetImplicitlyOverriddenBaseClassMethod(method);
 
-      return (overridenBaseClassMethod != Dummy.Method && overridenBaseClassMethod.IsAbstract);
+      return (!(overridenBaseClassMethod is Dummy) && overridenBaseClassMethod.IsAbstract);
     }
 
     private static bool MethodIsPropertyAccessor(IMethodDefinition method) {

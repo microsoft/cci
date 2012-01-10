@@ -543,8 +543,9 @@ namespace ILGarbageCollect.LocalFlow {
 
           currentState.Pop(); // the method pointer
 
-          Contract.Assume(instruction.Operation.Value is ISignature); //This is an informally specified property of the Metadata model.
-          InterpretCallWithSignature(currentState, (ISignature)instruction.Operation.Value, false);
+          signature = instruction.Operation.Value as ISignature;
+          Contract.Assume(signature != null); //This is an informally specified property of the Metadata model.
+          InterpretCallWithSignature(currentState, (ISignature)instruction.Operation.Value, !signature.IsStatic);
 
           break;
 
@@ -1179,7 +1180,7 @@ namespace ILGarbageCollect.LocalFlow {
         return Top;
       }
 
-      return TypeHelper.MergedType(lhs, rhs); // Returns System.Object if can't merge
+      return TypeHelper.MergedType(lhs, rhs).ResolvedType; // Returns System.Object if can't merge
     }
 
     public ITypeDefinition GetAbstractValueForType(ITypeDefinition type) {

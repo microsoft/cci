@@ -12,7 +12,7 @@ namespace EdgeProfiler {
       }
       using (var host = new PeReader.DefaultHost()) {
         IModule/*?*/ module = host.LoadUnitFrom(args[0]) as IModule;
-        if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
+        if (module == null || module is Dummy) {
           Console.WriteLine(args[0]+" is not a PE file containing a CLR module or assembly.");
           return;
         }

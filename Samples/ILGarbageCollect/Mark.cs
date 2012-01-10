@@ -385,7 +385,7 @@ namespace ILGarbageCollect.Mark {
       foreach (IAssembly assembly in allAssemblies) {
         INamedTypeDefinition foundType = UnitHelper.FindType(host.NameTable, assembly, fullyQualifiedName, genericParameterCount);
 
-        if (foundType != Dummy.NamespaceTypeDefinition) {
+        if (!(foundType is Dummy)) {
           return foundType;
         }
       }
@@ -733,7 +733,7 @@ namespace ILGarbageCollect.Mark {
 
       foreach (IAssembly rootAssembly in wholeProgram.RootAssemblies()) {
         IMethodReference assemblyEntryPoint = rootAssembly.EntryPoint;
-        if (assemblyEntryPoint != Dummy.MethodReference) {
+        if (!(assemblyEntryPoint is Dummy)) {
           rootsEntryPoints.Add(assemblyEntryPoint);
         }
       }

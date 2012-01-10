@@ -19,6 +19,7 @@ namespace Microsoft.Cci.Pdb {
     internal uint endLine;
     internal uint endColumn;
     internal PdbSource sourceFile;
+    internal PdbTokenLine/*?*/ nextLine;
 
     internal PdbTokenLine(uint token, uint file_id, uint line, uint column, uint endLine, uint endColumn) {
       this.token = token;

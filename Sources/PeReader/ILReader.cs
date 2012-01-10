@@ -374,9 +374,9 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
         this.ReturnTypeReference = this.GetTypeReference();
       }
       if (paramCount > 0) {
-        IParameterTypeInformation[] reqModuleParamArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount);
+        IParameterTypeInformation[] reqModuleParamArr = this.GetModuleParameterTypeInformations(Dummy.Signature, paramCount);
         if (reqModuleParamArr.Length > 0) this.RequiredParameters = IteratorHelper.GetReadonly(reqModuleParamArr);
-        IParameterTypeInformation[] varArgModuleParamArr = this.GetModuleParameterTypeInformations(Dummy.Method, paramCount - reqModuleParamArr.Length);
+        IParameterTypeInformation[] varArgModuleParamArr = this.GetModuleParameterTypeInformations(Dummy.Signature, paramCount - reqModuleParamArr.Length);
         if (varArgModuleParamArr.Length > 0) this.VarArgParameters = IteratorHelper.GetReadonly(varArgModuleParamArr);
       }
     }

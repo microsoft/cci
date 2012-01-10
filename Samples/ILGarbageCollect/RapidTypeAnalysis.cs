@@ -84,10 +84,10 @@ namespace ILGarbageCollect {
       Contract.Assert(coreAssembly != null);
 
       systemObjectType = GarbageCollectHelper.CreateTypeReference(wholeProgram.Host(), coreAssembly, "System.Object").ResolvedType;
-      Contract.Assert(systemObjectType != Dummy.Type && systemObjectType != Dummy.NamespaceTypeDefinition);
+      Contract.Assert(!(systemObjectType is Dummy));
 
       systemObjectFinalizeMethod = TypeHelper.GetMethod(systemObjectType, wholeProgram.Host().NameTable.GetNameFor("Finalize"));
-      Contract.Assert(systemObjectFinalizeMethod != Dummy.Method);
+      Contract.Assert(!(systemObjectFinalizeMethod is Dummy));
 
       methodsRequiringReflectionSummary = new HashSet<IMethodDefinition>(new MethodDefinitionEqualityComparer());
 
@@ -137,10 +137,7 @@ namespace ILGarbageCollect {
 
     private void TypeUseFound(ITypeDefinition t) {
       Contract.Requires(t != null);
-      Contract.Requires(t != Dummy.Type &&
-                      t != Dummy.NamedTypeDefinition &&
-                      t != Dummy.SpecializedNestedTypeDefinition &&
-                      t != Dummy.NestedType);
+      Contract.Requires(!(t is Dummy));
 
       Contract.Requires(GarbageCollectHelper.UnspecializeAndResolveTypeReference(t) == t);
      Contract.Ensures(this.types.Contains(t));
@@ -156,7 +153,7 @@ namespace ILGarbageCollect {
 
       // add static constructor to worklist
       var cctor = GarbageCollectHelper.GetStaticConstructor(this.wholeProgram.Host().NameTable, t);
-      if (cctor != Dummy.Method) {
+      if (!(cctor is Dummy)) {
         this.AddToWorklist(GarbageCollectHelper.UnspecializeAndResolveMethodReference(cctor));
       }
     }
@@ -170,7 +167,7 @@ namespace ILGarbageCollect {
 
     private void ConstructionFound(ITypeDefinition t) {
       Contract.Requires(t != null);
-      Contract.Requires(t != Dummy.Type);
+      Contract.Requires(!(t is Dummy));
       Contract.Requires(GarbageCollectHelper.TypeDefinitionIsUnspecialized(t));
       Contract.Requires(GarbageCollectHelper.TypeIsConstructable(t));
 
@@ -210,7 +207,7 @@ namespace ILGarbageCollect {
 
     private void NoteVirtualDispatch(IMethodDefinition methodDispatchedUpon) {
       Contract.Requires(methodDispatchedUpon != null);
-      Contract.Requires(methodDispatchedUpon != Dummy.Method);
+      Contract.Requires(!(methodDispatchedUpon is Dummy));
       Contract.Requires(GarbageCollectHelper.MethodDefinitionIsUnspecialized(methodDispatchedUpon));
       Contract.Requires(methodDispatchedUpon.IsVirtual);
 
@@ -282,7 +279,7 @@ namespace ILGarbageCollect {
 
     private void AddToWorklist(IMethodDefinition m) {
       Contract.Requires(m != null);
-      Contract.Requires(m != Dummy.Method);
+      Contract.Requires(!(m is Dummy));
       Contract.Requires(!(m is IGenericMethodInstance));
       Contract.Requires(!(m is ISpecializedMethodDefinition));
       Contract.Ensures(this.worklist.Contains(m) || this.methods.Contains(m));
@@ -522,7 +519,7 @@ namespace ILGarbageCollect {
             
             IMethodDefinition defaultConstructor = TypeHelper.GetMethod(unspecializedConcreteType, wholeProgram.Host().NameTable.GetNameFor(".ctor"));
 
-            if (defaultConstructor != Dummy.Method) {
+            if (!(defaultConstructor is Dummy)) {
               // t-devinc: Add reason for this
               NotePotentialNonVirtualMethodReachedForReason(defaultConstructor, null);
             }

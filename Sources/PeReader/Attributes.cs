@@ -523,19 +523,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     readonly ushort genericParameterCount;
     internal readonly NominalTypeName ContainingTypeName;
     internal readonly IName Name;
-    internal readonly IName unmanagledTypeName;
+    internal readonly IName unmangledTypeName;
 
-    internal NestedTypeName(
-      INameTable nameTable,
-      NominalTypeName containingTypeName,
-      IName name
-    ) {
+    internal NestedTypeName(INameTable nameTable, NominalTypeName containingTypeName, IName mangledName) {
       this.ContainingTypeName = containingTypeName;
-      this.Name = name;
-      this.unmanagledTypeName = name;
+      this.Name = mangledName;
       string nameStr = null;
-      TypeCache.SplitMangledTypeName(name.Value, out nameStr, out this.genericParameterCount);
-      this.unmanagledTypeName = nameTable.GetNameFor(nameStr);
+      TypeCache.SplitMangledTypeName(mangledName.Value, out nameStr, out this.genericParameterCount);
+      this.unmangledTypeName = nameTable.GetNameFor(nameStr);
     }
 
     internal override uint GenericParameterCount {
@@ -551,7 +546,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     internal override IName UnmangledTypeName {
       get {
-        return this.unmanagledTypeName;
+        return this.unmangledTypeName;
       }
     }
 
@@ -568,7 +563,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     internal bool MangleName {
-      get { return this.Name.UniqueKey != this.unmanagledTypeName.UniqueKey; }
+      get { return this.Name.UniqueKey != this.unmangledTypeName.UniqueKey; }
     }
   }
 
@@ -671,23 +666,18 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     private readonly AssemblyIdentity AssemblyIdentity;
     private readonly bool Retargetable;
 
-    internal AssemblyQualifiedTypeName(
-      TypeName typeName,
-      AssemblyIdentity assemblyIdentity,
-      bool retargetable
-    ) {
+    internal AssemblyQualifiedTypeName(TypeName typeName, AssemblyIdentity assemblyIdentity, bool retargetable) {
       this.TypeName = typeName;
       this.AssemblyIdentity = assemblyIdentity;
       this.Retargetable = retargetable;
     }
 
-    internal override ITypeReference/*?*/ GetAsTypeReference(
-      PEFileToObjectModel peFileToObjectModel,
-      IMetadataReaderModuleReference module
-    ) {
-      foreach (AssemblyReference aref in peFileToObjectModel.GetAssemblyReferences()) {
-        if (aref.AssemblyIdentity.Equals(this.AssemblyIdentity))
-          return this.TypeName.GetAsTypeReference(peFileToObjectModel, aref);
+    internal override ITypeReference/*?*/ GetAsTypeReference(PEFileToObjectModel peFileToObjectModel, IMetadataReaderModuleReference module) {
+      foreach (var aref in peFileToObjectModel.GetAssemblyReferences()) {
+        var assemRef = aref as AssemblyReference;
+        if (assemRef == null) continue;
+        if (assemRef.AssemblyIdentity.Equals(this.AssemblyIdentity))
+          return this.TypeName.GetAsTypeReference(peFileToObjectModel, assemRef);
       }
       if (module.ContainingAssembly.AssemblyIdentity.Equals(this.AssemblyIdentity))
         return this.TypeName.GetAsTypeReference(peFileToObjectModel, module);
@@ -1403,7 +1393,7 @@ namespace Microsoft.Cci.MetadataReader {
       int i = 0;
       foreach (var parameter in attributeConstructor.Parameters) {
         var parameterType = parameter.Type;
-        if (parameterType == Dummy.TypeReference) {
+        if (parameterType is Dummy) {
           //  Error...
           return;
         }
@@ -1460,7 +1450,7 @@ namespace Microsoft.Cci.MetadataReader {
         return null;
       IMethodReference ctorReference = Dummy.MethodReference;
       ITypeDefinition attributeType = moduleTypeReference.ResolvedType;
-      if (attributeType != Dummy.Type) {
+      if (!(attributeType is Dummy)) {
         foreach (ITypeDefinitionMember member in attributeType.GetMembersNamed(this.PEFileToObjectModel.NameTable.Ctor, false)) {
           IMethodDefinition/*?*/ method = member as IMethodDefinition;
           if (method == null) continue;
@@ -1482,7 +1472,7 @@ namespace Microsoft.Cci.MetadataReader {
           break;
         }
       }
-      if (ctorReference == Dummy.MethodReference) {
+      if (ctorReference is Dummy) {
         ctorReference = new MethodReference(this.PEFileToObjectModel.ModuleReader.metadataReaderHost, moduleTypeReference,
           CallingConvention.Default|CallingConvention.HasThis, this.PEFileToObjectModel.PlatformType.SystemVoid,
           this.PEFileToObjectModel.NameTable.Ctor, 0, this.PEFileToObjectModel.PlatformType.SystemSecurityPermissionsSecurityAction);

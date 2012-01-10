@@ -1220,6 +1220,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.ParentModuleNamespace; }
     }
 
+    IName IContainerMember<INamespaceDefinition>.Name {
+      get { return this.Name; }
+    }
+
     #endregion
 
     #region IScopeMember<IScope<INamespaceMember>> Members
@@ -1814,10 +1818,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public IEnumerable<byte> Rawdata {
       get {
         unsafe {
+          var size = this.sectionHeaders[this.index].SizeOfRawData;
+          var virtSize = this.sectionHeaders[this.index].VirtualSize;
+          if (virtSize < size) size = virtSize;
           MemoryBlock block =
             new MemoryBlock(
-              this.peFileToObjectModel.PEFileReader.BinaryDocumentMemoryBlock.Pointer + this.sectionHeaders[this.index].OffsetToRawData + 0,
-              this.sectionHeaders[this.index].VirtualSize);
+              this.peFileToObjectModel.PEFileReader.BinaryDocumentMemoryBlock.Pointer + this.sectionHeaders[this.index].OffsetToRawData + 0, size);
           return new EnumerableMemoryBlockWrapper(block);
         }
       }
@@ -2637,7 +2643,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
           this.adderMethod = this.PEFileToObjectModel.GetEventAddOrRemoveOrFireMethod(this, MethodSemanticsFlags.AddOn);
           if (this.adderMethod == null) {
             //  MDError
-            this.adderMethod = Dummy.Method;
+            this.adderMethod = Dummy.MethodDefinition;
           }
           this.EventFlags |= EventFlags.AdderLoaded;
         }
@@ -2652,7 +2658,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
           this.removerMethod = this.PEFileToObjectModel.GetEventAddOrRemoveOrFireMethod(this, MethodSemanticsFlags.RemoveOn);
           if (this.removerMethod == null) {
             //  MDError
-            this.removerMethod = Dummy.Method;
+            this.removerMethod = Dummy.MethodDefinition;
           }
           this.EventFlags |= EventFlags.RemoverLoaded;
         }
@@ -2700,7 +2706,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public IMethodReference Adder {
       get {
-        if (this.AdderMethod == Dummy.Method) return Dummy.MethodReference;
+        if (this.AdderMethod is Dummy) return Dummy.MethodReference;
         return this.AdderMethod;
       }
     }
@@ -2719,7 +2725,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public IMethodReference Remover {
       get {
-        if (this.RemoverMethod == Dummy.Method) return Dummy.MethodReference;
+        if (this.RemoverMethod is Dummy) return Dummy.MethodReference;
         return this.RemoverMethod;
       }
     }
@@ -3082,7 +3088,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public virtual IFieldDefinition ResolvedField {
       get {
         var parent = this.ParentTypeReference;
-        if (parent == null) return Dummy.Field;
+        if (parent == null) return Dummy.FieldDefinition;
         return TypeHelper.GetField(parent.ResolvedType, this, true);
       }
     }
@@ -3226,7 +3232,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     public virtual IMethodDefinition ResolvedMethod {
       get {
         ITypeReference/*?*/moduleTypeRef = this.OwningTypeReference;
-        if (moduleTypeRef == null) return Dummy.Method;
+        if (moduleTypeRef == null) return Dummy.MethodDefinition;
         return TypeHelper.GetMethod(moduleTypeRef.ResolvedType, this, true);
       }
     }
@@ -3861,7 +3867,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       ManifestResourceFlags flags,
       bool inExternalFile
     )
-      : base(peFileToObjectModel, resourceRowId, Dummy.Assembly, inExternalFile ? flags | ManifestResourceFlags.InExternalFile : flags, name) {
+      : base(peFileToObjectModel, resourceRowId, Dummy.AssemblyReference, inExternalFile ? flags | ManifestResourceFlags.InExternalFile : flags, name) {
     }
 
     internal override uint TokenValue {
@@ -3891,7 +3897,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     IAssemblyReference IResourceReference.DefiningAssembly {
       get {
         IAssembly/*?*/ assem = this.PEFileToObjectModel.Module as IAssembly;
-        return assem == null ? Dummy.Assembly : assem;
+        return assem == null ? Dummy.AssemblyReference : assem;
       }
     }
 

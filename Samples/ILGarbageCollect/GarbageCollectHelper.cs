@@ -17,7 +17,7 @@ namespace ILGarbageCollect {
     [Pure]
     internal static IEnumerable<ITypeDefinition> BaseClasses(ITypeDefinition t) {
       Contract.Requires(t != null);
-      Contract.Requires(t != Dummy.Type);
+      Contract.Requires(!(t is Dummy));
 
       foreach (var b in t.ResolvedType.BaseClasses) yield return b.ResolvedType;
       foreach (var b in t.ResolvedType.Interfaces) yield return b.ResolvedType;
@@ -31,7 +31,7 @@ namespace ILGarbageCollect {
     /// <returns></returns>
     internal static ISet<ITypeDefinition> AllSuperTypes(ITypeDefinition t) {
       Contract.Requires(t != null);
-      Contract.Requires(t != Dummy.Type);
+      Contract.Requires(!(t is Dummy));
 
       ISet<ITypeDefinition> collectedSuperTypes = new HashSet<ITypeDefinition>();
 
@@ -95,11 +95,11 @@ namespace ILGarbageCollect {
     /// </summary>
     internal static ICollection<IMethodDefinition> Implements(ITypeDefinition derived, ITypeDefinition upto, IMethodDefinition m) {
       Contract.Requires(derived != null);
-      Contract.Requires(derived != Dummy.Type);
+      Contract.Requires(!(derived is Dummy));
       Contract.Requires(upto != null);
-      Contract.Requires(upto != Dummy.Type);
+      Contract.Requires(!(upto is Dummy));
       Contract.Requires(m != null);
-      Contract.Requires(m != Dummy.Method);
+      Contract.Requires(!(m is Dummy));
       Contract.Requires(GarbageCollectHelper.TypeDefinitionIsUnspecialized(derived));
 
       Contract.Requires(GarbageCollectHelper.MethodDefinitionIsUnspecialized(m));
@@ -108,7 +108,7 @@ namespace ILGarbageCollect {
 
       Contract.Ensures(Contract.ForAll(Contract.Result<ICollection<IMethodDefinition>>(), resultM => GarbageCollectHelper.MethodDefinitionIsUnspecialized(resultM)));
       Contract.Ensures(Contract.ForAll(Contract.Result<ICollection<IMethodDefinition>>(), resultM =>
-        resultM != null && resultM != Dummy.Method && resultM != Dummy.SpecializedMethodDefinition)
+        resultM != null && !(resultM is Dummy))
       );
 
       ISet<IMethodDefinition> foundImplementations = new HashSet<IMethodDefinition>();
@@ -157,19 +157,16 @@ namespace ILGarbageCollect {
     /// <returns></returns>
     internal static IMethodDefinition ImplementsInstantiated(ITypeDefinition derived, IMethodDefinition m) {
       Contract.Requires(derived != null);
-      Contract.Requires(derived != Dummy.Type);
-      Contract.Requires(derived != Dummy.SpecializedNestedTypeDefinition);
+      Contract.Requires(!(derived is Dummy));
       Contract.Requires(m != null);
-      Contract.Requires(m != Dummy.Method);
-      Contract.Requires(m != Dummy.SpecializedMethodDefinition);
+      Contract.Requires(!(m is Dummy));
 
       Contract.Requires(TypeHelper.Type1DerivesFromOrIsTheSameAsType2(derived, m.ContainingTypeDefinition));
 
       Contract.Requires(!derived.IsInterface);
 
       Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
-      Contract.Ensures(Contract.Result<IMethodDefinition>() != Dummy.Method);
-      Contract.Ensures(Contract.Result<IMethodDefinition>() != Dummy.SpecializedMethodDefinition);
+      Contract.Ensures(!(Contract.Result<IMethodDefinition>() is Dummy));
 
       var classHierarchyChain = new ITypeDefinition[] { derived }.Concat(GarbageCollectHelper.AllSuperClasses(derived));
 
@@ -312,7 +309,7 @@ namespace ILGarbageCollect {
     internal static IMethodDefinition GetStaticConstructor(INameTable nametable, ITypeDefinition t) {
       Contract.Requires(nametable != null);
       Contract.Requires(t != null);
-      Contract.Requires(t != Dummy.Type);
+      Contract.Requires(!(t is Dummy));
       Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
 
       // return the "first" we find.  will be eithe r0 or 1 static constructor.
@@ -338,7 +335,7 @@ namespace ILGarbageCollect {
     }
 
     private static void CloseAndResolveOverReferencedAssembliesHelper(ISet<IAssembly> collectedAssemblies, IAssembly assembly) {
-      Contract.Requires(assembly != Dummy.Assembly);
+      Contract.Requires(!(assembly is Dummy));
       Contract.Ensures(collectedAssemblies.Contains(assembly));
 
       if (collectedAssemblies.Contains(assembly)) {
@@ -350,7 +347,7 @@ namespace ILGarbageCollect {
         foreach (IAssemblyReference referencedAssemblyReference in assembly.AssemblyReferences) {
           IAssembly referencedAssembly = referencedAssemblyReference.ResolvedAssembly;
 
-          if (referencedAssembly != Dummy.Assembly) {
+          if (!(referencedAssembly is Dummy)) {
             CloseAndResolveOverReferencedAssembliesHelper(collectedAssemblies, referencedAssembly);
           }
           else {
@@ -364,8 +361,8 @@ namespace ILGarbageCollect {
 
     [Pure]
     internal static IMethodDefinition UnspecializeAndResolveMethodReference(IMethodReference methodReference) {
-      Contract.Requires(methodReference != Dummy.MethodReference);
-      Contract.Ensures(Contract.Result<IMethodDefinition>() != Dummy.Method);
+      Contract.Requires(!(methodReference is Dummy));
+      Contract.Ensures(!(Contract.Result<IMethodDefinition>() is Dummy));
 
       IMethodReference unspecializedReference;
 
@@ -389,7 +386,7 @@ namespace ILGarbageCollect {
         unspecializedDefinition = resolvedDefinition;
       }
 
-      if (unspecializedDefinition == Dummy.Method) {
+      if (unspecializedDefinition is Dummy) {
         unspecializedDefinition = null;
       }
 
@@ -398,8 +395,8 @@ namespace ILGarbageCollect {
 
     [Pure]
     internal static IFieldDefinition UnspecializeAndResolveFieldReference(IFieldReference fieldReference) {
-      Contract.Requires(fieldReference != Dummy.FieldReference);
-      Contract.Ensures(Contract.Result<IFieldDefinition>() != Dummy.Field);
+      Contract.Requires(!(fieldReference is Dummy));
+      Contract.Ensures(!(Contract.Result<IFieldDefinition>() is Dummy));
 
       IFieldReference unspecializedReference;
 
@@ -413,7 +410,7 @@ namespace ILGarbageCollect {
       IFieldDefinition resolvedDefinition = unspecializedReference.ResolvedField;
 
 
-      if (resolvedDefinition == Dummy.Field) {
+      if (resolvedDefinition is Dummy) {
         resolvedDefinition = null;
       }
 
@@ -422,14 +419,14 @@ namespace ILGarbageCollect {
 
     [Pure]
     internal static ITypeDefinition UnspecializeAndResolveTypeReference(ITypeReference typeReference) {
-      Contract.Requires(typeReference != Dummy.TypeReference);
-      Contract.Ensures(Contract.Result<ITypeDefinition>() != Dummy.Type);
+      Contract.Requires(!(typeReference is Dummy));
+      Contract.Ensures(!(Contract.Result<ITypeDefinition>() is Dummy));
 
 
       // t-devinc: We don't currently unspecialize. Need to determine if that is needed.
       ITypeDefinition resolvedTypeDefinition = typeReference.ResolvedType;
 
-      if (resolvedTypeDefinition != Dummy.Type) {
+      if (!(resolvedTypeDefinition is Dummy)) {
 
         if (resolvedTypeDefinition is IGenericTypeInstance) {
           return UnspecializeAndResolveTypeReference(((IGenericTypeInstance)resolvedTypeDefinition).GenericType);
