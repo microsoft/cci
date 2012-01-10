@@ -35,7 +35,7 @@ namespace Microsoft.Cci {
     /// <param name="codeBaseUri">The code base URI.</param>
     public static bool Contains(Uri codeBaseUri) {
       Contract.Requires(codeBaseUri != null);
-
+      
       lock (GlobalLock.LockingObject) {
 #if COMPACTFX
         var gacKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(@"\Software\Microsoft\.NETCompactFramework\Installer\Assemblies\Global");

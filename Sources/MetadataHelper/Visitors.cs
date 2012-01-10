@@ -2451,6 +2451,7 @@ namespace Microsoft.Cci {
     /// Performs some computation with the given method reference.
     /// </summary>
     public virtual void Visit(IMethodReference methodReference) {
+      this.Visit((ITypeMemberReference)methodReference);
     }
 
     /// <summary>
@@ -2540,6 +2541,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public virtual void Visit(INestedTypeReference nestedTypeReference) {
       this.Visit((INamedTypeReference)nestedTypeReference);
+      this.Visit((ITypeMemberReference)nestedTypeReference);
     }
 
     /// <summary>

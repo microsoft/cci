@@ -373,19 +373,24 @@ namespace Microsoft.Cci.Immutable {
 
   public class GenericTypeInstance : Scope<ITypeDefinitionMember>, IGenericTypeInstance {
 
-    public static GenericTypeInstance GetGenericTypeInstance(INamedTypeReference genericType, IEnumerable<ITypeReference> genericArguments, IInternFactory internFactory)
-      //^ requires genericType.ResolvedType.IsGeneric;
-      //^ ensures !result.IsGeneric;
-    {
+    public static GenericTypeInstance GetGenericTypeInstance(INamedTypeDefinition genericType, IEnumerable<ITypeReference> genericArguments, IInternFactory internFactory) {
+      Contract.Requires(genericType != null);
+      Contract.Requires(genericArguments != null);
+      Contract.Requires(internFactory != null);
       Contract.Requires(!(genericType is Dummy));
+      Contract.Requires(genericType.IsGeneric);
       Contract.Ensures(Contract.Result<GenericTypeInstance>() != null);
+
       return new GenericTypeInstance(genericType, genericArguments, internFactory);
     }
 
-    private GenericTypeInstance(INamedTypeReference genericType, IEnumerable<ITypeReference> genericArguments, IInternFactory internFactory)
-      //^ requires genericType.ResolvedType.IsGeneric;
-    {
+    private GenericTypeInstance(INamedTypeDefinition genericType, IEnumerable<ITypeReference> genericArguments, IInternFactory internFactory) {
       Contract.Requires(!(genericType is Dummy));
+      Contract.Requires(genericArguments != null);
+      Contract.Requires(internFactory != null);
+      Contract.Requires(!(genericType is Dummy));
+      Contract.Requires(genericType.IsGeneric);
+
       this.genericType = genericType;
       this.genericArguments = genericArguments;
       this.internFactory = internFactory;
@@ -573,9 +578,9 @@ namespace Microsoft.Cci.Immutable {
       }
       if (copiedArguments == null) {
         if (copiedGenericType == genericTypeInstance.GenericType) return genericTypeInstance;
-        return GetGenericTypeInstance(copiedGenericType, genericTypeInstance.GenericArguments, internFactory);
+        return new GenericTypeInstanceReference(copiedGenericType, genericTypeInstance.GenericArguments, internFactory);
       }
-      return GetGenericTypeInstance(copiedGenericType, copiedArguments, internFactory);
+      return new GenericTypeInstanceReference(copiedGenericType, copiedArguments, internFactory);
     }
 
     internal static ITypeReference SpecializeTypeReference(IGenericTypeInstanceReference genericTypeInstance, ITypeReference targetContainer, IInternFactory internFactory) {
@@ -593,9 +598,9 @@ namespace Microsoft.Cci.Immutable {
       }
       if (copiedArguments == null) {
         if (copiedGenericType == genericTypeInstance.GenericType) return genericTypeInstance;
-        return GetGenericTypeInstance(copiedGenericType, genericTypeInstance.GenericArguments, internFactory);
+        return new GenericTypeInstanceReference(copiedGenericType, genericTypeInstance.GenericArguments, internFactory);
       }
-      return GetGenericTypeInstance(copiedGenericType, copiedArguments, internFactory);
+      return new GenericTypeInstanceReference(copiedGenericType, copiedArguments, internFactory);
     }
 
     internal static ITypeReference SpecializeTypeReference(IGenericTypeInstanceReference genericTypeInstance, IMethodReference targetContainer, IInternFactory internFactory) {
@@ -613,9 +618,9 @@ namespace Microsoft.Cci.Immutable {
       }
       if (copiedArguments == null) {
         if (copiedGenericType == genericTypeInstance.GenericType) return genericTypeInstance;
-        return GetGenericTypeInstance(copiedGenericType, genericTypeInstance.GenericArguments, internFactory);
+        return new GenericTypeInstanceReference(copiedGenericType, genericTypeInstance.GenericArguments, internFactory);
       }
-      return GetGenericTypeInstance(copiedGenericType, copiedArguments, internFactory);
+      return new GenericTypeInstanceReference(copiedGenericType, copiedArguments, internFactory);
     }
 
     /// <summary>
@@ -639,9 +644,9 @@ namespace Microsoft.Cci.Immutable {
       }
       if (specializedArguments == null) {
         if (specializedGenericType == genericTypeInstance.GenericType) return genericTypeInstance;
-        else return GetGenericTypeInstance(specializedGenericType, genericTypeInstance.GenericArguments, internFactory);
+        else return new GenericTypeInstanceReference(specializedGenericType, genericTypeInstance.GenericArguments, internFactory);
       }
-      return GetGenericTypeInstance(specializedGenericType, specializedArguments, internFactory);
+      return new GenericTypeInstanceReference(specializedGenericType, specializedArguments, internFactory);
     }
 
     /// <summary>
@@ -664,9 +669,9 @@ namespace Microsoft.Cci.Immutable {
       }
       if (specializedArguments == null) {
         if (specializedGenericType == genericTypeInstance.GenericType) return genericTypeInstance;
-        else return GetGenericTypeInstance(specializedGenericType, genericTypeInstance.GenericArguments, internFactory);
+        else return new GenericTypeInstanceReference(specializedGenericType, genericTypeInstance.GenericArguments, internFactory);
       }
-      return GetGenericTypeInstance(specializedGenericType, specializedArguments, internFactory);
+      return new GenericTypeInstanceReference(specializedGenericType, specializedArguments, internFactory);
     }
 
     /// <summary>
@@ -689,9 +694,9 @@ namespace Microsoft.Cci.Immutable {
       }
       if (specializedArguments == null) {
         if (specializedGenericType == genericTypeInstance.GenericType) return genericTypeInstance;
-        else return GetGenericTypeInstance(specializedGenericType, genericTypeInstance.GenericArguments, internFactory);
+        else return new GenericTypeInstanceReference(specializedGenericType, genericTypeInstance.GenericArguments, internFactory);
       }
-      return GetGenericTypeInstance(specializedGenericType, specializedArguments, internFactory);
+      return new GenericTypeInstanceReference(specializedGenericType, specializedArguments, internFactory);
     }
 
     public ITypeDefinitionMember SpecializeMember(ITypeDefinitionMember unspecializedMember, IInternFactory internFactory)
@@ -866,6 +871,13 @@ namespace Microsoft.Cci.Immutable {
   public class GenericTypeInstanceReference : IGenericTypeInstanceReference {
 
     public GenericTypeInstanceReference(INamedTypeReference genericType, IEnumerable<ITypeReference> genericArguments, IInternFactory internFactory) {
+      Contract.Requires(genericType != null);
+      Contract.Requires(genericArguments != null);
+      Contract.Requires(internFactory != null);
+
+      foreach (var genarg in genericArguments) {
+        Contract.Assume(!(genarg is Dummy));
+      }
       this.genericType = genericType;
       this.genericArguments = genericArguments;
       this.internFactory = internFactory;
@@ -881,7 +893,7 @@ namespace Microsoft.Cci.Immutable {
     public INamedTypeReference GenericType {
       get { return this.genericType; }
     }
-    readonly INamedTypeReference genericType; //^ invariant genericType.ResolvedType.IsGeneric;
+    readonly INamedTypeReference genericType;
 
     #endregion
 
@@ -931,8 +943,8 @@ namespace Microsoft.Cci.Immutable {
       get {
         if (this.resolvedType == null) {
           var template = this.GenericType.ResolvedType;
-          if (template == Dummy.NamedTypeDefinition)
-            this.resolvedType = Dummy.Type;
+          if (template is Dummy || !template.IsGeneric)
+            this.resolvedType = Dummy.TypeDefinition;
           else
             this.resolvedType = GenericTypeInstance.GetGenericTypeInstance(template, this.GenericArguments, this.InternFactory);
         }
@@ -1998,7 +2010,7 @@ namespace Microsoft.Cci.Immutable {
     /// </summary>
     /// <value></value>
     public IGenericTypeInstanceReference InstanceType {
-      get { return Dummy.GenericTypeInstance; }
+      get { return Dummy.GenericTypeInstanceReference; }
     }
 
     /// <summary>
@@ -3295,7 +3307,7 @@ namespace Microsoft.Cci.Immutable {
   public class SpecializedNestedTypeReference : ISpecializedNestedTypeReference {
 
     /// <summary>
-    /// A reference to a field of a generic type instance. It is specialized because any occurrences of the type parameters have been replaced with the
+    /// A reference to a nested type of a generic type instance. It is specialized because any occurrences of the type parameters have been replaced with the
     /// corresponding type arguments from the instance.
     /// </summary>
     /// <param name="unspecializedVersion"></param>
@@ -3351,7 +3363,7 @@ namespace Microsoft.Cci.Immutable {
 
     INamedTypeDefinition INamedTypeReference.ResolvedType {
       get {
-        if (this.ResolvedType == Dummy.NestedType) return Dummy.NamedTypeDefinition;
+        if (this.ResolvedType is Dummy) return Dummy.NamedTypeDefinition;
         return this.ResolvedType;
       }
     }
@@ -3413,7 +3425,7 @@ namespace Microsoft.Cci.Immutable {
 
     ITypeDefinition ITypeReference.ResolvedType {
       get {
-        if (this.ResolvedType == Dummy.NestedType) return Dummy.Type;
+        if (this.ResolvedType is Dummy) return Dummy.TypeDefinition;
         return this.ResolvedType;
       }
     }
@@ -3516,7 +3528,7 @@ namespace Microsoft.Cci.Immutable {
     }
 
     public IGenericTypeInstanceReference InstanceType {
-      get { return Dummy.GenericTypeInstance; }
+      get { return Dummy.GenericTypeInstanceReference; }
     }
 
     public bool IsAbstract {
@@ -3912,9 +3924,9 @@ namespace Microsoft.Cci.Immutable {
       }
       if (version.Major >= 2) {
         var argTypes = IteratorHelper.GetSingletonEnumerable<ITypeReference>(this.ElementType);
-        interfaces.Add(GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericIList, argTypes, this.InternFactory));
-        interfaces.Add(GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericICollection, argTypes, this.InternFactory));
-        interfaces.Add(GenericTypeInstance.GetGenericTypeInstance(this.PlatformType.SystemCollectionsGenericIEnumerable, argTypes, this.InternFactory));
+        interfaces.Add(new GenericTypeInstanceReference(this.PlatformType.SystemCollectionsGenericIList, argTypes, this.InternFactory));
+        interfaces.Add(new GenericTypeInstanceReference(this.PlatformType.SystemCollectionsGenericICollection, argTypes, this.InternFactory));
+        interfaces.Add(new GenericTypeInstanceReference(this.PlatformType.SystemCollectionsGenericIEnumerable, argTypes, this.InternFactory));
       }
       return interfaces.AsReadOnly();
     }

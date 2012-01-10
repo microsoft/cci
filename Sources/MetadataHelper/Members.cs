@@ -14,8 +14,6 @@ using System.Diagnostics;
 using System.Text;
 using System.Diagnostics.Contracts;
 
-//^ using Microsoft.Contracts;
-
 namespace Microsoft.Cci.Immutable {
 
   /// <summary>
@@ -88,7 +86,7 @@ namespace Microsoft.Cci.Immutable {
     /// The method being referred to.
     /// </summary>
     public IMethodDefinition ResolvedMethod {
-      get { return Dummy.Method; }
+      get { return Dummy.MethodDefinition; }
     }
 
     /// <summary>
@@ -188,7 +186,7 @@ namespace Microsoft.Cci.Immutable {
     /// The type definition member this reference resolves to.
     /// </summary>
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
-      get { return Dummy.Method; }
+      get { return Dummy.TypeDefinitionMember; }
     }
 
     /// <summary>
@@ -1189,7 +1187,7 @@ namespace Microsoft.Cci.Immutable {
       get { return this.definingMethod; }
       set {
         Contract.Requires(this.DefiningMethod == Dummy.MethodReference);
-        Contract.Requires(value != Dummy.MethodReference);
+        Contract.Requires(!(value is Dummy));
         this.definingMethod = value;
       }
     }
@@ -1272,7 +1270,7 @@ namespace Microsoft.Cci.Immutable {
 
     ITypeDefinition ITypeReference.ResolvedType {
       get {
-        if (this.ResolvedType == Dummy.GenericMethodParameter) return Dummy.Type;
+        if (this.ResolvedType is Dummy) return Dummy.TypeDefinition;
         return this.ResolvedType;
       }
     }
@@ -1911,7 +1909,7 @@ namespace Microsoft.Cci.Immutable {
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
       get {
         var result = this.ResolvedField;
-        if (result == Dummy.Field) return Dummy.Field; //TODO: need Dummy.TypeDefinitionMember;
+        if (result is Dummy) return Dummy.TypeDefinitionMember;
         return result;
       }
     }
@@ -2133,7 +2131,7 @@ namespace Microsoft.Cci.Immutable {
     ITypeDefinition ITypeReference.ResolvedType {
       get {
         var result = this.ResolvedType;
-        if (result == Dummy.GenericMethodParameter) return Dummy.Type;
+        if (result is Dummy) return Dummy.TypeDefinition;
         return result;
       }
     }
@@ -3232,7 +3230,7 @@ namespace Microsoft.Cci.Immutable {
     public ITypeDefinitionMember ResolvedTypeDefinitionMember {
       get {
         var result = this.ResolvedMethod;
-        if (result == Dummy.Method) return Dummy.Method; //TODO: introduce Dummy.TypeDefinitionMember
+        if (result is Dummy) return Dummy.TypeDefinitionMember;
         return result;
       }
     }
@@ -4177,7 +4175,7 @@ namespace Microsoft.Cci.Immutable {
     public MemberType/*!*/ UnspecializedVersion {
       get {
         Contract.Ensures(Contract.Result<MemberType>() != null);
-        return this.unspecializedVersion; 
+        return this.unspecializedVersion;
       }
     }
     readonly MemberType/*!*/ unspecializedVersion;

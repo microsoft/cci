@@ -225,18 +225,18 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Returns the method from the closest base class that is overridden by the given method.
-    /// If no such method exists, Dummy.Method is returned.
+    /// If no such method exists, Dummy.MethodDefinition is returned.
     /// </summary>
     public static IMethodDefinition GetImplicitlyOverriddenBaseClassMethod(IMethodDefinition derivedClassMethod) {
       Contract.Requires(derivedClassMethod != null);
       Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
 
-      if (!derivedClassMethod.IsVirtual || derivedClassMethod.IsNewSlot) return Dummy.Method;
+      if (!derivedClassMethod.IsVirtual || derivedClassMethod.IsNewSlot) return Dummy.MethodDefinition;
       foreach (ITypeReference baseClassReference in derivedClassMethod.ContainingTypeDefinition.BaseClasses) {
         IMethodDefinition overriddenMethod = GetImplicitlyOverriddenBaseClassMethod(derivedClassMethod, baseClassReference.ResolvedType);
-        if (overriddenMethod != Dummy.Method) return overriddenMethod;
+        if (!(overriddenMethod is Dummy)) return overriddenMethod;
       }
-      return Dummy.Method;
+      return Dummy.MethodDefinition;
     }
 
     private static IMethodDefinition GetImplicitlyOverriddenBaseClassMethod(IMethodDefinition derivedClassMethod, ITypeDefinition baseClass) {
@@ -248,27 +248,27 @@ namespace Microsoft.Cci {
         IMethodDefinition/*?*/ baseMethod = baseMember as IMethodDefinition;
         if (baseMethod == null) continue;
         if (MemberHelper.SignaturesAreEqual(derivedClassMethod, baseMethod)) {
-          if (!baseMethod.IsVirtual || baseMethod.IsSealed) return Dummy.Method;
+          if (!baseMethod.IsVirtual || baseMethod.IsSealed) return Dummy.MethodDefinition;
           return baseMethod;
         }
         if (derivedClassMethod.GenericParameterCount == baseMethod.GenericParameterCount && derivedClassMethod.IsGeneric) {
           if (MemberHelper.GenericMethodSignaturesAreEqual(derivedClassMethod, baseMethod)) {
-            if (!baseMethod.IsVirtual || baseMethod.IsSealed) return Dummy.Method;
+            if (!baseMethod.IsVirtual || baseMethod.IsSealed) return Dummy.MethodDefinition;
             return baseMethod;
           }
         }
-        if (!derivedClassMethod.IsHiddenBySignature) return Dummy.Method;
+        if (!derivedClassMethod.IsHiddenBySignature) return Dummy.MethodDefinition;
       }
       foreach (ITypeReference baseClassReference in baseClass.BaseClasses) {
         IMethodDefinition overriddenMethod = GetImplicitlyOverriddenBaseClassMethod(derivedClassMethod, baseClassReference.ResolvedType);
-        if (overriddenMethod != Dummy.Method) return overriddenMethod;
+        if (!(overriddenMethod is Dummy)) return overriddenMethod;
       }
-      return Dummy.Method;
+      return Dummy.MethodDefinition;
     }
 
     /// <summary>
     /// Returns the method from the derived class that overrides the given method.
-    /// If no such method exists, Dummy.Method is returned.
+    /// If no such method exists, Dummy.MethodDefinition is returned.
     /// </summary>
     public static IMethodDefinition GetImplicitlyOverridingDerivedClassMethod(IMethodDefinition baseClassMethod, ITypeDefinition derivedClass) {
       Contract.Requires(baseClassMethod != null);
@@ -279,20 +279,20 @@ namespace Microsoft.Cci {
         IMethodDefinition/*?*/ derivedMethod = derivedMember as IMethodDefinition;
         if (derivedMethod == null) continue;
         if (MemberHelper.MethodsAreEquivalent(baseClassMethod, derivedMethod)) {
-          if (!derivedMethod.IsVirtual || derivedMethod.IsSealed) return Dummy.Method;
+          if (!derivedMethod.IsVirtual || derivedMethod.IsSealed) return Dummy.MethodDefinition;
           return derivedMethod;
         } else {
-          if (!baseClassMethod.IsHiddenBySignature) return Dummy.Method;
+          if (!baseClassMethod.IsHiddenBySignature) return Dummy.MethodDefinition;
         }
       }
-      return Dummy.Method;
+      return Dummy.MethodDefinition;
     }
 
     /// <summary>
     /// Returns a C#-like string that corresponds to the given type member definition and that conforms to the specified formatting options.
     /// </summary>
     [Pure]
-    public static string GetMemberSignature(ITypeMemberReference member, NameFormattingOptions formattingOptions) {
+    public static string GetMemberSignature(ITypeMemberReference member, NameFormattingOptions formattingOptions = NameFormattingOptions.None) {
       Contract.Requires(member != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
@@ -303,7 +303,7 @@ namespace Microsoft.Cci {
     /// Returns a C#-like string that corresponds to the given method definition and that conforms to the specified formatting options.
     /// </summary>
     [Pure]
-    public static string GetMethodSignature(IMethodReference method, NameFormattingOptions formattingOptions) {
+    public static string GetMethodSignature(IMethodReference method, NameFormattingOptions formattingOptions = NameFormattingOptions.None) {
       Contract.Requires(method != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
@@ -375,7 +375,7 @@ namespace Microsoft.Cci {
       foreach (IMethodImplementation methodImpl in containingTypeDefinition.ExplicitImplementationOverrides) {
         if (methodImpl.ImplementingMethod.InternedKey != methodReference.InternedKey) continue;
         var implementedMethod = methodImpl.ImplementedMethod.ResolvedMethod;
-        if (implementedMethod == Dummy.Method) {
+        if (implementedMethod is Dummy) {
           //If the method being implemented did not resolve it can only be because it is actually defined in another assembly, which implies that it is visible outside its assembly,
           //at least in the case where the implemented method is public or internal. Since we can't know that without resolving the method, we'll err on the "safe" side.
           return true;
@@ -520,6 +520,7 @@ namespace Microsoft.Cci {
       if (specializedPropertyDefinition != null) return specializedPropertyDefinition.UnspecializedVersion;
       return potentiallySpecializedPropertyDefinition;
     }
+
   }
 
   /// <summary>
@@ -729,7 +730,7 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Searches the given type, as well as its base classes or base interfaces (if it is an interface), for a method
-    /// that matches this method reference and returns the method. Returns Dummy.Method is no matching method can be found.
+    /// that matches this method reference and returns the method. Returns Dummy.MethodDefinition is no matching method can be found.
     /// </summary>
     private IMethodDefinition Resolve(ITypeDefinition typeToSearch) {
       Contract.Requires(typeToSearch != null);
@@ -739,15 +740,15 @@ namespace Microsoft.Cci {
       if (result != null) return result;
       foreach (ITypeReference baseClass in typeToSearch.BaseClasses) {
         result = TypeHelper.GetMethod(baseClass.ResolvedType, this, true);
-        if (result != Dummy.Method) return result;
+        if (!(result is Dummy)) return result;
       }
       if (typeToSearch.IsInterface) {
         foreach (ITypeReference baseInterface in typeToSearch.Interfaces) {
           result = TypeHelper.GetMethod(baseInterface.ResolvedType, this, true);
-          if (result != Dummy.Method) return result;
+          if (!(result is Dummy)) return result;
         }
       }
-      return Dummy.Method;
+      return Dummy.MethodDefinition;
     }
 
     /// <summary>

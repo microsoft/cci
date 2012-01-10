@@ -17,7 +17,7 @@ using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci {
   /// <summary>
-  /// Class conraining helper routines for Attributes
+  /// Class containing helper routines for Attributes
   /// </summary>
   public static class AttributeHelper {
     /// <summary>

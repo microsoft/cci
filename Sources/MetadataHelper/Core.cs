@@ -203,9 +203,9 @@ namespace Microsoft.Cci {
     protected virtual AssemblyIdentity GetSystemCoreAssemblySymbolicIdentity() {
       var core = this.CoreAssemblySymbolicIdentity;
       var name = this.NameTable.GetNameFor("System.Core");
-      var location = core.Location;
-      if (location != null)
-        location = Path.Combine(Path.GetDirectoryName(location), "System.Core.dll");
+      var location = "";
+      if (core.Location.Length > 0)
+        location = Path.Combine(Path.GetDirectoryName(core.Location)??"", "System.Core.dll");
       var version = new Version(3, 5, 0, 0);
       if (version < core.Version) version = core.Version;
       return new AssemblyIdentity(name, core.Culture, version, core.PublicKeyToken, location);
@@ -353,6 +353,7 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// Returns the unit that is stored at the given location, or a dummy unit if no unit exists at that location or if the unit at that location is not accessible.
+    /// Implementations should do enough caching to avoid repeating work: this method gets called very often for already loaded units as part of the probing logic.
     /// </summary>
     public abstract IUnit LoadUnitFrom(string location);
 
@@ -437,13 +438,16 @@ namespace Microsoft.Cci {
     /// Returns null if not found, otherwise constructs a new AssemblyIdentity
     /// </summary>
     protected virtual AssemblyIdentity/*?*/ Probe(string probeDir, AssemblyIdentity referencedAssembly) {
+      Contract.Requires(probeDir != null);
+      Contract.Requires(referencedAssembly != null);
+
       string path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".dll");
       if (!File.Exists(path)) path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".winmd");
       if (!File.Exists(path)) path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".exe");
       if (!File.Exists(path)) return null;
       var assembly = this.LoadUnitFrom(path) as IAssembly;
       if (assembly == null) return null;
-      if (assembly.AssemblyIdentity != referencedAssembly) return null;
+      if (!assembly.AssemblyIdentity.Equals(referencedAssembly)) return null;
       return assembly.AssemblyIdentity;
     }
 
@@ -489,23 +493,23 @@ namespace Microsoft.Cci {
 #endif
 
       // Check platform location
-      var platformDir = Path.GetDirectoryName(Path.GetFullPath(GetLocalPath(typeof(object).Assembly.GetName())));
+      var platformDir = Path.GetDirectoryName(Path.GetFullPath(GetLocalPath(typeof(object).Assembly.GetName())))??"";
       var coreVersion = this.CoreAssemblySymbolicIdentity.Version;
       if (coreVersion.Major == 1) {
         if (coreVersion.Minor == 0)
-          platformDir = Path.Combine(Path.GetDirectoryName(platformDir), "v1.0.3705");
+          platformDir = Path.Combine(Path.GetDirectoryName(platformDir)??"", "v1.0.3705");
         else if (coreVersion.Minor == 1)
-          platformDir = Path.Combine(Path.GetDirectoryName(platformDir), "v1.1.4322");
+          platformDir = Path.Combine(Path.GetDirectoryName(platformDir)??"", "v1.1.4322");
       } else if (coreVersion.Major == 2) {
-        platformDir = Path.Combine(Path.GetDirectoryName(platformDir), "v3.5");
+        platformDir = Path.Combine(Path.GetDirectoryName(platformDir)??"", "v3.5");
         result = this.Probe(platformDir, referencedAssembly);
         if (result != null) return result;
-        platformDir = Path.Combine(Path.GetDirectoryName(platformDir), "v3.0");
+        platformDir = Path.Combine(Path.GetDirectoryName(platformDir)??"", "v3.0");
         result = this.Probe(platformDir, referencedAssembly);
         if (result != null) return result;
-        platformDir = Path.Combine(Path.GetDirectoryName(platformDir), "v2.0.50727");
+        platformDir = Path.Combine(Path.GetDirectoryName(platformDir)??"", "v2.0.50727");
       } else if (coreVersion.Major == 4) {
-        platformDir = Path.Combine(Path.GetDirectoryName(platformDir), "v4.0.30319");
+        platformDir = Path.Combine(Path.GetDirectoryName(platformDir)??"", "v4.0.30319");
       }
 
       result = this.Probe(platformDir, referencedAssembly);
@@ -606,8 +610,6 @@ namespace Microsoft.Cci {
         assemblyIdentity.Culture == this.CoreAssemblySymbolicIdentity.Culture && 
         IteratorHelper.EnumerablesAreEqual(assemblyIdentity.PublicKeyToken, this.CoreAssemblySymbolicIdentity.PublicKeyToken))
         return this.CoreAssemblySymbolicIdentity;
-      if (string.Equals(assemblyIdentity.Name.Value, "mscorlib", StringComparison.OrdinalIgnoreCase) && assemblyIdentity.Version == new Version(255, 255, 255, 255))
-        return this.CoreAssemblySymbolicIdentity;
       return assemblyIdentity;
     }
 
@@ -661,13 +663,22 @@ namespace Microsoft.Cci {
     IBinaryDocumentMemoryBlock/*?*/ OpenBinaryDocument(IBinaryDocument parentSourceDocument, string childDocumentName);
 
     /// <summary>
+    /// Provides the host with an opportunity to add, remove or substitute assembly references in the given list.
+    /// This avoids the cost of rewriting the entire unit in order to make such changes.
+    /// </summary>
+    /// <param name="referringUnit">A reference to the unit that has these references.</param>
+    /// <param name="assemblyReferences">The assembly references to substitute.</param>
+    /// <returns>Usually assemblyReferences, but occasionally a modified enumeration.</returns>
+    IEnumerable<IAssemblyReference> Redirect(IUnit referringUnit, IEnumerable<IAssemblyReference> assemblyReferences);
+
+    /// <summary>
     /// Provides the host with an opportunity to substitute one type reference for another during metadata reading.
     /// This avoids the cost of rewriting the entire unit in order to make such changes.
     /// </summary>
-    /// <param name="referringUnit">The unit that is referencing the type.</param>
+    /// <param name="definingUnit">A reference to the unit that is defining the type.</param>
     /// <param name="typeReference">A type reference encountered during metadata reading.</param>
     /// <returns>Usually the value in typeReference, but occassionally something else.</returns>
-    ITypeReference Redirect(IUnit referringUnit, ITypeReference typeReference);
+    ITypeReference Redirect(IUnit definingUnit, ITypeReference typeReference);
 
     /// <summary>
     /// Provides the host with an opportunity to substitute a custom attribute with another during metadata reading.
@@ -833,8 +844,8 @@ namespace Microsoft.Cci {
     /// <remarks>When overridding this method, be sure to add any disposable objects to this.disposableObjectAllocatedByThisHost.</remarks>
     public virtual IBinaryDocumentMemoryBlock/*?*/ OpenBinaryDocument(IBinaryDocument parentSourceDocument, string childDocumentName) {
       try {
-        string directory = Path.GetDirectoryName(parentSourceDocument.Location);
-        string fullPath = Path.Combine(directory, childDocumentName);
+        var directory = Path.GetDirectoryName(parentSourceDocument.Location)??"";
+        var fullPath = Path.Combine(directory, childDocumentName);
         IBinaryDocument newBinaryDocument = BinaryDocument.GetBinaryDocumentForFile(fullPath, this);
 #if !COMPACTFX && !__MonoCS__
         IBinaryDocumentMemoryBlock binDocMemoryBlock = MemoryMappedFile.CreateMemoryMappedFile(newBinaryDocument.Location, newBinaryDocument);
@@ -849,15 +860,26 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Provides the host with an opportunity to add, remove or substitute assembly references in the given list.
+    /// This avoids the cost of rewriting the entire unit in order to make such changes.
+    /// </summary>
+    /// <param name="referringUnit">A reference to the unit that has these references.</param>
+    /// <param name="assemblyReferences">The assembly references to substitute.</param>
+    /// <returns>Usually assemblyReferences, but occasionally a modified enumeration.</returns>
+    public virtual IEnumerable<IAssemblyReference> Redirect(IUnit referringUnit, IEnumerable<IAssemblyReference> assemblyReferences) {
+      return assemblyReferences;
+    }
+
+    /// <summary>
     /// Provides the host with an opportunity to substitute one type reference for another during metadata reading.
     /// This avoids the cost of rewriting the entire unit in order to make such changes.
     /// </summary>
-    /// <param name="referringUnit">The unit that is referencing the type.</param>
+    /// <param name="definingUnit">A reference to the unit that is defining the type.</param>
     /// <param name="typeReference">A type reference encountered during metadata reading.</param>
     /// <returns>
     /// Usually the value in typeReference, but occassionally something else.
     /// </returns>
-    public virtual ITypeReference Redirect(IUnit referringUnit, ITypeReference typeReference) {
+    public virtual ITypeReference Redirect(IUnit definingUnit, ITypeReference typeReference) {
       return typeReference;
     }
 
@@ -1261,9 +1283,10 @@ namespace Microsoft.Cci {
       return 0;
     }
 
-    uint GetNestedNamespaceInternId(
-      INestedUnitNamespaceReference nestedUnitNamespaceReference
-    ) {
+    uint GetNestedNamespaceInternId(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
+      Contract.Requires(nestedUnitNamespaceReference != null);
+      Contract.Requires(nestedUnitNamespaceReference.ContainingUnitNamespace != nestedUnitNamespaceReference);
+
       uint parentNamespaceInternedId = this.GetUnitNamespaceInternId(nestedUnitNamespaceReference.ContainingUnitNamespace);
       uint value = this.NestedNamespaceHashtable.Find(parentNamespaceInternedId, (uint)nestedUnitNamespaceReference.Name.UniqueKey);
       if (value == 0) {
@@ -1273,9 +1296,9 @@ namespace Microsoft.Cci {
       return value;
     }
 
-    uint GetUnitNamespaceInternId(
-      IUnitNamespaceReference unitNamespaceReference
-    ) {
+    uint GetUnitNamespaceInternId(IUnitNamespaceReference unitNamespaceReference) {
+      Contract.Requires(unitNamespaceReference != null);
+
       INestedUnitNamespaceReference/*?*/ nestedUnitNamespaceReference = unitNamespaceReference as INestedUnitNamespaceReference;
       if (nestedUnitNamespaceReference != null) {
         return this.GetNestedNamespaceInternId(nestedUnitNamespaceReference);
@@ -1283,11 +1306,11 @@ namespace Microsoft.Cci {
       return this.GetUnitRootNamespaceInternId(unitNamespaceReference.Unit);
     }
 
-    uint GetNamespaceTypeReferenceInternId(
-      IUnitNamespaceReference containingUnitNamespace,
-      IName typeName,
-      uint genericParameterCount
-    ) {
+    uint GetNamespaceTypeReferenceInternId(IUnitNamespaceReference containingUnitNamespace, IName typeName, uint genericParameterCount) {
+      Contract.Requires(containingUnitNamespace != null);
+      Contract.Requires(!(containingUnitNamespace is Dummy));
+      Contract.Requires(typeName != null);
+
       uint containingUnitNamespaceInteredId = this.GetUnitNamespaceInternId(containingUnitNamespace);
       foreach (NamespaceTypeStore nsTypeStore in this.NamespaceTypeHashtable.GetValuesFor((uint)typeName.UniqueKey)) {
         if (
@@ -1357,6 +1380,7 @@ namespace Microsoft.Cci {
         return 0;
       }
       ITypeReference currentTypeRef = typeReferences.Current;
+      Contract.Assume(currentTypeRef != null && !(currentTypeRef is Dummy));
       uint currentTypeRefInternedId = this.GetTypeReferenceInternId(currentTypeRef);
       uint tailInternedId = this.GetTypeReferenceListInternedId(typeReferences);
       uint value = this.TypeListHashtable.Find(currentTypeRefInternedId, tailInternedId);
@@ -1435,7 +1459,7 @@ namespace Microsoft.Cci {
       IMethodReference definingMethodReference,
       uint index
     ) {
-      if (this.CurrentMethodReference != Dummy.MethodReference) {
+      if (!(this.CurrentMethodReference is Dummy)) {
         //this happens when the defining method reference contains a type in its signature which either is, or contains,
         //a reference to this generic method type parameter. In that case we break the cycle by just using the index of 
         //the generic parameter. Only method references that refer to their own type parameters will ever
@@ -1637,6 +1661,9 @@ namespace Microsoft.Cci {
     }
 
     uint GetTypeReferenceInterendIdIgnoringCustomModifiers(ITypeReference typeReference) {
+      Contract.Requires(typeReference != null);
+      Contract.Requires(!(typeReference is Dummy));
+
       INamespaceTypeReference/*?*/ namespaceTypeReference = typeReference as INamespaceTypeReference;
       if (namespaceTypeReference != null) {
         return this.GetNamespaceTypeReferenceInternId(
@@ -1724,6 +1751,9 @@ namespace Microsoft.Cci {
     }
 
     uint GetTypeReferenceInternId(ITypeReference typeReference) {
+      Contract.Requires(typeReference != null);
+      Contract.Requires(!(typeReference is Dummy));
+
       IModifiedTypeReference/*?*/ modifiedTypeReference = typeReference as IModifiedTypeReference;
       if (modifiedTypeReference != null) {
         return this.GetModifiedTypeReferenceInternId(modifiedTypeReference.UnmodifiedType, modifiedTypeReference.CustomModifiers);

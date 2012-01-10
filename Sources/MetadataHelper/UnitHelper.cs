@@ -153,7 +153,7 @@ namespace Microsoft.Cci {
       if (assemblyReference.IsRetargetable)
         sb.Append(", Retargetable=Yes");
       if (assemblyReference.ContainsForeignTypes)
-        sb.Append(", ContentType = WindowsRuntime");
+        sb.Append(", ContentType=WindowsRuntime");
       return sb.ToString();
     }
 
@@ -800,13 +800,17 @@ namespace Microsoft.Cci.Immutable {
 
     #endregion
 
-    #region IContainerMember<INamespace> Members
+    #region IContainerMember<INamespaceDefinition> Members
 
     /// <summary>
     /// 
     /// </summary>
     public INamespaceDefinition Container {
       get { return this.ContainingNamespace; }
+    }
+
+    IName IContainerMember<INamespaceDefinition>.Name {
+      get { return this.Name; }
     }
 
     #endregion
