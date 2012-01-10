@@ -311,7 +311,7 @@ namespace CodeModelTestInput
         {
             push &xs[0];
             push dup;
-            pop = (pop + 1);
+            pop = (*pop + 1);
             return xs;
 
         }

@@ -205,7 +205,7 @@ namespace Microsoft.Cci.Contracts {
           IName tname = this.host.NameTable.GetNameFor("T");
           GenericMethodParameterReference t = new GenericMethodParameterReference(tname, 0, this.host);
           IEnumerable<ITypeReference> tArg = IteratorHelper.GetSingletonEnumerable<ITypeReference>(t);
-          IGenericTypeInstanceReference predT = GenericTypeInstance.GetGenericTypeInstance(this.PredicateType, tArg, this.host.InternFactory);
+          IGenericTypeInstanceReference predT = new GenericTypeInstanceReference(this.PredicateType, tArg, this.host.InternFactory);
           MethodReference mr = new MethodReference(this.host, this.host.PlatformType.SystemDiagnosticsContractsContract, CallingConvention.Generic,
             this.host.PlatformType.SystemBoolean, this.host.NameTable.GetNameFor("Exists"), 1, predT);
           t.DefiningMethod = mr;
@@ -228,7 +228,7 @@ namespace Microsoft.Cci.Contracts {
           IName tname = this.host.NameTable.GetNameFor("T");
           GenericMethodParameterReference t = new GenericMethodParameterReference(tname, 0, this.host);
           IEnumerable<ITypeReference> tArg = IteratorHelper.GetSingletonEnumerable<ITypeReference>(t);
-          IGenericTypeInstanceReference predT = GenericTypeInstance.GetGenericTypeInstance(this.PredicateType, tArg, this.host.InternFactory);
+          IGenericTypeInstanceReference predT = new GenericTypeInstanceReference(this.PredicateType, tArg, this.host.InternFactory);
           MethodReference mr = new MethodReference(this.host, this.host.PlatformType.SystemDiagnosticsContractsContract, CallingConvention.Generic,
             this.host.PlatformType.SystemBoolean, this.host.NameTable.GetNameFor("Forall"), 1, predT);
           t.DefiningMethod = mr;
@@ -509,7 +509,7 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// An exception that can be thrown by the associated method, along with a possibly empty list of postconditions that are true when that happens.
   /// </summary>
-  public interface IThrownException {
+  public interface IThrownException : IObjectWithLocations {
 
     /// <summary>
     /// The exception that can be thrown by the associated method.

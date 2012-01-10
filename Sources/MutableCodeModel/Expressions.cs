@@ -206,7 +206,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// For example, a value of 1 specifies that the pointer is byte aligned, whereas the target type may be word sized.
     /// </summary>
     /// <value></value>
-    public ushort Alignment {
+    public byte Alignment {
       get { return this.alignment; }
       set
         //^ requires value == 1 || value == 2 || value == 4;
@@ -214,7 +214,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.alignment = value;
       }
     }
-    ushort alignment;
+    byte alignment;
 
     /// <summary>
     /// Calls visitor.Visit(IAddressDereference).
@@ -498,7 +498,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IExpression Source {
       get { return this.source; }
-      set { this.source = value; }
+      set {
+        Contract.Requires(value != null);
+        this.source = value; 
+      }
     }
     IExpression source;
 
@@ -508,7 +511,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITargetExpression Target {
       get { return this.target; }
-      set { this.target = value; }
+      set {
+        Contract.Requires(value != null);
+        this.target = value; 
+      }
     }
     ITargetExpression target;
 
@@ -1638,7 +1644,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public ITypeReference Type {
       get { return this.type; }
-      set { this.type = value; }
+      set {
+        Contract.Requires(value != null);
+        this.type = value; 
+      }
     }
     ITypeReference type;
 
@@ -2833,13 +2842,12 @@ namespace Microsoft.Cci.MutableCodeModel {
       set {
         Contract.Requires(value is ILocalDefinition || value is IParameterDefinition || 
           value is IFieldReference || value is IArrayIndexer || 
-          value is IAddressDereference || value is IPropertyDefinition);
+          value is IAddressDereference || value is IPropertyDefinition || value is IThisReference);
         //Contract.Requires(!(value is IPropertyDefinition) || ((IPropertyDefinition)value).Setter != null);
         this.definition = value;
       }
     }
     object definition;
-    //^ invariant definition is ILocalDefinition || definition is IParameterDefinition || definition is IFieldDefinition || definition is IArrayIndexer || definition is IAddressDereference;
 
     /// <summary>
     /// The instance to be used if this.Definition is an instance field/property or array indexer.

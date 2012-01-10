@@ -34,8 +34,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="host">An object representing the application that is hosting this rewriter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
-    public CodeRewriter(IMetadataHost host)
-      : base(host) {
+    /// <param name="copyAndRewriteImmutableReferences">If true, the rewriter replaces frozen or immutable references with shallow copies.</param>
+    public CodeRewriter(IMetadataHost host, bool copyAndRewriteImmutableReferences = false)
+      : base(host, copyAndRewriteImmutableReferences) {
       this.dispatchingVisitor = new Dispatcher() { rewriter = this };
     }
 
@@ -397,30 +398,6 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.result = this.rewriter.Rewrite(yieldReturnStatement);
       }
 
-    }
-
-    private new IFieldReference Rewrite(IFieldReference fieldReference) {
-      Contract.Requires(fieldReference != null);
-      Contract.Ensures(Contract.Result<IFieldReference>() != null);
-
-      if (fieldReference is Dummy) return fieldReference;
-      return base.Rewrite(fieldReference);
-    }
-
-    private new IMethodReference Rewrite(IMethodReference methodReference) {
-      Contract.Requires(methodReference != null);
-      Contract.Ensures(Contract.Result<IMethodReference>() != null);
-
-      if (methodReference is Dummy) return methodReference;
-      return base.Rewrite(methodReference);
-    }
-
-    private new ITypeReference Rewrite(ITypeReference typeReference) {
-      Contract.Requires(typeReference != null);
-      Contract.Ensures(Contract.Result<ITypeReference>() != null);
-
-      if (typeReference is Dummy) return typeReference;
-      return base.Rewrite(typeReference);
     }
 
     /// <summary>
@@ -1720,8 +1697,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the given list of catch clauses.
     /// </summary>
     /// <param name="catchClauses"></param>
-    public virtual List<ICatchClause>/*?*/ Rewrite(List<ICatchClause>/*?*/ catchClauses) {
-      if (catchClauses == null) return null;
+    public virtual List<ICatchClause> Rewrite(List<ICatchClause> catchClauses) {
+      Contract.Requires(catchClauses != null);
+      Contract.Ensures(Contract.Result<List<ICatchClause>>() != null);
+
       for (int i = 0, n = catchClauses.Count; i < n; i++)
         catchClauses[i] = this.Rewrite((CatchClause)catchClauses[i]);
       return catchClauses;
@@ -1731,8 +1710,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the given list of expressions.
     /// </summary>
     /// <param name="expressions"></param>
-    public virtual List<IExpression>/*?*/ Rewrite(List<IExpression>/*?*/ expressions) {
-      if (expressions == null) return null;
+    public virtual List<IExpression> Rewrite(List<IExpression> expressions) {
+      Contract.Requires(expressions != null);
+      Contract.Ensures(Contract.Result<List<IExpression>>() != null);
+
       for (int i = 0, n = expressions.Count; i < n; i++)
         expressions[i] = this.Rewrite(expressions[i]);
       return expressions;
@@ -1742,8 +1723,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Rewrites the given list of switch cases.
     /// </summary>
     /// <param name="switchCases"></param>
-    public virtual List<ISwitchCase>/*?*/ Rewrite(List<ISwitchCase>/*?*/ switchCases) {
-      if (switchCases == null) return null;
+    public virtual List<ISwitchCase> Rewrite(List<ISwitchCase> switchCases) {
+      Contract.Requires(switchCases != null);
+      Contract.Ensures(Contract.Result<List<ISwitchCase>>() != null);
+
       for (int i = 0, n = switchCases.Count; i < n; i++)
         switchCases[i] = this.Rewrite((SwitchCase)switchCases[i]);
       return switchCases;
@@ -2006,7 +1989,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Requires(catchClause != null);
 
       catchClause.ExceptionType = this.Rewrite(catchClause.ExceptionType);
-      if (catchClause.ExceptionContainer != Dummy.LocalVariable)
+      if (!(catchClause.ExceptionContainer is Dummy))
         catchClause.ExceptionContainer = this.Rewrite(catchClause.ExceptionContainer);
       if (catchClause.FilterCondition != null)
         catchClause.FilterCondition = this.Rewrite(catchClause.FilterCondition);
@@ -2676,8 +2659,11 @@ namespace Microsoft.Cci.MutableCodeModel {
               if (addressDereference != null)
                 targetExpression.Definition = this.Rewrite(addressDereference);
               else {
-                var propertyDefinition = (IPropertyDefinition)targetExpression.Definition;
-                targetExpression.Definition = this.Rewrite(propertyDefinition);
+                var propertyDefinition = targetExpression.Definition as IPropertyDefinition;
+                if (propertyDefinition != null)
+                  targetExpression.Definition = this.Rewrite(propertyDefinition);
+                else
+                  targetExpression.Definition = this.Rewrite((IThisReference)targetExpression.Definition);
               }
             }
           }
@@ -7564,8 +7550,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// </summary>
     /// <param name="host">An object representing the application that is hosting this rewriter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
-    public CodeAndContractRewriter(IMetadataHost host)
-      : base(host) {
+    /// <param name="copyAndRewriteImmutableReferences">If true, the rewriter replaces frozen or immutable references with shallow copies.</param>
+    public CodeAndContractRewriter(IMetadataHost host, bool copyAndRewriteImmutableReferences = false)
+      : base(host, copyAndRewriteImmutableReferences) {
     }
 
     /// <summary>
@@ -7578,8 +7565,9 @@ namespace Microsoft.Cci.MutableCodeModel.Contracts {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="contractProvider">An object that associates contracts, such as preconditions and postconditions, with methods, types and loops.
     /// IL to check this contracts will be generated along with IL to evaluate the block of statements. May be null.</param>
-    public CodeAndContractRewriter(IMetadataHost host, ContractProvider/*?*/ contractProvider)
-      : base(host) {
+    /// <param name="copyAndRewriteImmutableReferences">If true, the rewriter replaces frozen or immutable references with shallow copies.</param>
+    public CodeAndContractRewriter(IMetadataHost host, ContractProvider/*?*/ contractProvider, bool copyAndRewriteImmutableReferences = false)
+      : base(host, copyAndRewriteImmutableReferences) {
       this.contractProvider = contractProvider;
     }
 

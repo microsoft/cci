@@ -360,7 +360,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         }
         var instanceType = closure.InstanceType;
         var genericArguments = IteratorHelper.GetConversionEnumerable<IGenericMethodParameter, ITypeReference>(this.method.GenericParameters);
-        this.currentClosureInstance = Immutable.GenericTypeInstance.GetGenericTypeInstance(instanceType.GenericType, genericArguments, this.host.InternFactory);
+        this.currentClosureInstance = new Immutable.GenericTypeInstanceReference(instanceType.GenericType, genericArguments, this.host.InternFactory);
         this.currentClosureSelfInstance = instanceType;
       } else {
         //if any of the containing types are generic, we need an instance or a specialized nested type.
@@ -637,6 +637,22 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Rewrites the children of the given block expression.
+    /// </summary>
+    /// <param name="blockExpression"></param>
+    public override void RewriteChildren(BlockExpression blockExpression) {
+      var block = blockExpression.BlockStatement as BlockStatement;
+      Contract.Assume(block != null);
+      if (this.scopesWithCapturedLocals.ContainsKey(block)) {
+        this.AllocateClosureFor(block, block.Statements, () => {
+          base.RewriteChildren(block);
+          blockExpression.Expression = this.Rewrite(blockExpression.Expression);
+        });
+      } else
+        base.RewriteChildren(blockExpression);
+    }
+
+    /// <summary>
     /// Rewrites the children of the given statement block.
     /// </summary>
     public override void RewriteChildren(BlockStatement block) {
@@ -709,6 +725,43 @@ namespace Microsoft.Cci.MutableCodeModel {
         Name = this.host.NameTable.Ctor,
         Type = this.host.PlatformType.SystemVoid
       };
+    }
+
+    /// <summary>
+    /// Rewrites the given assignment expression.
+    /// </summary>
+    public override IExpression Rewrite(IAssignment assignment) {
+      var targetInstance = assignment.Target.Instance;
+      var result = base.Rewrite(assignment);
+      if (targetInstance == null && assignment.Target.Instance != null) {
+        //The target now pushes something onto the stack that was not there before the rewrite.
+        //It the right hand side uses the stack, then it will not see the stack it expected.
+        //If so, we need to evaluate the right handside and squirrel it away in a temp before executing
+        //the actual assignment.
+        var popFinder = new PopFinder();
+        popFinder.Traverse(assignment.Source);
+        if (popFinder.foundAPop) {
+          var temp = new LocalDefinition() { Name = this.host.NameTable.GetNameFor("PopTemp"+this.popTempCounter++), Type = assignment.Source.Type };
+          var localDeclarationStatement = new LocalDeclarationStatement() { LocalVariable = temp, InitialValue = assignment.Source };
+          var blockStatement = new BlockStatement();
+          blockStatement.Statements.Add(localDeclarationStatement);
+          Contract.Assume(assignment is Assignment);
+          ((Assignment)assignment).Source = new BoundExpression() { Definition = temp, Type = temp.Type };
+          return new BlockExpression() { BlockStatement = blockStatement, Expression = assignment, Type = assignment.Type };
+        }        
+      }
+      return result;
+    }
+
+    int popTempCounter;
+
+    class PopFinder : CodeTraverser {
+      internal bool foundAPop;
+
+      public override void TraverseChildren(IPopValue popValue) {
+        this.foundAPop = true;
+        this.StopTraversal = true;
+      }
     }
 
     /// <summary>
@@ -876,6 +929,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     internal Dictionary<object, IFieldReference> captures = new Dictionary<object, IFieldReference>();
     internal Dictionary<object, bool> scopesWithCapturedLocals = new Dictionary<object, bool>();
     IBlockStatement/*?*/ currentBlock;
+
+    public override void TraverseChildren(IBlockExpression blockExpression) {
+      var saved = this.currentBlock;
+      this.currentBlock = blockExpression.BlockStatement;
+      base.TraverseChildren(blockExpression.BlockStatement);
+      this.Traverse(blockExpression.Expression);
+      this.currentBlock = saved;
+    }
 
     public override void TraverseChildren(IBlockStatement block) {
       var saved = this.currentBlock;

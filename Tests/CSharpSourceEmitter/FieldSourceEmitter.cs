@@ -38,11 +38,10 @@ namespace CSharpSourceEmitter {
         PrintPseudoCustomAttribute(fieldDefinition, "System.Runtime.InteropServices.FieldOffset", fieldDefinition.Offset.ToString(), true, null);
 
       PrintToken(CSharpToken.Indent);
-      
+
       if (fieldDefinition.IsCompileTimeConstant && fieldDefinition.ContainingType.IsEnum) {
         PrintFieldDefinitionEnumValue(fieldDefinition);
-      }
-      else {
+      } else {
         PrintFieldDefinitionVisibility(fieldDefinition);
         PrintFieldDefinitionModifiers(fieldDefinition);
 
@@ -54,8 +53,7 @@ namespace CSharpSourceEmitter {
             sourceEmitterOutput.Write(" = ");
             PrintFieldDefinitionValue(fieldDefinition);
           }
-        }
-        else {
+        } else {
           PrintFieldDefinitionFixedBuffer(fieldDefinition, fixedBufferAttr);
         }
         PrintToken(CSharpToken.Semicolon);
@@ -95,8 +93,8 @@ namespace CSharpSourceEmitter {
       } else if (TypeHelper.TypesAreEquivalent(fieldDefinition.ContainingTypeDefinition, fieldType) && 
         (fieldType.TypeCode == PrimitiveTypeCode.Int32 || fieldType.TypeCode == PrimitiveTypeCode.UInt32 ||
          fieldType.TypeCode == PrimitiveTypeCode.Int64 || fieldType.TypeCode == PrimitiveTypeCode.UInt64)) {
-          // Defining a core integral system type, can't reference the symbolic names, use constants
-          sourceEmitterOutput.Write(fieldDefinition.CompileTimeValue.Value.ToString());
+        // Defining a core integral system type, can't reference the symbolic names, use constants
+        sourceEmitterOutput.Write(fieldDefinition.CompileTimeValue.Value.ToString());
       } else {
         this.Traverse(fieldDefinition.CompileTimeValue);
       }
@@ -108,7 +106,7 @@ namespace CSharpSourceEmitter {
 
     public virtual void PrintFieldDefinitionModifiers(IFieldDefinition fieldDefinition) {
 
-      if (Utils.GetHiddenField(fieldDefinition) != Dummy.Field)
+      if (!(Utils.GetHiddenField(fieldDefinition) is Dummy))
         PrintKeywordNew();
 
       if (fieldDefinition.Type.TypeCode == PrimitiveTypeCode.Pointer) {
@@ -157,11 +155,10 @@ namespace CSharpSourceEmitter {
       var val = fieldDefinition.CompileTimeValue.Value;
       bool isFlags = (Utils.FindAttribute(fieldDefinition.ContainingTypeDefinition.Attributes, SpecialAttribute.Flags) != null);
       bool castNeeded = false;
-       if (isFlags) {
+      if (isFlags) {
         // Add cast if necessary
         var type = fieldDefinition.CompileTimeValue.Type;
-        long lv = Convert.ToInt64(val);
-        if (TypeHelper.IsSignedPrimitiveInteger(type) && lv < 0) {
+        if (TypeHelper.IsSignedPrimitiveInteger(type) && Convert.ToInt64(val) < 0) {
           castNeeded = true;
           sourceEmitterOutput.Write("unchecked((");
           PrintTypeReference(type);
@@ -169,10 +166,10 @@ namespace CSharpSourceEmitter {
         }
       }
       // Output flags values in hex, non-flags in decimal
-       if (isFlags)
-         this.sourceEmitterOutput.Write(String.Format("0x{0:X}", val));
-       else
-         Traverse(fieldDefinition.CompileTimeValue);
+      if (isFlags)
+        this.sourceEmitterOutput.Write(String.Format("0x{0:X}", val));
+      else
+        Traverse(fieldDefinition.CompileTimeValue);
       if (castNeeded)
         PrintToken(CSharpToken.RightParenthesis);
       PrintToken(CSharpToken.Comma);

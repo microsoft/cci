@@ -3096,7 +3096,7 @@ namespace Microsoft.Cci.Ast {
       if (this.InitialValue == null) return new DummyExpression(SourceDummy.SourceLocation);
       Expression result = this.ContainingLocalDeclarationsStatement.Helper.ImplicitConversionInAssignmentContext(this.InitialValue, this.Type);
       if (result is DummyExpression && this.InitialValue != null && !this.InitialValue.HasErrors) {
-        if (this.InitialValue.Type == Dummy.Type && this.Type.IsDelegate)
+        if (this.InitialValue.Type is Dummy && this.Type.IsDelegate)
           this.ContainingLocalDeclarationsStatement.Helper.ReportFailedMethodGroupToDelegateConversion(this.InitialValue, this.Type);
         else
           this.ContainingLocalDeclarationsStatement.Helper.ReportFailedImplicitConversion(this.InitialValue, this.Type);
@@ -3395,7 +3395,7 @@ namespace Microsoft.Cci.Ast {
           continue;
         }
         ITypeDefinition dtype = initialValue.Type;
-        if (dtype == Dummy.Type) continue;
+        if (dtype is Dummy) continue;
         if (result == null)
           result = dtype;
         else {
@@ -4836,7 +4836,7 @@ namespace Microsoft.Cci.Ast {
       get {
         if (this.Expression.HasErrors) return this.Expression;
         ITypeDefinition switchableType = this.GetSwitchableType(this.Expression.Type);
-        if (switchableType == Dummy.Type) return this.Expression;
+        if (switchableType is Dummy) return this.Expression;
         return this.Helper.ImplicitConversion(this.Expression, switchableType);
       }
     }
@@ -4853,15 +4853,15 @@ namespace Microsoft.Cci.Ast {
         IMethodDefinition/*?*/ conversion = member as IMethodDefinition;
         if (conversion == null) continue;
         if (this.Helper.IsSwitchableType(conversion.Type.ResolvedType)) {
-          if (result != Dummy.Type) return Dummy.Type;
+          if (!(result is Dummy)) return Dummy.Type;
           result = conversion.Type.ResolvedType;
         }
       }
-      if (result != Dummy.Type) return result;
+      if (!(result is Dummy)) return result;
       foreach (ITypeReference baseTypeReference in type.BaseClasses) {
         ITypeDefinition r = this.GetSwitchableType(baseTypeReference.ResolvedType);
-        if (r == Dummy.Type) continue;
-        if (result != Dummy.Type) return Dummy.Type;
+        if (r is Dummy) continue;
+        if (!(result is Dummy)) return Dummy.Type;
         result = r;
       }
       return result;

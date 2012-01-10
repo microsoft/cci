@@ -355,12 +355,46 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An object that represents a statement that consists of a single expression.
   /// </summary>
+  [ContractClass(typeof(IExpressionStatementContract))]
   public interface IExpressionStatement : IStatement {
     /// <summary>
     /// The expression.
     /// </summary>
     IExpression Expression { get; }
   }
+
+  #region IExpressionStatement contract binding
+  [ContractClassFor(typeof(IExpressionStatement))]
+  abstract class IExpressionStatementContract : IExpressionStatement {
+    #region IExpressionStatement Members
+
+    public IExpression Expression {
+      get {
+        Contract.Ensures(Contract.Result<IExpression>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+
+    #region IStatement Members
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// Represents the initblk IL instruction, which fills a block of memory with repeated copies of a given fill value.

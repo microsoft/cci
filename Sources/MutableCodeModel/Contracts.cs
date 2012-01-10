@@ -642,6 +642,23 @@ namespace Microsoft.Cci.MutableContracts {
     }
     IPostcondition postcondition;
 
+    #region IObjectWithLocations Members
+
+    /// <summary>
+    /// A potentially empty collection of locations that correspond to this instance.
+    /// </summary>
+    public List<ILocation> Locations {
+      get { return this.locations; }
+      set { this.locations = value; }
+    }
+    List<ILocation> locations;
+
+    IEnumerable<ILocation> IObjectWithLocations.Locations {
+      get { return this.Locations.AsReadOnly(); }
+    }
+
+    #endregion
+
   }
 
   /// <summary>

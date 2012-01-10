@@ -459,8 +459,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     internal void InitializeInterfaces(ITypeReference elementType, bool isEnumerable) {
       var methodTypeArguments = new List<ITypeReference>();
       methodTypeArguments.Add(elementType);
-      ITypeReference genericEnumeratorType = Immutable.GenericTypeInstance.GetGenericTypeInstance(this.host.PlatformType.SystemCollectionsGenericIEnumerator, methodTypeArguments, this.host.InternFactory);
-      ITypeReference genericEnumerableType = Immutable.GenericTypeInstance.GetGenericTypeInstance(this.host.PlatformType.SystemCollectionsGenericIEnumerable, methodTypeArguments, this.host.InternFactory);
+      ITypeReference genericEnumeratorType = new Immutable.GenericTypeInstanceReference(this.host.PlatformType.SystemCollectionsGenericIEnumerator, methodTypeArguments, this.host.InternFactory);
+      ITypeReference genericEnumerableType = new Immutable.GenericTypeInstanceReference(this.host.PlatformType.SystemCollectionsGenericIEnumerable, methodTypeArguments, this.host.InternFactory);
       ITypeReference nongenericEnumeratorType = this.host.PlatformType.SystemCollectionsIEnumerator;
       ITypeReference nongenericEnumerableType = this.host.PlatformType.SystemCollectionsIEnumerable;
       ITypeReference iDisposable = this.PlatformIDisposable;

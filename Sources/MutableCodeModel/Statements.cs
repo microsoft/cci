@@ -19,7 +19,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// A statement that asserts that a condition must always be true when execution reaches it. For example the assert statement of Spec#.
   /// </summary>
-  public sealed class AssertStatement : Statement, IAssertStatement {
+  public class AssertStatement : Statement, IAssertStatement {
 
     /// <summary>
     /// Allocates a statement that asserts that a condition must always be true when execution reaches it. For example the assert statement of Spec#.
@@ -102,7 +102,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// A statement that asserts that a condition will always be true when execution reaches it. For example the assume statement of Spec#
   /// or a call to System.Diagnostics.Assert in C#.
   /// </summary>
-  public sealed class AssumeStatement : Statement, IAssumeStatement {
+  public class AssumeStatement : Statement, IAssumeStatement {
 
     /// <summary>
     /// 
@@ -246,7 +246,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class BreakStatement : Statement, IBreakStatement {
+  public class BreakStatement : Statement, IBreakStatement {
 
     /// <summary>
     /// 
@@ -274,7 +274,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class CatchClause : ICatchClause {
+  public class CatchClause : ICatchClause {
 
     /// <summary>
     /// 
@@ -370,7 +370,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class ConditionalStatement : Statement, IConditionalStatement {
+  public class ConditionalStatement : Statement, IConditionalStatement {
 
     /// <summary>
     /// 
@@ -393,6 +393,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Returns a shallow copy of this ConditionalStatement.
+    /// </summary>
+    public virtual ConditionalStatement Clone() {
+      return new ConditionalStatement(this);
+    }
+
+    /// <summary>
     /// The expression to evaluate as true or false.
     /// </summary>
     /// <value></value>
@@ -400,6 +407,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get { return this.condition; }
       set {
         Contract.Requires(value != null);
+        //Contract.Requires(value.Type.TypeCode == PrimitiveTypeCode.Boolean);
         this.condition = value; 
       }
     }
@@ -444,7 +452,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class ContinueStatement : Statement, IContinueStatement {
+  public class ContinueStatement : Statement, IContinueStatement {
 
     /// <summary>
     /// 
@@ -474,7 +482,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// Represents the cpblk IL instruction, which copies a block of memory from one address to another.
   /// The behavior of this instruction is undefined if the source block overlaps the target block.
   /// </summary>
-  public sealed class CopyMemoryStatement : Statement, ICopyMemoryStatement {
+  public class CopyMemoryStatement : Statement, ICopyMemoryStatement {
 
     /// <summary>
     /// Represents the cpblk IL instruction, which copies a block of memory from one address to another.
@@ -540,7 +548,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class DebuggerBreakStatement : Statement, IDebuggerBreakStatement {
+  public class DebuggerBreakStatement : Statement, IDebuggerBreakStatement {
 
     /// <summary>
     /// 
@@ -569,7 +577,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class DoUntilStatement : Statement, IDoUntilStatement {
+  public class DoUntilStatement : Statement, IDoUntilStatement {
 
     /// <summary>
     /// 
@@ -622,7 +630,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class EmptyStatement : Statement, IEmptyStatement {
+  public class EmptyStatement : Statement, IEmptyStatement {
 
     /// <summary>
     /// 
@@ -637,6 +645,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     public EmptyStatement(IEmptyStatement emptyStatement)
       : base(emptyStatement) {
       this.isSentinel = emptyStatement.IsSentinel;
+    }
+
+    /// <summary>
+    /// Returns a shallow copy of this EmptyStatement.
+    /// </summary>
+    public virtual EmptyStatement Clone() {
+      return new EmptyStatement(this);
     }
 
     /// <summary>
@@ -662,7 +677,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class ExpressionStatement : Statement, IExpressionStatement {
+  public class ExpressionStatement : Statement, IExpressionStatement {
 
     /// <summary>
     /// 
@@ -703,7 +718,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// Represents the initblk IL instruction, which fills a block of memory with repeated copies of a given fill value.
   /// </summary>
-  public sealed class FillMemoryStatement : Statement, IFillMemoryStatement {
+  public class FillMemoryStatement : Statement, IFillMemoryStatement {
 
     /// <summary>
     /// Represents the initblk IL instruction, which fills a block of memory with repeated copies of a given fill value.
@@ -768,7 +783,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class ForEachStatement : Statement, IForEachStatement {
+  public class ForEachStatement : Statement, IForEachStatement {
 
     /// <summary>
     /// 
@@ -833,7 +848,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class ForStatement : Statement, IForStatement {
+  public class ForStatement : Statement, IForStatement {
 
     /// <summary>
     /// 
@@ -879,6 +894,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
     IStatement body;
+
+    /// <summary>
+    /// Returns a shallow copy of this ForStatement.
+    /// </summary>
+    public virtual ForStatement Clone() {
+      return new ForStatement(this);
+    }
 
     /// <summary>
     /// The expression to evaluate as true or false, which determines if the loop is to continue.
@@ -990,7 +1012,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class GotoSwitchCaseStatement : Statement, IGotoSwitchCaseStatement {
+  public class GotoSwitchCaseStatement : Statement, IGotoSwitchCaseStatement {
 
     /// <summary>
     /// 
@@ -1031,7 +1053,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class LabeledStatement : Statement, ILabeledStatement {
+  public class LabeledStatement : Statement, ILabeledStatement {
 
     /// <summary>
     /// 
@@ -1084,7 +1106,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// An object that represents the declaration of a local variable, with optional initializer.
   /// </summary>
-  public sealed class LocalDeclarationStatement : Statement, ILocalDeclarationStatement {
+  public class LocalDeclarationStatement : Statement, ILocalDeclarationStatement {
 
     /// <summary>
     /// Initializes an object that represents the declaration of a local variable, with optional initializer.
@@ -1136,7 +1158,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class LockStatement : Statement, ILockStatement {
+  public class LockStatement : Statement, ILockStatement {
 
     /// <summary>
     /// 
@@ -1188,7 +1210,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// Pushes a value onto an implicit operand stack.
   /// </summary>
-  public sealed class PushStatement : Statement, IPushStatement {
+  public class PushStatement : Statement, IPushStatement {
 
     /// <summary>
     /// Allocates a statement that pushes a value onto an implicit operand stack.
@@ -1226,7 +1248,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class ResourceUseStatement : Statement, IResourceUseStatement {
+  public class ResourceUseStatement : Statement, IResourceUseStatement {
 
     /// <summary>
     /// 
@@ -1278,7 +1300,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class RethrowStatement : Statement, IRethrowStatement {
+  public class RethrowStatement : Statement, IRethrowStatement {
 
     /// <summary>
     /// 
@@ -1307,7 +1329,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class ReturnStatement : Statement, IReturnStatement {
+  public class ReturnStatement : Statement, IReturnStatement {
 
     /// <summary>
     /// 
@@ -1407,7 +1429,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class SwitchCase : ISwitchCase {
+  public class SwitchCase : ISwitchCase {
 
     /// <summary>
     /// 
@@ -1499,7 +1521,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class SwitchStatement : Statement, ISwitchStatement {
+  public class SwitchStatement : Statement, ISwitchStatement {
 
     /// <summary>
     /// 
@@ -1565,7 +1587,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class ThrowStatement : Statement, IThrowStatement {
+  public class ThrowStatement : Statement, IThrowStatement {
 
     /// <summary>
     /// 
@@ -1606,7 +1628,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// Represents a try block with any number of catch clauses, any number of filter clauses and, optionally, a finally or fault block.
   /// </summary>
-  public sealed class TryCatchFinallyStatement : Statement, ITryCatchFinallyStatement {
+  public class TryCatchFinallyStatement : Statement, ITryCatchFinallyStatement {
 
     /// <summary>
     /// Allocates and object that represents a try block with any number of catch clauses, any number of filter clauses and, optionally, a finally or fault block.
@@ -1704,7 +1726,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class WhileDoStatement : Statement, IWhileDoStatement {
+  public class WhileDoStatement : Statement, IWhileDoStatement {
 
     /// <summary>
     /// 
@@ -1771,7 +1793,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class YieldBreakStatement : Statement, IYieldBreakStatement {
+  public class YieldBreakStatement : Statement, IYieldBreakStatement {
 
     /// <summary>
     /// 
@@ -1800,7 +1822,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class YieldReturnStatement : Statement, IYieldReturnStatement {
+  public class YieldReturnStatement : Statement, IYieldReturnStatement {
 
     /// <summary>
     /// 

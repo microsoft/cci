@@ -19,18 +19,18 @@ namespace CSharpSourceEmitter {
     /// <summary>
     /// Returns the method from the closest base class that is hidden by the given method according to C# rules.
     /// If the method is an interface method definition, then look at it's base interfaces
-    /// If no such method exists, Dummy.Method is returned.
+    /// If no such method exists, Dummy.MethodDefinition is returned.
     /// </summary>
     public static IMethodDefinition GetHiddenBaseClassMethod(IMethodDefinition derivedClassMethod) {
-      if (derivedClassMethod.IsConstructor) return Dummy.Method;
-      if (derivedClassMethod.IsVirtual && !derivedClassMethod.IsNewSlot) return Dummy.Method;   // an override
+      if (derivedClassMethod.IsConstructor) return Dummy.MethodDefinition;
+      if (derivedClassMethod.IsVirtual && !derivedClassMethod.IsNewSlot) return Dummy.MethodDefinition;   // an override
       var typeDef = derivedClassMethod.ContainingTypeDefinition;
       var bases = typeDef.IsInterface ? typeDef.Interfaces : typeDef.BaseClasses;
       foreach (ITypeReference baseClassReference in bases) {
         IMethodDefinition overriddenMethod = GetHiddenBaseClassMethod(derivedClassMethod, baseClassReference.ResolvedType);
-        if (overriddenMethod != Dummy.Method) return overriddenMethod;
+        if (!(overriddenMethod is Dummy)) return overriddenMethod;
       }
-      return Dummy.Method;
+      return Dummy.MethodDefinition;
     }
     private static IMethodDefinition GetHiddenBaseClassMethod(IMethodDefinition derivedClassMethod, ITypeDefinition baseClass) {
       foreach (ITypeDefinitionMember baseMember in baseClass.GetMembersNamed(derivedClassMethod.Name, false)) {
@@ -51,9 +51,9 @@ namespace CSharpSourceEmitter {
       var bases = baseClass.IsInterface ? baseClass.Interfaces : baseClass.BaseClasses;
       foreach (ITypeReference baseClassReference in bases) {
         IMethodDefinition overriddenMethod = GetHiddenBaseClassMethod(derivedClassMethod, baseClassReference.ResolvedType);
-        if (overriddenMethod != Dummy.Method) return overriddenMethod;
+        if (!(overriddenMethod is Dummy)) return overriddenMethod;
       }
-      return Dummy.Method;
+      return Dummy.MethodDefinition;
     }
 
     /// <summary>
@@ -63,9 +63,9 @@ namespace CSharpSourceEmitter {
       var typeDef = derivedClassField.ContainingTypeDefinition;
       foreach (ITypeReference baseClassReference in typeDef.BaseClasses) {
         IFieldDefinition hiddenField = GetHiddenField(derivedClassField, baseClassReference.ResolvedType);
-        if (hiddenField != Dummy.Field) return hiddenField;
+        if (!(hiddenField is Dummy)) return hiddenField;
       }
-      return Dummy.Field;
+      return Dummy.FieldDefinition;
     }
     private static IFieldDefinition GetHiddenField(IFieldDefinition derivedClassField, ITypeDefinition baseClass) {
       foreach (ITypeDefinitionMember baseMember in baseClass.GetMembersNamed(derivedClassField.Name, false)) {
@@ -77,9 +77,9 @@ namespace CSharpSourceEmitter {
       var bases = baseClass.IsInterface ? baseClass.Interfaces : baseClass.BaseClasses;
       foreach (ITypeReference baseClassReference in bases) {
         IFieldDefinition hiddenField = GetHiddenField(derivedClassField, baseClassReference.ResolvedType);
-        if (hiddenField != Dummy.Field) return hiddenField;
+        if (!(hiddenField is Dummy)) return hiddenField;
       }
-      return Dummy.Field;
+      return Dummy.FieldDefinition;
     }
 
     /// <summary>

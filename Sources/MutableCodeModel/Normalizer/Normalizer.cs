@@ -232,7 +232,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Iterator method.
     /// </summary>
-    private IMethodDefinition method = Dummy.Method;
+    private IMethodDefinition method = Dummy.MethodDefinition;
 
     /// <summary>
     /// List of helper types generated during compilation. We shall add the iterator closure to the list. 
@@ -433,7 +433,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (genericTypeInstanceRef != null) {
           List<ITypeReference> args = new List<ITypeReference>();
           foreach (var t in method.GenericParameters) args.Add(t);
-          return Immutable.GenericTypeInstance.GetGenericTypeInstance(genericTypeInstanceRef.GenericType, args, this.host.InternFactory);
+          return new Immutable.GenericTypeInstanceReference(genericTypeInstanceRef.GenericType, args, this.host.InternFactory);
         }
       }
       return closureReference;
@@ -868,7 +868,7 @@ namespace Microsoft.Cci.MutableCodeModel {
             return propertyDef;
           }
         }
-        return Dummy.Property;
+        return Dummy.PropertyDefinition;
       }
     }
 

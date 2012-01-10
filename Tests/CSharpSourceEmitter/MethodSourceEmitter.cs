@@ -121,7 +121,8 @@ namespace CSharpSourceEmitter {
         PrintTypeMemberVisibility(methodDefinition.Visibility);
     }
 
-    public virtual bool IsMethodUnsafe(IMethodDefinition methodDefinition) {
+    public virtual bool IsMethodUnsafe(IMethodDefinition/*?*/ methodDefinition) {
+      if (methodDefinition == null) return false;
       foreach (var p in methodDefinition.Parameters) {
         if (p.Type.TypeCode == PrimitiveTypeCode.Pointer)
           return true;
@@ -152,9 +153,9 @@ namespace CSharpSourceEmitter {
 
     private bool IsDestructor(IMethodDefinition methodDefinition, ITypeReference baseClassReference) {
       var baseClass = baseClassReference.ResolvedType;
-      if (baseClass == Dummy.Type) return true; //It might not be true, but it LOOKS true and we can't tell for sure. So give up and pretend it is true.
+      if (baseClass is Dummy) return true; //It might not be true, but it LOOKS true and we can't tell for sure. So give up and pretend it is true.
       var baseFinalize = TypeHelper.GetMethod(baseClass.GetMembersNamed(methodDefinition.Name, false), methodDefinition);
-      if (baseFinalize != Dummy.Method && baseFinalize.IsNewSlot) return TypeHelper.TypesAreEquivalent(baseClass, baseClass.PlatformType.SystemObject);
+      if (!(baseFinalize is Dummy) && baseFinalize.IsNewSlot) return TypeHelper.TypesAreEquivalent(baseClass, baseClass.PlatformType.SystemObject);
       foreach (var bbcRef in baseClass.BaseClasses)
         return IsDestructor(methodDefinition, bbcRef);
       return true; //Did not find Finalize in System.Object, which means that we're clueless anyway.
@@ -168,7 +169,7 @@ namespace CSharpSourceEmitter {
       if (IsMethodUnsafe(methodDefinition))
         PrintKeywordUnsafe();
 
-      if (Utils.GetHiddenBaseClassMethod(methodDefinition) != Dummy.Method)
+      if (!(Utils.GetHiddenBaseClassMethod(methodDefinition) is Dummy))
         PrintKeywordNew();
 
       if (methodDefinition.ContainingTypeDefinition.IsInterface) {
@@ -215,7 +216,9 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintMethodDefinitionReturnType(IMethodDefinition methodDefinition) {
-      if (!methodDefinition.IsConstructor && !IsDestructor(methodDefinition) /*&& !IsOperator(methodDefinition)*/)
+      if (methodDefinition == null)
+        this.sourceEmitterOutput.Write("unknown");
+      else if (!methodDefinition.IsConstructor && !IsDestructor(methodDefinition) /*&& !IsOperator(methodDefinition)*/)
         PrintTypeReference(methodDefinition.Type);
     }
 

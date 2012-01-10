@@ -436,7 +436,7 @@ namespace Microsoft.Cci.Ast {
       foreach (NamespaceImportDeclaration import in imports) {
         NamespaceReferenceExpression nsImport = import.ImportedNamespace;
         INamespaceDefinition nsDefinition = nsImport.Resolve();
-        if (nsDefinition != Dummy.RootUnitNamespace) {
+        if (!(nsDefinition is Dummy)) {
           foreach (INamespaceMember member in nsDefinition.Members) {
             ITypeDefinition typeDefinition = member as ITypeDefinition;
             if (typeDefinition != null && this.HasExtensionMethod(typeDefinition)) {
@@ -753,7 +753,7 @@ namespace Microsoft.Cci.Ast {
         }
         foreach (var import in this.Imports) {
           var ns = import.ImportedNamespace.Resolve();
-          if (ns == Dummy.RootUnitNamespace) continue;
+          if (ns is Dummy) continue;
           yield return new UsedNamespace(ns.Name);
         }
       }
@@ -1815,7 +1815,7 @@ namespace Microsoft.Cci.Ast {
           lock (GlobalLock.LockingObject) {
             if ((result = this.unitSet) == null) {
               this.unitSet = result = this.ContainingNamespaceDeclaration.Compilation.GetUnitSetFor(this.Name);
-              if (result == Dummy.UnitSet) {
+              if (result is Dummy) {
                 this.ContainingNamespaceDeclaration.Helper.ReportError(new AstErrorMessage(this.Name, Error.BadExternAlias, this.Name.Value));
               }
             }

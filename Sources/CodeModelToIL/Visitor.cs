@@ -724,8 +724,13 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="blockExpression">The block expression.</param>
     public override void TraverseChildren(IBlockExpression blockExpression) {
-      this.Traverse(blockExpression.BlockStatement);
+      uint numberOfIteratorLocals = 0;
+      if (this.iteratorLocalCount != null)
+        this.iteratorLocalCount.TryGetValue(blockExpression.BlockStatement, out numberOfIteratorLocals);
+      this.generator.BeginScope(numberOfIteratorLocals);
+      this.Traverse(blockExpression.BlockStatement.Statements);
       this.Traverse(blockExpression.Expression);
+      this.generator.EndScope();
     }
 
     /// <summary>
@@ -801,7 +806,7 @@ namespace Microsoft.Cci {
         this.generator.BeginCatchBlock(catchClause.ExceptionType);
       }
       this.StackSize++;
-      if (catchClause.ExceptionContainer != Dummy.LocalVariable) {
+      if (!(catchClause.ExceptionContainer is Dummy)) {
         this.generator.AddVariableToCurrentScope(catchClause.ExceptionContainer);
         this.VisitAssignmentTo(catchClause.ExceptionContainer);
       } else
@@ -937,8 +942,8 @@ namespace Microsoft.Cci {
       if (sourceType.ResolvedType.IsEnum) sourceType = sourceType.ResolvedType.UnderlyingType;
       ITypeReference targetType = conversion.Type;
       if (targetType.ResolvedType.IsEnum) targetType = targetType.ResolvedType.UnderlyingType;
-      if (sourceType == Dummy.TypeReference) sourceType = targetType;
-      if (targetType == Dummy.TypeReference) targetType = sourceType;
+      if (sourceType is Dummy) sourceType = targetType;
+      if (targetType is Dummy) targetType = sourceType;
       if (TypeHelper.TypesAreEquivalent(sourceType, targetType)) return;
       if (conversion.CheckNumericRange)
         this.VisitCheckedConversion(sourceType, targetType);
@@ -1632,7 +1637,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="methodCall">The method call.</param>
     public override void TraverseChildren(IMethodCall methodCall) {
-      if (methodCall.MethodToCall == Dummy.MethodReference) return;
+      if (methodCall.MethodToCall is Dummy) return;
       if (!methodCall.IsStaticCall && !methodCall.IsJumpCall)
         this.Traverse(methodCall.ThisArgument);
       this.Traverse(methodCall.Arguments);

@@ -48,10 +48,12 @@ namespace HelloContracts {
       #region Parse options
       var options = new Options();
       options.Parse(args);
-      if (options.HasErrors) {
-        if (options.HelpRequested)
-          options.PrintOptions("");
+      if (options.HelpRequested) {
+        options.PrintOptions("");
         return 1;
+      }
+      if (options.HasErrors) {
+        options.PrintErrorsAndExit(Console.Out);
       }
       #endregion
 
@@ -61,12 +63,12 @@ namespace HelloContracts {
         #region Collect and write contracts
         using (var host = new CodeContractAwareHostEnvironment(options.libpaths)) {
           IModule module = host.LoadUnitFrom(fileName) as IModule;
-          if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
+          if (module == null || module is Dummy) {
             Console.WriteLine("'{0}' is not a PE file containing a CLR module or assembly.", fileName);
             Environment.Exit(1);
           }
           var t = new Traverser(host, options.inherited);
-          t.Visit(module);
+          t.Traverse(module);
         }
         #endregion
         return 0;
@@ -74,7 +76,7 @@ namespace HelloContracts {
         using (var host = new CodeContractAwareHostEnvironment(options.libpaths, true, true)) {
           // Read the Metadata Model from the PE file
           var module = host.LoadUnitFrom(fileName) as IModule;
-          if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
+          if (module == null || module is Dummy) {
             Console.WriteLine(fileName + " is not a PE file containing a CLR module or assembly.");
             return 1;
           }
@@ -125,7 +127,7 @@ namespace HelloContracts {
     }
   }
 
-  sealed class Traverser : BaseMetadataTraverser {
+  sealed class Traverser : MetadataTraverser {
 
     private IContractAwareHost host;
     private bool showInherited;
@@ -200,7 +202,7 @@ namespace HelloContracts {
 
     #region Visitors
 
-    public override void Visit(ITypeDefinition typeDefinition) {
+    public override void TraverseChildren(ITypeDefinition typeDefinition) {
       if (AttributeHelper.Contains(typeDefinition.Attributes, this.host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute)) return;
       if (ContractHelper.IsContractClass(this.host, typeDefinition)) return;
       if (typeDefinition.IsEnum) return;
@@ -212,11 +214,11 @@ namespace HelloContracts {
         if (ce != null)
           PrintTypeContract(ce.GetTypeContractFor(typeDefinition));
       }
-      base.Visit(typeDefinition);
+      base.TraverseChildren(typeDefinition);
       this.indentLevel--;
     }
 
-    public override void Visit(IPropertyDefinition propertyDefinition) {
+    public override void TraverseChildren(IPropertyDefinition propertyDefinition) {
       string propertyId = MemberHelper.GetMemberSignature(propertyDefinition, NameFormattingOptions.SmartTypeName);
       Indent();
       Console.WriteLine(propertyId);
@@ -250,7 +252,7 @@ namespace HelloContracts {
       this.indentLevel--;
     }
 
-    public override void Visit(IMethodDefinition methodDefinition) {
+    public override void TraverseChildren(IMethodDefinition methodDefinition) {
       if (AttributeHelper.Contains(methodDefinition.Attributes, this.host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute)) return;
       if (ContractHelper.IsInvariantMethod(this.host, methodDefinition)) return;
       if (IsGetter(methodDefinition) || IsSetter(methodDefinition)) return;

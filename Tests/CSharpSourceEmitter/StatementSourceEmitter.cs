@@ -315,11 +315,11 @@ namespace CSharpSourceEmitter {
           this.Traverse(clause.Body);
         } else {
           this.sourceEmitterOutput.Write("catch", true);
-          if (clause.ExceptionType != Dummy.TypeReference) {
-            if (clause.ExceptionContainer != Dummy.LocalVariable || clause.ExceptionType.InternedKey != clause.ExceptionType.PlatformType.SystemObject.InternedKey) {
+          if (!(clause.ExceptionType is Dummy)) {
+            if (!(clause.ExceptionContainer is Dummy) || clause.ExceptionType.InternedKey != clause.ExceptionType.PlatformType.SystemObject.InternedKey) {
               this.sourceEmitterOutput.Write("(");
               this.PrintTypeReference(clause.ExceptionType);
-              if (clause.ExceptionContainer != Dummy.LocalVariable) {
+              if (!(clause.ExceptionContainer is Dummy)) {
                 this.sourceEmitterOutput.Write(" ");
                 this.PrintLocalName(clause.ExceptionContainer);
               }

@@ -1,14 +1,4 @@
-﻿//-----------------------------------------------------------------------------
-//
-// Copyright (c) Microsoft Corporation.  All Rights Reserved.
-// This code is licensed under the Microsoft Public License.
-// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
-// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
-// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
-//
-//-----------------------------------------------------------------------------
-using System;
+﻿using System;
 using Microsoft.Cci;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.Contracts;
@@ -27,8 +17,8 @@ namespace HelloCodeModel {
           ModuleName = nameTable.GetNameFor("hello.exe"),
           Kind = ModuleKind.ConsoleApplication,
           PlatformType = host.PlatformType,
-          TargetRuntimeVersion = coreAssembly.TargetRuntimeVersion,
           RequiresStartupStub = host.PointerSize == 4,
+          TargetRuntimeVersion = coreAssembly.TargetRuntimeVersion,
         };
         assembly.AssemblyReferences.Add(coreAssembly);
 
@@ -90,7 +80,6 @@ namespace HelloCodeModel {
         }
       }
     }
-
 
   }
 }

@@ -23,7 +23,7 @@ namespace Microsoft.Cci.MutableContracts {
   /// list of statements within a block statement, i.e., that they form a linear
   /// linked list.
   /// </summary>
-  public class ContractExtractor : MethodBodyCodeMutator {
+  public class ContractExtractor : CodeRewriter {
 
     #region Public API
     /// <summary>
@@ -113,7 +113,7 @@ namespace Microsoft.Cci.MutableContracts {
 
     #endregion
 
-    private MethodContract/*?*/ currentMethodContract;
+    internal MethodContract/*?*/ currentMethodContract;
     private MethodContract/*!*/ CurrentMethodContract {
       get {
         if (this.currentMethodContract == null) {
@@ -137,11 +137,10 @@ namespace Microsoft.Cci.MutableContracts {
     private IContractAwareHost contractAwarehost;
     private OldAndResultExtractor oldAndResultExtractor;
     private bool extractingFromACtorInAClass;
-    ///// <summary>
-    ///// When not null, this is the abstract type for which the contract class
-    ///// is holding the contracts for.
-    ///// </summary>
-    //private ITypeReference/*?*/ extractingFromAMethodInAContractClass;
+    /// <summary>
+    /// When not null, this is the abstract type for which the contract class
+    /// is holding the contracts for.
+    /// </summary>
 
     private bool methodIsInReferenceAssembly;
 
@@ -154,11 +153,11 @@ namespace Microsoft.Cci.MutableContracts {
       return (TypeHelper.GetTypeName(t).Equals("System.Diagnostics.Contracts.Contract"));
     }
 
-    private ContractExtractor(
+    internal ContractExtractor(
       ISourceMethodBody sourceMethodBody,
       IContractAwareHost host,
       PdbReader/*?*/ pdbReader)
-      : base(host, true, pdbReader) {
+      : base(host) {
       this.sourceMethodBody = sourceMethodBody;
       this.contractAwarehost = host;
       this.pdbReader = pdbReader;
@@ -177,7 +176,7 @@ namespace Microsoft.Cci.MutableContracts {
       }
       #endregion Set contract purity based on whether the method definition has the pure attribute
 
-      this.oldAndResultExtractor = new OldAndResultExtractor(this.host, sourceMethodBody, this.referenceCache, this.IsContractMethod);
+      this.oldAndResultExtractor = new OldAndResultExtractor(this.host, sourceMethodBody, this.IsContractMethod);
 
       this.extractingFromACtorInAClass =
         this.currentMethod.IsConstructor
@@ -188,10 +187,7 @@ namespace Microsoft.Cci.MutableContracts {
 
     private MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(IBlockStatement blockStatement) {
       // Don't start with an empty contract because the ctor may have set some things in it
-      var bs = this.Visit(blockStatement);
-      //if (false) { // TODO: remove this once the clients that care can extract the assert/assume calls themselves
-      //  bs = new AssertAssumeExtractor(this.sourceMethodBody, this.host, this.pdbReader).Visit(bs);
-      //}
+      var bs = this.Rewrite(blockStatement);
       if (this.currentMethodContract != null) {
         this.currentMethodContract = ReplacePrivateFieldsThatHavePublicProperties(this.host, this.currentMethod.ContainingTypeDefinition, this.currentMethodContract);
         ContractChecker.CheckMethodContract(this.host, this.currentMethod, this.currentMethodContract);
@@ -288,7 +284,7 @@ namespace Microsoft.Cci.MutableContracts {
       }
 
       TypeInvariant invariant = new TypeInvariant() {
-        Condition = this.Visit(contractExpression),
+        Condition = this.Rewrite(contractExpression),
         Description = numArgs >= 2 ? arguments[1] : null,
         OriginalSource = origSource,
         Locations = locations,
@@ -296,16 +292,16 @@ namespace Microsoft.Cci.MutableContracts {
       return invariant;
     }
 
-    public override IBlockStatement Visit(BlockStatement blockStatement) {
-      if (blockStatement == null) return blockStatement;
+    public override void RewriteChildren(BlockStatement blockStatement) {
+      if (blockStatement == null) return;
       var stmts = blockStatement.Statements;
-      if (stmts.Count == 0) return blockStatement;
+      if (stmts.Count == 0) return;
 
       var linearBlockIndex = LinearizeBlocks(blockStatement);
 
       int lastBlockIndex;
       int lastStatementIndex;
-      if (!LastIndexOf(s => IsPrePostEndOrLegacy(s, false), linearBlockIndex, out lastBlockIndex, out lastStatementIndex)) return blockStatement;
+      if (!LastIndexOf(s => IsPrePostEndOrLegacy(s, false), linearBlockIndex, out lastBlockIndex, out lastStatementIndex)) return;
 
       List<IStatement> newStmts = new List<IStatement>();
 
@@ -313,7 +309,7 @@ namespace Microsoft.Cci.MutableContracts {
       int stmtIndexOfNextContractCall;
 
       var found = IndexOf(s => IsPrePostEndOrLegacy(s, true), linearBlockIndex, 0, 0, out blockIndexOfNextContractCall, out stmtIndexOfNextContractCall);
-      if (!found || !BlockStatementIndicesLessThanOrEqual(blockIndexOfNextContractCall, stmtIndexOfNextContractCall, lastBlockIndex, lastStatementIndex)) return blockStatement;
+      if (!found || !BlockStatementIndicesLessThanOrEqual(blockIndexOfNextContractCall, stmtIndexOfNextContractCall, lastBlockIndex, lastStatementIndex)) return;
 
       var localDeclarationStatements = new List<IStatement>();
       var firstStatementIndex = 0;
@@ -378,10 +374,10 @@ namespace Microsoft.Cci.MutableContracts {
         remaining.InsertRange(0, localDeclarationStatements);
       newStmts.AddRange(remaining);
       blockStatement.Statements = newStmts;
-      return blockStatement;
+      return;
     }
 
-    private List<IStatement> ExtractContractsAndReturnRemainingStatements(
+    internal List<IStatement> ExtractContractsAndReturnRemainingStatements(
       List<BlockStatement> linearBlockIndex,
       int startBlock,
       int startStatement,
@@ -502,7 +498,7 @@ namespace Microsoft.Cci.MutableContracts {
             IGenericMethodInstanceReference/*?*/ genericMethodToCall = methodToCall as IGenericMethodInstanceReference;
 
             if (mname == "Ensures") {
-              contractExpression = this.oldAndResultExtractor.Visit(contractExpression);
+              contractExpression = this.oldAndResultExtractor.Rewrite(contractExpression);
               Postcondition postcondition = new Postcondition() {
                 Condition = contractExpression,
                 Description = description,
@@ -516,7 +512,7 @@ namespace Microsoft.Cci.MutableContracts {
             }
             if (mname == "EnsuresOnThrow" && genericMethodToCall != null) {
               var genericArgs = new List<ITypeReference>(genericMethodToCall.GenericArguments); // REVIEW: Better way to get the single element from the enumerable?
-              contractExpression = this.oldAndResultExtractor.Visit(contractExpression);
+              contractExpression = this.oldAndResultExtractor.Rewrite(contractExpression);
               ThrownException exceptionalPostcondition = new ThrownException() {
                 ExceptionType = genericArgs[0],
                 Postcondition = new Postcondition() {
@@ -565,26 +561,26 @@ namespace Microsoft.Cci.MutableContracts {
               var copier = new CodeAndContractDeepCopier(this.host);
               var copyOfContract = copier.Copy(mc);
 
-              var gmir = methodToCall as IGenericMethodInstanceReference;
-              if (gmir != null) {
-                // If there are any references to the abbreviator's parameters in the contract,
-                // then they are to the unspecialized parameters. So the abbreviatorDef needs
-                // to get unspecialized so that the BetaReducer can get the right parameters
-                // out of it to use in its mapping table.
-                abbreviatorDef = gmir.GenericMethod.ResolvedMethod;
-              }
+              //var gmir = methodToCall as IGenericMethodInstanceReference;
+              //if (gmir != null) {
+              //  // If there are any references to the abbreviator's parameters in the contract,
+              //  // then they are to the unspecialized parameters. So the abbreviatorDef needs
+              //  // to get unspecialized so that the BetaReducer can get the right parameters
+              //  // out of it to use in its mapping table.
+              //  abbreviatorDef = gmir.GenericMethod.ResolvedMethod;
+              //}
 
               var brewriter = new BetaReducer(host, abbreviatorDef, this.currentMethod, new List<IExpression>(methodCall.Arguments));
               brewriter.RewriteChildren(copyOfContract);
 
-              if (gmir != null) {
-                var typeMap = new Dictionary<uint, ITypeReference>();
-                IteratorHelper.Zip(abbreviatorDef.GenericParameters, gmir.GenericArguments,
-                  (i, j) => typeMap.Add(i.InternedKey, j));
+              //if (gmir != null) {
+              //  var typeMap = new Dictionary<uint, ITypeReference>();
+              //  IteratorHelper.Zip(abbreviatorDef.GenericParameters, gmir.GenericArguments,
+              //    (i, j) => typeMap.Add(i.InternedKey, j));
 
-                var cs2 = new CodeSpecializer2(this.host, typeMap);
-                cs2.RewriteChildren(copyOfContract);
-              }
+              //  var cs2 = new CodeSpecializer2(this.host, typeMap);
+              //  cs2.RewriteChildren(copyOfContract);
+              //}
               copyOfContract.Locations.InsertRange(0, methodCall.Locations);
               if (this.currentMethodContract == null)
                 this.currentMethodContract = new MethodContract(copyOfContract);
@@ -603,10 +599,11 @@ namespace Microsoft.Cci.MutableContracts {
     /// list of statements in a BlockStatement.
     /// </summary>
     /// <returns>A list of the blocks. Each block is unchanged.</returns>
-    internal List<BlockStatement> LinearizeBlocks(BlockStatement blockStatement) {
+    internal List<BlockStatement> LinearizeBlocks(IBlockStatement blockStatement) {
       var result = new List<BlockStatement>();
-      if (blockStatement.Statements.Count == 0) return result;
-      BlockStatement bs = blockStatement;
+      if (IteratorHelper.EnumerableIsEmpty(blockStatement.Statements)) return result;
+      BlockStatement bs = blockStatement as BlockStatement;
+      if (bs == null) return result;
       do {
         result.Add(bs);
         bs = bs.Statements[bs.Statements.Count - 1] as BlockStatement;
@@ -1015,8 +1012,9 @@ namespace Microsoft.Cci.MutableContracts {
       if (caw != null)
         validatorContract = ContractHelper.GetMethodContractFor(caw, methodDefinition);
       if (validatorContract != null) {
+        validatorContract = new CodeAndContractDeepCopier(host).Copy(validatorContract);
         var bpta = new ReplaceParametersWithArguments(this.host, methodDefinition, methodCall);
-        validatorContract = bpta.Visit(validatorContract);
+        validatorContract = bpta.Rewrite(validatorContract);
         Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(this.CurrentMethodContract, validatorContract);
       }
     }
@@ -1024,8 +1022,10 @@ namespace Microsoft.Cci.MutableContracts {
 
     /// <summary>
     /// A mutator that replaces the parameters of a method with the arguments from a method call.
+    /// It does *not* make a copy of the contract, so any client using this needs to make a copy
+    /// of the entire contract if that is needed.
     /// </summary>
-    private sealed class ReplaceParametersWithArguments : MethodBodyCodeAndContractMutator {
+    private sealed class ReplaceParametersWithArguments : CodeAndContractRewriter {
       private IMethodDefinition methodDefinition;
       private IMethodCall methodCall;
       private List<IExpression> arguments;
@@ -1033,7 +1033,7 @@ namespace Microsoft.Cci.MutableContracts {
       /// Creates a mutator that replaces all occurrences of parameters from the target method with those from the source method.
       /// </summary>
       public ReplaceParametersWithArguments(IMetadataHost host, IMethodDefinition methodDefinition, IMethodCall methodCall)
-        : base(host, false) { // NB: Important to pass "false": this mutator needs to make a copy of the entire expression!
+        : base(host) { 
         this.methodDefinition = methodDefinition;
         this.methodCall = methodCall;
         this.arguments = new List<IExpression>(methodCall.Arguments);
@@ -1044,29 +1044,26 @@ namespace Microsoft.Cci.MutableContracts {
       /// </summary>
       /// <param name="boundExpression">The bound expression.</param>
       /// <returns></returns>
-      public override IExpression Visit(BoundExpression boundExpression) {
+      public override IExpression Rewrite(IBoundExpression boundExpression) {
         ParameterDefinition/*?*/ par = boundExpression.Definition as ParameterDefinition;
         if (par != null && par.ContainingSignature == this.methodDefinition) {
           return this.arguments[par.Index];
         } else {
-          return base.Visit(boundExpression);
+          return base.Rewrite(boundExpression);
         }
       }
     }
 
-    public sealed class AssertAssumeExtractor : MethodBodyCodeMutator {
+    public sealed class AssertAssumeExtractor : CodeRewriter {
 
       PdbReader/*?*/ pdbReader;
 
-      public AssertAssumeExtractor(
-        IMetadataHost host,
-        PdbReader/*?*/ pdbReader
-        )
-        : base(host, true, pdbReader) {
+      public AssertAssumeExtractor(IMetadataHost host, PdbReader/*?*/ pdbReader)
+        : base(host) {
         this.pdbReader = pdbReader;
       }
 
-      public override IStatement Visit(ExpressionStatement expressionStatement) {
+      public override IStatement Rewrite(IExpressionStatement expressionStatement) {
         IMethodCall/*?*/ methodCall = expressionStatement.Expression as IMethodCall;
         if (methodCall == null) goto JustVisit;
         IMethodReference methodToCall = methodCall.MethodToCall;
@@ -1089,7 +1086,7 @@ namespace Microsoft.Cci.MutableContracts {
           new List<ILocation>(IteratorHelper.GetConversionEnumerable<IPrimarySourceLocation, ILocation>(this.pdbReader.GetClosestPrimarySourceLocationsFor(locations)));
         if (mname == "Assert") {
           AssertStatement assertStatement = new AssertStatement() {
-            Condition = this.Visit(arguments[0]),
+            Condition = this.Rewrite(arguments[0]),
             Description = numArgs >= 2? arguments[1] : null,
             OriginalSource = origSource,
             Locations = locations2,
@@ -1098,7 +1095,7 @@ namespace Microsoft.Cci.MutableContracts {
         }
         if (mname == "Assume") {
           AssumeStatement assumeStatement = new AssumeStatement() {
-            Condition = this.Visit(arguments[0]),
+            Condition = this.Rewrite(arguments[0]),
             Description = numArgs >= 2 ? arguments[1] : null,
             OriginalSource = origSource,
             Locations = locations2,
@@ -1106,7 +1103,7 @@ namespace Microsoft.Cci.MutableContracts {
           return assumeStatement;
         }
       JustVisit:
-        return base.Visit(expressionStatement);
+        return base.Rewrite(expressionStatement);
       }
 
 
@@ -1136,13 +1133,13 @@ namespace Microsoft.Cci.MutableContracts {
       }
       if (0 < field2Getter.Count) {
         SubstitutePropertyGetterForField s = new SubstitutePropertyGetterForField(host, sourceType, field2Getter);
-        methodContract.Preconditions = (List<IPrecondition>)s.Visit(methodContract.Preconditions);
+        methodContract.Preconditions = (List<IPrecondition>)s.Rewrite(methodContract.Preconditions);
         //methodContract = (MethodContract)s.Visit(methodContract);
       }
       return methodContract;
     }
 
-    private class SubstitutePropertyGetterForField : CodeAndContractMutatingVisitor {
+    private class SubstitutePropertyGetterForField : CodeAndContractRewriter {
       ITypeDefinition sourceType;
       Dictionary<IName, IMethodReference> substitution;
       public SubstitutePropertyGetterForField(IMetadataHost host, ITypeDefinition sourceType, Dictionary<IName, IMethodReference> substitutionTable)
@@ -1150,7 +1147,7 @@ namespace Microsoft.Cci.MutableContracts {
         this.sourceType = sourceType;
         this.substitution = substitutionTable;
       }
-      public override IExpression Visit(BoundExpression boundExpression) {
+      public override IExpression Rewrite(IBoundExpression boundExpression) {
         IFieldDefinition f = boundExpression.Definition as IFieldDefinition;
         if (f != null && f.ContainingType.InternedKey == this.sourceType.InternedKey && this.substitution.ContainsKey(f.Name)) {
           IMethodReference m = this.substitution[f.Name];
@@ -1161,7 +1158,7 @@ namespace Microsoft.Cci.MutableContracts {
             ThisArgument = boundExpression.Instance,
           };
         } else {
-          return base.Visit(boundExpression);
+          return base.Rewrite(boundExpression);
         }
       }
     }
@@ -1181,15 +1178,15 @@ namespace Microsoft.Cci.MutableContracts {
       }
     }
 
-    private class LocalBinder : MethodBodyCodeMutator {
+    private class LocalBinder : CodeRewriter {
       Dictionary<ILocalDefinition, ILocalDefinition> tableForLocalDefinition = new Dictionary<ILocalDefinition, ILocalDefinition>();
       List<IStatement> localDeclarations = new List<IStatement>();
       private int counter = 0;
-      private LocalBinder(IMetadataHost host) : base(host, true) { }
+      private LocalBinder(IMetadataHost host) : base(host) { }
 
       public static List<IStatement> CloseClump(IMetadataHost host, List<IStatement> clump) {
         var cc = new LocalBinder(host);
-        cc.Visit(clump);
+        clump = cc.Rewrite(clump);
         cc.localDeclarations.AddRange(clump);
         return cc.localDeclarations;
       }
@@ -1213,54 +1210,64 @@ namespace Microsoft.Cci.MutableContracts {
         return localToUse == null ? localDefinition : localToUse;
       }
 
-      public override IStatement Visit(LocalDeclarationStatement localDeclarationStatement) {
+      public override void RewriteChildren(LocalDeclarationStatement localDeclarationStatement) {
         // then we don't need to replace this local, so put a dummy value in the table
         // so we don't muck with it.
-        this.tableForLocalDefinition.Add(localDeclarationStatement.LocalVariable, null);
-        if (localDeclarationStatement.InitialValue != null) {
-          localDeclarationStatement.InitialValue = this.Visit(localDeclarationStatement.InitialValue);
+        var loc = localDeclarationStatement.LocalVariable;
+        // locals don't get removed (not tracking scopes) so if a local definition is re-used
+        // (say in two for-loops), then we'd be trying to add the same key twice
+        // shouldn't ever happen except for when the remaining body of the method is being
+        // visited.
+        if (!this.tableForLocalDefinition.ContainsKey(loc)) {
+          this.tableForLocalDefinition.Add(loc, null);
         }
-        return localDeclarationStatement;
+        if (localDeclarationStatement.InitialValue != null) {
+          localDeclarationStatement.InitialValue = this.Rewrite(localDeclarationStatement.InitialValue);
+        }
+        return;
       }
 
       /// <summary>
       /// Need to have this override because the base class doesn't visit down into local definitions
       /// (and besides, this is where this visitor is doing its work anyway).
       /// </summary>
-      public override ILocalDefinition Visit(ILocalDefinition localDefinition) {
+      public override ILocalDefinition Rewrite(ILocalDefinition localDefinition) {
         return PossiblyReplaceLocal(localDefinition);
       }
 
-      public override ILocalDefinition VisitReferenceTo(ILocalDefinition localDefinition) {
-        return PossiblyReplaceLocal(localDefinition);
+      /// <summary>
+      /// TODO: This is necessary only because the base rewriter for things like TargetExpression call
+      /// this method and its definition in the base rewriter is to not visit it, but to just return it.
+      /// </summary>
+      public override object RewriteReference(ILocalDefinition localDefinition) {
+        return this.Rewrite(localDefinition);
       }
+
 
     }
 
   }
 
-  internal class OldAndResultExtractor : MethodBodyCodeMutator {
+  internal class OldAndResultExtractor : CodeRewriter {
     ISourceMethodBody sourceMethodBody;
     AnonymousDelegate/*?*/ currentAnonymousDelegate;
     private Predicate<IMethodReference> isContractMethod;
 
-    internal OldAndResultExtractor(IMetadataHost host, ISourceMethodBody sourceMethodBody, Dictionary<IReference, IReference>/*?*/ referenceCache, Predicate<IMethodReference> isContractMethod)
-      : base(host, true) {
+    internal OldAndResultExtractor(IMetadataHost host, ISourceMethodBody sourceMethodBody, Predicate<IMethodReference> isContractMethod)
+      : base(host) {
       this.sourceMethodBody = sourceMethodBody;
-      if (referenceCache != null)
-        this.referenceCache = referenceCache;
       this.isContractMethod = isContractMethod;
     }
 
-    public override IExpression Visit(AnonymousDelegate anonymousDelegate) {
+    public override void RewriteChildren(AnonymousDelegate anonymousDelegate) {
       var savedAnonymousDelegate = this.currentAnonymousDelegate;
       this.currentAnonymousDelegate = anonymousDelegate;
-      var result = base.Visit(anonymousDelegate);
+      base.RewriteChildren(anonymousDelegate);
       this.currentAnonymousDelegate = savedAnonymousDelegate;
-      return result;
+      return;
     }
 
-    public override IExpression Visit(MethodCall methodCall) {
+    public override IExpression Rewrite(IMethodCall methodCall) {
       IGenericMethodInstanceReference/*?*/ methodToCall = methodCall.MethodToCall as IGenericMethodInstanceReference;
       if (methodToCall != null) {
         if (this.isContractMethod(methodToCall)) {
@@ -1268,7 +1275,7 @@ namespace Microsoft.Cci.MutableContracts {
           if (methodToCall.GenericMethod.Name.Value == "Result") {
             ReturnValue returnValue = new ReturnValue() {
               Type = methodToCall.Type,
-              Locations = methodCall.Locations,
+              Locations = new List<ILocation>(methodCall.Locations),
             };
             if (this.currentAnonymousDelegate != null)
               this.currentAnonymousDelegate.CallingConvention |= CallingConvention.HasThis;
@@ -1276,25 +1283,25 @@ namespace Microsoft.Cci.MutableContracts {
           }
           if (methodToCall.GenericMethod.Name.Value == "OldValue") {
             OldValue oldValue = new OldValue() {
-              Expression = this.Visit(methodCall.Arguments[0]),
+              Expression = this.Rewrite(IteratorHelper.First(methodCall.Arguments)),
               Type = methodToCall.Type,
-              Locations = methodCall.Locations,
+              Locations = new List<ILocation>(methodCall.Locations),
             };
             return oldValue;
           }
 
           if (methodToCall.GenericMethod.Name.Value == "ValueAtReturn") {
             AddressDereference addressDereference = new AddressDereference() {
-              Address = methodCall.Arguments[0],
-              Locations = methodCall.Locations,
+              Address = IteratorHelper.First(methodCall.Arguments),
+              Locations = new List<ILocation>(methodCall.Locations),
               Type = methodToCall.Type,
             };
-            return this.Visit(addressDereference);
+            return this.Rewrite(addressDereference);
           }
 
         }
       }
-      return base.Visit(methodCall);
+      return base.Rewrite(methodCall);
     }
   }
   internal class FindModelMembers : CodeTraverser {

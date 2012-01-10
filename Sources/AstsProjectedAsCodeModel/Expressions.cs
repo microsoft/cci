@@ -1029,19 +1029,19 @@ namespace Microsoft.Cci.Ast {
       private bool result = false;
 
       public override void TraverseChildren(IAddressDereference addressDereference) {
-        this.Traverse(addressDereference.Address);
+        this.TraverseChildren(addressDereference.Address);
       }
 
       public override void TraverseChildren(IAddition addition) {
-        this.Traverse(addition.LeftOperand);
+        this.TraverseChildren(addition.LeftOperand);
       }
 
       public override void TraverseChildren(IConversion conversion) {
-        this.Traverse(conversion.ValueToConvert);
+        this.TraverseChildren(conversion.ValueToConvert);
       }
 
       public override void TraverseChildren(IAddressOf addressOf) {
-        this.Traverse(addressOf.Expression);
+        this.TraverseChildren(addressOf.Expression);
       }
 
       public override void TraverseChildren(IAddressableExpression addressableExpression) {
@@ -1302,7 +1302,7 @@ namespace Microsoft.Cci.Ast {
     /// When type inference fails, Dummy.Type is returned.
     /// </summary>
     public override ITypeDefinition InferType() {
-      if (this.Address.Type == Dummy.Type) return Dummy.Type;
+      if (this.Address.Type is Dummy) return Dummy.Type;
       return PointerType.GetPointerType(this.Address.Type, this.Compilation.HostEnvironment.InternFactory);
     }
 
@@ -1419,7 +1419,7 @@ namespace Microsoft.Cci.Ast {
     /// If the addres to dereference is not aligned with the size of the target type, this property specifies the actual alignment.
     /// For example, a value of 1 specifies that the pointer is byte aligned, whereas the target type may be word sized.
     /// </summary>
-    public virtual ushort Alignment {
+    public virtual byte Alignment {
       get { return 1; }
     }
 
@@ -1427,7 +1427,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Address.HasErrors || this.Type == Dummy.Type;
+      return this.Address.HasErrors || this.Type is Dummy;
     }
 
     /// <summary>
@@ -2259,7 +2259,7 @@ namespace Microsoft.Cci.Ast {
           }
         }
       }
-      if (result == Dummy.RootUnitNamespace || result == Dummy.Type) return null;
+      if (result is Dummy) return null;
       //^ assume result is INamespaceDefinition || result is ITypeDefinition;
       return result;
     }
@@ -3076,7 +3076,7 @@ namespace Microsoft.Cci.Ast {
     /// The latter can be supplied when the expression is in error because one or both of the arguments cannot be converted the correct parameter type for a valid overload.</param>
     /// <returns></returns>
     protected virtual MethodCall CreateOverloadMethodCall(IMethodDefinition overloadMethod) {
-      if (overloadMethod == Dummy.Method)
+      if (overloadMethod is Dummy)
         return new DummyMethodCall(this);
       else {
         List<Expression> args = new List<Expression>(2);
@@ -3888,7 +3888,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       IFieldDefinition field = this.definition as IFieldDefinition;
-      if (field != null && field == Dummy.Field) return true;
+      if (field != null && field is Dummy) return true;
       return false;
     }
 
@@ -4655,10 +4655,10 @@ namespace Microsoft.Cci.Ast {
       // Before checking converted arguments we must ensure that resolvedMethod has 
       // successfully bound the methodExpression. If the method does not resolve, 
       // checking conversion of the arguments against Dummy.Method is meaningless.
-      if (this.ResolvedMethod != Dummy.Method)
+      if (!(this.ResolvedMethod is Dummy))
         foreach (Expression arg in this.ConvertedArguments)
           result |= arg.HasErrors;
-      result |= this.Type == Dummy.Type;
+      result |= this.Type is Dummy;
       return result;
     }
 
@@ -4808,7 +4808,7 @@ namespace Microsoft.Cci.Ast {
 
       if (IteratorHelper.EnumerableIsNotEmpty(candidateMethods))
         resolvedMethod = this.Helper.ResolveOverload(candidateMethods, this.OriginalArguments, false);
-      if (resolvedMethod == Dummy.Method &&
+      if (resolvedMethod is Dummy &&
         (methodCall = this as MethodCall) != null && 
         (callExpression = methodCall.MethodExpression as QualifiedName) != null) {
         // Cannot reuse local variable "candidateMethods" here, as the current
@@ -4817,15 +4817,15 @@ namespace Microsoft.Cci.Ast {
           LanguageSpecificCompilationHelper.MakeExtensionArgumentList(callExpression, methodCall.OriginalArguments);
         IEnumerable<IMethodDefinition> extensionCandidates = methodCall.GetCandidateExtensionMethods(argumentsForStaticCall);
         resolvedMethod = this.Helper.ResolveOverload(extensionCandidates, argumentsForStaticCall, false);
-        if (resolvedMethod != Dummy.Method)
+        if (!(resolvedMethod is Dummy))
           this.argumentsForExtensionCall = argumentsForStaticCall;
       }
 
-      if (resolvedMethod == Dummy.Method) {
+      if (resolvedMethod is Dummy) {
         if (this.ComplainedAboutArguments()) return resolvedMethod;
         if (this.ComplainedAboutFailedInferences()) return resolvedMethod;
         resolvedMethod = this.Helper.ResolveOverload(candidateMethods, this.OriginalArguments, true);
-        if (resolvedMethod != Dummy.Method) {
+        if (!(resolvedMethod is Dummy)) {
           this.Helper.ReportError(new AstErrorMessage(this, Error.BadArgumentTypes, this.Helper.GetMethodSignature(resolvedMethod,
             NameFormattingOptions.Signature | NameFormattingOptions.UseTypeKeywords)));
         } else {
@@ -6125,8 +6125,8 @@ namespace Microsoft.Cci.Ast {
       bool result = this.ConvertedCondition.HasErrors;
       result |= this.ConvertedResultIfTrue.HasErrors;
       result |= this.ConvertedResultIfFalse.HasErrors;
-      result |= this.Type == Dummy.Type;
-      if (this.Type == Dummy.Type) {
+      result |= this.Type is Dummy;
+      if (this.Type is Dummy) {
         var leftType = this.ResultIfTrue.Type;
         var rightType = this.ResultIfFalse.Type;
         if (this.Helper.ImplicitConversionExists(this.ResultIfFalse, leftType) &&
@@ -6435,7 +6435,7 @@ namespace Microsoft.Cci.Ast {
     /// into IL.
     /// </summary>
     protected override IExpression ProjectAsNonConstantIExpression() {
-      if (this.ResolvedMethod == Dummy.Method && !this.HasErrors)
+      if (this.ResolvedMethod is Dummy && !this.HasErrors)
         // The only unresolved constructor call is a no-arg "new" on a value type.
         // Value types do not have no-arg constructors, but translate to IL "initobj TypeRef"
         return new DefaultValue(this.ObjectType, this.SourceLocation);
@@ -6727,7 +6727,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      bool failed = this.Type == Dummy.Type;
+      bool failed = this.Type is Dummy;
       if (!failed) {
         uint sizeCount = IteratorHelper.EnumerableCount(this.Sizes);
         uint initCount = IteratorHelper.EnumerableCount(this.Initializers);
@@ -8826,7 +8826,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the item or a constituent part of the item.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Type == Dummy.Type;
+      return this.Type is Dummy;
     }
 
     /// <summary>
@@ -9109,7 +9109,7 @@ namespace Microsoft.Cci.Ast {
           this.value = this.GetValue();
           if (this.value == null) this.value = Dummy.Constant;
         }
-        if (this.value == Dummy.Constant) return null;
+        if (this.value is Dummy) return null;
         return this.value;
       }
     }
@@ -10202,7 +10202,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override IExpression ProjectAsNonConstantIExpression() {
       IMethodDefinition resolvedMethod = this.ResolvedMethod;
-      if (resolvedMethod == Dummy.Method || resolvedMethod is BuiltinMethodDefinition) {
+      if (resolvedMethod is Dummy || resolvedMethod is BuiltinMethodDefinition) {
         IPointerTypeReference/*?*/ pointerType = this.indexedObject.Type as IPointerTypeReference;
         if (pointerType != null)
           return this.ProjectAsDereferencedPointerAddition();
@@ -10610,7 +10610,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
       if (this.Operand.HasErrors) return true;
-      return this.Type == Dummy.Type;
+      return this.Type is Dummy;
     }
 
     /// <summary>
@@ -12214,7 +12214,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     protected virtual IMethodReference GetReferenceToMethodToCall() {
       IMethodDefinition method = this.ResolvedMethod;
-      if (method == Dummy.Method) return Dummy.MethodReference;
+      if (method is Dummy) return Dummy.MethodReference;
       if (!method.AcceptsExtraArguments) return method;
       ushort nPars = (ushort)IteratorHelper.EnumerableCount(method.Parameters);
       ushort nArgs = (ushort)IteratorHelper.EnumerableCount(this.ConvertedArguments);
@@ -12251,7 +12251,7 @@ namespace Microsoft.Cci.Ast {
         return IteratorHelper.GetSingletonEnumerable<IMethodDefinition>(new FunctionPointerMethod((IFunctionPointerTypeReference)methodExpression.Type));
 
       //If this.MethodExpression binds to a method group or a group of generic method instances, return all methods in the group
-      if (methodExpressionType == Dummy.Type) {
+      if (methodExpressionType is Dummy) {
         //Check if expression binds to a method group
         IMethodDefinition/*?*/ methodGroupRepresentative = this.ResolveMethodExpression(this.MethodExpression) as IMethodDefinition;
         if (methodGroupRepresentative != null) {
@@ -12301,7 +12301,7 @@ namespace Microsoft.Cci.Ast {
       foreach (IMethodDefinition method in this.GetMethodGroupMethods(methodGroupRepresentative)) {
         if (method.IsGeneric) {
           IMethodDefinition instantiatedMethod = this.GetInstantiatedMethodAfterInferringGenericArguments(method, allowMethodParameterInferencesToFail);
-          if (instantiatedMethod == Dummy.Method) continue; //Type inference did not succeed, so method must be ignored
+          if (instantiatedMethod is Dummy) continue; //Type inference did not succeed, so method must be ignored
           yield return instantiatedMethod;
         } else
           yield return method;
@@ -12500,7 +12500,7 @@ namespace Microsoft.Cci.Ast {
       //^ requires methodExpressionType.IsDelegate;
     {
       IMethodDefinition invokeMethod = this.Helper.GetInvokeMethod(methodExpressionType);
-      if (invokeMethod == Dummy.Method) return Enumerable<IMethodDefinition>.Empty; //Will get here only when referencing a malformed/malicious assembly. 
+      if (invokeMethod is Dummy) return Enumerable<IMethodDefinition>.Empty; //Will get here only when referencing a malformed/malicious assembly. 
       return IteratorHelper.GetSingletonEnumerable<IMethodDefinition>(invokeMethod);
     }
 
@@ -12693,7 +12693,7 @@ namespace Microsoft.Cci.Ast {
       }
       object/*?*/ resolvedMethodExpression = this.ResolveMethodExpression(this.MethodExpression);
       IMethodDefinition/*?*/ methodGroupRepresentative = resolvedMethodExpression as IMethodDefinition;
-      if (methodGroupRepresentative != null && methodGroupRepresentative != Dummy.Method) {
+      if (methodGroupRepresentative != null && !(methodGroupRepresentative is Dummy)) {
         string/*?*/ numberOfArguments = IteratorHelper.EnumerableCount(this.OriginalArguments).ToString();
         //^ assume numberOfArguments != null;
         this.Helper.ReportError(new AstErrorMessage(this, Error.BadNumberOfArguments, this.Helper.GetMethodSignature(methodGroupRepresentative, NameFormattingOptions.None), numberOfArguments));
@@ -13526,7 +13526,7 @@ namespace Microsoft.Cci.Ast {
       if (simpleName != null) {
         result = this.Resolve(simpleName.ResolveAsNamespaceOrType(), numberOfTypeParameters);
         //^ assert result == Dummy.Type || result.GenericParameterCount == numberOfTypeParameters;
-        if (result == Dummy.Type)
+        if (result is Dummy)
           this.Helper.ReportError(new AstErrorMessage(this, Error.SingleTypeNameNotFound, simpleName.Name.Value));
         //^ assume result == Dummy.Type || result.GenericParameterCount == numberOfTypeParameters;
         return result;
@@ -15123,7 +15123,7 @@ namespace Microsoft.Cci.Ast {
       //^ requires !typeDefinition.IsGeneric;
       //^ ensures result == null || result is ITypeGroup || (!restrictToNamespacesAndTypes && result is ITypeDefinitionMember);
     {
-      if (typeDefinition == Dummy.Type || typeDefinition == Dummy.NamespaceTypeDefinition) return;
+      if (typeDefinition is Dummy) return;
       foreach (ITypeDefinitionMember member in typeDefinition.Members) {
         if (!member.Name.Value.StartsWith(this.Name.Value, this.ignoreCase, CultureInfo.InvariantCulture)) continue;
         if (!this.ContainingBlock.ContainingTypeDeclaration.CanAccess(member)) continue;
@@ -15236,7 +15236,7 @@ namespace Microsoft.Cci.Ast {
       ITypeDefinitionMember/*?*/ resolvedMember = this.ResolveAsValueContainer(false) as ITypeDefinitionMember;
       if (resolvedMember == null) {
         ITypeDefinition/*?*/ qualifierType = this.Qualifier.Type;
-        if (qualifierType != null && qualifierType != Dummy.Type) {
+        if (qualifierType != null && !(qualifierType is Dummy)) {
           IPointerTypeReference/*?*/ pqType = qualifierType as IPointerTypeReference;
           if (pqType != null) {
             string typeName = this.ContainingBlock.Helper.GetTypeName(pqType.TargetType.ResolvedType);
@@ -15278,7 +15278,7 @@ namespace Microsoft.Cci.Ast {
     public override Expression/*?*/ Instance {
       get {
         ITypeDefinition/*?*/ qualifierType = this.Qualifier.Type;
-        if (qualifierType == Dummy.Type) return null;
+        if (qualifierType is Dummy) return null;
         IPointerTypeReference/*?*/ ptr = qualifierType as IPointerTypeReference;
         if (ptr != null && ptr.TargetType.IsValueType)
           return this.Qualifier;
@@ -15442,7 +15442,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.elementType.HasErrors || this.elementType == Dummy.Type;
+      return this.elementType.HasErrors;
     }
 
     /// <summary>
@@ -16143,7 +16143,7 @@ namespace Microsoft.Cci.Ast {
       if (resolvedMember == null) {
         ITypeDefinition qualifierType = this.Qualifier.Type;
         string qualifier;
-        if (qualifierType == Dummy.Type)
+        if (qualifierType is Dummy)
           qualifier = this.Qualifier.SourceLocation.Source;
         else
           qualifier = this.ContainingBlock.Helper.GetTypeName(qualifierType);
@@ -16265,7 +16265,7 @@ namespace Microsoft.Cci.Ast {
     public virtual Expression/*?*/ Instance {
       get {
         ITypeDefinition/*?*/ qualifierType = this.Qualifier.Type;
-        if (qualifierType == Dummy.Type) return null;
+        if (qualifierType is Dummy) return null;
         return this.Qualifier;
       }
     }
@@ -16330,15 +16330,15 @@ namespace Microsoft.Cci.Ast {
       var result = this.resolvedMember;
       if (result == null || ignoreAccessibility) {
         ITypeDefinition/*?*/ qualifierType = this.Qualifier.Type;
-        if (qualifierType == Dummy.Type)
+        if (qualifierType is Dummy)
           qualifierType = this.ResolveAsType(this.ResolveQualifierAsNamespaceOrType());
-        if (qualifierType != Dummy.Type && qualifierType != null)
+        if (!(qualifierType is Dummy) && qualifierType != null)
           result = this.ResolveTypeMember(qualifierType, ignoreAccessibility);
         if (ignoreAccessibility) return result;
         if (result == null)
           this.resolvedMember = Dummy.Method;
       }
-      if (result != null && result != Dummy.Method) this.hasErrors = false; //If the qualified name resolved, it is error free and need not be checked for errors.
+      if (result != null && !(result is Dummy)) this.hasErrors = false; //If the qualified name resolved, it is error free and need not be checked for errors.
       return result;
     }
     ITypeDefinitionMember/*?*/ resolvedMember;
@@ -18250,7 +18250,7 @@ namespace Microsoft.Cci.Ast {
       //^ requires !typeDefinition.IsGeneric;
       //^ ensures result == null || result is ITypeGroup || (!restrictToNamespacesAndTypes && result is ITypeDefinitionMember);
     {
-      if (typeDefinition == Dummy.Type || typeDefinition == Dummy.NamespaceTypeDefinition) return null;
+      if (typeDefinition is Dummy) return null;
       IEnumerable<ITypeDefinitionMember> members = typeDefinition.GetMembersNamed(this.Name, this.ignoreCase);
       foreach (ITypeDefinitionMember member in members) {
         //TODO: filter out members that are not visible to this expression
@@ -19225,7 +19225,7 @@ namespace Microsoft.Cci.Ast {
     /// Performs any error checks still needed and returns true if any errors were found in the statement or a constituent part of the statement.
     /// </summary>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.ResolvedType == Dummy.Type;
+      return this.ResolvedType is Dummy;
     }
 
     /// <summary>
@@ -19690,7 +19690,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     /// <returns></returns>
     protected override bool CheckForErrorsAndReturnTrueIfAnyAreFound() {
-      return this.Operand.HasErrors || this.Type == Dummy.Type;
+      return this.Operand.HasErrors || this.Type is Dummy;
     }
 
     /// <summary>
@@ -19702,7 +19702,7 @@ namespace Microsoft.Cci.Ast {
     /// The latter can be supplied when the expression is in error because one or both of the arguments cannot be converted the correct parameter type for a valid overload.</param>
     /// <returns></returns>
     protected virtual MethodCall CreateOverloadMethodCall(IMethodDefinition overloadMethod) {
-      if (overloadMethod == Dummy.Method)
+      if (overloadMethod is Dummy)
         return new DummyMethodCall(this);
       else {
         List<Expression> args = new List<Expression>(1);

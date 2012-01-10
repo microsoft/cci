@@ -1128,7 +1128,7 @@ namespace Microsoft.Cci.Ast {
           return this.Conversion(cconst, targetType, isExplicitConversion, sourceLocation);
         }
       }
-      if (expression.Type == Dummy.Type) {
+      if (expression.Type is Dummy) {
         if (targetType.IsDelegate) {
           AnonymousMethod/*?*/ anonMethod = expression as AnonymousMethod;
           if (anonMethod != null)
@@ -1265,8 +1265,8 @@ namespace Microsoft.Cci.Ast {
       QualifiedName qualifiedName;
       IMethodDefinition matchingMethod = this.GetMatchingMethodFromMethodGroup(expression, targetType, true, out applicableButNotConsistent);
       Expression/*?*/ instance = null;
-      if (matchingMethod != Dummy.Method) {
-        if (matchingMethod != Dummy.Method && !matchingMethod.IsStatic) {
+      if (!(matchingMethod is Dummy)) {
+        if (!matchingMethod.IsStatic) {
           SimpleName/*?*/ simpleName = expression as SimpleName;
           if (simpleName != null)
             instance = new ThisReference(simpleName.ContainingBlock, simpleName.SourceLocation);
@@ -1276,7 +1276,6 @@ namespace Microsoft.Cci.Ast {
               instance = qualifiedName.Qualifier;
           }
         }
-        //^ assume instance != null; //matchingMethod should be a dummy if expression is not going to result in something above.
       }
       else if (!applicableButNotConsistent && (qualifiedName = expression as QualifiedName) != null) { // Look for extension method.
         List<IMethodDefinition> result = new List<IMethodDefinition>();
@@ -1291,7 +1290,7 @@ namespace Microsoft.Cci.Ast {
           matchingMethod = this.ResolveOverload(result, delegateArgs, false);
         instance = qualifiedName.Qualifier;
       }
-      if (matchingMethod == Dummy.Method)
+      if (matchingMethod is Dummy)
         return new DummyExpression(expression.SourceLocation);
       return new CreateDelegateInstance(instance, targetType, matchingMethod, expression.SourceLocation);
     }
@@ -1572,7 +1571,7 @@ namespace Microsoft.Cci.Ast {
       IMethodDefinition matchingMethod = this.ResolveOverload(candidates, fakeArguments);
       // There is an applicable method, but is not consistent with delegate invocation semantics.
       // The caller needs to know this, since no extension method is searched for in this case.
-      if (matchingMethod != Dummy.Method && requireConsistency && !this.SignaturesAreConsistent(invokeMethod, matchingMethod)) {
+      if (!(matchingMethod is Dummy) && requireConsistency && !this.SignaturesAreConsistent(invokeMethod, matchingMethod)) {
         matchingMethod = Dummy.Method;
         applicableButInconsistent = true;
       }
@@ -1781,7 +1780,7 @@ namespace Microsoft.Cci.Ast {
       }
       //TODO: lambdas
       ITypeDefinition expressionType = expression.Type;
-      if (expressionType == Dummy.Type) {
+      if (expressionType is Dummy) {
         if (targetType.IsDelegate) return this.ImplicitConversionFromMethodGroupExists(expression, targetType);
         return false;
       }
@@ -1873,7 +1872,7 @@ namespace Microsoft.Cci.Ast {
     private bool ImplicitConversionFromMethodGroupExists(Expression expression, ITypeDefinition targetType)
       //^ requires targetType.IsDelegate;
     {
-      return this.GetMatchingMethodFromMethodGroup(expression, targetType, false) != Dummy.Method;
+      return !(this.GetMatchingMethodFromMethodGroup(expression, targetType, false) is Dummy);
     }
 
     /// <summary>
@@ -2031,7 +2030,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     //^ [Pure]
     public virtual bool InferTypesAndReturnTrueIfInferenceFails(Dictionary<IGenericMethodParameter, ITypeDefinition> inferredTypeArgumentFor, ITypeDefinition argumentType, ITypeDefinition parameterType) {
-      if (argumentType == Dummy.Type)
+      if (argumentType is Dummy)
         return true; //Error situation: the argument is not valid, or else it would have a real type.
 
       if (parameterType is IGenericMethodParameter) {
@@ -2886,7 +2885,7 @@ namespace Microsoft.Cci.Ast {
       IMethodDefinition bestSoFar = Dummy.Method;
       List<IMethodDefinition>/*?*/ ambiguousMatches = null;
       foreach (IMethodDefinition candidate in candidateMethods) {
-        if (bestSoFar == Dummy.Method) {
+        if (bestSoFar is Dummy) {
           if (this.MethodIsEligible(candidate, arguments)) bestSoFar = candidate;
           continue;
         }
@@ -2917,7 +2916,7 @@ namespace Microsoft.Cci.Ast {
         ambiguousMatches.Add(candidate);
       }
       if (ambiguousMatches != null) return Dummy.Method;
-      if (bestSoFar == Dummy.Method && allowTypeMismatches)
+      if (bestSoFar is Dummy && allowTypeMismatches)
         return this.SingleCandidateWithTheGivenNumberOfArguments(candidateMethods, arguments);
       else
         return bestSoFar;
@@ -2931,7 +2930,7 @@ namespace Microsoft.Cci.Ast {
       IMethodDefinition likelyMatch = Dummy.Method;
       foreach (IMethodDefinition candidate in candidateMethods) {
         if (this.MethodIsEligible(candidate, arguments, true)) {
-          if (likelyMatch != Dummy.Method) return Dummy.Method;
+          if (!(likelyMatch is Dummy)) return Dummy.Method;
           likelyMatch = candidate;
         }
       }
@@ -2967,7 +2966,7 @@ namespace Microsoft.Cci.Ast {
     /// <param name="parameterIndex">The zero based index of the parameter.</param>
     public virtual void ReportFailedArgumentConversion(Expression expression, ITypeDefinition parameterType, int parameterIndex) {
       if (expression.HasErrors) return;
-      if (expression.Type == Dummy.Type)
+      if (expression.Type is Dummy)
         this.ReportFailedImplicitConversion(expression, parameterType);
       else
         this.ReportError(new AstErrorMessage(expression, Error.BadArgumentType, (parameterIndex+1).ToString(), 
@@ -2983,8 +2982,8 @@ namespace Microsoft.Cci.Ast {
     /// <param name="targetType">The type to which the expression could not be implicitly converted.</param>
     //^ [Pure]
     public virtual void ReportFailedImplicitConversion(Expression expression, ITypeDefinition targetType) {
-      if (expression.HasErrors || targetType == Dummy.Type) return;
-      if (expression.Type == Dummy.Type) {
+      if (expression.HasErrors || targetType is Dummy) return;
+      if (expression.Type is Dummy) {
         if (targetType.IsDelegate)
           this.ReportFailedMethodGroupToDelegateConversion(expression, targetType);
         else
@@ -3244,7 +3243,7 @@ namespace Microsoft.Cci.Ast {
       ITypeDefinition/*?*/ mostSpecificTargetType = null;
       IMethodDefinition/*?*/ mostSpecificConversion = null;
       ITypeDefinition sourceTypeOrBase = sourceType;
-      while (sourceTypeOrBase != Dummy.Type)
+      while (!(sourceTypeOrBase is Dummy))
       //^ invariant mostSpecificSourceType == null <==> mostSpecificTargetType == null;
       {
         foreach (ITypeDefinitionMember member in sourceTypeOrBase.GetMembersNamed(conversionName, false))
@@ -3299,7 +3298,7 @@ namespace Microsoft.Cci.Ast {
           if (parameterType != null) { parameterType = null; break; } //Not a valid conversion
           parameterType = parameter.Type.ResolvedType;
         }
-        if (parameterType == null || parameterType == Dummy.Type) continue; //Not a valid conversion
+        if (parameterType == null || parameterType is Dummy) continue; //Not a valid conversion
         if (!this.ImplicitStandardConversionExists(sourceType, parameterType)) continue;
         if (mostSpecificSourceType == null || 
             TypeHelper.Type1DerivesFromType2(parameterType, mostSpecificSourceType) ||
@@ -3669,7 +3668,7 @@ namespace Microsoft.Cci.Ast {
     }
 
     public string GetSourceNameFor(ILocalDefinition localDefinition, out bool isCompilerGenerated) {
-      isCompilerGenerated = localDefinition.Name == Dummy.Name;
+      isCompilerGenerated = localDefinition.Name is Dummy;
       return localDefinition.Name.Value;
     }
 

@@ -71,7 +71,8 @@ namespace CSharpSourceEmitter {
       if (delegateDefinition.GenericParameterCount > 0) {
         this.Traverse(delegateDefinition.GenericParameters);
       }
-      Traverse(invokeMethod.Parameters);
+      if (invokeMethod != null)
+        Traverse(invokeMethod.Parameters);
 
       PrintToken(CSharpToken.Semicolon);
     }

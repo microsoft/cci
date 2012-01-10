@@ -86,7 +86,8 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(IAddressDereference addressDereference) {
-      if (addressDereference.Address.Type is IPointerTypeReference || addressDereference.Address.Type.TypeCode == PrimitiveTypeCode.IntPtr)
+      if (addressDereference.Address.Type is IPointerTypeReference || addressDereference.Address.Type.TypeCode == PrimitiveTypeCode.IntPtr ||
+        addressDereference.Address is IDupValue || addressDereference.Address is IPopValue)
         this.sourceEmitterOutput.Write("*");
       else {
         var addrOf = addressDereference.Address as IAddressOf;

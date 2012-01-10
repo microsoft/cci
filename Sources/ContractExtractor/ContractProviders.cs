@@ -87,7 +87,7 @@ namespace Microsoft.Cci.Contracts {
         return null;
       }
       IMethodDefinition methodDefinition = methodReference.ResolvedMethod;
-      if (methodDefinition == Dummy.Method) {
+      if (methodDefinition is Dummy) {
         this.contractProviderCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
         return null;
       }
@@ -101,56 +101,95 @@ namespace Microsoft.Cci.Contracts {
         }
       }
 
-      // But if it is an abstract method, then check to see if its containing type points to a class holding the contract
-      IMethodDefinition/*?*/ proxyMethod = ContractHelper.GetMethodFromContractClass(this.host, methodDefinition);
-      if (proxyMethod == null) {
-        this.contractProviderCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
-        return null;
-      }
-      MethodContract cumulativeContract = new MethodContract();
-      if (underlyingContract != null) {
-        ContractHelper.AddMethodContract(cumulativeContract, underlyingContract);
-      }
+      // The method is definitely an abstract method, so either:
+      //  (a) we've never looked for a contract for it before, or else
+      //  (b) it is a specialized/instantiated method and the uninstantiated version has already
+      //      had its contract extracted.
 
-      ITypeDefinition contractClass;
-      var specializedProxyMethod = proxyMethod as ISpecializedMethodDefinition;
-      IMethodDefinition unspec = null;
-      IMethodContract proxyContract;
-      if (specializedProxyMethod != null) {
-        unspec = ContractHelper.UninstantiateAndUnspecialize(specializedProxyMethod).ResolvedMethod;
-        proxyContract = this.underlyingContractProvider.GetMethodContractFor(unspec);
-        contractClass = unspec.ContainingTypeDefinition;
-      } else {
-        proxyContract = this.underlyingContractProvider.GetMethodContractFor(proxyMethod);
-        contractClass = proxyMethod.ContainingTypeDefinition;
-      }
-      if (proxyContract == null) {
-        if (underlyingContract == null) {
-          // then there was nothing on the abstract method (like purity markings)
+      var unspecializedMethodDefinition = ContractHelper.UninstantiateAndUnspecializeMethodDefinition(methodDefinition);
+      cachedContract = this.contractProviderCache.GetMethodContractFor(unspecializedMethodDefinition);
+
+      if (cachedContract == null) { // (a)
+
+        // Check to see if its containing type points to a class holding the contract
+        IMethodDefinition/*?*/ proxyMethod = ContractHelper.GetMethodFromContractClass(this.host, unspecializedMethodDefinition);
+        if (proxyMethod == null) {
           this.contractProviderCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
           return null;
-        } else {
-          // nothing on proxy, but something on abstract method
-          this.contractProviderCache.AssociateMethodWithContract(method, cumulativeContract);
-          return cumulativeContract;
         }
+        MethodContract cumulativeContract = new MethodContract();
+        if (underlyingContract != null) {
+          ContractHelper.AddMethodContract(cumulativeContract, underlyingContract);
+        }
+
+        IMethodContract proxyContract = this.underlyingContractProvider.GetMethodContractFor(proxyMethod);
+        ITypeReference contractClass = proxyMethod.ContainingTypeDefinition;
+
+        if (proxyContract == null) {
+          if (underlyingContract == null) {
+            // then there was nothing on the abstract method (like purity markings)
+            this.contractProviderCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
+            return null;
+          } else {
+            // nothing on proxy, but something on abstract method
+            this.contractProviderCache.AssociateMethodWithContract(method, cumulativeContract);
+            return cumulativeContract;
+          }
+        }
+        var copier = new CodeAndContractDeepCopier(this.host);
+        proxyContract = copier.Copy(proxyContract);
+
+
+        //var cccc = new ConvertContractClassContract(this.host, contractClass, unspecializedMethodDefinition.ContainingType);
+        //proxyContract = cccc.Rewrite(mutableContract);
+        //proxyContract = ContractHelper.CopyContractIntoNewContext(this.host, proxyContract, unspecializedMethodDefinition, proxyMethod);
+
+        if (unspecializedMethodDefinition != methodDefinition) {
+          // need to replace the generic instantiations and specializations in the contract so they are for the
+          // context of the *unspecialized* method definition. That is what should get cached here.
+
+          var targetTypeReferences = new List<ITypeReference>();
+          foreach (var t in proxyMethod.GenericParameters) {
+            targetTypeReferences.Add(t);
+          }
+          var sourceTypeReferences = new List<ITypeReference>();
+          foreach (var t in unspecializedMethodDefinition.GenericParameters) {
+            sourceTypeReferences.Add(t);
+          }
+          foreach (var t in proxyMethod.ContainingTypeDefinition.GenericParameters) {
+            targetTypeReferences.Add(t);
+          }
+          foreach (var t in unspecializedMethodDefinition.ContainingTypeDefinition.GenericParameters) {
+            sourceTypeReferences.Add(t);
+          }
+          var d = new Dictionary<uint, ITypeReference>();
+          IteratorHelper.Zip(targetTypeReferences, sourceTypeReferences,
+            (u, s) => d.Add(u.InternedKey, s)
+              );
+          var specializer = new CodeSpecializer(host, d);
+          proxyContract = specializer.Rewrite(proxyContract);
+
+        }
+
+        var cccc = new ConvertContractClassContract(this.host, contractClass, unspecializedMethodDefinition.ContainingType);
+        proxyContract = cccc.Rewrite(proxyContract);
+        proxyContract = ContractHelper.CopyContractIntoNewContext(this.host, proxyContract, unspecializedMethodDefinition, proxyMethod);
+
+        ContractHelper.AddMethodContract(cumulativeContract, proxyContract);
+
+        // Cache the unspecialized contract: specialize and instantiate on demand
+        this.contractProviderCache.AssociateMethodWithContract(unspecializedMethodDefinition, cumulativeContract);
+        cachedContract = cumulativeContract;
       }
-      var cccc = new ConvertContractClassContract(this.host, contractClass, methodDefinition.ContainingTypeDefinition);
-      cccc.Traverse(proxyContract);
-      proxyContract = ContractHelper.CopyContract(this.host, proxyContract, methodDefinition, specializedProxyMethod != null ? unspec : proxyMethod);
-      if (specializedProxyMethod != null || proxyMethod.IsGeneric || proxyMethod.ContainingTypeDefinition.IsGeneric) {
-        var stdm = specializedProxyMethod as Immutable.SpecializedTypeDefinitionMember<IMethodDefinition>;
-        var sourceTypeReferences = stdm == null ? 
-          (proxyMethod.ContainingTypeDefinition.IsGeneric ? 
-            IteratorHelper.GetConversionEnumerable<IGenericTypeParameter, ITypeReference>(methodDefinition.ContainingTypeDefinition.GenericParameters)
-            : Enumerable<ITypeReference>.Empty)
-          : stdm.ContainingGenericTypeInstance.GenericArguments;
-        proxyContract = ContractHelper.SpecializeMethodContract(this.host, proxyContract, unspec == null ? proxyMethod.ContainingTypeDefinition : unspec.ContainingTypeDefinition, unspec == null ? proxyMethod.ContainingTypeDefinition.GenericParameters : unspec.ContainingTypeDefinition.GenericParameters, sourceTypeReferences,
-          unspec == null ? proxyMethod.GenericParameters : unspec.GenericParameters, methodDefinition.GenericParameters);
+
+      if (unspecializedMethodDefinition == methodDefinition)
+        return cachedContract == ContractDummy.MethodContract ? null : cachedContract;
+      else { // (b)
+        var mc = ContractHelper.InstantiateAndSpecializeContract(this.host, cachedContract, methodDefinition, unspecializedMethodDefinition);
+        mc = (MethodContract) ContractHelper.CopyContractIntoNewContext(this.host, mc, methodDefinition, unspecializedMethodDefinition);
+        return mc;
       }
-      ContractHelper.AddMethodContract(cumulativeContract, proxyContract);
-      this.contractProviderCache.AssociateMethodWithContract(methodDefinition, cumulativeContract);
-      return cumulativeContract;
+
     }
 
 
@@ -210,33 +249,61 @@ namespace Microsoft.Cci.Contracts {
 
     #endregion
 
-    private class ConvertContractClassContract : CodeAndContractTraverser {
+    /// <summary>
+    /// When a class is used to express the contracts for an interface (or a third-party class)
+    /// certain modifications must be made to the code in the contained contracts. For instance,
+    /// if the contract class uses implicit interface implementations, then it might have a call
+    /// to one of those implementations in a contract, Requires(this.P), for some boolean property
+    /// P. That call has to be changed to be a call to the interface method.
+    /// </summary>
+    private class ConvertContractClassContract : CodeAndContractRewriter {
 
-      private ITypeDefinition contractClass;
-      private ITypeDefinition abstractType;
-      private uint contractClassInternedKey;
-      IMetadataHost host;
+      private ITypeReference contractClass;
+      private ITypeReference abstractType;
 
       private Dictionary<uint, IMethodReference> correspondingAbstractMember = new Dictionary<uint, IMethodReference>();
 
-      public ConvertContractClassContract(IMetadataHost host, ITypeDefinition contractClass, ITypeDefinition abstractType)
-        : base(null) {
-        Contract.Requires(contractClass.IsGeneric == abstractType.IsGeneric);
+      public ConvertContractClassContract(IMetadataHost host, ITypeReference contractClass, ITypeReference abstractType)
+        : base(host, true) {
         this.contractClass = contractClass;
-        this.contractClassInternedKey = this.contractClass.InternedKey;
         this.abstractType = abstractType;
-        this.host = host;
       }
 
-      public override void TraverseChildren(IMethodCall methodCall) {
+      public override ITypeReference Rewrite(ITypeReference typeReference) {
+        if (typeReference.InternedKey == this.contractClass.InternedKey)
+          return this.abstractType;
+        else
+          return base.Rewrite(typeReference);
+      }
+
+      /// <summary>
+      /// Need this override because when a GenericTypeInstanceReference is rewritten, its GenericType is visited
+      /// as an INamespaceTypeReference and so the above override is never executed.
+      /// </summary>
+      public override INamespaceTypeReference Rewrite(INamespaceTypeReference namespaceTypeReference) {
+        if (namespaceTypeReference.InternedKey == this.contractClass.InternedKey && this.abstractType is INamespaceTypeReference)
+          return (INamespaceTypeReference) this.abstractType;
+        else
+          return base.Rewrite(namespaceTypeReference);
+      }
+
+      /// <summary>
+      /// A call in another method in a contract class will be a non-virtual call.
+      /// If the contract class is holding the contract for an interface, then this must
+      /// be turned into a virtual call.
+      /// </summary>
+      /// <param name="methodCall"></param>
+      public override void RewriteChildren(MethodCall methodCall) {
         var mtc = methodCall.MethodToCall;
         var ct = ContractHelper.UninstantiateAndUnspecialize(mtc).ContainingType;
-        if (ct.InternedKey != this.contractClass.InternedKey) return;
+        if (ct.InternedKey != this.contractClass.InternedKey) {
+          base.RewriteChildren(methodCall);
+          return;
+        }
         foreach (IMethodDefinition ifaceMethod in ContractHelper.GetAllImplicitlyImplementedInterfaceMethods(mtc.ResolvedMethod)) {
-          var mutableMethodCall = (MethodCall)methodCall;
-          mutableMethodCall.MethodToCall = ifaceMethod;
-          mutableMethodCall.IsVirtualCall = true;
-          base.TraverseChildren(methodCall);
+          methodCall.MethodToCall = ifaceMethod;
+          methodCall.IsVirtualCall = true;
+          base.RewriteChildren(methodCall);
           return;
         }
         return;
@@ -332,8 +399,11 @@ namespace Microsoft.Cci.Contracts {
     /// </summary>
     /// <param name="loop">An object that might have been associated with a loop contract. This can be any kind of object.</param>
     /// <returns></returns>
+    /// <remarks>
+    /// Currently this contract provider does not provide loop contracts: it always returns null.
+    /// </remarks>
     public ILoopContract/*?*/ GetLoopContractFor(object loop) {
-      throw new NotImplementedException();
+      return null;
     }
 
     /// <summary>
@@ -353,7 +423,7 @@ namespace Microsoft.Cci.Contracts {
       }
 
       IMethodDefinition methodDefinition = methodReference.ResolvedMethod;
-      if (methodDefinition == Dummy.Method) {
+      if (methodDefinition is Dummy) {
         this.underlyingContractProvider.AssociateMethodWithContract(method, ContractDummy.MethodContract);
         return null;
       }
@@ -419,8 +489,11 @@ namespace Microsoft.Cci.Contracts {
     /// </summary>
     /// <param name="quantifier">An object that might have been associated with triggers. This can be any kind of object.</param>
     /// <returns></returns>
+    /// <remarks>
+    /// Currently this contract provider does not provide triggers: it always returns null.
+    /// </remarks>
     public IEnumerable<IEnumerable<IExpression>>/*?*/ GetTriggersFor(object quantifier) {
-      throw new NotImplementedException();
+      return null;
     }
 
     /// <summary>
@@ -670,8 +743,11 @@ namespace Microsoft.Cci.Contracts {
     /// </summary>
     /// <param name="loop">An object that might have been associated with a loop contract. This can be any kind of object.</param>
     /// <returns></returns>
+    /// <remarks>
+    /// Currently this contract provider does not provide loop contracts: it always returns null.
+    /// </remarks>
     public ILoopContract/*?*/ GetLoopContractFor(object loop) {
-      throw new NotImplementedException();
+      return null;
     }
 
     /// <summary>
@@ -723,7 +799,7 @@ namespace Microsoft.Cci.Contracts {
             oobContract = oobToPrimaryMapper.Map(oobContract);
 
             var sps = new Microsoft.Cci.MutableContracts.SubstituteParameters(this.host, oobMethod.ResolvedMethod, methodReference.ResolvedMethod);
-            oobContract = sps.Visit(oobContract);
+            oobContract = sps.Rewrite(oobContract);
 
             Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(result, oobContract);
             found = true;
@@ -749,8 +825,11 @@ namespace Microsoft.Cci.Contracts {
     /// </summary>
     /// <param name="quantifier">An object that might have been associated with triggers. This can be any kind of object.</param>
     /// <returns></returns>
+    /// <remarks>
+    /// Currently this contract provider does not provide triggers: it always returns null.
+    /// </remarks>
     public IEnumerable<IEnumerable<IExpression>>/*?*/ GetTriggersFor(object quantifier) {
-      throw new NotImplementedException();
+      return null;
     }
 
     /// <summary>

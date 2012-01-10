@@ -641,6 +641,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Requires(conditionalStatement != null);
       Contract.Ensures(Contract.Result<ConditionalStatement>() != null);
 
+      var mutable = conditionalStatement as ConditionalStatement;
+      if (mutable != null) return mutable.Clone();
       return new ConditionalStatement(conditionalStatement);
     }
 
@@ -751,6 +753,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Requires(emptyStatement != null);
       Contract.Ensures(Contract.Result<EmptyStatement>() != null);
 
+      var mutable = emptyStatement as EmptyStatement;
+      if (mutable != null) return mutable.Clone();
       return new EmptyStatement(emptyStatement);
     }
 
@@ -851,6 +855,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Requires(forStatement != null);
       Contract.Ensures(Contract.Result<ForStatement>() != null);
 
+      var mutable = forStatement as ForStatement;
+      if (mutable != null) return mutable.Clone();
       return new ForStatement(forStatement);
     }
 
@@ -2168,7 +2174,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       var mutableCopy = this.shallowCopier.Copy(catchClause);
       mutableCopy.ExceptionType = this.Copy(mutableCopy.ExceptionType);
-      if (mutableCopy.ExceptionContainer != Dummy.LocalVariable) {
+      if (!(mutableCopy.ExceptionContainer is Dummy)) {
         var copy = this.GetExistingCopyIfInsideCone(mutableCopy.ExceptionContainer); //allow catch clauses to share the same local
         if (copy == mutableCopy.ExceptionContainer) {
           mutableCopy.ExceptionContainer = this.Copy(mutableCopy.ExceptionContainer);
@@ -3073,8 +3079,11 @@ namespace Microsoft.Cci.MutableCodeModel {
               if (addressDereference != null)
                 mutableCopy.Definition = this.Copy(addressDereference);
               else {
-                var propertyDefinition = (IPropertyDefinition)mutableCopy.Definition;
-                mutableCopy.Definition = this.GetExistingCopyIfInsideCone(propertyDefinition);
+                var propertyDefinition = mutableCopy.Definition as IPropertyDefinition;
+                if (propertyDefinition != null)
+                  mutableCopy.Definition = this.GetExistingCopyIfInsideCone(propertyDefinition);
+                else
+                  mutableCopy.Definition = this.Copy((IThisReference)mutableCopy.Definition);
               }
             }
           }
@@ -3340,7 +3349,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="local">A local that is referenced from an expression.</param>
     /// <returns></returns>
-    private ILocalDefinition GetExistingCopyIfInsideCone(ILocalDefinition local) {
+    public ILocalDefinition GetExistingCopyIfInsideCone(ILocalDefinition local) {
       ILocalDefinition copy;
       if (this.LocalsInsideCone.TryGetValue(local, out copy)) return copy;
       return local; //The local is declared in a scope that encloses the cone being copied.

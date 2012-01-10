@@ -171,7 +171,7 @@ namespace Microsoft.Cci.Ast {
     /// The kind of metadata stored in the module. For example whether the module is an executable or a manifest resource file.
     /// </summary>
     public override ModuleKind Kind {
-      get { return this.EntryPoint.ResolvedMethod == Dummy.Method ? ModuleKind.DynamicallyLinkedLibrary : ModuleKind.ConsoleApplication; } //TODO: obtain it from the compiler options
+      get { return this.EntryPoint.ResolvedMethod is Dummy ? ModuleKind.DynamicallyLinkedLibrary : ModuleKind.ConsoleApplication; } //TODO: obtain it from the compiler options
     }
 
     /// <summary>

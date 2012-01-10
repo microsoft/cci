@@ -346,7 +346,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       IBlockStatement result = rootBlock;
       if ((this.options & DecompilerOptions.Iterators) != 0) {
         IMethodBody moveNextILBody = this.FindClosureMoveNext(rootBlock);
-        if (moveNextILBody != Dummy.MethodBody) {
+        if (!(moveNextILBody is Dummy)) {
           if (this.privateHelperTypesToRemove == null) this.privateHelperTypesToRemove = new List<ITypeDefinition>(1);
           this.privateHelperTypesToRemove.Add(moveNextILBody.MethodDefinition.ContainingTypeDefinition);
           var moveNextBody = new MoveNextSourceMethodBody(this.ilMethodBody, moveNextILBody, this.host, this.sourceLocationProvider, this.localScopeProvider, this.options);
@@ -1027,6 +1027,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       pointer.Type = funcPointerRef;
       foreach (var par in funcPointerRef.Parameters)
         result.Arguments.Add(this.PopOperandStack());
+      if (!funcPointerRef.IsStatic)
+        result.Arguments.Add(this.PopOperandStack());
       result.Arguments.Reverse();
       result.Pointer = pointer;
       this.sawTailCall = false;
@@ -1548,7 +1550,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           Operand = castIfPossible.ValueToCast,
           TypeToCheck = castIfPossible.TargetType,
         };
-      } else if (condition.Type != Dummy.TypeReference && condition.Type.TypeCode != PrimitiveTypeCode.Boolean) {
+      } else if (!(condition.Type is Dummy) && condition.Type.TypeCode != PrimitiveTypeCode.Boolean) {
         var defaultValue = new DefaultValue() { DefaultValueType = condition.Type, Type = condition.Type };
         condition = new NotEquality() { LeftOperand = condition, RightOperand = defaultValue };
       }

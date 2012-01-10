@@ -45,28 +45,30 @@ namespace Microsoft.Cci.MutableContracts {
     /// </summary>
     public static void InjectContractCalls(IMetadataHost host, Module module, ContractProvider contractProvider, ISourceLocationProvider sourceLocationProvider) {
       var cci = new ContractCallInjector(host, contractProvider, sourceLocationProvider);
-      cci.Visit(module);
+      cci.Rewrite(module);
     }
 
-    private class ContractCallInjector : CodeAndContractMutatingVisitor {
+    private class ContractCallInjector : CodeAndContractRewriter {
 
       private readonly ITypeReference systemVoid;
+      private ISourceLocationProvider sourceLocationProvider;
 
       public ContractCallInjector(IMetadataHost host, ContractProvider contractProvider, ISourceLocationProvider sourceLocationProvider)
-        : base(host, sourceLocationProvider, contractProvider) {
+        : base(host, contractProvider) {
         this.systemVoid = host.PlatformType.SystemVoid;
+        this.sourceLocationProvider = sourceLocationProvider;
       }
 
       private static List<T> MkList<T>(T t) { var xs = new List<T>(); xs.Add(t); return xs; }
 
-      public override INamespaceTypeDefinition Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
+      public override INamespaceTypeDefinition Rewrite(INamespaceTypeDefinition namespaceTypeDefinition) {
         this.VisitTypeDefinition(namespaceTypeDefinition);
-        return base.Visit(namespaceTypeDefinition);
+        return base.Rewrite(namespaceTypeDefinition);
       }
 
-      public override INestedTypeDefinition Visit(INestedTypeDefinition nestedTypeDefinition) {
+      public override INestedTypeDefinition Rewrite(INestedTypeDefinition nestedTypeDefinition) {
         this.VisitTypeDefinition(nestedTypeDefinition);
-        return base.Visit(nestedTypeDefinition);
+        return base.Rewrite(nestedTypeDefinition);
       }
 
       /// <summary>
@@ -140,11 +142,11 @@ namespace Microsoft.Cci.MutableContracts {
         }
       }
 
-      public override IMethodDefinition Visit(IMethodDefinition methodDefinition) {
+      public override void RewriteChildren(MethodDefinition methodDefinition) {
         IMethodContract methodContract = this.contractProvider.GetMethodContractFor(methodDefinition);
-        if (methodContract == null) return methodDefinition;
+        if (methodContract == null) return;
         ISourceMethodBody sourceMethodBody = methodDefinition.Body as ISourceMethodBody;
-        if (sourceMethodBody == null) return methodDefinition;
+        if (sourceMethodBody == null) return;
         List<IStatement> contractStatements = new List<IStatement>();
         foreach (var precondition in methodContract.Preconditions) {
           var methodCall = new MethodCall() {
@@ -161,7 +163,7 @@ namespace Microsoft.Cci.MutableContracts {
         }
         foreach (var postcondition in methodContract.Postconditions) {
           var methodCall = new MethodCall() {
-            Arguments = MkList(this.Visit(postcondition.Condition)),
+            Arguments = MkList(this.Rewrite(postcondition.Condition)),
             IsStaticCall = true,
             MethodToCall = this.contractProvider.ContractMethods.Ensures,
             Type = systemVoid,
@@ -173,7 +175,7 @@ namespace Microsoft.Cci.MutableContracts {
           contractStatements.Add(es);
         }
         List<IStatement> existingStatements = new List<IStatement>(sourceMethodBody.Block.Statements);
-        existingStatements = this.Visit(existingStatements);
+        existingStatements = this.Rewrite(existingStatements);
         // keep the call to the base constructor at the top
         if (methodDefinition.IsConstructor && existingStatements.Count > 0) {
           contractStatements.Insert(0, existingStatements[0]);
@@ -188,14 +190,14 @@ namespace Microsoft.Cci.MutableContracts {
           LocalsAreZeroed = sourceMethodBody.LocalsAreZeroed,
           MethodDefinition = methodDefinition,
         };
-        ((MethodDefinition)methodDefinition).Body = newSourceMethodBody;
-        return methodDefinition;
+        methodDefinition.Body = newSourceMethodBody;
+        return;
       }
 
       /// <summary>
       /// Converts the assert statement into a call to Contract.Assert
       /// </summary>
-      public override IStatement Visit(AssertStatement assertStatement) {
+      public override IStatement Rewrite(IAssertStatement assertStatement) {
         var methodCall = new MethodCall() {
           Arguments = MkList(assertStatement.Condition),
           IsStaticCall = true,
@@ -212,7 +214,7 @@ namespace Microsoft.Cci.MutableContracts {
       /// <summary>
       /// Converts the assume statement into a call to Contract.Assume
       /// </summary>
-      public override IStatement Visit(AssumeStatement assumeStatement) {
+      public override IStatement Rewrite(IAssumeStatement assumeStatement) {
         var methodCall = new MethodCall() {
           Arguments = MkList(assumeStatement.Condition),
           IsStaticCall = true,
@@ -229,7 +231,7 @@ namespace Microsoft.Cci.MutableContracts {
       /// <summary>
       /// Converts the old value into a call to Contract.OldValue
       /// </summary>
-      public override IExpression Visit(OldValue oldValue) {
+      public override IExpression Rewrite(IOldValue oldValue) {
 
         var mref = this.contractProvider.ContractMethods.Old;
         var methodToCall = new Microsoft.Cci.MutableCodeModel.GenericMethodInstanceReference() {
@@ -257,7 +259,7 @@ namespace Microsoft.Cci.MutableContracts {
       /// <summary>
       /// Converts the return value into a call to Contract.Result
       /// </summary>
-      public override IExpression Visit(ReturnValue returnValue) {
+      public override IExpression Rewrite(IReturnValue returnValue) {
 
         var mref = this.contractProvider.ContractMethods.Result;
         var methodToCall = new Microsoft.Cci.MutableCodeModel.GenericMethodInstanceReference() {
@@ -293,26 +295,31 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     /// <summary>
-    /// 
+    /// First, uninstantiates the method if it is a reference to a generic method.
+    /// Then, if the resulting method reference is specialized, the unspecialized
+    /// version is returned.
     /// </summary>
-    /// <param name="method"></param>
-    /// <returns></returns>
     public static IMethodReference UninstantiateAndUnspecialize(IMethodReference method) {
       IMethodReference result = method;
       IGenericMethodInstanceReference gmir = result as IGenericMethodInstanceReference;
       if (gmir != null) {
         result = gmir.GenericMethod;
       }
-      // REVIEW: This next block is needed because ISpecializedMethodDefinition isn't
-      // a subtype of ISpecializedMethodReference. Should it be?
-      ISpecializedMethodDefinition smd = result as ISpecializedMethodDefinition;
-      if (smd != null) {
-        result = smd.UnspecializedVersion;
-      }
       ISpecializedMethodReference smr = result as ISpecializedMethodReference;
       if (smr != null) {
         result = smr.UnspecializedVersion;
       }
+      return result;
+    }
+
+    public static IMethodDefinition UninstantiateAndUnspecializeMethodDefinition(IMethodDefinition method) {
+      IMethodDefinition result = method;
+      var gmi = result as IGenericMethodInstance;
+      if (gmi != null)
+        result = gmi.GenericMethod.ResolvedMethod;
+      var smd = result as ISpecializedMethodDefinition;
+      if (smd != null)
+        result = smd.UnspecializedVersion;
       return result;
     }
 
@@ -394,17 +401,21 @@ namespace Microsoft.Cci.MutableContracts {
     /// </summary>
     public static IMethodDefinition/*?*/ GetMethodFromContractClass(IMetadataHost host, IMethodDefinition methodDefinition) {
 
-      var unspecializedMethodDefinition = UninstantiateAndUnspecialize(methodDefinition);
-      ITypeDefinition definingType = unspecializedMethodDefinition.ResolvedMethod.ContainingTypeDefinition;
+      //var unspecializedMethodDefinition = UninstantiateAndUnspecialize(methodDefinition);
+      //ITypeDefinition definingType = unspecializedMethodDefinition.ResolvedMethod.ContainingTypeDefinition;
+
+      var definingType = methodDefinition.ContainingTypeDefinition;
 
       ITypeDefinition typeHoldingContractDefinition = GetTypeDefinitionFromAttribute(definingType, "System.Diagnostics.Contracts.ContractClassAttribute");
       if (typeHoldingContractDefinition == null) return null;
       if (definingType.IsInterface) {
+        var unspecializedMethodDefinition = UninstantiateAndUnspecialize(methodDefinition);
+        definingType = unspecializedMethodDefinition.ResolvedMethod.ContainingTypeDefinition;
         #region Explicit Interface Implementations
         foreach (IMethodImplementation methodImplementation in typeHoldingContractDefinition.ExplicitImplementationOverrides) {
           var implementedInterfaceMethod = UninstantiateAndUnspecialize(methodImplementation.ImplementedMethod);
           if (unspecializedMethodDefinition.InternedKey == implementedInterfaceMethod.InternedKey)
-            return methodImplementation.ImplementingMethod.ResolvedMethod;
+              return methodImplementation.ImplementingMethod.ResolvedMethod;
         }
         #endregion Explicit Interface Implementations
         #region Implicit Interface Implementations
@@ -420,14 +431,25 @@ namespace Microsoft.Cci.MutableContracts {
         #endregion Implicit Interface Implementations
         return null;
       } else if (methodDefinition.IsAbstract) {
-        if (typeHoldingContractDefinition.IsGeneric) {
-          var instant = Immutable.GenericTypeInstance.GetGenericTypeInstance((INamedTypeDefinition)typeHoldingContractDefinition,
-            IteratorHelper.GetConversionEnumerable<IGenericTypeParameter, ITypeReference>(definingType.GenericParameters),
-            host.InternFactory);
-          typeHoldingContractDefinition = instant;
+        var smd = methodDefinition as ISpecializedMethodDefinition;
+        if (smd != null) {
+          // need to instantiate the type holding the contracts to match the instantiation of the containing type of the method
+          var gti = (IGenericTypeInstanceReference)smd.ContainingType;
+          typeHoldingContractDefinition = Immutable.GenericTypeInstance.GetGenericTypeInstance((INamedTypeDefinition)typeHoldingContractDefinition, gti.GenericArguments, host.InternFactory);
+          
         }
         IMethodDefinition method = MemberHelper.GetImplicitlyOverridingDerivedClassMethod(methodDefinition, typeHoldingContractDefinition);
-        if (method == Dummy.Method) return null;
+        var implicitImplementations = typeHoldingContractDefinition.GetMatchingMembers(
+          tdm => {
+            IMethodDefinition md = tdm as IMethodDefinition;
+            if (md == null) return false;
+            if (md.Name != methodDefinition.Name) return false;
+            return true;
+          });
+        if (IteratorHelper.EnumerableIsNotEmpty(implicitImplementations)) {
+          return IteratorHelper.First(implicitImplementations) as IMethodDefinition;
+        }
+        if (method is Dummy) return null;
         return method;
       }
       return null;
@@ -457,7 +479,7 @@ namespace Microsoft.Cci.MutableContracts {
         }
       } else if (abstractTypeDefinition.IsAbstract) {
         IMethodDefinition method = MemberHelper.GetImplicitlyOverriddenBaseClassMethod(methodDefinition);
-        if (method == Dummy.Method) return null;
+        if (method is Dummy) return null;
         return method;
       }
       return null;
@@ -495,34 +517,25 @@ namespace Microsoft.Cci.MutableContracts {
     /// </summary>
     public static bool IsAutoPropertyMember(IMetadataHost host, ITypeDefinitionMember member) {
       if (AttributeHelper.Contains(member.Attributes, host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute)) return true;
-      if (systemDiagnosticsDebuggerNonUserCodeAttribute == null) {
-        systemDiagnosticsDebuggerNonUserCodeAttribute = CreateTypeReference(host, new Immutable.AssemblyReference(host, host.ContractAssemblySymbolicIdentity), "System.Diagnostics.DebuggerNonUserCodeAttribute");
-      }
+      var systemDiagnosticsDebuggerNonUserCodeAttribute = CreateTypeReference(host, new Immutable.AssemblyReference(host, host.ContractAssemblySymbolicIdentity), "System.Diagnostics.DebuggerNonUserCodeAttribute");
       return AttributeHelper.Contains(member.Attributes, systemDiagnosticsDebuggerNonUserCodeAttribute);
     }
-    private static INamespaceTypeReference systemDiagnosticsDebuggerNonUserCodeAttribute = null;
 
     /// <summary>
     /// Returns true iff the type definition is a contract class for an interface or abstract class.
     /// </summary>
     public static bool IsContractClass(IMetadataHost host, ITypeDefinition typeDefinition) {
-      if (contractClassFor == null) {
-        contractClassFor = CreateTypeReference(host, new Immutable.AssemblyReference(host, host.ContractAssemblySymbolicIdentity), "System.Diagnostics.Contracts.ContractClassForAttribute");
-      }
+      var contractClassFor = CreateTypeReference(host, new Immutable.AssemblyReference(host, host.ContractAssemblySymbolicIdentity), "System.Diagnostics.Contracts.ContractClassForAttribute");
       return AttributeHelper.Contains(typeDefinition.Attributes, contractClassFor);
     }
-    private static INamespaceTypeReference contractClassFor = null;
 
     /// <summary>
     /// Returns true iff the method definition is an invariant method.
     /// </summary>
     public static bool IsInvariantMethod(IMetadataHost host, IMethodDefinition methodDefinition) {
-      if (contractInvariantMethod == null) {
-        contractInvariantMethod = CreateTypeReference(host, new Immutable.AssemblyReference(host, host.ContractAssemblySymbolicIdentity), "System.Diagnostics.Contracts.ContractInvariantMethodAttribute");
-      }
+      var contractInvariantMethod = CreateTypeReference(host, new Immutable.AssemblyReference(host, host.ContractAssemblySymbolicIdentity), "System.Diagnostics.Contracts.ContractInvariantMethodAttribute");
       return AttributeHelper.Contains(methodDefinition.Attributes, contractInvariantMethod);
     }
-    private static INamespaceTypeReference contractInvariantMethod = null;
 
     /// <summary>
     /// Returns true iff the method resolves to a definition which is decorated
@@ -531,13 +544,35 @@ namespace Microsoft.Cci.MutableContracts {
     /// The namespace the attribute belongs to is ignored.
     /// </summary>
     public static bool IsValidatorOrAbbreviator(IMethodReference method) {
+      return (IsAbbreviator(method) || IsValidator(method));
+    }
+
+    /// <summary>
+    /// Returns true iff the method resolves to a definition which is decorated
+    /// with an attribute named "ContractAbbreviatorAttribute".
+    /// The namespace the attribute belongs to is ignored.
+    /// </summary>
+    public static bool IsAbbreviator(IMethodReference method) {
       IMethodDefinition methodDefinition = method.ResolvedMethod;
-      if (methodDefinition == Dummy.Method) return false;
+      if (methodDefinition is Dummy) return false;
       foreach (var a in methodDefinition.Attributes) {
         string name = TypeHelper.GetTypeName(a.Type, NameFormattingOptions.None);
-        if (name.EndsWith("ContractArgumentValidatorAttribute")
-          || name.EndsWith("ContractAbbreviatorAttribute")
-          )
+        if (name.EndsWith("ContractAbbreviatorAttribute"))
+          return true;
+      }
+      return false;
+    }
+    /// <summary>
+    /// Returns true iff the method resolves to a definition which is decorated
+    /// with an attribute named  "ContractArgumentValidatorAttribute".
+    /// The namespace the attribute belongs to is ignored.
+    /// </summary>
+    public static bool IsValidator(IMethodReference method) {
+      IMethodDefinition methodDefinition = method.ResolvedMethod;
+      if (methodDefinition is Dummy) return false;
+      foreach (var a in methodDefinition.Attributes) {
+        string name = TypeHelper.GetTypeName(a.Type, NameFormattingOptions.None);
+        if (name.EndsWith("ContractArgumentValidatorAttribute"))
           return true;
       }
       return false;
@@ -562,7 +597,7 @@ namespace Microsoft.Cci.MutableContracts {
     public static ICustomAttribute/*?*/ IsModel(IMethodReference method) {
       var mr = UninstantiateAndUnspecialize(method);
       IMethodDefinition methodDefinition = mr.ResolvedMethod;
-      if (methodDefinition == Dummy.Method) return null;
+      if (methodDefinition is Dummy) return null;
       ICustomAttribute/*?*/ attr;
       if (TryGetAttributeByName(methodDefinition.Attributes, "ContractModelAttribute", out attr)) return attr;
       // TODO: Need to cache this information. This is an expensive way to tell if something is a getter.
@@ -578,12 +613,9 @@ namespace Microsoft.Cci.MutableContracts {
       return null;
     }
 
-    private static ITypeReference pureAttribute = null;
     public static bool IsPure(IMetadataHost host, IMethodReference methodReference) {
-      if (contractInvariantMethod == null) {
-        var contractAssemblyReference = new Immutable.AssemblyReference(host, host.ContractAssemblySymbolicIdentity);
-        pureAttribute = ContractHelper.CreateTypeReference(host, contractAssemblyReference, "System.Diagnostics.Contracts.PureAttribute"); 
-      }
+      var contractAssemblyReference = new Immutable.AssemblyReference(host, host.ContractAssemblySymbolicIdentity);
+      var pureAttribute = ContractHelper.CreateTypeReference(host, contractAssemblyReference, "System.Diagnostics.Contracts.PureAttribute"); 
       if (AttributeHelper.Contains(methodReference.Attributes, pureAttribute)) return true;
       var methodDefinition = methodReference.ResolvedMethod;
       return methodDefinition != methodReference && AttributeHelper.Contains(methodDefinition.Attributes, pureAttribute);
@@ -626,13 +658,12 @@ namespace Microsoft.Cci.MutableContracts {
     public static IMethodContract GetMethodContractFor(IContractAwareHost host, IMethodDefinition methodDefinition) {
 
       if (methodDefinition is Dummy) return null;
-      methodDefinition = UninstantiateAndUnspecialize(methodDefinition).ResolvedMethod;
-      IUnit/*?*/ unit = TypeHelper.GetDefiningUnit(methodDefinition.ContainingType.ResolvedType);
-      if (unit == null) return null;
-      IContractProvider/*?*/ cp = host.GetContractExtractor(unit.UnitIdentity);
+      var u = TypeHelper.GetDefiningUnitReference(methodDefinition.ContainingType);
+      if (u == null) return null;
+      var cp = host.GetContractExtractor(u.UnitIdentity);
       if (cp == null) return null;
-      var methodContract = cp.GetMethodContractFor(methodDefinition);
-      return methodContract;
+      var mc = cp.GetMethodContractFor(methodDefinition);
+      return mc;
     }
 
     /// <summary>
@@ -656,33 +687,19 @@ namespace Microsoft.Cci.MutableContracts {
       #region Overrides of base class methods
       if (!methodDefinition.IsNewSlot) { // REVIEW: Is there a better test?
         IMethodDefinition overriddenMethod = MemberHelper.GetImplicitlyOverriddenBaseClassMethod(methodDefinition) as IMethodDefinition;
-        while (overriddenMethod != null && overriddenMethod != Dummy.Method) {
+        while (overriddenMethod != null && !(overriddenMethod is Dummy)) {
           IMethodContract/*?*/ overriddenContract = ContractHelper.GetMethodContractFor(host, overriddenMethod);
           if (overriddenContract != null) {
 
-            var specializedoverriddenMethod = overriddenMethod as ISpecializedMethodDefinition;
-
-            if (specializedoverriddenMethod != null) {
-              overriddenMethod = UninstantiateAndUnspecialize(overriddenMethod).ResolvedMethod;
-            }
-
-            overriddenContract = CopyContract(host, overriddenContract, methodDefinition, overriddenMethod);
+            overriddenContract = CopyContractIntoNewContext(host, overriddenContract, methodDefinition, overriddenMethod);
             overriddenContract = FilterUserMessage(host, overriddenContract, methodDefinition.ContainingTypeDefinition);
 
-            if (specializedoverriddenMethod != null || overriddenMethod.IsGeneric) {
-              var stdm = specializedoverriddenMethod as Immutable.SpecializedTypeDefinitionMember<IMethodDefinition>;
-              var sourceTypeReferences = stdm == null ? Enumerable<ITypeReference>.Empty : stdm.ContainingGenericTypeInstance.GenericArguments;
-              var targetTypeParameters = overriddenMethod.ContainingTypeDefinition.GenericParameters;
-              var justToSee = overriddenMethod.InternedKey;
-              overriddenContract = SpecializeMethodContract(
-                host,
-                overriddenContract,
-                overriddenMethod.ContainingTypeDefinition,
-                targetTypeParameters,
-                sourceTypeReferences,
-                overriddenMethod.GenericParameters,
-                methodDefinition.GenericParameters
-                );
+            // if the method is generic, then need to specialize the contract to have the same method type parameters as the method
+            if (methodDefinition.IsGeneric) {
+              var d = new Dictionary<uint, ITypeReference>();
+              IteratorHelper.Zip(overriddenMethod.GenericParameters, methodDefinition.GenericParameters, (i,j) => d.Add(i.InternedKey, j));
+              var cs = new CodeSpecializer(host, d);
+              overriddenContract = cs.Rewrite(overriddenContract);
             }
 
             Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(cumulativeContract, overriddenContract);
@@ -696,7 +713,7 @@ namespace Microsoft.Cci.MutableContracts {
       foreach (IMethodDefinition ifaceMethod in ContractHelper.GetAllImplicitlyImplementedInterfaceMethods(methodDefinition)) {
         IMethodContract/*?*/ ifaceContract = ContractHelper.GetMethodContractFor(host, ifaceMethod);
         if (ifaceContract == null) continue;
-        ifaceContract = CopyAndStuff(host, ifaceContract, methodDefinition, ifaceMethod);
+        ifaceContract = CopyContractIntoNewContext(host, ifaceContract, methodDefinition, ifaceMethod);
         ifaceContract = FilterUserMessage(host, ifaceContract, methodDefinition.ContainingTypeDefinition);
         Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(cumulativeContract, ifaceContract);
         atLeastOneContract = true;
@@ -708,7 +725,7 @@ namespace Microsoft.Cci.MutableContracts {
         if (ifaceMethod == null) continue;
         IMethodContract/*?*/ ifaceContract = ContractHelper.GetMethodContractFor(host, ifaceMethod);
         if (ifaceContract == null) continue;
-        ifaceContract = CopyAndStuff(host, ifaceContract, methodDefinition, ifaceMethod);
+        ifaceContract = CopyContractIntoNewContext(host, ifaceContract, methodDefinition, ifaceMethod);
         ifaceContract = FilterUserMessage(host, ifaceContract, methodDefinition.ContainingTypeDefinition);
         Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(cumulativeContract, ifaceContract);
         atLeastOneContract = true;
@@ -787,133 +804,72 @@ namespace Microsoft.Cci.MutableContracts {
       return false;
     }
 
-    public static IMethodContract CopyAndStuff(IMetadataHost host, IMethodContract methodContract, IMethodDefinition toMethod, IMethodDefinition fromMethod) {
-      var specializedFromMethod = fromMethod as ISpecializedMethodDefinition;
-      if (specializedFromMethod != null) {
-        fromMethod = UninstantiateAndUnspecialize(fromMethod).ResolvedMethod;
-      }
-      IMethodContract fromMethodContract = CopyContract(host, methodContract, toMethod, fromMethod);
+    /// <summary>
+    /// Given a method contract (<paramref name="methodContact"/> for a unspecialized/uninstantiated method reference/definition
+    /// (<paramref name="unspec"/>), specialize and instantiate (i.e., the generics) in the contract so that it is a contract
+    /// relative to the specialized/instantiated method reference/definition (<paramref name="mr"/>).
+    /// </summary>
+    /// <returns>
+    /// A deep copy of <paramref name="methodContract"/>, properly specialized and instantiated.
+    /// </returns>
+    public static MethodContract InstantiateAndSpecializeContract(IMetadataHost host, IMethodContract methodContract, IMethodReference mr, IMethodReference unspec) {
+      //Contract.Requires(mr is IGenericMethodInstanceReference || mr is ISpecializedMethodReference);
 
-      IGenericMethodInstance gmi = fromMethod as IGenericMethodInstance;
-      if (gmi != null) fromMethod = gmi.GenericMethod.ResolvedMethod;
-      if (specializedFromMethod != null || fromMethod.IsGeneric) {
-        var stdm = specializedFromMethod as Immutable.SpecializedTypeDefinitionMember<IMethodDefinition>;
-        var sourceTypeReferences = stdm == null ? Enumerable<ITypeReference>.Empty : stdm.ContainingGenericTypeInstance.GenericArguments;
-        var targetTypeParameters = fromMethod.ContainingTypeDefinition.GenericParameters;
-        var justToSee = fromMethod.InternedKey;
-        fromMethodContract = SpecializeMethodContract(
-          host,
-          fromMethodContract,
-          fromMethod.ContainingTypeDefinition,
-          targetTypeParameters,
-          sourceTypeReferences,
-          fromMethod.GenericParameters,
-          toMethod.GenericParameters
-          );
-        return fromMethodContract;
-      }
+      var copier = new CodeAndContractDeepCopier(host);
+      var mutableContract = copier.Copy(methodContract);
 
-      //var gmir = fromMethod as IGenericMethodInstanceReference;
-      //if (gmir != null) {
-      //  var genericMethod = gmir.GenericMethod.ResolvedMethod;
-      //  var targetTypeParameters = genericMethod.GenericParameters;
-      //  fromMethodContract = SpecializeMethodContract(
-      //    host,
-      //    fromMethodContract,
-      //    fromMethod.ContainingTypeDefinition,
-      //    targetTypeParameters,
-      //    sourceTypeReferences,
-      //    fromMethod.GenericParameters,
-      //    toMethod.GenericParameters
-      //    );
-      //  return fromMethodContract;
-      //}
+      var unspecializedTypeReferences = new List<ITypeReference>();
+      var specializedTypeReferences = new List<ITypeReference>();
 
-      return fromMethodContract;
-    }
+      var copyOfUnspecializedContainingType = copier.Copy(unspec.ContainingType);
+      unspecializedTypeReferences.Add(copyOfUnspecializedContainingType);
+      var containingType = mr.ContainingType;
+      var gtir2 = containingType as IGenericTypeInstanceReference;
+      var copyOfSpecializedContainingType = gtir2 != null ? copier.Copy(gtir2) : copier.Copy(containingType);
+      specializedTypeReferences.Add(copyOfSpecializedContainingType);
 
-    internal static IMethodContract SpecializeMethodContract(IMetadataHost host, IMethodContract contract, ITypeDefinition typeDefinition,
-      IEnumerable<IGenericTypeParameter> targetTypeParameters, IEnumerable<ITypeReference> sourceTypeReferences,
-      IEnumerable<IGenericMethodParameter> targetMethodTypeParameters, IEnumerable<IGenericMethodParameter> sourceMethodTypeParameters
-      ) {
-      var cs = new CodeSpecializer(host, typeDefinition, targetTypeParameters, sourceTypeReferences, targetMethodTypeParameters, sourceMethodTypeParameters);
-      var mc = new MethodContract(contract);
-      mc = cs.Visit(mc) as MethodContract;
-      return mc;
-    }
+      var unspecializedMethodDefinition = unspec as IMethodDefinition;
 
-    private class CodeSpecializer : CodeAndContractMutatingVisitor {
-      Dictionary<uint, ITypeReference> typeRefMap = new Dictionary<uint, ITypeReference>();
-      private ITypeDefinition targetType;
-      ITypeReference specializedTypeReference;
-      public CodeSpecializer(IMetadataHost host,
-        ITypeDefinition targetType,
-        IEnumerable<IGenericTypeParameter> targetTypeParameters,
-        IEnumerable<ITypeReference> sourceTypeReferences,
-        IEnumerable<IGenericMethodParameter> targetMethodTypeParameters,
-        IEnumerable<IGenericMethodParameter> sourceMethodTypeParameters
-        )
-        : base(host) {
-        this.targetType = targetType;
-        var b = TypeHelper.TryGetFullyInstantiatedSpecializedTypeReference(targetType, out this.specializedTypeReference);
-
-        var i = 0;
-        var targetGP = new List<IGenericTypeParameter>(targetTypeParameters);
-        foreach (var typeReference in sourceTypeReferences) {
-          this.typeRefMap.Add(targetGP[i].InternedKey, typeReference);
-          i++;
+      #region Map generic type parameters
+      var smr = mr as ISpecializedMethodReference;
+      if (smr != null) {
+        if (unspecializedMethodDefinition != null) {
+          foreach (var t in unspecializedMethodDefinition.ContainingTypeDefinition.GenericParameters) {
+            // without the cast, the copy is not object equals to references within the contract
+            var copyOfT = copier.Copy((IGenericTypeParameterReference)t);
+            unspecializedTypeReferences.Add(copyOfT);
+          }
+          var gtir = smr.ContainingType as IGenericTypeInstanceReference;
+          if (gtir != null) {
+            foreach (var t in gtir.GenericArguments) {
+              var copyOfT = copier.Copy(t);
+              specializedTypeReferences.Add(copyOfT);
+            }
+          }
         }
-
-        i = 0;
-        var targetMTP = new List<IGenericMethodParameter>(targetMethodTypeParameters);
-        foreach (var typeReference in sourceMethodTypeParameters) {
-          this.typeRefMap.Add(targetMTP[i].InternedKey, typeReference);
-          i++;
+      }
+      #endregion
+      #region Map generic method parameters
+      var gmir = mr as IGenericMethodInstanceReference;
+      if (gmir != null) {
+        var unspecialized = gmir.GenericMethod.ResolvedMethod;
+        foreach (var t in unspecialized.GenericParameters) {
+          var copyOfT = copier.Copy(t);
+          unspecializedTypeReferences.Add(copyOfT);
         }
-
+        foreach (var t in gmir.GenericArguments) {
+          var copyOfT = copier.Copy(t);
+          specializedTypeReferences.Add(copyOfT);
+        }
       }
-      public override ITypeReference Visit(ITypeReference typeReference) {
-        ITypeReference mappedTo;
-        if (this.typeRefMap.TryGetValue(typeReference.InternedKey, out mappedTo))
-          return mappedTo;
-        else
-          return base.Visit(typeReference);
-      }
-
-      public override SpecializedFieldReference Mutate(SpecializedFieldReference specializedFieldReference) {
-        return new SpecializedFieldReference() {
-          ContainingType = this.Visit(specializedFieldReference.ContainingType),
-          InternFactory = this.host.InternFactory,
-          Name = specializedFieldReference.Name,
-          Type = this.Visit(specializedFieldReference.Type),
-          UnspecializedVersion = specializedFieldReference.UnspecializedVersion,
-        };
-      }
-
-      public override SpecializedNestedTypeReference Visit(SpecializedNestedTypeReference specializedNestedTypeReference) {
-        return new SpecializedNestedTypeReference() {
-          ContainingType = this.Visit(specializedNestedTypeReference.ContainingType),
-          GenericParameterCount = specializedNestedTypeReference.GenericParameterCount,
-          InternFactory = this.host.InternFactory,
-          MangleName = true,
-          Name = specializedNestedTypeReference.Name,
-          PlatformType = specializedNestedTypeReference.PlatformType,
-          UnspecializedVersion = specializedNestedTypeReference.UnspecializedVersion,
-        };
-
-      }
-      public override SpecializedMethodReference Mutate(SpecializedMethodReference specializedMethodReference) {
-        return new SpecializedMethodReference() {
-          CallingConvention = specializedMethodReference.CallingConvention,
-          ContainingType = this.Visit(specializedMethodReference.ContainingType),
-          InternFactory = this.host.InternFactory,
-          Name = specializedMethodReference.Name,
-          Parameters = this.Mutate(specializedMethodReference.Parameters),
-          Type = this.Visit(specializedMethodReference.Type),
-          UnspecializedVersion = specializedMethodReference.UnspecializedVersion,
-        };
-      }
-
+      #endregion
+      var d = new Dictionary<uint, ITypeReference>();
+      IteratorHelper.Zip(unspecializedTypeReferences, specializedTypeReferences, (u, s) => d.Add(u.InternedKey, s));
+      var specializer = new CodeSpecializer(host, d);
+      
+      mutableContract = (MethodContract)specializer.Rewrite(mutableContract);
+      mutableContract = (MethodContract)ContractHelper.CopyContractIntoNewContext(host, mutableContract, smr != null ? smr.ResolvedMethod : mr.ResolvedMethod, unspecializedMethodDefinition);
+      return mutableContract;
     }
 
     /// <summary>
@@ -993,13 +949,13 @@ namespace Microsoft.Cci.MutableContracts {
           if (MemberHelper.MethodsAreEquivalent(implementingMethod, interfaceMethod)) {
             var key = interfaceMethod.InternedKey;
             if (explicitImplementations == null || explicitImplementations.BinarySearch(key) < 0) {
-              if (overiddenMethod != Dummy.Method) implicitImplementations.Add(key);
+              if (!(overiddenMethod is Dummy)) implicitImplementations.Add(key);
               yield return interfaceMethod;
             }
           }
         }
       }
-      if (overiddenMethod != Dummy.Method) {
+      if (!(overiddenMethod is Dummy)) {
         foreach (var implicitImplementation in MemberHelper.GetImplicitlyImplementedInterfaceMethods(overiddenMethod)) {
           var key = implicitImplementation.InternedKey;
           if (!implicitImplementations.Contains(key)) {
@@ -1011,21 +967,18 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     /// <summary>
-    /// Returns a deep copy of <paramref name="methodContract"/> which belongs to <paramref name="fromMethod"/> so that
-    /// it is a method contract for <paramref name="toMethod"/>.
-    /// In addition to being a deep copy, all parameters from <paramref name="fromMethod"/> are replaced with the corresponding
+    /// Returns a modified <paramref name="methodContract"/> so that instead of belonging to <paramref name="fromMethod"/> it
+    /// is a method contract for <paramref name="toMethod"/>.
+    /// All parameters from <paramref name="fromMethod"/> are replaced with the corresponding
     /// parameters from <paramref name="toMethod"/>.
     /// Any local definitions which are introduced in local declaration statements are modified so that the defining method
     /// each local points to is <paramref name="toMethod"/> instead of <paramref name="fromMethod"/>
     /// </summary>
-    public static IMethodContract CopyContract(IMetadataHost host, IMethodContract methodContract, IMethodDefinition toMethod, IMethodDefinition fromMethod) {
+    public static IMethodContract CopyContractIntoNewContext(IMetadataHost host, IMethodContract methodContract, IMethodDefinition toMethod, IMethodDefinition fromMethod) {
 
       var result = new CodeAndContractDeepCopier(host).Copy(methodContract);
-      var rewriter = new ContractRewriter(host, toMethod, fromMethod);
+      var rewriter = new RewriteContractInNewContext(host, toMethod, fromMethod);
       return rewriter.Rewrite(result);
-
-      //var copier = new ContractCopier(host, null, toMethod, fromMethod);
-      //return copier.Substitute(methodContract);
     }
 
     /// <summary>
@@ -1033,42 +986,53 @@ namespace Microsoft.Cci.MutableContracts {
     /// from another method as it is copying. It also re-parents any locals so that they point
     /// to the method the contract is being copied "into".
     /// </summary>
-    private class ContractRewriter : CodeAndContractRewriter {
+    private class RewriteContractInNewContext : CodeAndContractRewriter {
       private IMethodDefinition targetMethod;
       private IMethodDefinition sourceMethod;
       private ITypeReference targetType;
       private ITypeReference sourceType;
-      private IThisReference ThisReference;
       private List<IParameterDefinition> sourceParameters;
       private List<IParameterDefinition> targetParameters;
+      private Dictionary<ILocalDefinition, ILocalDefinition> newLocals = new Dictionary<ILocalDefinition, ILocalDefinition>();
 
-      public ContractRewriter(IMetadataHost host, IMethodDefinition toMethod, IMethodDefinition fromMethod)
-        : base(host) {
+      public RewriteContractInNewContext(IMetadataHost host, IMethodDefinition toMethod, IMethodDefinition fromMethod)
+        : base(host, true) {
         this.targetMethod = toMethod;
         this.targetType = toMethod.ContainingType;
+        // If it is a method definition, then its containing type can be a generic
+        // type definition. Need to have an instance of it to use in rewriting the contract.
+        var td = this.targetType as ITypeDefinition;
+        if (td != null && td.IsGeneric) {
+          this.targetType = td.InstanceType;
+        }
         this.sourceMethod = fromMethod;
         this.sourceType = fromMethod.ContainingType;
-        this.ThisReference = new ThisReference() {
-          Type = this.targetType,
-        };
         this.sourceParameters = new List<IParameterDefinition>(fromMethod.Parameters);
         this.targetParameters = new List<IParameterDefinition>(toMethod.Parameters);
       }
 
-      public override void RewriteChildren(LocalDefinition localDefinition) {
-        if (localDefinition.MethodDefinition.InternedKey == this.targetMethod.InternedKey)
-          localDefinition.MethodDefinition = this.sourceMethod;
-        base.RewriteChildren(localDefinition);
-      }
-      public override object RewriteReference(ILocalDefinition localDefinition) {
-        if (localDefinition.MethodDefinition.InternedKey == this.targetMethod.InternedKey) {
-          var ld = localDefinition as LocalDefinition;
-          if (ld != null) {
-            this.RewriteChildren(ld);
-            return ld;
+      public override ILocalDefinition Rewrite(ILocalDefinition localDefinition) {
+        if (localDefinition.MethodDefinition/*.InternedKey*/ == this.sourceMethod/*.InternedKey*/) {
+          ILocalDefinition alreadyReparentedLocal;
+          if (!this.newLocals.TryGetValue(localDefinition, out alreadyReparentedLocal)) {
+            var ld = new LocalDefinition() {
+              MethodDefinition = this.targetMethod,
+              Name = localDefinition.Name,
+              Type = localDefinition.Type,
+            };
+            this.newLocals.Add(localDefinition, ld);
+            alreadyReparentedLocal = ld;
           }
+          return alreadyReparentedLocal;
         }
-        return base.RewriteReference(localDefinition);
+        return localDefinition;
+      }
+      /// <summary>
+      /// TODO: This is necessary only because the base rewriter for things like TargetExpression call
+      /// this method and its definition in the base rewriter is to not visit it, but to just return it.
+      /// </summary>
+      public override object RewriteReference(ILocalDefinition localDefinition) {
+        return this.Rewrite(localDefinition);
       }
 
       public override IParameterDefinition Rewrite(IParameterDefinition parameterDefinition) {
@@ -1083,29 +1047,27 @@ namespace Microsoft.Cci.MutableContracts {
       }
 
 
-      public override IExpression Rewrite(IThisReference thisReference) {
-        var t = thisReference.Type;
-        var gt = t as IGenericTypeInstanceReference;
-        if (gt != null) t = gt.GenericType;
-        var k = t.InternedKey;
-        if (k == this.sourceType.InternedKey) {
-          ITypeReference st = this.targetType;
-          return new ThisReference() {
-            Type = NamedTypeDefinition.SelfInstance((INamedTypeDefinition)st.ResolvedType, this.host.InternFactory),
-          };
-        }
-        return base.Rewrite(thisReference);
+      public override void RewriteChildren(ThisReference thisReference) {
+        if (TypeHelper.TypesAreEquivalent(thisReference.Type,this.sourceType))
+          thisReference.Type = this.targetType;
       }
 
+      /// <summary>
+      /// The inherited contract might have a method call of the form "this.M(...)" where "this" had been
+      /// a reference type in the original contract (e.g., in an interface contract). But if it is
+      /// inherited into a method belonging to a struct (or other value type), then the "this" reference
+      /// needs to have its type changed to be a managed pointer.
+      /// </summary>
       public override void RewriteChildren(MethodCall methodCall) {
         base.RewriteChildren(methodCall);
-        if (!methodCall.IsStaticCall && methodCall.ThisArgument is IThisReference && this.targetType.IsValueType && !this.sourceType.IsValueType) {
+        if (!methodCall.IsStaticCall && methodCall.ThisArgument is IThisReference && methodCall.ThisArgument.Type.IsValueType) {
           methodCall.ThisArgument =
               new ThisReference() {
                 Type = MutableModelHelper.GetManagedPointerTypeReference(methodCall.ThisArgument.Type, this.host.InternFactory, methodCall.ThisArgument.Type)
               };
         }
       }
+
     }
 
     /// <summary>
@@ -1156,7 +1118,7 @@ namespace Microsoft.Cci.MutableContracts {
       // If the auto-property inherits any contracts then it doesn't derive any from the invariant
       var inheritsContract = false;
       IMethodDefinition overriddenMethod = MemberHelper.GetImplicitlyOverriddenBaseClassMethod(getter) as IMethodDefinition;
-      var isOverride = getter.IsNewSlot && overriddenMethod != null && overriddenMethod != Dummy.Method;
+      var isOverride = getter.IsNewSlot && overriddenMethod != null && !(overriddenMethod is Dummy);
       inheritsContract |= isOverride;
       if (!inheritsContract) {
         inheritsContract |= IteratorHelper.EnumerableIsNotEmpty(ContractHelper.GetAllImplicitlyImplementedInterfaceMethods(getter));
@@ -1279,7 +1241,7 @@ namespace Microsoft.Cci.MutableContracts {
   /// <summary>
   /// A mutator that reparents locals defined in the target method so that they point to the source method.
   /// </summary>
-  internal sealed class ReparentLocals : MethodBodyCodeAndContractMutator {
+  internal sealed class ReparentLocals : CodeAndContractRewriter {
     private IMethodDefinition targetMethod;
     private IMethodDefinition sourceMethod;
 
@@ -1287,25 +1249,23 @@ namespace Microsoft.Cci.MutableContracts {
     /// Creates a mutator that reparents locals defined in the target method so that they point to the source method.
     /// </summary>
     public ReparentLocals(IMetadataHost host, IMethodDefinition targetMethodDefinition, IMethodDefinition sourceMethodDefinition)
-      : base(host, true) {
+      : base(host) {
       this.targetMethod = targetMethodDefinition;
       this.sourceMethod = sourceMethodDefinition;
     }
 
-    public override ILocalDefinition Visit(ILocalDefinition localDefinition) {
+    public override void RewriteChildren(LocalDefinition localDefinition) {
       if (localDefinition.MethodDefinition.InternedKey == this.targetMethod.InternedKey) {
-        var mutableLocalDefinition = localDefinition as LocalDefinition;
-        if (mutableLocalDefinition != null)
-          mutableLocalDefinition.MethodDefinition = this.sourceMethod;
+        localDefinition.MethodDefinition = this.sourceMethod;
       }
-      return localDefinition;
+      return;
     }
   }
   /// <summary>
   /// A mutator that substitutes parameters defined in the target method with those from the source method
   /// (including the "this" parameter).
   /// </summary>
-  public sealed class SubstituteParameters : MethodBodyCodeAndContractMutator {
+  public sealed class SubstituteParameters : CodeAndContractRewriter {
     private IMethodDefinition targetMethod;
     private IMethodDefinition sourceMethod;
     private ITypeReference targetType;
@@ -1315,7 +1275,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// Creates a mutator that replaces all occurrences of parameters from the target method with those from the source method.
     /// </summary>
     public SubstituteParameters(IMetadataHost host, IMethodDefinition targetMethodDefinition, IMethodDefinition sourceMethodDefinition)
-      : base(host, true) {
+      : base(host) {
       this.targetMethod = targetMethodDefinition;
       this.sourceMethod = sourceMethodDefinition;
       this.targetType = targetMethodDefinition.ContainingType;
@@ -1327,17 +1287,17 @@ namespace Microsoft.Cci.MutableContracts {
     /// it is replaced with the equivalent parameter of the source method.
     /// </summary>
     /// <param name="addressableExpression">The addressable expression.</param>
-    public override IAddressableExpression Visit(AddressableExpression addressableExpression) {
+    public override void RewriteChildren(AddressableExpression addressableExpression) {
       ParameterDefinition/*?*/ par = addressableExpression.Definition as ParameterDefinition;
       if (par != null && par.ContainingSignature == this.targetMethod) {
         addressableExpression.Definition = this.parameters[par.Index];
         if (addressableExpression.Instance != null) {
-          addressableExpression.Instance = this.Visit(addressableExpression.Instance);
+          addressableExpression.Instance = this.Rewrite(addressableExpression.Instance);
         }
-        addressableExpression.Type = this.Visit(addressableExpression.Type);
-        return addressableExpression;
+        addressableExpression.Type = this.Rewrite(addressableExpression.Type);
+        return;
       } else {
-        return base.Visit(addressableExpression);
+        base.RewriteChildren(addressableExpression);
       }
     }
 
@@ -1346,33 +1306,33 @@ namespace Microsoft.Cci.MutableContracts {
     /// it is replaced with the equivalent parameter of the source method.
     /// </summary>
     /// <param name="boundExpression">The bound expression.</param>
-    public override IExpression Visit(BoundExpression boundExpression) {
+    public override void RewriteChildren(BoundExpression boundExpression) {
       ParameterDefinition/*?*/ par = boundExpression.Definition as ParameterDefinition;
       if (par != null && par.ContainingSignature == this.targetMethod) {
         boundExpression.Definition = this.parameters[par.Index];
         if (boundExpression.Instance != null) {
-          boundExpression.Instance = this.Visit(boundExpression.Instance);
+          boundExpression.Instance = this.Rewrite(boundExpression.Instance);
         }
-        boundExpression.Type = this.Visit(boundExpression.Type);
-        return boundExpression;
+        boundExpression.Type = this.Rewrite(boundExpression.Type);
+        return;
       } else {
-        return base.Visit(boundExpression);
+        base.RewriteChildren(boundExpression);
       }
     }
 
-    public override IParameterDefinition VisitReferenceTo(IParameterDefinition parameterDefinition) {
-      //The referrer must refer to the same copy of the parameter definition that was (or will be) produced by a visit to the actual definition.
-      return this.Visit(parameterDefinition);
-    }
+    //public override IParameterDefinition VisitReferenceTo(IParameterDefinition parameterDefinition) {
+    //  //The referrer must refer to the same copy of the parameter definition that was (or will be) produced by a visit to the actual definition.
+    //  return this.Visit(parameterDefinition);
+    //}
 
     /// <summary>
     /// Replaces the specified this reference with a this reference to the containing type of the target method
     /// </summary>
     /// <param name="thisReference">The this reference.</param>
     /// <returns>a this reference to the containing type of the target method</returns>
-    public override IExpression Visit(ThisReference thisReference) {
+    public override IExpression Rewrite(IThisReference thisReference) {
       return new ThisReference() {
-        Type = this.Visit(this.targetType),
+        Type = this.Rewrite(this.targetType),
       };
     }
   }
@@ -1387,12 +1347,15 @@ namespace Microsoft.Cci.MutableContracts {
     private ITypeReference sourceType;
     private IThisReference ThisReference;
     private Dictionary<object, IExpression> values = new Dictionary<object, IExpression>();
+    private List<IParameterDefinition> fromParameters;
+    private  List<IExpression> expressions;
 
     public BetaReducer(IMetadataHost host, IMethodDefinition fromMethod, IMethodDefinition toMethod, List<IExpression> expressions)
       : base(host) {
-      var fromParameters = new List<IParameterDefinition>(fromMethod.Parameters);
+      this.fromParameters = new List<IParameterDefinition>(fromMethod.Parameters);
+      this.expressions = expressions;
       for (ushort i = 0; i < fromMethod.ParameterCount; i++) {
-        this.values.Add(fromParameters[i], expressions[i]);
+        this.values.Add(this.fromParameters[i], expressions[i]);
       }
       this.targetMethod = toMethod;
       this.targetType = toMethod.ContainingType;
@@ -1434,18 +1397,25 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     public override IExpression Rewrite(IBoundExpression boundExpression) {
-      IExpression v;
-      if (this.values.TryGetValue(boundExpression.Definition, out v)) {
-        return v;
+      // Can't depend on object identity. A copy might have been made of the paramter
+      // definition as part of specializing the contract.
+      var p = boundExpression.Definition as IParameterDefinition;
+      if (p != null) {
+        var md = p.ContainingSignature as IMethodDefinition;
+        if (md != null) {
+          if (MemberHelper.MethodsAreEquivalent(md, this.sourceMethod)) {
+            return this.expressions[p.Index];
+          }
+        }
       }
       return base.Rewrite(boundExpression);
     }
   }
 
-  public class CodeSpecializer2 : CodeAndContractRewriter {
-    Dictionary<uint, ITypeReference> typeRefMap;// = new Dictionary<uint, ITypeReference>();
-    public CodeSpecializer2(IMetadataHost host, Dictionary<uint, ITypeReference> typeRefMap)
-      : base(host) {
+  public class CodeSpecializer : CodeAndContractRewriter {
+    Dictionary<uint, ITypeReference> typeRefMap;
+    public CodeSpecializer(IMetadataHost host, Dictionary<uint, ITypeReference> typeRefMap)
+      : base(host, true){
       this.typeRefMap = typeRefMap;
     }
     private ITypeReference/*?*/ TryMap(ITypeReference typeReference) {
@@ -1460,11 +1430,10 @@ namespace Microsoft.Cci.MutableContracts {
       var result = this.TryMap(genericMethodParameterReference);
       return result ?? base.Rewrite(genericMethodParameterReference);
     }
-    public override ITypeReference Rewrite(IGenericTypeInstanceReference genericTypeInstanceReference) {
-      var result = this.TryMap(genericTypeInstanceReference);
-      return result ?? base.Rewrite(genericTypeInstanceReference);
+    public override ITypeReference Rewrite(IGenericTypeParameterReference genericTypeParameterReference) {
+      var result = this.TryMap(genericTypeParameterReference);
+      return result ?? base.Rewrite(genericTypeParameterReference);
     }
-
     public override void RewriteChildren(SpecializedFieldReference fieldReference) {
       fieldReference.ContainingType = this.Rewrite(fieldReference.ContainingType);
       fieldReference.Type = this.Rewrite(fieldReference.Type);
@@ -1477,6 +1446,13 @@ namespace Microsoft.Cci.MutableContracts {
     public override void RewriteChildren(SpecializedNestedTypeReference specializedNestedTypeReference) {
       specializedNestedTypeReference.ContainingType = this.Rewrite(specializedNestedTypeReference.ContainingType);
     }
+    /// <summary>
+    /// Base rewriter doesn't go into the type of the local.
+    /// </summary>
+    public override object RewriteReference(ILocalDefinition localDefinition) {
+      return this.Rewrite(localDefinition);
+    }
+
   }
 
   internal class SimpleHostEnvironment : MetadataReaderHost, IContractAwareHost {
@@ -1735,40 +1711,40 @@ namespace Microsoft.Cci.MutableContracts {
       }
       if (!(previousTime.CompareTo(timeOfLastModification) < 0))
         return false;
-          // file has been modified. Need to throw away PeReader because it caches based on identity and
-          // won't actually read in and construct an object model from the file. Even though at this
-          // point we don't even know what assembly is at this location. Maybe it isn't even an updated
-          // version, but instead some completely different assembly?
-          this.peReader = new PeReader(this);
 
-          var unit = this.location2Unit[location];
+      // file has been modified. Need to throw away PeReader because it caches based on identity and
+      // won't actually read in and construct an object model from the file. Even though at this
+      // point we don't even know what assembly is at this location. Maybe it isn't even an updated
+      // version, but instead some completely different assembly?
+      this.peReader = new PeReader(this);
 
-          // Need to dump all units that depended on this one because their reference is now stale.
-          List<IUnitReference> referencesToDependentUnits;
-          if (this.unit2DependentUnits.TryGetValue(unit.UnitIdentity, out referencesToDependentUnits)) {
-            foreach (var d in referencesToDependentUnits) {
-              this.RemoveUnit(d.UnitIdentity);
-            }
-          }
+      var unit = this.location2Unit[location];
+      // Need to dump all units that depended on this one because their reference is now stale.
+      List<IUnitReference> referencesToDependentUnits;
+      if (this.unit2DependentUnits.TryGetValue(unit.UnitIdentity, out referencesToDependentUnits)) {
+        foreach (var d in referencesToDependentUnits) {
+          this.RemoveUnit(d.UnitIdentity);
+        }
+      }
 
-          // Need to remove unit from the list of dependent units for each unit
-          // it *was* dependent on in case the newer version has a changed list of
-          // dependencies.
-          foreach (var d in unit.UnitReferences) {
-            this.unit2DependentUnits[d.UnitIdentity].Remove(unit);
-          }
+      // Need to remove unit from the list of dependent units for each unit
+      // it *was* dependent on in case the newer version has a changed list of
+      // dependencies.
+      foreach (var d in unit.UnitReferences) {
+        this.unit2DependentUnits[d.UnitIdentity].Remove(unit);
+      }
 
-          // Dump all reference assemblies for this unit.
-          List<IUnitReference> referenceAssemblies;
-          if (this.unit2ReferenceAssemblies.TryGetValue(unit, out referenceAssemblies)) {
-            foreach (var d in referenceAssemblies) {
-              this.RemoveUnit(d.UnitIdentity);
-            }
-          }
+      // Dump all reference assemblies for this unit.
+      List<IUnitReference> referenceAssemblies;
+      if (this.unit2ReferenceAssemblies.TryGetValue(unit, out referenceAssemblies)) {
+        foreach (var d in referenceAssemblies) {
+          this.RemoveUnit(d.UnitIdentity);
+        }
+      }
 
-          // Dump stale version from cache
-          this.RemoveUnit(unit.UnitIdentity);
-          return true;
+      // Dump stale version from cache
+      this.RemoveUnit(unit.UnitIdentity);
+      return true;
     }
 
     /// <summary>
@@ -1843,7 +1819,7 @@ namespace Microsoft.Cci.MutableContracts {
               #endregion
             }
             #region Attach a contract provider to it
-            if (referenceUnit != null && referenceUnit != Dummy.Unit) {
+            if (referenceUnit != null && !(referenceUnit is Dummy)) {
               IAssembly referenceAssembly = referenceUnit as IAssembly;
               if (referenceAssembly != null) {
                 var referenceAssemblyContractProvider = new CodeContractsContractExtractor(hostForReferenceAssembly,

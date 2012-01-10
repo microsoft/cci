@@ -1044,7 +1044,7 @@ namespace Microsoft.Cci.Ast {
         foreach (ITypeDefinition implementedInterface in method.ImplementedInterfaces) {
           IEnumerable<ITypeDefinitionMember> interfaceMembers = implementedInterface.GetMembersNamed(method.UnqualifiedName, false);
           IMethodDefinition interfaceMethod = TypeHelper.GetMethod(interfaceMembers, method);
-          if (interfaceMethod == Dummy.Method) {
+          if (interfaceMethod is Dummy) {
             //TODO: error
             continue;
           }
@@ -1074,7 +1074,7 @@ namespace Microsoft.Cci.Ast {
       foreach (ITypeReference baseClassRef in this.BaseClasses) {
         foreach (IMethodDefinition abstractMethod in GetAbstractMethods(baseClassRef.ResolvedType)) {
           IMethodDefinition method = TypeHelper.GetMethod(this, abstractMethod);
-          if (method == Dummy.Method || method.Visibility != abstractMethod.Visibility)
+          if (method is Dummy || method.Visibility != abstractMethod.Visibility)
             yield return method;
         }
       }
@@ -1087,7 +1087,7 @@ namespace Microsoft.Cci.Ast {
       foreach (ITypeReference baseClassRef in typeDefinition.BaseClasses) {
         foreach (IMethodDefinition abstractMethod in GetAbstractMethods(baseClassRef.ResolvedType)) {
           IMethodDefinition method = TypeHelper.GetMethod(baseClassRef.ResolvedType, abstractMethod);
-          if (method == Dummy.Method || !method.IsVirtual || method.Visibility != abstractMethod.Visibility)
+          if (method is Dummy || !method.IsVirtual || method.Visibility != abstractMethod.Visibility)
             yield return abstractMethod;
         }
       }

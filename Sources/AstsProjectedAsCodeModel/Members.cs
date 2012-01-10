@@ -206,9 +206,8 @@ namespace Microsoft.Cci.Ast {
       get { return Enumerable<ISecurityAttribute>.Empty; }
     }
 
-    //^ [Confined]
     public override string ToString() {
-      if (this.Name == Dummy.Name)
+      if (this.Name is Dummy)
         return MemberHelper.GetMethodSignature(this, NameFormattingOptions.ReturnType|NameFormattingOptions.Signature);
       else
         return this.Name.Value;

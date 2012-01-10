@@ -3642,7 +3642,7 @@ namespace Microsoft.Cci {
       Contract.Requires(catchClause != null);
       this.Traverse(catchClause.ExceptionType);
       if (this.StopTraversal) return;
-      if (catchClause.ExceptionContainer != Dummy.LocalVariable) {
+      if (!(catchClause.ExceptionContainer is Dummy)) {
         this.Traverse(catchClause.ExceptionContainer);
         if (this.StopTraversal) return;
       }
@@ -4313,8 +4313,11 @@ namespace Microsoft.Cci {
               if (addressDereference != null)
                 this.Traverse(addressDereference);
               else {
-                var propertyDefinition = (IPropertyDefinition)targetExpression.Definition;
-                this.Traverse(propertyDefinition);
+                var propertyDefinition = targetExpression.Definition as IPropertyDefinition;
+                if (propertyDefinition != null)
+                  this.Traverse(propertyDefinition);
+                else
+                  this.Traverse((IThisReference)targetExpression.Definition);
               }
             }
           }
@@ -7919,12 +7922,14 @@ namespace Microsoft.Cci.Contracts {
     /// Traverses the children of the method definition.
     /// </summary>
     public override void TraverseChildren(IMethodDefinition method) {
+      if (this.contractProvider != null) {
+        IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(method);
+        if (methodContract != null) {
+          this.Traverse(methodContract);
+          if (this.StopTraversal) return;
+        }
+      }
       base.TraverseChildren(method);
-      if (this.StopTraversal) return;
-      if (this.contractProvider == null) return;
-      IMethodContract/*?*/ methodContract = this.contractProvider.GetMethodContractFor(method);
-      if (methodContract != null)
-        this.Traverse(methodContract);
     }
 
     /// <summary>

@@ -9,10 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 using System;
-using System.Collections.Generic;
-using System.Text;
-
-//^ using Microsoft.Contracts;
+using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci {
   /// <summary>
@@ -236,7 +233,7 @@ namespace Microsoft.Cci {
     /// True if the given expression is a compile time constant with a value that is a boxed integer of type byte, int, long, sbyte, short, uint, ulong or ushort
     /// that is not equal to 0.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool IsIntegralNonzero(IExpression expression) {
       ICompileTimeConstant/*?*/ constExpression = expression as ICompileTimeConstant;
       if (constExpression == null) return false;
@@ -246,7 +243,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// True if the value is a boxed zero of type byte, int, long, sbyte, short, uint, ulong, ushort or bool that is not equal to 0.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool IsIntegralNonzero(ICompileTimeConstant constExpression) {
       IConvertible/*?*/ ic = constExpression.Value as IConvertible;
       if (ic == null) return false;
@@ -267,7 +264,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// True if the given expression is a compile time constant with a value that is a boxed 1 of type byte, int, long, sbyte, short, uint, ulong, ushort or bool.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool IsIntegralOne(IExpression expression) {
       ICompileTimeConstant/*?*/ constExpression = expression as ICompileTimeConstant;
       if (constExpression == null) return false;
@@ -277,7 +274,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// True if the value is a boxed 1 of type byte, int, long, sbyte, short, uint, ulong, ushort or bool.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool IsIntegralOne(ICompileTimeConstant constExpression) {
       IConvertible/*?*/ ic = constExpression.Value as IConvertible;
       if (ic == null) return false;
@@ -296,9 +293,32 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// True if the value is a boxed zero of type byte, int, long, sbyte, short, uint, ulong, ushort, float, double or decimal.
+    /// </summary>
+    [Pure]
+    public static bool IsNumericOne(ICompileTimeConstant constExpression) {
+      IConvertible/*?*/ ic = constExpression.Value as IConvertible;
+      if (ic == null) return false;
+      switch (ic.GetTypeCode()) {
+        case System.TypeCode.SByte: return ic.ToSByte(null) == 1;
+        case System.TypeCode.Int16: return ic.ToInt16(null) == 1;
+        case System.TypeCode.Int32: return ic.ToInt32(null) == 1;
+        case System.TypeCode.Int64: return ic.ToInt64(null) == 1;
+        case System.TypeCode.Byte: return ic.ToByte(null) == 1;
+        case System.TypeCode.UInt16: return ic.ToUInt16(null) == 1;
+        case System.TypeCode.UInt32: return ic.ToUInt32(null) == 1;
+        case System.TypeCode.UInt64: return ic.ToUInt64(null) == 1;
+        case System.TypeCode.Single: return ic.ToSingle(null) == 1;
+        case System.TypeCode.Double: return ic.ToDouble(null) == 1;
+        case System.TypeCode.Decimal: return ic.ToDecimal(null) == 1;
+      }
+      return false;
+    }
+
+    /// <summary>
     /// True if the given expression is a compile time constant with a value that is a boxed zero of type byte, int, long, sbyte, short, uint, ulong, ushort or bool.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool IsIntegralZero(IExpression expression) {
       ICompileTimeConstant/*?*/ constExpression = expression as ICompileTimeConstant;
       if (constExpression == null) return false;
@@ -308,7 +328,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// True if the value is a boxed zero of type byte, int, long, sbyte, short, uint, ulong, ushort or bool.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool IsIntegralZero(ICompileTimeConstant constExpression) {
       IConvertible/*?*/ ic = constExpression.Value as IConvertible;
       if (ic == null) return false;
@@ -327,9 +347,32 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// True if the value is a boxed zero of type byte, int, long, sbyte, short, uint, ulong, ushort, float, double or decimal.
+    /// </summary>
+    [Pure]
+    public static bool IsNumericZero(ICompileTimeConstant constExpression) {
+      IConvertible/*?*/ ic = constExpression.Value as IConvertible;
+      if (ic == null) return false;
+      switch (ic.GetTypeCode()) {
+        case System.TypeCode.SByte: return ic.ToSByte(null) == 0;
+        case System.TypeCode.Int16: return ic.ToInt16(null) == 0;
+        case System.TypeCode.Int32: return ic.ToInt32(null) == 0;
+        case System.TypeCode.Int64: return ic.ToInt64(null) == 0;
+        case System.TypeCode.Byte: return ic.ToByte(null) == 0;
+        case System.TypeCode.UInt16: return ic.ToUInt16(null) == 0;
+        case System.TypeCode.UInt32: return ic.ToUInt32(null) == 0;
+        case System.TypeCode.UInt64: return ic.ToUInt64(null) == 0;
+        case System.TypeCode.Single: return ic.ToSingle(null) == 0;
+        case System.TypeCode.Double: return ic.ToDouble(null) == 0;
+        case System.TypeCode.Decimal: return ic.ToDecimal(null) == 0;
+      }
+      return false;
+    }
+
+    /// <summary>
     /// True if the given expression is a compile time literal with a null value.
     /// </summary>
-    //^ [Pure]
+    [Pure]
     public static bool IsNullLiteral(IExpression expression) {
       ICompileTimeConstant/*?*/ constExpression = expression as ICompileTimeConstant;
       return constExpression != null && constExpression.Value == null;
