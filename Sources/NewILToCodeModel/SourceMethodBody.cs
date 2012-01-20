@@ -1,0 +1,367 @@
+﻿//-----------------------------------------------------------------------------
+//
+// Copyright (c) Microsoft. All rights reserved.
+// This code is licensed under the Microsoft Public License.
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+//-----------------------------------------------------------------------------
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using Microsoft.Cci;
+using Microsoft.Cci.MutableCodeModel;
+using Microsoft.Cci.UtilityDataStructures;
+
+namespace Microsoft.Cci.ILToCodeModel {
+  /// <summary>
+  /// A metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
+  /// </summary>
+  public class SourceMethodBody : Microsoft.Cci.MutableCodeModel.SourceMethodBody {
+
+    /// <summary>
+    /// Allocates a metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
+    /// </summary>
+    /// <param name="ilMethodBody">A method body whose IL operations should be decompiled into a block of statements that will be the
+    /// result of the Block property of the resulting source method body.</param>
+    /// <param name="host">An object representing the application that is hosting the converter. It is used to obtain access to some global
+    /// objects and services such as the shared name table and the table for interning references.</param>
+    /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
+    /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method.</param>
+    /// <param name="options">Set of options that control decompilation.</param>
+    public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider,
+      ILocalScopeProvider/*?*/ localScopeProvider, DecompilerOptions options = DecompilerOptions.None)
+      : base(host, sourceLocationProvider) {
+      Contract.Requires(ilMethodBody != null);
+      Contract.Requires(host != null);
+
+      this.ilMethodBody = ilMethodBody;
+      this.host = host;
+      this.nameTable = host.NameTable;
+      this.sourceLocationProvider = sourceLocationProvider;
+      this.pdbReader = sourceLocationProvider as PdbReader;
+      this.localScopeProvider = localScopeProvider;
+      this.options = options;
+      this.platformType = ilMethodBody.MethodDefinition.ContainingTypeDefinition.PlatformType;
+      if (IteratorHelper.EnumerableIsNotEmpty(ilMethodBody.LocalVariables))
+        this.LocalsAreZeroed = ilMethodBody.LocalsAreZeroed;
+      else
+        this.LocalsAreZeroed = true;
+      this.MethodDefinition = ilMethodBody.MethodDefinition;
+      this.privateHelperFieldsToRemove = null;
+      this.privateHelperMethodsToRemove = null;
+      this.privateHelperTypesToRemove = null;
+      this.cdfg = ControlAndDataFlowGraph<BasicBlock<Instruction>, Instruction>.GetControlAndDataFlowGraphFor(host, ilMethodBody, localScopeProvider);
+    }
+
+    internal readonly IMetadataHost host;
+    internal readonly IMethodBody ilMethodBody;
+    internal readonly INameTable nameTable;
+    internal readonly IPlatformType platformType;
+    internal readonly ControlAndDataFlowGraph<BasicBlock<Instruction>, Instruction> cdfg;
+
+    internal readonly ISourceLocationProvider/*?*/ sourceLocationProvider;
+    internal readonly ILocalScopeProvider/*?*/ localScopeProvider;
+    internal readonly DecompilerOptions options;
+    private readonly PdbReader/*?*/ pdbReader;
+    internal List<ITypeDefinition>/*?*/ privateHelperTypesToRemove;
+    internal Dictionary<uint, IMethodDefinition>/*?*/ privateHelperMethodsToRemove;
+    internal List<IFieldDefinition>/*?*/ privateHelperFieldsToRemove;
+    Hashtable<ILocalDefinition, LocalDefinition> localMap = new Hashtable<ILocalDefinition, LocalDefinition>();
+    internal readonly Hashtable<List<IGotoStatement>> gotosThatTarget = new Hashtable<List<IGotoStatement>>();
+    internal readonly HashtableForUintValues<object> numberOfReferencesToLocal = new HashtableForUintValues<object>();
+    internal readonly HashtableForUintValues<object> numberOfAssignmentsToLocal = new HashtableForUintValues<object>();
+    internal readonly SetOfObjects bindingsThatMakeALastUseOfALocalVersion = new SetOfObjects();
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.host != null);
+      Contract.Invariant(this.ilMethodBody != null);
+      Contract.Invariant(this.nameTable != null);
+      Contract.Invariant(this.platformType != null);
+      Contract.Invariant(this.cdfg != null);
+      Contract.Invariant(this.localMap != null);
+      Contract.Invariant(this.gotosThatTarget != null);
+      Contract.Invariant(this.numberOfReferencesToLocal != null);
+      Contract.Invariant(this.numberOfAssignmentsToLocal != null);
+      Contract.Invariant(this.bindingsThatMakeALastUseOfALocalVersion != null);
+    }
+
+    /// <summary>
+    /// Decompile the IL operations of this method body into a block of statements.
+    /// </summary>
+    protected override IBlockStatement GetBlock() {
+      var block = new DecompiledBlock(0, GetSizeOf(this.ilMethodBody), new Sublist<BasicBlock<Instruction>>(this.cdfg.AllBlocks, 0, this.cdfg.AllBlocks.Count), isLexicalScope: true);
+      this.CreateExceptionBlocks(block);
+      if (this.localScopeProvider != null) {
+        var scopes = new List<ILocalScope>(this.localScopeProvider.GetLocalScopes(this.ilMethodBody));
+        if (scopes.Count > 0)
+          this.CreateLexicalScopes(block, new Sublist<ILocalScope>(scopes, 0, scopes.Count));
+      } else {
+        int counter = 0;
+        foreach (var local in this.ilMethodBody.LocalVariables) {
+          Contract.Assume(counter <= block.Statements.Count);
+          block.Statements.Insert(counter++, new LocalDeclarationStatement() { LocalVariable = local });
+        }
+      }
+      new InstructionParser(this).Traverse(block);
+      new SwitchReplacer(this).Traverse(block);
+      new PatternReplacer(this, block).Traverse(block);
+      new TryCatchReplacer(this, block).Traverse(block);
+      new RemoveNonLexicalBlocks().Traverse(block);
+      new DeclarationUnifier(this).Traverse(block);
+      new IfThenElseReplacer(this).Traverse(block);
+      if ((this.options & DecompilerOptions.Loops) != 0) {
+        new WhileLoopReplacer(this).Traverse(block);
+        new ForLoopReplacer(this).Traverse(block);
+      }
+      new UnreferencedLabelRemover(this).Traverse(block);
+      new LockReplacer(this).Traverse(block);
+      new BlockFlattener().Traverse(block);
+      this.RemoveRedundantFinalReturn(block);
+      var result = new CompilationArtifactRemover(this.host).Rewrite(block);
+      if ((this.options & DecompilerOptions.AnonymousDelegates) != 0) {
+        result = new AnonymousDelegateInserter(this).InsertAnonymousDelegates(result);
+      }
+      return result;
+    }
+
+    private static uint GetSizeOf(IMethodBody methodBody) {
+      Contract.Requires(methodBody != null);
+      //TODO: IMethodBody should expose this information directly. Meanwhile, just get somewhat close.
+      uint lastOffset = 0;
+      foreach (var operation in methodBody.Operations) lastOffset = operation.Offset;
+      return lastOffset+1;
+    }
+
+    private void CreateExceptionBlocks(DecompiledBlock block) {
+      Contract.Requires(block != null);
+
+      if (IteratorHelper.EnumerableIsEmpty(this.ilMethodBody.OperationExceptionInformation)) return;
+      List<IOperationExceptionInformation> handlers = new List<IOperationExceptionInformation>(this.ilMethodBody.OperationExceptionInformation);
+      handlers.Sort(CompareHandlers);
+      foreach (var exInfo in handlers) {
+        Contract.Assume(exInfo != null);
+        this.CreateNestedBlock(block, exInfo.TryStartOffset, exInfo.TryEndOffset);
+        if (exInfo.HandlerKind == HandlerKind.Filter)
+          this.CreateNestedBlock(block, exInfo.FilterDecisionStartOffset, exInfo.HandlerEndOffset);
+        this.CreateNestedBlock(block, exInfo.HandlerStartOffset, exInfo.HandlerEndOffset);
+      }
+    }
+
+    private static int CompareHandlers(IOperationExceptionInformation handler1, IOperationExceptionInformation handler2) {
+      Contract.Requires(handler1 != null);
+      Contract.Requires(handler2 != null);
+      if (handler1.TryStartOffset < handler2.TryStartOffset) return -1;
+      if (handler1.TryStartOffset > handler2.TryStartOffset) return 1;
+      if (handler1.TryEndOffset > handler2.TryEndOffset) return -1;
+      if (handler1.TryEndOffset < handler2.TryEndOffset) return 1;
+      if (handler1.HandlerStartOffset < handler2.HandlerStartOffset) return -1;
+      if (handler2.HandlerStartOffset > handler2.HandlerStartOffset) return 1;
+      if (handler1.HandlerEndOffset > handler2.HandlerEndOffset) return -1;
+      if (handler1.HandlerEndOffset < handler2.HandlerEndOffset) return 1;
+      return 0;
+    }
+
+    private DecompiledBlock CreateNestedBlock(DecompiledBlock block, uint startOffset, uint endOffset) {
+      Contract.Requires(block != null);
+      Contract.Requires(startOffset <= endOffset);
+      Contract.Ensures(Contract.Result<DecompiledBlock>() != null);
+
+      {
+      nextBlock:
+        foreach (var statement in block.Statements) {
+          var nestedBlock = statement as DecompiledBlock;
+          if (nestedBlock == null) continue;
+          if (nestedBlock.StartOffset <= startOffset && nestedBlock.EndOffset >= endOffset) {
+            block = nestedBlock;
+            goto nextBlock;
+          }
+        }
+      }
+      if (block.StartOffset == startOffset && block.EndOffset == endOffset) return block;
+      //replace block.Statements with three nested blocks, the middle one corresponding to one we have to create
+      //but keep any declarations.
+      int n = block.Statements.Count;
+      var oldStatements = block.Statements;
+      var newStatements = block.Statements;
+      int m = 0;
+      if (n >= 0) {
+        while (m < n && oldStatements[m] is LocalDeclarationStatement) m++;
+        if (m < n) {
+          newStatements = new List<IStatement>(m+3);
+          for (int i = 0; i < m; i++) newStatements.Add(oldStatements[i]);
+        }
+      }
+      block.Statements = newStatements;
+      var basicBlocks = block.GetBasicBlocksForRange(startOffset, endOffset);
+      var newNestedBlock = new DecompiledBlock(startOffset, endOffset, basicBlocks, isLexicalScope: true);
+      DecompiledBlock beforeBlock = null;
+      if (block.StartOffset < startOffset) {
+        var basicBlocksBefore = block.GetBasicBlocksForRange(block.StartOffset, startOffset);
+        Contract.Assume(block.StartOffset < startOffset);
+        beforeBlock = new DecompiledBlock(block.StartOffset, startOffset, basicBlocksBefore, isLexicalScope: false);
+        newStatements.Add(beforeBlock);
+      }
+      newStatements.Add(newNestedBlock);
+      DecompiledBlock afterBlock = null;
+      if (block.EndOffset > endOffset) {
+        var basicBlocksAfter = block.GetBasicBlocksForRange(endOffset, block.EndOffset);
+        Contract.Assume(block.EndOffset > endOffset);
+        afterBlock = new DecompiledBlock(endOffset, block.EndOffset, basicBlocksAfter, isLexicalScope: false);
+        newStatements.Add(afterBlock);
+      }
+      if (newStatements != oldStatements) {
+        //In this case there were already some nested blocks, which happens when there are nested exception blocks
+        //and we are creating an enclosing lexical block that does not quite coincide with block.
+        //We now have to populate the newly created blocks with these nested blocks, splitting them if necessary.
+        for (int i = m; i < n; i++) {
+          var nb = oldStatements[i] as DecompiledBlock;
+          Contract.Assume(nb != null);
+          if (nb.EndOffset <= startOffset) {
+            Contract.Assume(beforeBlock != null);
+            beforeBlock.Statements.Add(nb);
+          } else if (nb.StartOffset < startOffset) {
+            Contract.Assume(nb.EndOffset <= endOffset);  //nb starts before newNestedBlock but ends inside it.
+            Contract.Assume(!nb.IsLexicalScope); //lexical scopes are assumed to nest cleanly.
+            Contract.Assume(beforeBlock != null);
+            this.SplitBlock(nb, startOffset, beforeBlock.Statements, newNestedBlock.Statements);
+          } else if (nb.EndOffset <= endOffset) {
+            newNestedBlock.Statements.Add(nb);
+          } else if (nb.StartOffset < endOffset) {
+            Contract.Assert(nb.EndOffset > endOffset); //nb starts inside newNestedBlock but ends after it.
+            Contract.Assume(!nb.IsLexicalScope); //lexical scopes are assumed to nest cleanly.
+            Contract.Assume(afterBlock != null);
+            this.SplitBlock(nb, endOffset, newNestedBlock.Statements, afterBlock.Statements);
+          } else {
+            Contract.Assume(afterBlock != null);
+            afterBlock.Statements.Add(nb);
+          }
+        }
+        //consolidate blocks consisting of a single block
+        Consolidate(beforeBlock);
+        Consolidate(newNestedBlock);
+        Consolidate(afterBlock);
+      }
+      return newNestedBlock;
+    }
+
+    private void Consolidate(DecompiledBlock block) {
+      if (block == null) return;
+      if (block.Statements.Count != 1) return;
+      var nestedBlock = block.Statements[0] as DecompiledBlock;
+      if (nestedBlock == null) return;
+      Consolidate(nestedBlock);
+      block.Statements = nestedBlock.Statements;
+    }
+
+    private void SplitBlock(DecompiledBlock blockToSplit, uint splitOffset, List<IStatement> leftList, List<IStatement> rightList) {
+      Contract.Requires(blockToSplit != null);
+      Contract.Requires(leftList != null);
+      Contract.Requires(rightList != null);
+      Contract.Requires(splitOffset >= blockToSplit.StartOffset);
+      Contract.Requires(splitOffset <= blockToSplit.EndOffset);
+
+      var leftBasicBlocks = blockToSplit.GetBasicBlocksForRange(blockToSplit.StartOffset, splitOffset);
+      Contract.Assume(splitOffset >= blockToSplit.StartOffset);
+      var leftBlock = new DecompiledBlock(blockToSplit.StartOffset, splitOffset, leftBasicBlocks, isLexicalScope: false);
+      leftList.Add(leftBlock);
+      var rightBasicBlocks = blockToSplit.GetBasicBlocksForRange(splitOffset, blockToSplit.EndOffset);
+      Contract.Assume(splitOffset <= blockToSplit.EndOffset);
+      var rightBlock = new DecompiledBlock(splitOffset, blockToSplit.EndOffset, rightBasicBlocks, isLexicalScope: false);
+      rightList.Add(rightBlock);
+
+      var n = blockToSplit.Statements.Count;
+      if (n == 0) return;
+      var leftStatements = leftBlock.Statements = new List<IStatement>();
+      var rightStatements = rightBlock.Statements = new List<IStatement>();
+      for (int i = 0; i < n; i++) {
+        var nb = blockToSplit.Statements[i] as DecompiledBlock;
+        Contract.Assume(nb != null);
+        if (nb.EndOffset <= splitOffset) {
+          leftStatements.Add(nb);
+        } else if (nb.StartOffset < splitOffset) {
+          Contract.Assume(!nb.IsLexicalScope); //lexical scopes are assumed to nest cleanly.
+          this.SplitBlock(nb, splitOffset, leftStatements, rightStatements);
+        } else {
+          rightList.Add(nb);
+        }
+      }
+      Consolidate(leftBlock);
+      Consolidate(rightBlock);
+    }
+
+    private void CreateLexicalScopes(DecompiledBlock block, Sublist<ILocalScope> scopes) {
+      Contract.Requires(block != null);
+      Contract.Requires(this.localScopeProvider != null);
+
+      for (int i = 0, n = scopes.Count; i < n; ) {
+        var scope = scopes[i++];
+        var nestedBlock = this.CreateNestedBlock(block, scope.Offset, scope.Offset+scope.Length);
+        this.AddLocalsAndConstants(nestedBlock, scope);
+      }
+    }
+
+    private void AddLocalsAndConstants(DecompiledBlock block, ILocalScope scope) {
+      Contract.Requires(block != null);
+      Contract.Requires(scope != null);
+      Contract.Requires(this.localScopeProvider != null);
+
+      bool isLexicalScope = false;
+      int counter = 0;
+      foreach (var local in this.localScopeProvider.GetConstantsInScope(scope)) {
+        Contract.Assume(local != null);
+        var localVariable = this.GetLocalWithSourceName(local);
+        Contract.Assume(counter <= block.Statements.Count);
+        block.Statements.Insert(counter++, new LocalDeclarationStatement() { LocalVariable = localVariable });
+      }
+      foreach (var local in this.localScopeProvider.GetVariablesInScope(scope)) {
+        Contract.Assume(local != null);
+        var localVariable = this.GetLocalWithSourceName(local);
+        Contract.Assume(counter <= block.Statements.Count);
+        block.Statements.Insert(counter++, new LocalDeclarationStatement() { LocalVariable = localVariable });
+      }
+      if (isLexicalScope) block.IsLexicalScope = true;
+    }
+
+    internal ILocalDefinition GetLocalWithSourceName(ILocalDefinition localDef) {
+      Contract.Requires(localDef != null);
+      if (this.sourceLocationProvider == null) return localDef;
+      var mutableLocal = this.localMap[localDef];
+      if (mutableLocal != null) return mutableLocal;
+      mutableLocal = localDef as LocalDefinition;
+      if (mutableLocal == null) {
+        mutableLocal = new LocalDefinition();
+        mutableLocal.Copy(localDef, this.host.InternFactory);
+      }
+      this.localMap.Add(localDef, mutableLocal);
+      bool isCompilerGenerated;
+      var sourceName = this.sourceLocationProvider.GetSourceNameFor(localDef, out isCompilerGenerated);
+      if (sourceName != localDef.Name.Value) {
+        mutableLocal.Name = this.host.NameTable.GetNameFor(sourceName);
+      }
+      return mutableLocal;
+    }
+
+    private void RemoveRedundantFinalReturn(DecompiledBlock block) {
+      Contract.Requires(block != null);
+      var n = block.Statements.Count;
+      if (n > 0) {
+        var returnStatement = block.Statements[n-1] as ReturnStatement;
+        if (returnStatement == null) return;
+        if (this.ilMethodBody.MethodDefinition.Type.TypeCode != PrimitiveTypeCode.Void) {
+          var boundExpression = returnStatement.Expression as IBoundExpression;
+          if (boundExpression == null) return;
+          var local = boundExpression.Definition as ILocalDefinition;
+          if (local == null) return;
+          if (this.numberOfAssignmentsToLocal[local] > 0) return;
+        }
+        block.Statements.RemoveAt(n-1);
+      }
+    }
+
+  }
+}
