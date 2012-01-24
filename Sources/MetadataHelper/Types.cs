@@ -1055,6 +1055,11 @@ namespace Microsoft.Cci.Immutable {
     }
 
     internal static ITypeReference SpecializeTypeReference(IGenericMethodParameterReference genericMethodParameter, IMethodReference targetContainer, IInternFactory internFactory) {
+      var genMethInstance = targetContainer as IGenericMethodInstanceReference;
+      if (genMethInstance != null) {
+        var genMethInstanceArg = SpecializeIfConstructedFromApplicableTypeParameter(genericMethodParameter, genMethInstance);
+        if (genMethInstanceArg != genericMethodParameter) return genMethInstanceArg;
+      }
       return new SpecializedGenericMethodParameterReference(targetContainer, genericMethodParameter, internFactory);
     }
 

@@ -428,7 +428,7 @@ namespace ModuleReaderTests {
 {
   .maxstack 6
   .locals init(
-     V_0
+    [mscorlib]System.Object  V_0
   )
   IL_0000:  nop
   IL_0001:  ldarg.0
