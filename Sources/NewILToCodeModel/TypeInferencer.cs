@@ -270,6 +270,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             case PrimitiveTypeCode.Int16:
             case PrimitiveTypeCode.Int32:
             case PrimitiveTypeCode.Int64:
+            case PrimitiveTypeCode.Char:
             case PrimitiveTypeCode.UInt8:
             case PrimitiveTypeCode.UInt16:
             case PrimitiveTypeCode.UInt32:

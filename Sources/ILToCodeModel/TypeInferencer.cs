@@ -265,6 +265,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             case PrimitiveTypeCode.Pointer:
             case PrimitiveTypeCode.Reference:
               return this.platformType.SystemUIntPtr;
+            case PrimitiveTypeCode.Char:
             case PrimitiveTypeCode.Int8:
             case PrimitiveTypeCode.Int16:
             case PrimitiveTypeCode.Int32:
