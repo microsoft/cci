@@ -2673,7 +2673,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool IsMarshalledExplicitly {
-      get { return (this.marshallingInformation is Dummy); }
+      get { return !(this.marshallingInformation is Dummy); }
     }
 
     /// <summary>
