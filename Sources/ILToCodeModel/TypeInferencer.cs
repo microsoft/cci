@@ -265,11 +265,11 @@ namespace Microsoft.Cci.ILToCodeModel {
             case PrimitiveTypeCode.Pointer:
             case PrimitiveTypeCode.Reference:
               return this.platformType.SystemUIntPtr;
-            case PrimitiveTypeCode.Char:
             case PrimitiveTypeCode.Int8:
             case PrimitiveTypeCode.Int16:
             case PrimitiveTypeCode.Int32:
             case PrimitiveTypeCode.Int64:
+            case PrimitiveTypeCode.Char:
             case PrimitiveTypeCode.UInt8:
             case PrimitiveTypeCode.UInt16:
             case PrimitiveTypeCode.UInt32:
@@ -341,7 +341,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override void TraverseChildren(IAddressOf addressOf) {
       base.TraverseChildren(addressOf);
       ITypeReference targetType = addressOf.Expression.Type;
-      if (targetType == Dummy.TypeReference) {
+      if (targetType is Dummy) {
         IMethodReference/*?*/ method = addressOf.Expression.Definition as IMethodReference;
         if (method != null) {
           ((AddressOf)addressOf).Type = new Immutable.FunctionPointerType(method.CallingConvention, method.ReturnValueIsByRef, method.Type,
@@ -356,7 +356,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       base.TraverseChildren(addressDereference);
       IPointerTypeReference/*?*/ pointerTypeReference = addressDereference.Address.Type as IPointerTypeReference;
       if (pointerTypeReference != null) {
-        if (pointerTypeReference.TargetType != Dummy.TypeReference) {
+        if (!(pointerTypeReference.TargetType is Dummy)) {
           if (addressDereference.Type is Dummy)
             ((AddressDereference)addressDereference).Type = pointerTypeReference.TargetType;
           else if (!TypeHelper.TypesAreEquivalent(addressDereference.Type, pointerTypeReference.TargetType)) {
@@ -370,7 +370,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       IManagedPointerTypeReference/*?*/ managedPointerTypeReference = addressDereference.Address.Type as IManagedPointerTypeReference;
       if (managedPointerTypeReference != null) {
-        if (managedPointerTypeReference.TargetType != Dummy.TypeReference) {
+        if (!(managedPointerTypeReference.TargetType is Dummy)) {
           if (addressDereference.Type is Dummy)
             ((AddressDereference)addressDereference).Type = managedPointerTypeReference.TargetType;
           else if (!TypeHelper.TypesAreEquivalent(addressDereference.Type, managedPointerTypeReference.TargetType)) {
@@ -397,7 +397,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void TraverseChildren(IAssignment assignment) {
       base.TraverseChildren(assignment);
-      if (assignment.Target.Type == Dummy.TypeReference) {
+      if (assignment.Target.Type is Dummy) {
         var temp = assignment.Target.Definition as TempVariable;
         if (temp != null) {
           temp.Type = assignment.Source.Type;
@@ -532,7 +532,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     public override void TraverseChildren(ICompileTimeConstant constant) {
-      Debug.Assert(constant.Type != Dummy.TypeReference);
+      Contract.Assume(!(constant.Type is Dummy));
       //The type should already be filled in
     }
 
@@ -729,7 +729,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void TraverseChildren(ILocalDeclarationStatement localDeclarationStatement) {
       base.TraverseChildren(localDeclarationStatement);
-      if (localDeclarationStatement.InitialValue != null && localDeclarationStatement.LocalVariable.Type == Dummy.TypeReference) {
+      if (localDeclarationStatement.InitialValue != null && localDeclarationStatement.LocalVariable.Type is Dummy) {
         var temp = (TempVariable)localDeclarationStatement.LocalVariable;
         temp.Type = localDeclarationStatement.InitialValue.Type;
       }

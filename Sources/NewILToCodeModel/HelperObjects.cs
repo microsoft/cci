@@ -10,7 +10,7 @@
 //-----------------------------------------------------------------------------
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using Microsoft.Cci;
+using Microsoft.Cci.Analysis;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.UtilityDataStructures;
 
@@ -110,42 +110,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (firstBlock == null) return false;
       return firstBlock.FirstStatementIs(statement);
     }
-  }
-
-  internal sealed class ConvertToUnsigned : Expression, IConversion {
-
-    internal ConvertToUnsigned(IExpression valueToConvert) {
-      Contract.Requires(valueToConvert != null);
-      this.valueToConvert = valueToConvert;
-    }
-
-    [ContractInvariantMethod]
-    private void ObjectInvariant() {
-      Contract.Invariant(this.valueToConvert != null);
-    }
-
-
-    public override void Dispatch(ICodeVisitor visitor) {
-      visitor.Visit(this);
-    }
-
-    public IExpression ValueToConvert {
-      get { return this.valueToConvert; }
-    }
-    IExpression valueToConvert;
-
-    public bool CheckNumericRange {
-      get { return false; }
-    }
-
-    public ITypeReference TypeAfterConversion {
-      get { return TypeHelper.UnsignedEquivalent(this.ValueToConvert.Type); }
-    }
-
-    ITypeReference IExpression.Type {
-      get { return this.TypeAfterConversion; }
-    }
-
   }
 
   internal sealed class EndFilter : EmptyStatement {

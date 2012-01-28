@@ -9,8 +9,32 @@
 //
 //-----------------------------------------------------------------------------
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci.CodeModelToIL {
+
+  internal sealed class ExpressionSourceLocation : IExpressionSourceLocation {
+
+    internal ExpressionSourceLocation(IPrimarySourceLocation primarySourceLocation) {
+      Contract.Requires(primarySourceLocation != null);
+      this.primarySourceLocation = primarySourceLocation;
+    }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.primarySourceLocation != null);
+    }
+
+    public IPrimarySourceLocation PrimarySourceLocation {
+      get { return this.primarySourceLocation; }
+    }
+    IPrimarySourceLocation primarySourceLocation;
+
+    public IDocument Document {
+      get { return this.PrimarySourceLocation.Document; }
+    }
+  }
+
   internal sealed class TemporaryVariable : ILocalDefinition {
 
     internal TemporaryVariable(ITypeReference type, IMethodDefinition containingMethod) {

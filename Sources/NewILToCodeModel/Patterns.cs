@@ -122,14 +122,19 @@ namespace Microsoft.Cci.ILToCodeModel {
       while (this.ReplaceArrayInitializerPattern(b) ||
       this.ReplaceArrayInitializerPattern2(b) ||
       this.ReplaceConditionalExpressionPattern(b) ||
-      this.ReplacePushPopPattern(b) ||
       this.ReplacePushPushDupPopPopPattern(b) ||
+      this.ReplacePushDupPopPattern(b) ||
+      this.ReplacePushPopPattern(b) ||
+      this.ReplaceDupPopPattern(b) ||
+      this.ReplacePostBinopPattern(b) ||
       this.ReplaceReturnViaGoto(b) ||
+      this.ReplaceSelfAssignment(b) ||
       this.ReplaceShortCircuitAnd(b) ||
       this.ReplaceShortCircuitAnd2(b) ||
       this.ReplaceShortCircuitAnd3(b) ||
       this.ReplaceShortCircuitAnd4(b) ||
       this.ReplaceShortCircuitAnd5(b) ||
+      this.ReplaceShortCircuitAnd6(b) ||
       this.ReplaceSingleUseCompilerGeneratedLocalPattern(b)) {
       }
 
@@ -393,6 +398,56 @@ namespace Microsoft.Cci.ILToCodeModel {
       return replacedPattern;
     }
 
+    private bool ReplaceDupPopPattern(BlockStatement b) {
+      Contract.Requires(b != null);
+      bool replacedPattern = false;
+      var statements = b.Statements;
+      for (int i = 0; i < statements.Count-1; i++) {
+        var exprS1 = statements[i] as ExpressionStatement;
+        if (exprS1 == null) continue;
+        var assign1 = exprS1.Expression as Assignment;
+        if (assign1 == null) continue;
+        if (!(assign1.Source is IDupValue)) continue;
+        var exprS2 = statements[i+1] as ExpressionStatement;
+        if (exprS2 == null) continue;
+        var assign2 = exprS2.Expression as Assignment;
+        if (assign2 == null) continue;
+        if (!(assign2.Source is IPopValue)) continue;
+        assign1.Source = assign2.Source;
+        assign2.Source = assign1;
+        statements.RemoveAt(i);
+        replacedPattern = true;
+      }
+      return replacedPattern;
+    }
+
+    private bool ReplacePostBinopPattern(BlockStatement b) {
+      Contract.Requires(b != null);
+      bool replacedPattern = false;
+      var statements = b.Statements;
+      for (int i = 0; i < statements.Count-2; i++) {
+        var push1 = statements[i] as PushStatement;
+        if (push1 == null) continue;
+        var bound1 = push1.ValueToPush as BoundExpression;
+        if (bound1 == null) continue;
+        var exprS1 = statements[i+1] as ExpressionStatement;
+        if (exprS1 == null) continue;
+        var assign1 = exprS1.Expression as Assignment;
+        if (assign1 == null) continue;
+        if (bound1.Definition != assign1.Target.Definition) continue;
+        if (bound1.Instance != assign1.Target.Instance) continue;
+        var binop1 = assign1.Source as BinaryOperation;
+        if (binop1 == null) continue;
+        if (!(binop1.LeftOperand is IDupValue)) continue;
+        binop1.LeftOperand = assign1.Target;
+        binop1.ResultIsUnmodifiedLeftOperand = true;
+        push1.ValueToPush = binop1;
+        statements.RemoveAt(i+1);
+        replacedPattern = true;
+      }
+      return replacedPattern;
+    }
+
     private bool ReplacePushPushDupPopPopPattern(BlockStatement b) {
       Contract.Requires(b != null);
       bool replacedPattern = false;
@@ -410,18 +465,126 @@ namespace Microsoft.Cci.ILToCodeModel {
         var exprS2 = statements[i+3] as ExpressionStatement;
         if (exprS2 == null) continue;
         var assign2 = exprS2.Expression as Assignment;
-        if (assign2 == null) continue;
-        if (!(assign2.Source is IPopValue)) continue;
-        if (!(assign2.Target.Instance is IPopValue)) continue;
-        assign1.Source = assign2;
-        assign2.Source = push2.ValueToPush;
-        ((TargetExpression)assign2.Target).Instance = push1.ValueToPush;
-        exprS1.Expression = assign1;
+        if (assign2 == null) {
+          var setterCall = exprS2.Expression as MethodCall;
+          if (setterCall == null || setterCall.IsStaticCall || setterCall.Arguments.Count != 1) continue;
+          if (!(setterCall.ThisArgument is IPopValue) || !(setterCall.Arguments[0] is IPopValue)) continue;
+          var binaryOp = push2.ValueToPush as BinaryOperation;
+          if (binaryOp == null) continue;
+          var getterCall = binaryOp.LeftOperand as MethodCall;
+          if (getterCall == null || getterCall.IsStaticCall || getterCall.Arguments.Count != 0) continue;
+          if (!(getterCall.ThisArgument is IDupValue)) continue;
+          var setterName = setterCall.MethodToCall.Name.Value;
+          var getterName = getterCall.MethodToCall.Name.Value;
+          if (setterName.Length != getterName.Length || setterName.Length <= 4) continue;
+          if (string.CompareOrdinal(setterName, 4, getterName, 4, setterName.Length-4) != 0) continue;
+          if (!setterName.StartsWith("set_") || !getterName.StartsWith("get_")) continue;
+          var propertyNameStr = setterCall.MethodToCall.Name.Value.Substring(4);
+          var propertyName = this.host.NameTable.GetNameFor(propertyNameStr);
+          var property = new PropertyDefinition() {
+            Name = propertyName, Getter = getterCall.MethodToCall, Setter = setterCall.MethodToCall, Type = getterCall.Type
+          };
+          binaryOp.LeftOperand = new TargetExpression() { Definition = property, Instance = push1.ValueToPush, 
+            GetterIsVirtual = getterCall.IsVirtualCall, SetterIsVirtual = setterCall.IsVirtualCall };          
+          assign1.Source = binaryOp;
+          exprS1.Expression = assign1;
+        } else {
+          if (!(assign2.Source is IPopValue)) continue;
+          if (!(assign2.Target.Instance is IPopValue)) continue;
+          assign1.Source = assign2;
+          assign2.Source = push2.ValueToPush;
+          ((TargetExpression)assign2.Target).Instance = push1.ValueToPush;
+          exprS1.Expression = this.CollapseOpAssign(assign1);
+        }
         statements[i] = exprS1;
         statements.RemoveRange(i+1, 3);
         replacedPattern = true;
       }
       return replacedPattern;
+    }
+
+    private IExpression CollapseOpAssign(Assignment assignment) {
+      Contract.Requires(assignment != null);
+      Contract.Ensures(Contract.Result<IExpression>() != null);
+
+      var sourceAssignment = assignment.Source as Assignment;
+      if (sourceAssignment != null) {
+        assignment.Source = this.CollapseOpAssign(sourceAssignment);
+        return assignment;
+      }
+      var binOp = assignment.Source as BinaryOperation;
+      if (binOp != null) {
+        var addressDeref = binOp.LeftOperand as IAddressDereference;
+        if (addressDeref != null) {
+          var dupValue = addressDeref.Address as IDupValue;
+          if (dupValue != null) {
+            if (binOp is IAddition || binOp is IBitwiseAnd || binOp is IBitwiseOr || binOp is IDivision || binOp is IExclusiveOr ||
+            binOp is ILeftShift || binOp is IModulus || binOp is IMultiplication || binOp is IRightShift || binOp is ISubtraction) {
+              binOp.LeftOperand = assignment.Target;
+              return binOp;
+            }
+          }
+        } else {
+          var boundExpr = binOp.LeftOperand as IBoundExpression;
+          if (boundExpr != null && boundExpr.Definition == assignment.Target.Definition && boundExpr.Instance is IDupValue) {
+            if (binOp is IAddition || binOp is IBitwiseAnd || binOp is IBitwiseOr || binOp is IDivision || binOp is IExclusiveOr ||
+            binOp is ILeftShift || binOp is IModulus || binOp is IMultiplication || binOp is IRightShift || binOp is ISubtraction) {
+              binOp.LeftOperand = assignment.Target;
+              return binOp;
+            }
+          }
+        }
+      }
+      return assignment;
+    }
+
+    private bool ReplacePushDupPopPattern(BlockStatement b) {
+      Contract.Requires(b != null);
+      bool replacedPattern = false;
+      var statements = b.Statements;
+      for (int i = 0; i < statements.Count-3; i++) {
+        var push1 = statements[i] as PushStatement;
+        if (push1 == null) continue;
+        var binop1 = push1.ValueToPush as BinaryOperation;
+        if (binop1 == null) continue;
+        var bound1 = binop1.LeftOperand as BoundExpression;
+        if (bound1 == null) continue;
+        var exprS1 = statements[i+1] as ExpressionStatement;
+        if (exprS1 == null) continue;
+        var assign1 = exprS1.Expression as Assignment;
+        if (assign1 == null) continue;
+        if (assign1.Target.Definition != bound1.Definition) continue;
+        if (assign1.Target.Instance != bound1.Instance) {
+          if (!(assign1.Target.Instance is IPopValue && bound1.Instance is IDupValue)) continue;
+        }
+        if (!(assign1.Source is DupValue)) continue;
+        var statement = statements[i+2];
+        var popCounter = new PopCounter();
+        popCounter.Traverse(statement);
+        if (popCounter.count != 1) continue;
+        binop1.LeftOperand = assign1.Target;
+        var popReplacer = new PrefixPopReplacer(this.host, binop1);
+        popReplacer.Rewrite(statement);
+        statements.RemoveRange(i, 2);
+        replacedPattern = true;
+      }
+      return replacedPattern;
+    }
+
+    class PrefixPopReplacer : CodeRewriter {
+
+      internal PrefixPopReplacer(IMetadataHost host, BinaryOperation prefixOp)
+        : base(host) {
+        Contract.Requires(prefixOp != null);
+        this.prefixOp = prefixOp;
+      }
+
+      BinaryOperation prefixOp;
+
+      public override IExpression Rewrite(IPopValue popValue) {
+        return this.prefixOp;
+      }
+
     }
 
     private bool ReplacePushPopPattern(BlockStatement b) {
@@ -691,6 +854,70 @@ namespace Microsoft.Cci.ILToCodeModel {
             ResultIfFalse = falseConst, Type = pushTrue.ValueToPush.Type
           }
         };
+        replacedPattern = true;
+      }
+      return replacedPattern;
+    }
+
+    private bool ReplaceShortCircuitAnd6(BlockStatement b) {
+      Contract.Requires(b != null);
+      bool replacedPattern = false;
+      var statements = b.Statements;
+      for (int i = 0; i < statements.Count-8; i++) {
+        var ifStatement = statements[i] as ConditionalStatement;
+        if (ifStatement == null) continue;
+        var gotoFalseCase = ifStatement.FalseBranch as GotoStatement;
+        if (gotoFalseCase == null) continue;
+        Contract.Assume(ifStatement.TrueBranch is EmptyStatement);
+        var labeledStatement = statements[i+1] as LabeledStatement;
+        if (labeledStatement == null) continue;
+        var gotos = this.gotosThatTarget[(uint)labeledStatement.Label.UniqueKey];
+        if (gotos != null && gotos.Count > 0) continue;
+        var ifStatement2 = statements[i+2] as ConditionalStatement;
+        if (ifStatement2 == null) continue;
+        var gotoTrueCase = ifStatement2.FalseBranch as GotoStatement;
+        if (gotoTrueCase == null) continue;
+        if (!(ifStatement2.TrueBranch is EmptyStatement)) continue;
+        var labeledStatement2 = statements[i+3] as LabeledStatement;
+        if (labeledStatement2 == null || labeledStatement2 != gotoFalseCase.TargetStatement) continue;
+        gotos = this.gotosThatTarget[(uint)labeledStatement2.Label.UniqueKey];
+        Contract.Assume(gotos != null && gotos.Count > 0);
+        if (gotos.Count > 1) continue;
+        Contract.Assume(gotos[0] == gotoFalseCase);
+        var pushFalseCase = statements[i+4] as PushStatement;
+        if (pushFalseCase == null) continue;
+        if (pushFalseCase.ValueToPush.Type.TypeCode != PrimitiveTypeCode.Boolean) continue;
+        var gotoEnd = statements[i+5] as GotoStatement;
+        if (gotoEnd == null) continue;
+        var labeledStatement3 = statements[i+6] as LabeledStatement;
+        if (labeledStatement3 == null || labeledStatement3 != gotoTrueCase.TargetStatement) continue;
+        gotos = this.gotosThatTarget[(uint)labeledStatement3.Label.UniqueKey];
+        Contract.Assume(gotos != null && gotos.Count > 0);
+        if (gotos.Count > 1) continue;
+        Contract.Assume(gotos[0] == gotoTrueCase);
+        var pushTrueCase = statements[i+7] as PushStatement;
+        if (pushTrueCase == null) continue;
+        if (pushTrueCase.ValueToPush.Type.TypeCode != PrimitiveTypeCode.Int32) continue;
+        var pushTrueVal = pushTrueCase.ValueToPush as CompileTimeConstant;
+        if (pushTrueVal == null || !(pushTrueVal.Value is int)) continue;
+        if (1 != (int)pushTrueVal.Value) continue;
+        var endLabel = statements[i+8] as LabeledStatement;
+        if (endLabel == null || gotoEnd.TargetStatement != endLabel) continue;
+        gotos = this.gotosThatTarget[(uint)endLabel.Label.UniqueKey];
+        Contract.Assume(gotos != null && gotos.Count > 0);
+        if (gotos.Count > 1) continue;
+        Contract.Assume(gotos[0] == gotoEnd);
+
+        var falseConst = new CompileTimeConstant() { Value = false, Type = this.host.PlatformType.SystemBoolean };
+        var invertedCond1 = IfThenElseReplacer.InvertCondition(ifStatement2.Condition);
+        var conditional1 = new Conditional() { Condition = ifStatement.Condition, ResultIfTrue = invertedCond1, ResultIfFalse = falseConst, Type = this.host.PlatformType.SystemBoolean };
+        var trueConst = new CompileTimeConstant() { Value = true, Type = this.host.PlatformType.SystemBoolean };
+        var invertedCond2 = IfThenElseReplacer.InvertCondition(pushFalseCase.ValueToPush);
+        var conditional2 = new Conditional() { Condition = conditional1, ResultIfTrue = trueConst, ResultIfFalse = invertedCond2, Type = this.host.PlatformType.SystemBoolean };
+        pushTrueCase.ValueToPush = conditional2;
+        statements.RemoveAt(i+8);
+        statements.RemoveRange(i, 7);
+        replacedPattern = true;
       }
       return replacedPattern;
     }
@@ -719,16 +946,49 @@ namespace Microsoft.Cci.ILToCodeModel {
       return replacedPattern;
     }
 
+    private bool ReplaceSelfAssignment(BlockStatement b) {
+      Contract.Requires(b != null);
+      if (this.returnValueTemp == null) return false;
+      bool replacedPattern = false;
+      var statements = b.Statements;
+      for (int i = 1; i < b.Statements.Count; i++) {
+        var expressionStatement = statements[i] as ExpressionStatement;
+        if (expressionStatement == null) continue;
+        var assign = expressionStatement.Expression as Assignment;
+        if (assign == null) continue;
+        var local = assign.Target.Definition as LocalDefinition;
+        if (local == null) continue;
+        var boundExpr = assign.Source as BoundExpression;
+        if (boundExpr == null || boundExpr.Definition != local) continue;
+        this.numberOfAssignmentsToLocal[local]--;
+        this.numberOfReferencesToLocal[local]--;
+        statements.RemoveAt(i);
+        replacedPattern = true;
+      }
+      return replacedPattern;
+    }
+
     private bool ReplaceSingleUseCompilerGeneratedLocalPattern(BlockStatement b) {
       Contract.Requires(b != null);
       bool replacedPattern = false;
       var statements = b.Statements;
       for (int i = 0; i < statements.Count-1; i++) {
+        uint referencesToRemove = 1;
         var expressionStatement = statements[i] as ExpressionStatement;
         if (expressionStatement == null) continue;
         var assignment = expressionStatement.Expression as Assignment;
         if (assignment == null) continue;
         var local = assignment.Target.Definition as ILocalDefinition;
+        if (local == null) {
+          var adr = assignment.Target.Definition as IAddressDereference;
+          if (adr != null) {
+            var addrOf = adr.Address as IAddressOf;
+            if (addrOf != null) {
+              local = addrOf.Expression.Definition as ILocalDefinition;
+              referencesToRemove = 2;
+            }
+          }
+        }
         if (local == null) continue;
         if (this.sourceLocationProvider != null) {
           bool isCompilerGenerated;
@@ -736,12 +996,15 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (!isCompilerGenerated) continue;
         }
         if (!this.singleUseExpressionChecker.ExpressionCanBeMovedAndDoesNotReference(assignment.Source, local)) continue;
-        Contract.Assume(statements[i+1] != null);
-        if (this.singleAssignmentReferenceFinder.LocalCanBeReplacedIn(statements[i+1], local)) {
-          if (this.singleAssignmentLocalReplacer.Replace(assignment.Source, local, statements[i+1])) {
+        var j = 1;
+        while (i+j < statements.Count-2 && statements[i+j] is IEmptyStatement) j++;
+        Contract.Assume(i+j < statements.Count); //i < statements.Count-1 and (j == 1 or the loop above established i+j < statements.Count-1)
+        Contract.Assume(statements[i+j] != null);
+        if (this.singleAssignmentReferenceFinder.LocalCanBeReplacedIn(statements[i+j], local)) {
+          if (this.singleAssignmentLocalReplacer.Replace(assignment.Source, local, statements[i+j])) {
             this.numberOfAssignmentsToLocal[local]--;
-            this.numberOfReferencesToLocal[local]--;
-            statements.RemoveAt(i);
+            this.numberOfReferencesToLocal[local] -= referencesToRemove;
+            statements.RemoveRange(i, j);
             replacedPattern = true;
           }
         }

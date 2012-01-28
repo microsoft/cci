@@ -229,6 +229,17 @@ namespace CodeModelTestInput {
       y=false;
     }
 
+    static int Method27(int n) {
+      var i = 1;
+      if (++i > n) return i;
+      return 0;
+    }
+
+    public int Method28(int n) {
+      if (++this.c > n) return this.c;
+      return 0;
+    }
+
   }
 
   public class Class2 {

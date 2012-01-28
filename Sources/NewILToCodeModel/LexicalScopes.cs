@@ -101,6 +101,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       for (i = 0; i < n; i++) {
         var statement = block.Statements[i];
         Contract.Assume(statement != null);
+        if (statement is EmptyStatement) continue;
         var decl = statement as LocalDeclarationStatement;
         if (decl == null) break;
         this.declarationFor.Add(decl.LocalVariable, decl);

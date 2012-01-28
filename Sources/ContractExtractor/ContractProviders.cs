@@ -442,7 +442,9 @@ namespace Microsoft.Cci.Contracts {
         }
       }
 
-      IMethodBody methodBody = methodDefinition.Body;
+      var unspecializedMethodDefintion = ContractHelper.UninstantiateAndUnspecializeMethodDefinition(methodDefinition);
+
+      IMethodBody methodBody = unspecializedMethodDefintion.Body;
 
       if (methodBody is Dummy) {
         this.underlyingContractProvider.AssociateMethodWithContract(method, ContractDummy.MethodContract);
@@ -455,13 +457,23 @@ namespace Microsoft.Cci.Contracts {
       }
 
       MethodContractAndMethodBody result = this.SplitMethodBodyIntoContractAndCode(sourceMethodBody);
+
       var methodContract = result.MethodContract;
+      if (methodContract != null && unspecializedMethodDefintion != methodDefinition) {
+        var instantiatedContract = ContractHelper.InstantiateAndSpecializeContract(this.host, result.MethodContract, methodDefinition, unspecializedMethodDefintion);
+        methodContract = instantiatedContract;
+      }
 
       #region Auto-properties get their contract from mining the invariant
-      if (ContractHelper.IsAutoPropertyMember(host, methodDefinition)) {
-        var tc = this.GetTypeContractFor(methodDefinition.ContainingTypeDefinition);
-        MethodContract mc = ContractHelper.GetAutoPropertyContract(this.host, tc, methodDefinition);
+      if (ContractHelper.IsAutoPropertyMember(host, unspecializedMethodDefintion)) {
+        var tc = this.GetTypeContractFor(unspecializedMethodDefintion.ContainingTypeDefinition);
+        MethodContract mc = ContractHelper.GetAutoPropertyContract(this.host, tc, unspecializedMethodDefintion);
         if (mc != null) {
+          if (unspecializedMethodDefintion != methodDefinition) {
+            var mutableContract = ContractHelper.InstantiateAndSpecializeContract(this.host, mc, methodDefinition, unspecializedMethodDefintion);
+            mc = mutableContract;
+          }
+
           if (methodContract == null)
             methodContract = mc;
           else

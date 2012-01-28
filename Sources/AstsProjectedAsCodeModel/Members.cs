@@ -2777,6 +2777,7 @@ namespace Microsoft.Cci.Ast {
       CodeModelToILConverter converter = new CodeModelToILConverter(this.Block.Compilation.HostEnvironment,
         this.MethodDefinition,
         this.Block.Compilation.SourceLocationProvider);
+      //TODO: if /optimize has not been specified, disable converter.MinimizeCodeSize
       converter.ConvertToIL(normalizedBody.Block);
 
       this.localScopes = converter.GetLocalScopes();

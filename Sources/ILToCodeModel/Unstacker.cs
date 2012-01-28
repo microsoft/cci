@@ -149,14 +149,14 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (pop != null) {
         if (this.operandStack.Count > 0) {
           var local = this.operandStack.Pop();
-          if (pop.Type.TypeCode == PrimitiveTypeCode.Boolean && local.Type != Dummy.TypeReference) {
+          if (pop.Type.TypeCode == PrimitiveTypeCode.Boolean && !(local.Type is Dummy)) {
             return new NotEquality() {
               LeftOperand = new BoundExpression() { Definition = local },
               RightOperand = new DefaultValue() { DefaultValueType = local.Type },
               Type = pop.Type
             };
           }
-          if (pop.Type != Dummy.TypeReference)
+          if (!(pop.Type is Dummy))
             local.Type = pop.Type;
           this.body.numberOfReferences[local]++;
           IExpression result;

@@ -51,12 +51,14 @@ namespace Microsoft.Cci.ILToCodeModel {
       Contract.Invariant(this.numberOfReferencesToLocal != null);
     }
 
-    public IBlockStatement InsertAnonymousDelegates(IBlockStatement block) {
+    public IBlockStatement InsertAnonymousDelegates(IBlockStatement block, out bool didNothing) {
       Contract.Requires(block != null);
 
+      didNothing = true;
       var closureFinder = new ClosureFinder(this.host);
       closureFinder.Traverse(block);
       if (!closureFinder.sawAnonymousDelegate) return block;
+      didNothing = false;
       var closures = this.closures = closureFinder.closures;
       closureFinder = null;
       if (closures != null) {
@@ -76,7 +78,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           Contract.Assume(closure != null);
           this.sourceMethodBody.privateHelperTypesToRemove.Add(TypeHelper.UninstantiateAndUnspecialize(closure).ResolvedType);
         }
-        result = new ClosureRemover(this.host, closures, closureFieldToLocalOrParameterMap).Rewrite(result);
+        result = new ClosureRemover(this.sourceMethodBody, closures, closureFieldToLocalOrParameterMap).Rewrite(result);
       }
       if (this.delegatesCachedInFields != null || this.delegatesCachedInLocals != null || closures != null) {
         Contract.Assume(result is BlockStatement);
@@ -222,9 +224,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         //We are referring to a method of a closure class for a method that is generic (either by having its own generic parameters
         //or by being a member of a generic type (including non generic nested types of generic containing types).
         //We want avoid compiling specialized methods to IL and then decompiling those, just to get a specialized copy of the 
-        //Hence we first get a copy of the compiled block of the unspecialized 
+        //Hence we first get a copy of the compiled block of the unspecialized method.
         var block = this.GetCopyOfBody(specializedMethod.UnspecializedVersion);
-        return new MapGenericTypeParameters(this.host, specializedMethod.ContainingTypeDefinition).Rewrite(block);
+        block = new MapGenericTypeParameters(this.host, specializedMethod.ContainingTypeDefinition).Rewrite(block);
+        return block;
       }
 
       Contract.Assume(!delegateMethod.IsAbstract && !delegateMethod.IsExternal);
@@ -315,7 +318,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   internal class MapGenericMethodParameters : CodeRewriter {
 
     internal MapGenericMethodParameters(IMetadataHost host, IGenericMethodInstance genericMethodInstance)
-      : base(host) {
+      : base(host, copyAndRewriteImmutableReferences: true) {
       Contract.Requires(host != null);
       Contract.Requires(genericMethodInstance != null);
 
@@ -341,7 +344,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   internal class MapGenericTypeParameters : CodeRewriter {
 
     internal MapGenericTypeParameters(IMetadataHost host, ITypeDefinition type)
-      : base(host) {
+      : base(host, copyAndRewriteImmutableReferences: true) {
       Contract.Requires(host != null);
       Contract.Requires(type != null);
 

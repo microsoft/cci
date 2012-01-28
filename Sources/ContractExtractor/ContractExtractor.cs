@@ -190,7 +190,6 @@ namespace Microsoft.Cci.MutableContracts {
       var bs = this.Rewrite(blockStatement);
       if (this.currentMethodContract != null) {
         this.currentMethodContract = ReplacePrivateFieldsThatHavePublicProperties(this.host, this.currentMethod.ContainingTypeDefinition, this.currentMethodContract);
-        ContractChecker.CheckMethodContract(this.host, this.currentMethod, this.currentMethodContract);
       }
       return new MethodContractAndMethodBody(this.currentMethodContract, bs);
     }
@@ -409,6 +408,10 @@ namespace Microsoft.Cci.MutableContracts {
         found = IndexOf(s => IsPrePostEndOrLegacy(s, true), linearBlockIndex, currentBlockIndex, currentStatementIndex, out blockIndexOfNextContractCall, out stmtIndexOfNextContractCall);
       }
 
+      if (!(currentBlockIndex < linearBlockIndex.Count)) {
+        // then the body contained nothing but contracts!
+        return new List<IStatement>();
+      }
       var lastBlock = linearBlockIndex[linearBlockIndex.Count - 1];
       var currentClump2 = ExtractClump(linearBlockIndex, currentBlockIndex, currentStatementIndex, linearBlockIndex.Count - 1, lastBlock.Statements.Count - 1);
       currentClump2 = LocalBinder.CloseClump(this.host, currentClump2);

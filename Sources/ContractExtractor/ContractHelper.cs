@@ -347,7 +347,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// </summary>
     /// <param name="attributes">The list of attributes that will be searched</param>
     /// <param name="attributeName">Name of the attribute.</param>
-    /// <returns></returns>
+    /// <returns>The string argument if it exists, otherwise null.</returns>
     public static string/*?*/ GetStringArgumentFromAttribute(IEnumerable<ICustomAttribute> attributes, string attributeName) {
       ICustomAttribute foundAttribute = null;
       foreach (ICustomAttribute attribute in attributes) {
@@ -1640,6 +1640,28 @@ namespace Microsoft.Cci.MutableContracts {
     #endregion
 
     #region MetadataReaderHost Overrides
+
+    /// <summary>
+    /// Override so that contract assemblies get loaded regardless of whether their identity matches
+    /// that of the referencedAssembly. The base Probe method cares about the identities matching,
+    /// but for contract assemblies, the identity is constructed from the real assembly and its
+    /// identity might have nothing to do with the identity of the contract assembly since we match
+    /// them based only on name.
+    /// </summary>
+    protected override AssemblyIdentity Probe(string probeDir, AssemblyIdentity referencedAssembly) {
+      if (referencedAssembly.Name.Value.EndsWith(".Contracts")) {
+        string path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".dll");
+        if (!File.Exists(path)) path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".winmd");
+        if (!File.Exists(path)) path = Path.Combine(probeDir, referencedAssembly.Name.Value + ".exe");
+        if (!File.Exists(path)) return null;
+        var assembly = this.LoadUnitFrom(path) as IAssembly;
+        if (assembly == null) return null;
+        return assembly.AssemblyIdentity;
+      } else {
+        return base.Probe(probeDir, referencedAssembly);
+      }
+    }
+
     public override AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
       string pathFromTable;
       var assemblyName = referencedAssembly.Name.Value;

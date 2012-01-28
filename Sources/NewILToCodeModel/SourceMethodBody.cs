@@ -12,7 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using Microsoft.Cci;
+using Microsoft.Cci.Analysis;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.UtilityDataStructures;
 
@@ -96,15 +96,20 @@ namespace Microsoft.Cci.ILToCodeModel {
     protected override IBlockStatement GetBlock() {
       var block = new DecompiledBlock(0, GetSizeOf(this.ilMethodBody), new Sublist<BasicBlock<Instruction>>(this.cdfg.AllBlocks, 0, this.cdfg.AllBlocks.Count), isLexicalScope: true);
       this.CreateExceptionBlocks(block);
+      bool addDeclarations = true;
       if (this.localScopeProvider != null) {
         var scopes = new List<ILocalScope>(this.localScopeProvider.GetLocalScopes(this.ilMethodBody));
-        if (scopes.Count > 0)
+        if (scopes.Count > 0) {
           this.CreateLexicalScopes(block, new Sublist<ILocalScope>(scopes, 0, scopes.Count));
-      } else {
+          addDeclarations = false;
+        }
+      }
+      if (addDeclarations) {
         int counter = 0;
         foreach (var local in this.ilMethodBody.LocalVariables) {
+          Contract.Assume(local != null);
           Contract.Assume(counter <= block.Statements.Count);
-          block.Statements.Insert(counter++, new LocalDeclarationStatement() { LocalVariable = local });
+          block.Statements.Insert(counter++, new LocalDeclarationStatement() { LocalVariable = this.GetLocalWithSourceName(local) });
         }
       }
       new InstructionParser(this).Traverse(block);
@@ -122,9 +127,11 @@ namespace Microsoft.Cci.ILToCodeModel {
       new LockReplacer(this).Traverse(block);
       new BlockFlattener().Traverse(block);
       this.RemoveRedundantFinalReturn(block);
-      var result = new CompilationArtifactRemover(this.host).Rewrite(block);
+      var result = new CompilationArtifactRemover(this).Rewrite(block);
       if ((this.options & DecompilerOptions.AnonymousDelegates) != 0) {
-        result = new AnonymousDelegateInserter(this).InsertAnonymousDelegates(result);
+        bool didNothing;
+        result = new AnonymousDelegateInserter(this).InsertAnonymousDelegates(result, out didNothing);
+        if (!didNothing) new DeclarationUnifier(this).Traverse(result);
       }
       return result;
     }
@@ -329,6 +336,8 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     internal ILocalDefinition GetLocalWithSourceName(ILocalDefinition localDef) {
       Contract.Requires(localDef != null);
+      Contract.Ensures(Contract.Result<ILocalDefinition>() != null);
+
       if (this.sourceLocationProvider == null) return localDef;
       var mutableLocal = this.localMap[localDef];
       if (mutableLocal != null) return mutableLocal;
@@ -358,6 +367,17 @@ namespace Microsoft.Cci.ILToCodeModel {
           var local = boundExpression.Definition as ILocalDefinition;
           if (local == null) return;
           if (this.numberOfAssignmentsToLocal[local] > 0) return;
+          this.numberOfReferencesToLocal[local]--;
+          if (this.numberOfReferencesToLocal[local] == 0 && this.numberOfAssignmentsToLocal[local] == 0) {
+            for (int j = 0; j < n-1; j++) {
+              var locDecl = block.Statements[j] as ILocalDeclarationStatement;
+              if (locDecl != null && locDecl.LocalVariable == local) {
+                block.Statements.RemoveAt(j);
+                n--;
+                break;
+              }
+            }
+          }
         }
         block.Statements.RemoveAt(n-1);
       }

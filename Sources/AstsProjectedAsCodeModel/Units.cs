@@ -473,6 +473,15 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// A hexadecimal string that is used to store and retrieve the debugging symbols from a symbol store.
+    /// </summary>
+    public string DebugInformationVersion {
+      get {
+        return string.Empty;
+      }
+    }
+
+    /// <summary>
     /// Flags that control the behavior of the target operating system. CLI implementations are supposed to ignore this, but some operating system pay attention.
     /// </summary>
     public virtual ushort DllCharacteristics {

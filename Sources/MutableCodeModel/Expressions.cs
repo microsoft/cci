@@ -541,6 +541,12 @@ namespace Microsoft.Cci.MutableCodeModel {
       : base(binaryOperation) {
       this.leftOperand = binaryOperation.LeftOperand;
       this.rightOperand = binaryOperation.RightOperand;
+      this.resultIsUnmodifiedLeftOperand = binaryOperation.ResultIsUnmodifiedLeftOperand;
+    }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(!this.resultIsUnmodifiedLeftOperand || this.LeftOperand is ITargetExpression);
     }
 
     /// <summary>
@@ -548,7 +554,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public IExpression LeftOperand {
       get { return this.leftOperand; }
-      set { this.leftOperand = value; }
+      set {
+        Contract.Requires(value is ITargetExpression || !this.ResultIsUnmodifiedLeftOperand);
+        this.leftOperand = value; 
+      }
     }
     IExpression leftOperand;
 
@@ -560,6 +569,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.rightOperand = value; }
     }
     IExpression rightOperand;
+
+    /// <summary>
+    /// If true, the left operand must be a target expression and the result of the binary operation is the
+    /// value of the target expression before it is assigned the value of the operation performed on
+    /// (right hand) values of the left and right operands.
+    /// </summary>
+    public bool ResultIsUnmodifiedLeftOperand {
+      get { return this.resultIsUnmodifiedLeftOperand; }
+      set {
+        Contract.Requires(!value || this.LeftOperand is ITargetExpression );
+        this.resultIsUnmodifiedLeftOperand = value; 
+      }
+    }
+    bool resultIsUnmodifiedLeftOperand;
 
   }
 
@@ -2197,6 +2220,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.argumentName = namedArgument.ArgumentName;
       this.argumentValue = namedArgument.ArgumentValue;
       this.resolvedDefinition = namedArgument.ResolvedDefinition;
+      this.getterIsVirtual = namedArgument.GetterIsVirtual;
+      this.setterIsVirtual = namedArgument.SetterIsVirtual;
     }
 
     /// <summary>
@@ -2238,6 +2263,24 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
     object/*?*/ resolvedDefinition;
+
+    /// <summary>
+    /// If true, the resolved definition is a property whose getter is virtual.
+    /// </summary>
+    public bool GetterIsVirtual {
+      get { return this.getterIsVirtual; }
+      set { this.getterIsVirtual = value; }
+    }
+    bool getterIsVirtual;
+
+    /// <summary>
+    /// If true, the resolved definition is a property whose setter is virtual.
+    /// </summary>
+    public bool SetterIsVirtual {
+      get { return this.setterIsVirtual; }
+      set { this.setterIsVirtual = value; }
+    }
+    bool setterIsVirtual;
 
     #region IMetadataNamedArgument
 
@@ -2795,6 +2838,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       : base(targetExpression) {
       this.definition = targetExpression.Definition;
       this.instance = targetExpression.Instance;
+      this.getterIsVirtual = targetExpression.GetterIsVirtual;
+      this.setterIsVirtual = targetExpression.SetterIsVirtual;
       if (targetExpression.IsUnaligned)
         this.alignment = targetExpression.Alignment;
       else
@@ -2848,6 +2893,24 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
     object definition;
+
+    /// <summary>
+    /// If true, the resolved definition is a property whose getter is virtual.
+    /// </summary>
+    public bool GetterIsVirtual {
+      get { return this.getterIsVirtual; }
+      set { this.getterIsVirtual = value; }
+    }
+    bool getterIsVirtual;
+
+    /// <summary>
+    /// If true, the resolved definition is a property whose setter is virtual.
+    /// </summary>
+    public bool SetterIsVirtual {
+      get { return this.setterIsVirtual; }
+      set { this.setterIsVirtual = value; }
+    }
+    bool setterIsVirtual;
 
     /// <summary>
     /// The instance to be used if this.Definition is an instance field/property or array indexer.

@@ -10,15 +10,28 @@
 //-----------------------------------------------------------------------------
 using System.Diagnostics.Contracts;
 using Microsoft.Cci.MutableCodeModel;
+using Microsoft.Cci.UtilityDataStructures;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
   internal class CompilationArtifactRemover : CodeRewriter {
 
-    internal CompilationArtifactRemover(IMetadataHost host)
-      : base(host) {
-      Contract.Requires(host != null);
+    internal CompilationArtifactRemover(SourceMethodBody sourceMethodBody)
+      : base(sourceMethodBody.host) {
+      Contract.Requires(sourceMethodBody != null);
+      this.numberOfAssignmentsToLocal = sourceMethodBody.numberOfAssignmentsToLocal; Contract.Assume(this.numberOfAssignmentsToLocal != null);
+      this.numberOfReferencesToLocal = sourceMethodBody.numberOfReferencesToLocal; Contract.Assume(this.numberOfReferencesToLocal != null);
     }
+
+    HashtableForUintValues<object> numberOfAssignmentsToLocal;
+    HashtableForUintValues<object> numberOfReferencesToLocal;
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.numberOfAssignmentsToLocal != null);
+      Contract.Invariant(this.numberOfReferencesToLocal != null);
+    }
+
 
     public override IExpression Rewrite(IBlockExpression blockExpression) {
       var e = base.Rewrite(blockExpression);
@@ -27,6 +40,33 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (IteratorHelper.EnumerableIsEmpty(be.BlockStatement.Statements))
         return be.Expression;
       return be;
+    }
+
+    public override IExpression Rewrite(IAssignment assignment) {
+      var binOp = assignment.Source as BinaryOperation;
+      if (binOp != null) {
+        var addressDeref = binOp.LeftOperand as IAddressDereference;
+        if (addressDeref != null) {
+          var dupValue = addressDeref.Address as IDupValue;
+          if (dupValue != null) {
+            if (binOp is IAddition || binOp is IBitwiseAnd || binOp is IBitwiseOr || binOp is IDivision || binOp is IExclusiveOr ||
+            binOp is ILeftShift || binOp is IModulus || binOp is IMultiplication || binOp is IRightShift || binOp is ISubtraction) {
+              binOp.LeftOperand = assignment.Target;
+              return binOp;
+            }
+          }
+        } else {
+          var boundExpr = binOp.LeftOperand as IBoundExpression;
+          if (boundExpr != null && boundExpr.Definition == assignment.Target.Definition && boundExpr.Instance is IDupValue) {
+            if (binOp is IAddition || binOp is IBitwiseAnd || binOp is IBitwiseOr || binOp is IDivision || binOp is IExclusiveOr ||
+            binOp is ILeftShift || binOp is IModulus || binOp is IMultiplication || binOp is IRightShift || binOp is ISubtraction) {
+              binOp.LeftOperand = assignment.Target;
+              return binOp;
+            }
+          }
+        }
+      }
+      return base.Rewrite(assignment);
     }
 
     public override IExpression Rewrite(ICreateObjectInstance createObjectInstance) {
@@ -127,6 +167,8 @@ namespace Microsoft.Cci.ILToCodeModel {
           Contract.Assume(cc2.Value is int);
           return new CompileTimeConstant() { Value = ((int)cc1.Value) != ((int)cc2.Value), Type = notEquality.Type };
         }
+      } else if (cc2 != null && ExpressionHelper.IsNumericZero(cc2) && notEquality.LeftOperand.Type.TypeCode == PrimitiveTypeCode.Boolean) {
+        return notEquality.LeftOperand;
       }
       return notEquality;
     }

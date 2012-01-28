@@ -94,6 +94,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       var field = assignment.Target.Definition as IFieldReference;
       if (field == null) return;
       if (this.closures.Find(instance.Type.InternedKey) == null) return;
+      if (this.closureFieldToLocalOrParameterMap[field.InternedKey] != null) return;
       var thisRef = assignment.Source as ThisReference;
       if (thisRef != null) {
         this.closureFieldToLocalOrParameterMap.Add(field.InternedKey, thisRef);
@@ -115,11 +116,27 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override void TraverseChildren(IBlockStatement block) {
       Contract.Assume(block is BlockStatement);
       var mutableBlock = (BlockStatement)block;
-      for (int i = 0, n = mutableBlock.Statements.Count; i < n; i++) {
-        Contract.Assume(mutableBlock.Statements[i] != null);
-        this.Traverse(mutableBlock.Statements[i]);
+      this.Traverse(mutableBlock.Statements);
+    }
+
+    public override void TraverseChildren(IForStatement forStatement) {
+      Contract.Assume(forStatement is ForStatement);
+      var mutableForStatement = (ForStatement)forStatement;
+      this.TraverseChildren((IStatement)mutableForStatement);
+      this.Traverse(mutableForStatement.InitStatements);
+      this.Traverse(mutableForStatement.Condition);
+      this.Traverse(forStatement.IncrementStatements);
+      this.Traverse(mutableForStatement.Body);
+    }
+
+    private void Traverse(List<IStatement> statements) {
+      Contract.Requires(statements != null);
+
+      for (int i = 0, n = statements.Count; i < n; i++) {
+        Contract.Assume(statements[i] != null);
+        this.Traverse(statements[i]);
         if (this.localDeclarationToSubstituteForAssignment != null) {
-          mutableBlock.Statements[i] = this.localDeclarationToSubstituteForAssignment;
+          statements[i] = this.localDeclarationToSubstituteForAssignment;
           this.localDeclarationToSubstituteForAssignment = null;
         }
       }

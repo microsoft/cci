@@ -16,22 +16,30 @@ using Microsoft.Cci.UtilityDataStructures;
 namespace Microsoft.Cci.ILToCodeModel {
   internal class ClosureRemover : CodeRewriter {
 
-    internal ClosureRemover(IMetadataHost host, Hashtable<object> closures, Hashtable<Expression> closureFieldToLocalOrParameterMap)
-      : base(host) {
-      Contract.Requires(host != null);
+    internal ClosureRemover(SourceMethodBody body, Hashtable<object> closures, Hashtable<Expression> closureFieldToLocalOrParameterMap)
+      : base(body.host) {
+      Contract.Requires(body != null);
       Contract.Requires(closures != null);
       Contract.Requires(closureFieldToLocalOrParameterMap != null);
       this.closures = closures;
       this.closureFieldToLocalOrParameterMap = closureFieldToLocalOrParameterMap;
+      Contract.Assume(body.numberOfAssignmentsToLocal != null);
+      this.numberOfAssignmentsToLocal = body.numberOfAssignmentsToLocal;
+      Contract.Assume(body.numberOfReferencesToLocal != null);
+      this.numberOfReferencesToLocal = body.numberOfReferencesToLocal;
     }
 
     Hashtable<object> closures;
     Hashtable<Expression> closureFieldToLocalOrParameterMap;
+    HashtableForUintValues<object> numberOfReferencesToLocal;
+    HashtableForUintValues<object> numberOfAssignmentsToLocal;
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
       Contract.Invariant(this.closures != null);
       Contract.Invariant(this.closureFieldToLocalOrParameterMap != null);
+      Contract.Invariant(this.numberOfAssignmentsToLocal != null);
+      Contract.Invariant(this.numberOfReferencesToLocal != null);
     }
 
     public override IAddressableExpression Rewrite(IAddressableExpression addressableExpression) {
@@ -45,6 +53,10 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (boundExpression != null) definition = boundExpression.Definition;
           Contract.Assume(definition is ILocalDefinition || definition is IParameterDefinition ||
           definition is IFieldReference || definition is IMethodReference || definition is IExpression);
+          if (definition is LocalDefinition) {
+            this.numberOfAssignmentsToLocal[definition]++;
+            this.numberOfReferencesToLocal[definition]++;
+          }
           return new AddressableExpression() { Definition = definition, Type = field.Type };
         }
       }
@@ -56,7 +68,13 @@ namespace Microsoft.Cci.ILToCodeModel {
       var field = boundExpression.Definition as IFieldReference;
       if (field != null) {
         var locOrPar = this.closureFieldToLocalOrParameterMap.Find(field.InternedKey);
-        if (locOrPar != null) return locOrPar;
+        if (locOrPar != null) {
+          var be = locOrPar as BoundExpression;
+          if (be != null && be.Definition is LocalDefinition) {
+            this.numberOfReferencesToLocal[be.Definition]++;
+          }
+          return locOrPar;
+        }
       }
       return result;
     }
@@ -70,22 +88,22 @@ namespace Microsoft.Cci.ILToCodeModel {
             //Assigning the closure instance to a field of an outer closure or an interator state class.
             return CodeDummy.Block;
           }
+          //in this case we may be initializing a closure field with the parameter that it captures.
           var closureInstance = assignment.Target.Instance;
           if (closureInstance != null && this.closures.Find(closureInstance.Type.InternedKey) != null) {
-            var binding = assignment.Source as IBoundExpression;
-            if (binding != null) {
-              if (binding.Definition is IParameterDefinition) return CodeDummy.Block;
-              var locOrPar = this.closureFieldToLocalOrParameterMap.Find(field.InternedKey) as IBoundExpression;
-              if (locOrPar != null) {
-                var loc = locOrPar.Definition as ILocalDefinition;
-                if (loc != null && this.closures.Find(loc.Type.InternedKey) != null) {
-                  var source = this.Rewrite(assignment.Source);
-                  return new LocalDeclarationStatement() { LocalVariable = loc, InitialValue = source, Locations = assignment.Locations };
-                }
+            var locOrPar = this.closureFieldToLocalOrParameterMap.Find(field.InternedKey) as IBoundExpression;
+            if (locOrPar != null) {
+              var binding = assignment.Source as IBoundExpression;
+              if (binding != null) {
+                if (binding.Definition == locOrPar.Definition) return CodeDummy.Block;
               }
+            } else {
+              var thisRef = assignment.Source as IThisReference;
+              if (thisRef != null) return CodeDummy.Block;
             }
-            return CodeDummy.Block;
-          } 
+          }
+          //If we get here, we just have a normal assignment to a closure field. We need to replace the field with the local or parameter.
+          //The base call will do that by calling Rewrite(ITargetExpression).
         }
       }
       return base.Rewrite(expressionStatement);
@@ -120,6 +138,9 @@ namespace Microsoft.Cci.ILToCodeModel {
           Contract.Assume(definition is ILocalDefinition || definition is IParameterDefinition || 
           definition is IFieldReference || definition is IArrayIndexer || 
           definition is IAddressDereference || definition is IPropertyDefinition);
+          if (definition is LocalDefinition) {
+            this.numberOfAssignmentsToLocal[definition]++;
+          }
           return new TargetExpression() { Definition = definition, Type = field.Type };
         }
       }

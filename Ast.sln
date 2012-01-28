@@ -100,6 +100,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EdgeProfiler", "Metadata\Sa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControlAndDataFlowGraph", "Metadata\Sources\ControlAndDataFlowGraph\ControlAndDataFlowGraph.csproj", "{2596EFB0-87AE-42CE-89EB-84F35D6350D2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewILToCodeModel", "Sources\NewILToCodeModel\NewILToCodeModel.csproj", "{A555D4CB-F16F-4049-A8CF-180B8A05C755}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -498,6 +500,16 @@ Global
 		{2596EFB0-87AE-42CE-89EB-84F35D6350D2}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{2596EFB0-87AE-42CE-89EB-84F35D6350D2}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{2596EFB0-87AE-42CE-89EB-84F35D6350D2}.Release|x86.ActiveCfg = Release|Any CPU
+		{A555D4CB-F16F-4049-A8CF-180B8A05C755}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A555D4CB-F16F-4049-A8CF-180B8A05C755}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A555D4CB-F16F-4049-A8CF-180B8A05C755}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{A555D4CB-F16F-4049-A8CF-180B8A05C755}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{A555D4CB-F16F-4049-A8CF-180B8A05C755}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A555D4CB-F16F-4049-A8CF-180B8A05C755}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A555D4CB-F16F-4049-A8CF-180B8A05C755}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A555D4CB-F16F-4049-A8CF-180B8A05C755}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{A555D4CB-F16F-4049-A8CF-180B8A05C755}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{A555D4CB-F16F-4049-A8CF-180B8A05C755}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

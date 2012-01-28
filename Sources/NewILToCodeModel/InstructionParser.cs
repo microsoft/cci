@@ -11,7 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using Microsoft.Cci;
+using Microsoft.Cci.Analysis;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.UtilityDataStructures;
 
@@ -1566,7 +1566,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       } else {
         var result = this.operandStack.Pop();
         Contract.Assume(result != null);
-        return new ConvertToUnsigned(result);
+        return this.ConvertToUnsigned(result);
       }
     }
 
@@ -1622,8 +1622,10 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private Expression ConvertToUnsigned(Expression expression) {
       Contract.Requires(expression != null);
+      Contract.Ensures(Contract.Result<Expression>() != null);
+
       CompileTimeConstant/*?*/ cc = expression as CompileTimeConstant;
-      if (cc == null) return new ConvertToUnsigned(expression);
+      if (cc == null) return ConvertToUnsigned2(expression);
       IConvertible/*?*/ ic = cc.Value as IConvertible;
       if (ic == null) {
         if (cc.Value is System.IntPtr) {
@@ -1631,7 +1633,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           cc.Type = this.platformType.SystemUIntPtr;
           return cc;
         }
-        return new ConvertToUnsigned(expression);
+        return ConvertToUnsigned2(expression);
       }
       switch (ic.GetTypeCode()) {
         case TypeCode.SByte:
@@ -1643,6 +1645,16 @@ namespace Microsoft.Cci.ILToCodeModel {
         case TypeCode.Int64:
           cc.Value = (ulong)ic.ToInt64(null); cc.Type = this.platformType.SystemUInt64; break;
       }
+      return expression;
+    }
+
+    private static Expression ConvertToUnsigned2(Expression expression) {
+      Contract.Requires(expression != null);
+      Contract.Ensures(Contract.Result<Expression>() != null);
+
+      var resultType = TypeHelper.UnsignedEquivalent(expression.Type);
+      if (resultType != expression.Type)
+        return new Conversion() { ValueToConvert = expression, TypeAfterConversion = resultType };
       return expression;
     }
 

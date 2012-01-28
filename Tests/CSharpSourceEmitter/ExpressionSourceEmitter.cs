@@ -19,9 +19,22 @@ namespace CSharpSourceEmitter {
   public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
 
     public override void TraverseChildren(IAddition addition) {
+      if (addition.LeftOperand is ITargetExpression && ExpressionHelper.IsIntegralOne(addition.RightOperand)) {
+        if (addition.ResultIsUnmodifiedLeftOperand) {
+          this.Traverse(addition.LeftOperand);
+          this.sourceEmitterOutput.Write("++");
+        } else {
+          this.sourceEmitterOutput.Write("++");
+          this.Traverse(addition.LeftOperand);
+        }
+        return;
+      }
       this.sourceEmitterOutput.Write("(");
       this.Traverse(addition.LeftOperand);
-      this.sourceEmitterOutput.Write(" + ");
+      if (addition.LeftOperand is ITargetExpression)
+        this.sourceEmitterOutput.Write(" += ");
+      else
+        this.sourceEmitterOutput.Write(" + ");
       this.Traverse(addition.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
@@ -109,12 +122,27 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(IAnonymousDelegate anonymousDelegate) {
-      if (IteratorHelper.EnumerableHasLength(anonymousDelegate.Body.Statements, 1)) {
-        var returnStatement = IteratorHelper.Single(anonymousDelegate.Body.Statements) as IReturnStatement;
+      var nonEmptyStatementCount = 0;
+      IStatement nonEmptyStatement = null;
+      foreach (var statement in anonymousDelegate.Body.Statements) {
+        if (!(statement is IEmptyStatement)) {
+          nonEmptyStatementCount++;
+          nonEmptyStatement = statement;
+        }
+      }
+      if (nonEmptyStatementCount == 1) {
+        var returnStatement = nonEmptyStatement as IReturnStatement;
         if (returnStatement != null && returnStatement.Expression != null) {
           this.Traverse(anonymousDelegate.Parameters);
           this.sourceEmitterOutput.Write(" => ");
           this.Traverse(returnStatement.Expression);
+          return;
+        }
+        var expressionStatement = nonEmptyStatement as IExpressionStatement;
+        if (expressionStatement != null && anonymousDelegate.ReturnType.TypeCode == PrimitiveTypeCode.Void) {
+          this.Traverse(anonymousDelegate.Parameters);
+          this.sourceEmitterOutput.Write(" => ");
+          this.Traverse(expressionStatement.Expression);
           return;
         }
       }
@@ -166,6 +194,86 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(IAssignment assignment) {
+      var binOp = assignment.Source as IBinaryOperation;
+      if (binOp != null && assignment.Target.Instance == null) {
+        var leftBinding = binOp.LeftOperand as IBoundExpression;
+        if (leftBinding != null && leftBinding.Instance == null && leftBinding.Definition == assignment.Target.Definition) {
+          if (binOp is IAddition) {
+            if (ExpressionHelper.IsIntegralOne(binOp.RightOperand)) { //TODO: pointer incr can have size == target type size.
+              if (binOp.ResultIsUnmodifiedLeftOperand) {
+                this.Traverse(assignment.Target);
+                this.sourceEmitterOutput.Write("++");
+              } else {
+                this.sourceEmitterOutput.Write("++");
+                this.Traverse(assignment.Target);
+              }
+            } else {
+              this.Traverse(assignment.Target);
+              this.sourceEmitterOutput.Write(" += ");
+              this.Traverse(binOp.RightOperand);
+            }
+            return;
+          }
+          if (binOp is ISubtraction) {
+            if (ExpressionHelper.IsIntegralOne(binOp.RightOperand)) { //TODO: pointer incr can have size == target type size.
+              if (binOp.ResultIsUnmodifiedLeftOperand) {
+                this.Traverse(assignment.Target);
+                this.sourceEmitterOutput.Write("--");
+              } else {
+                this.sourceEmitterOutput.Write("--");
+                this.Traverse(assignment.Target);
+              }
+            } else {
+              this.Traverse(assignment.Target);
+              this.sourceEmitterOutput.Write(" -= ");
+              this.Traverse(binOp.RightOperand);
+            }
+            return;
+          }
+          this.Traverse(assignment.Target);
+          if (binOp is IBitwiseAnd) {
+            this.sourceEmitterOutput.Write(" &= ");
+            this.Traverse(binOp.RightOperand);
+            return;
+          }
+          if (binOp is IBitwiseOr) {
+            this.sourceEmitterOutput.Write(" |= ");
+            this.Traverse(binOp.RightOperand);
+            return;
+          }
+          if (binOp is IDivision) {
+            this.sourceEmitterOutput.Write(" /= ");
+            this.Traverse(binOp.RightOperand);
+            return;
+          }
+          if (binOp is IExclusiveOr) {
+            this.sourceEmitterOutput.Write(" ^= ");
+            this.Traverse(binOp.RightOperand);
+            return;
+          }
+          if (binOp is ILeftShift) {
+            this.sourceEmitterOutput.Write(" <<= ");
+            this.Traverse(binOp.RightOperand);
+            return;
+          }
+          if (binOp is IModulus) {
+            this.sourceEmitterOutput.Write(" %= ");
+            this.Traverse(binOp.RightOperand);
+            return;
+          }
+          if (binOp is IMultiplication) {
+            this.sourceEmitterOutput.Write(" *= ");
+            this.Traverse(binOp.RightOperand);
+            return;
+          }
+          if (binOp is IRightShift) {
+            this.sourceEmitterOutput.Write(" >>= ");
+            this.Traverse(binOp.RightOperand);
+            return;
+          }
+        }
+      }
+
       this.Traverse(assignment.Target);
       this.PrintToken(CSharpToken.Space);
       this.PrintToken(CSharpToken.Assign);
@@ -176,15 +284,20 @@ namespace CSharpSourceEmitter {
     public override void TraverseChildren(IBitwiseAnd bitwiseAnd) {
       this.sourceEmitterOutput.Write("(");
       this.Traverse(bitwiseAnd.LeftOperand);
-      this.sourceEmitterOutput.Write(" & ");
+      if (bitwiseAnd.LeftOperand is ITargetExpression)
+        this.sourceEmitterOutput.Write(" &= ");
+      else
+        this.sourceEmitterOutput.Write(" & ");
       this.Traverse(bitwiseAnd.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
 
     public override void TraverseChildren(IBitwiseOr bitwiseOr) {
       this.sourceEmitterOutput.Write("(");
-      this.Traverse(bitwiseOr.LeftOperand);
-      this.sourceEmitterOutput.Write(" | ");
+      if (bitwiseOr.LeftOperand is ITargetExpression)
+        this.sourceEmitterOutput.Write(" |= ");
+      else
+        this.sourceEmitterOutput.Write(" | ");
       this.Traverse(bitwiseOr.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
@@ -272,6 +385,20 @@ namespace CSharpSourceEmitter {
           this.Traverse(conditional.Condition);
           this.sourceEmitterOutput.Write(" && ");
           this.Traverse(conditional.ResultIfTrue);
+          this.sourceEmitterOutput.Write(")");
+          return;
+        }
+        if (ExpressionHelper.IsIntegralOne(conditional.ResultIfFalse)) {
+          this.sourceEmitterOutput.Write("(");
+          this.Traverse(conditional.Condition);
+          this.sourceEmitterOutput.Write(" && ");
+          var ln = conditional.ResultIfTrue as ILogicalNot;
+          if (ln != null)
+            this.Traverse(ln.Operand);
+          else {
+            this.sourceEmitterOutput.Write("!");
+            this.Traverse(conditional.ResultIfTrue);
+          }
           this.sourceEmitterOutput.Write(")");
           return;
         }
@@ -375,7 +502,10 @@ namespace CSharpSourceEmitter {
     public override void TraverseChildren(IDivision division) {
       this.sourceEmitterOutput.Write("(");
       this.Traverse(division.LeftOperand);
-      this.sourceEmitterOutput.Write(" / ");
+      if (division.LeftOperand is ITargetExpression)
+        this.sourceEmitterOutput.Write(" /= ");
+      else
+        this.sourceEmitterOutput.Write(" / ");
       this.Traverse(division.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
@@ -395,7 +525,10 @@ namespace CSharpSourceEmitter {
     public override void TraverseChildren(IExclusiveOr exclusiveOr) {
       this.sourceEmitterOutput.Write("(");
       this.Traverse(exclusiveOr.LeftOperand);
-      this.sourceEmitterOutput.Write(" ^ ");
+      if (exclusiveOr.LeftOperand is ITargetExpression)
+        this.sourceEmitterOutput.Write(" ^= ");
+      else
+        this.sourceEmitterOutput.Write(" ^ ");
       this.Traverse(exclusiveOr.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
@@ -489,7 +622,10 @@ namespace CSharpSourceEmitter {
     public override void TraverseChildren(ILeftShift leftShift) {
       this.sourceEmitterOutput.Write("(");
       this.Traverse(leftShift.LeftOperand);
-      this.sourceEmitterOutput.Write(" << ");
+      if (leftShift.LeftOperand is ITargetExpression)
+        this.sourceEmitterOutput.Write(" <<= ");
+      else
+        this.sourceEmitterOutput.Write(" << ");
       this.Traverse(leftShift.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
@@ -833,7 +969,10 @@ namespace CSharpSourceEmitter {
     public override void TraverseChildren(IModulus modulus) {
       this.sourceEmitterOutput.Write("(");
       this.Traverse(modulus.LeftOperand);
-      this.sourceEmitterOutput.Write(" % ");
+      if (modulus.LeftOperand is ITargetExpression)
+        this.sourceEmitterOutput.Write(" %= ");
+      else
+        this.sourceEmitterOutput.Write(" % ");
       this.Traverse(modulus.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
@@ -841,7 +980,10 @@ namespace CSharpSourceEmitter {
     public override void TraverseChildren(IMultiplication multiplication) {
       this.sourceEmitterOutput.Write("(");
       this.Traverse(multiplication.LeftOperand);
-      this.sourceEmitterOutput.Write(" * ");
+      if (multiplication.LeftOperand is ITargetExpression)
+        this.sourceEmitterOutput.Write(" *= ");
+      else
+        this.sourceEmitterOutput.Write(" * ");
       this.Traverse(multiplication.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
@@ -925,7 +1067,10 @@ namespace CSharpSourceEmitter {
     public override void TraverseChildren(IRightShift rightShift) {
       this.sourceEmitterOutput.Write("(");
       this.Traverse(rightShift.LeftOperand);
-      this.sourceEmitterOutput.Write(" >> ");
+      if (rightShift.LeftOperand is ITargetExpression)
+        this.sourceEmitterOutput.Write(" >>= ");
+      else
+        this.sourceEmitterOutput.Write(" >> ");
       this.Traverse(rightShift.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }
@@ -953,9 +1098,22 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(ISubtraction subtraction) {
+      if (subtraction.LeftOperand is ITargetExpression && ExpressionHelper.IsIntegralOne(subtraction.RightOperand)) {
+        if (subtraction.ResultIsUnmodifiedLeftOperand) {
+          this.Traverse(subtraction.LeftOperand);
+          this.sourceEmitterOutput.Write("--");
+        } else {
+          this.sourceEmitterOutput.Write("--");
+          this.Traverse(subtraction.LeftOperand);
+        }
+        return;
+      }
       this.sourceEmitterOutput.Write("(");
       this.Traverse(subtraction.LeftOperand);
-      this.sourceEmitterOutput.Write(" - ");
+      if (subtraction.LeftOperand is ITargetExpression)
+        this.sourceEmitterOutput.Write(" -= ");
+      else
+        this.sourceEmitterOutput.Write(" - ");
       this.Traverse(subtraction.RightOperand);
       this.sourceEmitterOutput.Write(")");
     }

@@ -500,6 +500,14 @@ namespace Microsoft.Cci {
       get { return null; }
     }
 
+    public bool GetterIsVirtual {
+      get { return false; }
+    }
+
+    public bool SetterIsVirtual {
+      get { return false; }
+    }
+
     public bool IsUnaligned {
       get { return false; }
     }

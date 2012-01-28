@@ -393,6 +393,13 @@ namespace Microsoft.Cci {
     /// The right operand.
     /// </summary>
     IExpression RightOperand { get; }
+
+    /// <summary>
+    /// If true, the left operand must be a target expression and the result of the binary operation is the
+    /// value of the target expression before it is assigned the value of the operation performed on
+    /// (right hand) values of the left and right operands.
+    /// </summary>
+    bool ResultIsUnmodifiedLeftOperand { get; }
   }
 
   [ContractClassFor(typeof(IBinaryOperation))]
@@ -407,6 +414,18 @@ namespace Microsoft.Cci {
     public IExpression RightOperand {
       get {
         Contract.Ensures(Contract.Result<IExpression>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    /// <summary>
+    /// If true, the left operand must be a target expression and the result of the binary operation is the
+    /// value of the target expression before it is assigned the value of the operation performed on
+    /// (right hand) values of the left and right operands.
+    /// </summary>
+    public bool ResultIsUnmodifiedLeftOperand {
+      get {
+        Contract.Ensures(!Contract.Result<bool>() || this.LeftOperand is ITargetExpression);
         throw new NotImplementedException();
       }
     }
@@ -1224,6 +1243,39 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
+  /// A source location to proffer from IOperation.Location and indicating the source extent (or extents) of an expression in the source language.
+  /// Such locations are ignored when producing a PDB file, since PDB files only record the source extents of statements.
+  /// </summary>
+  [ContractClass(typeof(IExpressionSourceLocationContract))]
+  public interface IExpressionSourceLocation : ILocation {
+
+    /// <summary>
+    /// Zero or more locations that correspond to an expression.
+    /// </summary>
+    IPrimarySourceLocation PrimarySourceLocation { get; }
+  }
+
+  #region IExpressionSourceLocation contract binding
+
+  [ContractClassFor(typeof(IExpressionSourceLocation))]
+  abstract class IExpressionSourceLocationContract : IExpressionSourceLocation {
+
+    public IPrimarySourceLocation PrimarySourceLocation {
+      get {
+        Contract.Ensures(Contract.Result<IPrimarySourceLocation>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IDocument Document {
+      get { throw new NotImplementedException(); }
+    }
+
+  }
+  #endregion
+
+
+  /// <summary>
   /// An expression that results in an instance of System.Type that represents the compile time type that has been paired with a runtime value via a typed reference.
   /// This corresponds to the __reftype operator in C#.
   /// </summary>
@@ -1519,6 +1571,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An expression that represents a (name, value) pair and that is typically used in method calls, custom attributes and object initializers.
   /// </summary>
+  [ContractClass(typeof(INamedArgumentContract))]
   public interface INamedArgument : IExpression {
     /// <summary>
     /// The name of the parameter or property or field that corresponds to the argument.
@@ -1537,7 +1590,91 @@ namespace Microsoft.Cci {
       get;
       //^ ensures result == null || result is IParameterDefinition || result is IPropertyDefinition || result is IFieldDefinition;
     }
+
+    /// <summary>
+    /// If true, the resolved definition is a property whose getter is virtual.
+    /// </summary>
+    bool GetterIsVirtual { get; }
+
+    /// <summary>
+    /// If true, the resolved definition is a property whose setter is virtual.
+    /// </summary>
+    bool SetterIsVirtual { get; }
   }
+
+  #region INamedArgument contract binding
+  [ContractClassFor(typeof(INamedArgument))]
+  abstract class INamedArgumentContract : INamedArgument {
+    #region INamedArgument Members
+
+    /// <summary>
+    /// The name of the parameter or property or field that corresponds to the argument.
+    /// </summary>
+    public IName ArgumentName {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    /// <summary>
+    /// The value of the argument.
+    /// </summary>
+    public IExpression ArgumentValue {
+      get {
+        Contract.Ensures(Contract.Result<IExpression>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    /// <summary>
+    /// Returns either null or the parameter or property or field that corresponds to this argument.
+    /// </summary>
+    public object ResolvedDefinition {
+      get {
+        Contract.Ensures(Contract.Result<object>() == null || Contract.Result<object>() is IParameterDefinition || 
+          Contract.Result<object>() is IPropertyDefinition || Contract.Result<object>() is IFieldDefinition);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    /// <summary>
+    /// If true, the resolved definition is a property whose getter is virtual.
+    /// </summary>
+     public bool GetterIsVirtual {
+      get { throw new NotImplementedException(); }
+    }
+
+     /// <summary>
+     /// If true, the resolved definition is a property whose setter is virtual.
+     /// </summary>
+    public bool SetterIsVirtual {
+      get { throw new NotImplementedException(); }
+    }
+
+   #endregion
+
+    #region IExpression Members
+
+    public void Dispatch(ICodeVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public ITypeReference Type {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
 
   /// <summary>
   /// An expression that results in false if both operands represent the same value or object.
@@ -1825,6 +1962,16 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// If true, the resolved definition is a property whose getter is virtual.
+    /// </summary>
+    bool GetterIsVirtual { get; }
+
+    /// <summary>
+    /// If true, the resolved definition is a property whose setter is virtual.
+    /// </summary>
+    bool SetterIsVirtual { get; }
+
+    /// <summary>
     /// The instance to be used if this.Definition is an instance field/property or array indexer.
     /// </summary>
     IExpression/*?*/ Instance { get; }
@@ -1863,6 +2010,20 @@ namespace Microsoft.Cci {
         Contract.Ensures(!(Contract.Result<object>() is IPropertyDefinition) || ((IPropertyDefinition)Contract.Result<object>()).Setter != null);
         throw new NotImplementedException(); 
       }
+    }
+
+    /// <summary>
+    /// If true, the resolved definition is a property whose getter is virtual.
+    /// </summary>
+    public bool GetterIsVirtual {
+      get { throw new NotImplementedException(); }
+    }
+
+    /// <summary>
+    /// If true, the resolved definition is a property whose setter is virtual.
+    /// </summary>
+    public bool SetterIsVirtual {
+      get { throw new NotImplementedException(); }
     }
 
     public IExpression Instance {

@@ -49,7 +49,7 @@ namespace Microsoft.Cci {
     /// <param name="method">The method that contains the block of statements that will be converted.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
     /// <param name="iteratorLocalCount">A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods. May be null.</param>
-    public CodeModelToILConverter(IMetadataHost host, IMethodDefinition method, ISourceLocationProvider/*?*/ sourceLocationProvider, IDictionary<IBlockStatement, uint> iteratorLocalCount) {
+    public CodeModelToILConverter(IMetadataHost host, IMethodDefinition method, ISourceLocationProvider/*?*/ sourceLocationProvider, IDictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount) {
       Contract.Requires(host != null);
       Contract.Requires(method != null);
       this.generator = new ILGenerator(host, method);
@@ -69,6 +69,13 @@ namespace Microsoft.Cci {
     /// A label for the instruction to where a continue statement should currently branch to.
     /// </summary>
     ILGeneratorLabel currentContinueTarget = new ILGeneratorLabel();
+
+    /// <summary>
+    /// True when the binary expression currently being processed is the top level expression of an ExpressionStatement and it has
+    /// a target expression as its left operand (i.e. it is an assignment statement of the form tgt op= src).
+    /// Be sure to clear this flag before any sub expresions are processed.
+    /// </summary>
+    bool currentExpressionIsStatement;
 
     /// <summary>
     /// A label for the first instruction that comes after the current TryCatchFinally statement.
@@ -142,6 +149,11 @@ namespace Microsoft.Cci {
     protected ISourceLocationProvider/*?*/ sourceLocationProvider;
 
     /// <summary>
+    /// If true, the generated IL keeps track of the source locations of expressions, not just statements.
+    /// </summary>
+    private bool trackExpressionSourceLocations;
+
+    /// <summary>
     /// A list of all the local variable definitions that were encountered during the translation to IL.
     /// </summary>
     List<ILocalDefinition> localVariables = new List<ILocalDefinition>();
@@ -150,6 +162,23 @@ namespace Microsoft.Cci {
     /// A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods. May be null.
     /// </summary>
     IDictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount;
+
+    /// <summary>
+    /// Report the current expression to the IL generator. The source locations of the current expression will be wrapped up
+    /// as an IExpressionSourceLocation object and stored in the Location property of the next IL instruction that is created by the IL generator.
+    /// </summary>
+    private void EmitSourceLocation(IExpression expression) {
+      Contract.Requires(expression != null);
+      if (this.sourceLocationProvider == null || !this.trackExpressionSourceLocations) return;
+      foreach (var location in expression.Locations) {
+        Contract.Assume(location != null);
+        foreach (IPrimarySourceLocation sloc in this.sourceLocationProvider.GetPrimarySourceLocationsFor(location)) {
+          Contract.Assume(sloc != null);
+          this.generator.MarkExpressionLocation(new ExpressionSourceLocation(sloc)); //hide the location from the PDB writer.
+          return;
+        }
+      }
+    }
 
     /// <summary>
     /// Translates the parameter list position of the given parameter to an IL parameter index. In other words,
@@ -301,6 +330,14 @@ namespace Microsoft.Cci {
     }
     ushort maximumStackSizeNeeded;
 
+    /// <summary>
+    /// If true, code generation emphasizes small code size over patterns that make debugging better.
+    /// </summary>
+    public bool MinimizeCodeSize {
+      get { return this.minizeCodeSize; }
+      set { this.minizeCodeSize = value; }
+    }
+
     ushort StackSize {
       get { return this._stackSize; }
       set {
@@ -311,11 +348,33 @@ namespace Microsoft.Cci {
     ushort _stackSize;
 
     /// <summary>
+    /// If true, the generated IL keeps track of the source locations of expressions, not just statements.
+    /// </summary>
+    public bool TrackExpressionSourceLocations {
+      get { return this.trackExpressionSourceLocations; }
+      set { this.trackExpressionSourceLocations = value; }
+    }
+
+    /// <summary>
     /// Generates IL for the specified addition.
     /// </summary>
     /// <param name="addition">The addition.</param>
     public override void TraverseChildren(IAddition addition) {
-      this.Traverse(addition.LeftOperand);
+      var targetExpression = addition.LeftOperand as ITargetExpression;
+      if (targetExpression != null) {
+        bool statement = this.currentExpressionIsStatement;
+        this.currentExpressionIsStatement = false;
+        this.VisitAssignment(targetExpression, addition, (IExpression e) => this.TraverseAdditionRightOperandAndDoOperation(e), 
+          treatAsStatement: statement, pushTargetRValue: true, resultIsInitialTargetRValue: addition.ResultIsUnmodifiedLeftOperand);
+      } else {
+        this.Traverse(addition.LeftOperand);
+        this.TraverseAdditionRightOperandAndDoOperation(addition);
+      }
+    }
+
+    private void TraverseAdditionRightOperandAndDoOperation(IExpression expression) {
+      Contract.Assume(expression is IAddition);
+      var addition = (IAddition)expression;
       this.Traverse(addition.RightOperand);
       OperationCode operationCode = OperationCode.Add;
       if (addition.CheckOverflow) {
@@ -332,6 +391,7 @@ namespace Microsoft.Cci {
             operationCode = OperationCode.Add_Ovf_Un;
         }
       }
+      this.EmitSourceLocation(addition);
       this.generator.Emit(operationCode);
       this.StackSize--;
     }
@@ -354,8 +414,14 @@ namespace Microsoft.Cci {
         this.generator.Emit(OperationCode.Unaligned_, addressDereference.Alignment);
       if (addressDereference.IsVolatile)
         this.generator.Emit(OperationCode.Volatile_);
+      this.LoadIndirect(addressDereference.Type);
+    }
+
+    private void LoadIndirect(ITypeReference targetType) {
+      Contract.Requires(targetType != null);
+
       OperationCode opcode;
-      switch (addressDereference.Type.TypeCode) {
+      switch (targetType.TypeCode) {
         case PrimitiveTypeCode.Boolean: opcode = OperationCode.Ldind_U1; break;
         case PrimitiveTypeCode.Char: opcode = OperationCode.Ldind_U2; break;
         case PrimitiveTypeCode.Float32: opcode = OperationCode.Ldind_R4; break;
@@ -372,18 +438,18 @@ namespace Microsoft.Cci {
         case PrimitiveTypeCode.UInt8: opcode = OperationCode.Ldind_U1; break;
         case PrimitiveTypeCode.UIntPtr: opcode = OperationCode.Ldind_I; break;
         default:
-          var ptr = addressDereference.Type as IPointerTypeReference;
+          var ptr = targetType as IPointerTypeReference;
           if (ptr != null) {
             opcode = OperationCode.Ldind_I; break;
           } else {
-            var mgdPtr = addressDereference.Type as IManagedPointerTypeReference;
+            var mgdPtr = targetType as IManagedPointerTypeReference;
             if (mgdPtr != null) {
               opcode = OperationCode.Ldind_I; break;
             }
           }
-          //If addressDereference.Type is a reference type, then Ldobj is equivalent to Lind_Ref, but the instruction is larger, so try to avoid it.
-          if (addressDereference.Type.IsValueType || addressDereference.Type is IGenericParameterReference) {
-            this.generator.Emit(OperationCode.Ldobj, addressDereference.Type);
+          //If type is a reference type, then Ldobj is equivalent to Lind_Ref, but the instruction is larger, so try to avoid it.
+          if (targetType.IsValueType || targetType is IGenericParameterReference) {
+            this.generator.Emit(OperationCode.Ldobj, targetType);
             return;
           }
           opcode = OperationCode.Ldind_Ref; break;
@@ -417,6 +483,7 @@ namespace Microsoft.Cci {
     public override void TraverseChildren(IArrayIndexer arrayIndexer) {
       this.Traverse(arrayIndexer.IndexedObject);
       this.Traverse(arrayIndexer.Indices);
+      this.EmitSourceLocation(arrayIndexer);
       IArrayTypeReference arrayType = (IArrayTypeReference)arrayIndexer.IndexedObject.Type;
       if (arrayType.IsVector)
         this.LoadVectorElement(arrayType.ElementType);
@@ -478,38 +545,74 @@ namespace Microsoft.Cci {
     /// <param name="assignment">The assignment.</param>
     /// <param name="treatAsStatement">if set to <c>true</c> [treat as statement].</param>
     public virtual void VisitAssignment(IAssignment assignment, bool treatAsStatement) {
-      object container = assignment.Target.Definition;
+      var target = assignment.Target;
+      this.VisitAssignment(assignment.Target, assignment.Source, (IExpression e) => this.Traverse(e), treatAsStatement, pushTargetRValue: false, resultIsInitialTargetRValue: false);
+    }
+
+    internal delegate void SourceTraverser(IExpression source);
+
+    private void VisitAssignment(ITargetExpression target, IExpression source, SourceTraverser sourceTraverser, 
+      bool treatAsStatement, bool pushTargetRValue, bool resultIsInitialTargetRValue) {
+      Contract.Requires(target != null);
+      Contract.Requires(source != null);
+      Contract.Requires(sourceTraverser != null);
+      Contract.Requires(!resultIsInitialTargetRValue || pushTargetRValue);
+      Contract.Requires(!pushTargetRValue || source is IBinaryOperation);
+
+      object container = target.Definition;
       ILocalDefinition/*?*/ local = container as ILocalDefinition;
       if (local != null) {
-        if (assignment.Source is IDefaultValue && !local.Type.ResolvedType.IsReferenceType) {
+        if (source is IDefaultValue && !local.Type.ResolvedType.IsReferenceType) {
           this.LoadAddressOf(local, null);
           this.generator.Emit(OperationCode.Initobj, local.Type);
+          if (!treatAsStatement) this.LoadLocal(local);
         } else {
-          this.Traverse(assignment.Source);
+          if (pushTargetRValue) {
+            this.LoadLocal(local);
+            if (!treatAsStatement && resultIsInitialTargetRValue) {
+              this.generator.Emit(OperationCode.Dup);
+              this.StackSize++;
+            }
+          }
+          sourceTraverser(source);
+          if (!treatAsStatement && !resultIsInitialTargetRValue) {
+            this.generator.Emit(OperationCode.Dup);
+            this.StackSize++;
+          }
           this.VisitAssignmentTo(local);
         }
-        if (!treatAsStatement) this.LoadLocal(local);
         return;
       }
       IParameterDefinition/*?*/ parameter = container as IParameterDefinition;
       if (parameter != null) {
-        if (assignment.Source is IDefaultValue && !parameter.Type.ResolvedType.IsReferenceType) {
+        if (source is IDefaultValue && !parameter.Type.ResolvedType.IsReferenceType) {
           this.LoadAddressOf(parameter, null);
           this.generator.Emit(OperationCode.Initobj, parameter.Type);
+          if (!treatAsStatement) this.LoadParameter(parameter);
         } else {
-          this.Traverse(assignment.Source);
+          if (pushTargetRValue) {
+            this.LoadParameter(parameter);
+            if (!treatAsStatement && resultIsInitialTargetRValue) {
+              this.generator.Emit(OperationCode.Dup);
+              this.StackSize++;
+            }
+          }
+          sourceTraverser(source);
+          if (!treatAsStatement && !resultIsInitialTargetRValue) {
+            this.generator.Emit(OperationCode.Dup);
+            this.StackSize++;
+          }
           ushort parIndex = GetParameterIndex(parameter);
           if (parIndex <= byte.MaxValue) this.generator.Emit(OperationCode.Starg_S, parameter);
           else this.generator.Emit(OperationCode.Starg, parameter);
           this.StackSize--;
         }
-        if (!treatAsStatement) this.LoadParameter(parameter);
         return;
       }
       IFieldReference/*?*/ field = container as IFieldReference;
       if (field != null) {
-        if (assignment.Source is IDefaultValue && !field.Type.ResolvedType.IsReferenceType) {
-          this.LoadAddressOf(field, assignment.Target.Instance);
+        if (source is IDefaultValue && !field.Type.ResolvedType.IsReferenceType) {
+          this.LoadAddressOf(field, target.Instance);
           if (!treatAsStatement) {
             this.generator.Emit(OperationCode.Dup);
             this.StackSize++;
@@ -520,34 +623,47 @@ namespace Microsoft.Cci {
           else
             this.StackSize--;
         } else {
-          if (assignment.Target.Instance != null) {
-            this.Traverse(assignment.Target.Instance);
-            if (!treatAsStatement) {
+          ILocalDefinition/*?*/ temp = null;
+          if (target.Instance != null) {
+            this.Traverse(target.Instance);
+            if (pushTargetRValue) {
               this.generator.Emit(OperationCode.Dup);
+              this.generator.Emit(OperationCode.Ldfld, field);
               this.StackSize++;
+              if (!treatAsStatement && resultIsInitialTargetRValue) {
+                this.generator.Emit(OperationCode.Dup);
+                this.StackSize++;
+                temp = new TemporaryVariable(source.Type, this.method);
+                this.VisitAssignmentTo(temp);
+              }
             }
           }
-          this.Traverse(assignment.Source);
-          if (assignment.Target.IsUnaligned)
-            this.generator.Emit(OperationCode.Unaligned_, assignment.Target.Alignment);
-          if (assignment.Target.IsVolatile)
+          sourceTraverser(source);
+          if (!treatAsStatement && !resultIsInitialTargetRValue) {
+            this.generator.Emit(OperationCode.Dup);
+            this.StackSize++;
+            temp = new TemporaryVariable(source.Type, this.method);
+            this.VisitAssignmentTo(temp);
+          }
+          if (target.IsUnaligned)
+            this.generator.Emit(OperationCode.Unaligned_, target.Alignment);
+          if (target.IsVolatile)
             this.generator.Emit(OperationCode.Volatile_);
-          if (assignment.Target.Instance == null) {
+          if (target.Instance == null) {
             this.generator.Emit(OperationCode.Stsfld, field);
             this.StackSize--;
           } else {
             this.generator.Emit(OperationCode.Stfld, field);
             this.StackSize-=2;
           }
-          if (!treatAsStatement)
-            this.LoadField(assignment.Target.IsUnaligned ? assignment.Target.Alignment : (byte)0, assignment.Target.IsVolatile, null, field, assignment.Target.Instance == null);
+          if (temp != null) this.LoadLocal(temp);
         }
         return;
       }
       IArrayIndexer/*?*/ arrayIndexer = container as IArrayIndexer;
       if (arrayIndexer != null) {
-        if (assignment.Source is IDefaultValue && !arrayIndexer.Type.ResolvedType.IsReferenceType) {
-          this.LoadAddressOf(arrayIndexer, assignment.Target.Instance);
+        if (source is IDefaultValue && !arrayIndexer.Type.ResolvedType.IsReferenceType) {
+          this.LoadAddressOf(arrayIndexer, target.Instance);
           if (!treatAsStatement) {
             this.generator.Emit(OperationCode.Dup);
             this.StackSize++;
@@ -558,20 +674,39 @@ namespace Microsoft.Cci {
           else
             this.StackSize--;
         } else {
-          this.Traverse(assignment.Target.Instance);
-          this.Traverse(arrayIndexer.Indices);
-          this.Traverse(assignment.Source);
           ILocalDefinition/*?*/ temp = null;
-          if (!treatAsStatement) {
-            temp = new TemporaryVariable(assignment.Source.Type, this.method);
-            this.VisitAssignmentTo(temp);
-            this.LoadLocal(temp);
+          IArrayTypeReference arrayType = (IArrayTypeReference)target.Instance.Type;
+          this.Traverse(target.Instance);
+          this.Traverse(arrayIndexer.Indices);
+          if (pushTargetRValue) {
+            if (arrayType.IsVector)
+              this.generator.Emit(OperationCode.Ldelema);
+            else
+              this.generator.Emit(OperationCode.Array_Addr, arrayType);
+            this.generator.Emit(OperationCode.Dup);
+            this.LoadIndirect(arrayType.ElementType);
+            if (!treatAsStatement && resultIsInitialTargetRValue) {
+              this.generator.Emit(OperationCode.Dup);
+              this.StackSize++;
+              temp = new TemporaryVariable(source.Type, this.method);
+              this.VisitAssignmentTo(temp);
+            }
           }
-          IArrayTypeReference arrayType = (IArrayTypeReference)assignment.Target.Instance.Type;
-          if (arrayType.IsVector)
-            this.StoreVectorElement(arrayType.ElementType);
-          else
-            this.generator.Emit(OperationCode.Array_Set, arrayType);
+          sourceTraverser(source);
+          if (!treatAsStatement && !resultIsInitialTargetRValue) {
+            this.generator.Emit(OperationCode.Dup);
+            this.StackSize++;
+            temp = new TemporaryVariable(source.Type, this.method);
+            this.VisitAssignmentTo(temp);
+          }
+          if (pushTargetRValue) {
+            this.StoreIndirect(arrayType.ElementType);
+          } else {
+            if (arrayType.IsVector)
+              this.StoreVectorElement(arrayType.ElementType);
+            else
+              this.generator.Emit(OperationCode.Array_Set, arrayType);
+          }
           this.StackSize-=(ushort)(IteratorHelper.EnumerableCount(arrayIndexer.Indices)+2);
           if (temp != null) this.LoadLocal(temp);
         }
@@ -580,7 +715,7 @@ namespace Microsoft.Cci {
       IAddressDereference/*?*/ addressDereference = container as IAddressDereference;
       if (addressDereference != null) {
         this.Traverse(addressDereference.Address);
-        if (assignment.Source is IDefaultValue && !addressDereference.Type.ResolvedType.IsReferenceType) {
+        if (source is IDefaultValue && !addressDereference.Type.ResolvedType.IsReferenceType) {
           if (!treatAsStatement) {
             this.generator.Emit(OperationCode.Dup);
             this.StackSize++;
@@ -590,27 +725,78 @@ namespace Microsoft.Cci {
             this.generator.Emit(OperationCode.Ldobj, addressDereference.Type);
           else
             this.StackSize--;
-        } else if (assignment.Source is IAddressDereference) {
+        } else if (source is IAddressDereference) {
           if (!treatAsStatement) {
             this.generator.Emit(OperationCode.Dup);
             this.StackSize++;
           }
-          this.Traverse(((IAddressDereference)assignment.Source).Address);
+          this.Traverse(((IAddressDereference)source).Address);
           this.generator.Emit(OperationCode.Cpobj, addressDereference.Type);
           this.StackSize-=2;
           if (!treatAsStatement)
             this.generator.Emit(OperationCode.Ldobj, addressDereference.Type);
         } else {
-          this.Traverse(assignment.Source);
           ILocalDefinition/*?*/ temp = null;
-          if (!treatAsStatement) {
-            temp = new TemporaryVariable(assignment.Source.Type, this.method);
+          if (pushTargetRValue) {
+            this.generator.Emit(OperationCode.Dup);
+            if (addressDereference.IsUnaligned)
+              this.generator.Emit(OperationCode.Unaligned_, addressDereference.Alignment);
+            if (addressDereference.IsVolatile)
+              this.generator.Emit(OperationCode.Volatile_);
+            this.LoadIndirect(addressDereference.Type);
+            if (!treatAsStatement && resultIsInitialTargetRValue) {
+              this.generator.Emit(OperationCode.Dup);
+              this.StackSize++;
+              temp = new TemporaryVariable(source.Type, this.method);
+              this.VisitAssignmentTo(temp);
+            }
+          }
+          sourceTraverser(source);
+          if (!treatAsStatement && !resultIsInitialTargetRValue) {
+            this.generator.Emit(OperationCode.Dup);
+            this.StackSize++;
+            temp = new TemporaryVariable(source.Type, this.method);
             this.VisitAssignmentTo(temp);
-            this.LoadLocal(temp);
           }
           this.VisitAssignmentTo(addressDereference);
           if (temp != null) this.LoadLocal(temp);
         }
+        return;
+      }
+      IPropertyDefinition/*?*/ propertyDefinition = container as IPropertyDefinition;
+      if (propertyDefinition != null) {
+        Contract.Assume(propertyDefinition.Getter != null && propertyDefinition.Setter != null);
+        if (!propertyDefinition.IsStatic) {
+          this.Traverse(target.Instance);
+        }
+        ILocalDefinition temp = null;
+        if (pushTargetRValue) {
+          if (!propertyDefinition.IsStatic) {
+            this.generator.Emit(OperationCode.Dup);
+            this.generator.Emit(target.GetterIsVirtual ? OperationCode.Callvirt : OperationCode.Call, propertyDefinition.Getter);
+          } else {
+            this.generator.Emit(OperationCode.Call, propertyDefinition.Getter);
+          }
+          if (!treatAsStatement && resultIsInitialTargetRValue) {
+            this.generator.Emit(OperationCode.Dup);
+            this.StackSize++;
+            temp = new TemporaryVariable(source.Type, this.method);
+            this.VisitAssignmentTo(temp);
+          }
+        }
+        sourceTraverser(source);
+        if (!treatAsStatement && !resultIsInitialTargetRValue) {
+          this.generator.Emit(OperationCode.Dup);
+          this.StackSize++;
+          temp = new TemporaryVariable(propertyDefinition.Type, this.method);
+          this.VisitAssignmentTo(temp);
+        }
+        if (!propertyDefinition.IsStatic) {
+          this.generator.Emit(target.SetterIsVirtual ? OperationCode.Callvirt : OperationCode.Call, propertyDefinition.Setter);
+        } else {
+          this.generator.Emit(OperationCode.Call, propertyDefinition.Setter);
+        }
+        if (temp != null) this.LoadLocal(temp);
         return;
       }
       Contract.Assume(false);
@@ -649,8 +835,12 @@ namespace Microsoft.Cci {
         this.generator.Emit(OperationCode.Unaligned_, addressDereference.Alignment);
       if (addressDereference.IsVolatile)
         this.generator.Emit(OperationCode.Volatile_);
+      this.StoreIndirect(addressDereference.Type);
+    }
+
+    private void StoreIndirect(ITypeReference targetType) {
       OperationCode opcode;
-      switch (addressDereference.Type.TypeCode) {
+      switch (targetType.TypeCode) {
         case PrimitiveTypeCode.Boolean: opcode = OperationCode.Stind_I1; break;
         case PrimitiveTypeCode.Char: opcode = OperationCode.Stind_I2; break;
         case PrimitiveTypeCode.Float32: opcode = OperationCode.Stind_R4; break;
@@ -667,8 +857,8 @@ namespace Microsoft.Cci {
         case PrimitiveTypeCode.UInt8: opcode = OperationCode.Stind_I1; break;
         case PrimitiveTypeCode.UIntPtr: opcode = OperationCode.Stind_I; break;
         default:
-          if (addressDereference.Type.IsValueType || addressDereference.Type is IGenericParameterReference) {
-            this.generator.Emit(OperationCode.Stobj, addressDereference.Type);
+          if (targetType.IsValueType || targetType is IGenericParameterReference) {
+            this.generator.Emit(OperationCode.Stobj, targetType);
             this.StackSize-=2;
             return;
           }
@@ -702,8 +892,23 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="bitwiseAnd">The bitwise and.</param>
     public override void TraverseChildren(IBitwiseAnd bitwiseAnd) {
-      this.Traverse(bitwiseAnd.LeftOperand);
+      var targetExpression = bitwiseAnd.LeftOperand as ITargetExpression;
+      if (targetExpression != null) {
+        bool statement = this.currentExpressionIsStatement;
+        this.currentExpressionIsStatement = false;
+        this.VisitAssignment(targetExpression, bitwiseAnd, (IExpression e) => this.TraverseBitwiseAndRightOperandAndDoOperation(e),
+          treatAsStatement: statement, pushTargetRValue: true, resultIsInitialTargetRValue: bitwiseAnd.ResultIsUnmodifiedLeftOperand);
+      } else {
+        this.Traverse(bitwiseAnd.LeftOperand);
+        this.TraverseBitwiseAndRightOperandAndDoOperation(bitwiseAnd);
+      }
+    }
+
+    private void TraverseBitwiseAndRightOperandAndDoOperation(IExpression expression) {
+      Contract.Assume(expression is IBitwiseAnd);
+      var bitwiseAnd = (IBitwiseAnd)expression;
       this.Traverse(bitwiseAnd.RightOperand);
+      this.EmitSourceLocation(bitwiseAnd);
       this.generator.Emit(OperationCode.And);
       this.StackSize--;
     }
@@ -713,8 +918,23 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="bitwiseOr">The bitwise or.</param>
     public override void TraverseChildren(IBitwiseOr bitwiseOr) {
-      this.Traverse(bitwiseOr.LeftOperand);
+      var targetExpression = bitwiseOr.LeftOperand as ITargetExpression;
+      if (targetExpression != null) {
+        bool statement = this.currentExpressionIsStatement;
+        this.currentExpressionIsStatement = false;
+        this.VisitAssignment(targetExpression, bitwiseOr, (IExpression e) => this.TraverseBitwiseOrRightOperandAndDoOperation(e),
+          treatAsStatement: statement, pushTargetRValue: true, resultIsInitialTargetRValue: bitwiseOr.ResultIsUnmodifiedLeftOperand);
+      } else {
+        this.Traverse(bitwiseOr.LeftOperand);
+        this.TraverseBitwiseOrRightOperandAndDoOperation(bitwiseOr);
+      }
+    }
+
+    private void TraverseBitwiseOrRightOperandAndDoOperation(IExpression expression) {
+      Contract.Assume(expression is IBitwiseOr);
+      var bitwiseOr = (IBitwiseOr)expression;
       this.Traverse(bitwiseOr.RightOperand);
+      this.EmitSourceLocation(bitwiseOr);
       this.generator.Emit(OperationCode.Or);
       this.StackSize--;
     }
@@ -789,6 +1009,7 @@ namespace Microsoft.Cci {
     /// <param name="castIfPossible">The cast if possible.</param>
     public override void TraverseChildren(ICastIfPossible castIfPossible) {
       this.Traverse(castIfPossible.ValueToCast);
+      this.EmitSourceLocation(castIfPossible);
       this.generator.Emit(OperationCode.Isinst, castIfPossible.TargetType);
     }
 
@@ -825,6 +1046,7 @@ namespace Microsoft.Cci {
     /// <param name="checkIfInstance">The check if instance.</param>
     public override void TraverseChildren(ICheckIfInstance checkIfInstance) {
       this.Traverse(checkIfInstance.Operand);
+      this.EmitSourceLocation(checkIfInstance);
       this.generator.Emit(OperationCode.Isinst, checkIfInstance.TypeToCheck);
       this.generator.Emit(OperationCode.Ldnull);
       this.StackSize++;
@@ -991,6 +1213,7 @@ namespace Microsoft.Cci {
         create = OperationCode.Newarr;
         arrayType = Vector.GetVector(createArray.ElementType, this.host.InternFactory);
       }
+      this.EmitSourceLocation(createArray);
       this.generator.Emit(create, arrayType);
       this.StackSize -= (ushort)(createArray.Rank+boundsEmitted - 1);
       if (createArray.Rank == 1) {
@@ -1071,6 +1294,7 @@ namespace Microsoft.Cci {
     /// <param name="createObjectInstance">The create object instance.</param>
     public override void TraverseChildren(ICreateObjectInstance createObjectInstance) {
       this.Traverse(createObjectInstance.Arguments);
+      this.EmitSourceLocation(createObjectInstance);
       this.generator.Emit(OperationCode.Newobj, createObjectInstance.MethodToCall);
       this.StackSize -= (ushort)IteratorHelper.EnumerableCount(createObjectInstance.Arguments);
       this.StackSize++;
@@ -1102,8 +1326,23 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="division">The division.</param>
     public override void TraverseChildren(IDivision division) {
-      this.Traverse(division.LeftOperand);
+      var targetExpression = division.LeftOperand as ITargetExpression;
+      if (targetExpression != null) {
+        bool statement = this.currentExpressionIsStatement;
+        this.currentExpressionIsStatement = false;
+        this.VisitAssignment(targetExpression, division, (IExpression e) => this.TraverseDivisionRightOperandAndDoOperation(e),
+          treatAsStatement: statement, pushTargetRValue: true, resultIsInitialTargetRValue: division.ResultIsUnmodifiedLeftOperand);
+      } else {
+        this.Traverse(division.LeftOperand);
+        this.TraverseDivisionRightOperandAndDoOperation(division);
+      }
+    }
+
+    private void TraverseDivisionRightOperandAndDoOperation(IExpression expression) {
+      Contract.Assume(expression is IDivision);
+      var division = (IDivision)expression;
       this.Traverse(division.RightOperand);
+      this.EmitSourceLocation(division);
       if (division.TreatOperandsAsUnsignedIntegers)
         this.generator.Emit(OperationCode.Div_Un);
       else
@@ -1164,6 +1403,7 @@ namespace Microsoft.Cci {
     public override void TraverseChildren(IEquality equality) {
       this.Traverse(equality.LeftOperand);
       this.Traverse(equality.RightOperand);
+      this.EmitSourceLocation(equality);
       this.generator.Emit(OperationCode.Ceq);
       this.StackSize--;
     }
@@ -1173,8 +1413,23 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="exclusiveOr">The exclusive or.</param>
     public override void TraverseChildren(IExclusiveOr exclusiveOr) {
-      this.Traverse(exclusiveOr.LeftOperand);
+      var targetExpression = exclusiveOr.LeftOperand as ITargetExpression;
+      if (targetExpression != null) {
+        bool statement = this.currentExpressionIsStatement;
+        this.currentExpressionIsStatement = false;
+        this.VisitAssignment(targetExpression, exclusiveOr, (IExpression e) => this.TraverseExclusiveOrRightOperandAndDoOperation(e),
+          treatAsStatement: statement, pushTargetRValue: true, resultIsInitialTargetRValue: exclusiveOr.ResultIsUnmodifiedLeftOperand);
+      } else {
+        this.Traverse(exclusiveOr.LeftOperand);
+        this.TraverseExclusiveOrRightOperandAndDoOperation(exclusiveOr);
+      }
+    }
+
+    private void TraverseExclusiveOrRightOperandAndDoOperation(IExpression expression) {
+      Contract.Assume(expression is IExclusiveOr);
+      var exclusiveOr = (IExclusiveOr)expression;
       this.Traverse(exclusiveOr.RightOperand);
+      this.EmitSourceLocation(exclusiveOr);
       this.generator.Emit(OperationCode.Xor);
       this.StackSize--;
     }
@@ -1189,10 +1444,16 @@ namespace Microsoft.Cci {
       if (assigment != null) {
         this.VisitAssignment(assigment, true);
       } else {
-        this.Traverse(expressionStatement.Expression);
-        if (expressionStatement.Expression.Type.TypeCode != PrimitiveTypeCode.Void) {
-          this.generator.Emit(OperationCode.Pop);
-          this.StackSize--;
+        IBinaryOperation binOp = expressionStatement.Expression as IBinaryOperation;
+        if (binOp != null && binOp.LeftOperand is ITargetExpression) {
+          this.currentExpressionIsStatement = true;
+          this.Traverse(expressionStatement.Expression);
+        } else {
+          this.Traverse(expressionStatement.Expression);
+          if (expressionStatement.Expression.Type.TypeCode != PrimitiveTypeCode.Void) {
+            this.generator.Emit(OperationCode.Pop);
+            this.StackSize--;
+          }
         }
       }
       this.lastStatementWasUnconditionalTransfer = false;
@@ -1367,6 +1628,7 @@ namespace Microsoft.Cci {
     public override void TraverseChildren(IGreaterThan greaterThan) {
       this.Traverse(greaterThan.LeftOperand);
       this.Traverse(greaterThan.RightOperand);
+      this.EmitSourceLocation(greaterThan);
       if (greaterThan.IsUnsignedOrUnordered)
         this.generator.Emit(OperationCode.Cgt_Un);
       else
@@ -1381,6 +1643,7 @@ namespace Microsoft.Cci {
     public override void TraverseChildren(IGreaterThanOrEqual greaterThanOrEqual) {
       this.Traverse(greaterThanOrEqual.LeftOperand);
       this.Traverse(greaterThanOrEqual.RightOperand);
+      this.EmitSourceLocation(greaterThanOrEqual);
       if (greaterThanOrEqual.IsUnsignedOrUnordered && !TypeHelper.IsPrimitiveInteger(greaterThanOrEqual.LeftOperand.Type))
         this.generator.Emit(OperationCode.Clt_Un);
       else
@@ -1409,8 +1672,23 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="leftShift">The left shift.</param>
     public override void TraverseChildren(ILeftShift leftShift) {
-      this.Traverse(leftShift.LeftOperand);
+      var targetExpression = leftShift.LeftOperand as ITargetExpression;
+      if (targetExpression != null) {
+        bool statement = this.currentExpressionIsStatement;
+        this.currentExpressionIsStatement = false;
+        this.VisitAssignment(targetExpression, leftShift, (IExpression e) => this.TraverseLeftShiftRightOperandAndDoOperation(e),
+          treatAsStatement: statement, pushTargetRValue: true, resultIsInitialTargetRValue: leftShift.ResultIsUnmodifiedLeftOperand);
+      } else {
+        this.Traverse(leftShift.LeftOperand);
+        this.TraverseLeftShiftRightOperandAndDoOperation(leftShift);
+      }
+    }
+
+    private void TraverseLeftShiftRightOperandAndDoOperation(IExpression expression) {
+      Contract.Assume(expression is ILeftShift);
+      var leftShift = (ILeftShift)expression;
       this.Traverse(leftShift.RightOperand);
+      this.EmitSourceLocation(leftShift);
       this.generator.Emit(OperationCode.Shl);
       this.StackSize--;
     }
@@ -1422,6 +1700,7 @@ namespace Microsoft.Cci {
     public override void TraverseChildren(ILessThan lessThan) {
       this.Traverse(lessThan.LeftOperand);
       this.Traverse(lessThan.RightOperand);
+      this.EmitSourceLocation(lessThan);
       if (lessThan.IsUnsignedOrUnordered)
         this.generator.Emit(OperationCode.Clt_Un);
       else
@@ -1580,6 +1859,7 @@ namespace Microsoft.Cci {
       if (logicalNot.Operand.Type.IsValueType) {
         //The type should be a primitive integer, a boolean or an enum.
         this.Traverse(logicalNot.Operand);
+        this.EmitSourceLocation(logicalNot);
         var opsize = TypeHelper.SizeOfType(logicalNot.Operand.Type);
         if (opsize == 1 || opsize == 2 || opsize == 4) {
           this.generator.Emit(OperationCode.Ldc_I4_0);
@@ -1656,6 +1936,7 @@ namespace Microsoft.Cci {
         call = OperationCode.Jmp;
       if (methodCall.IsTailCall)
         this.generator.Emit(OperationCode.Tail_);
+      this.EmitSourceLocation(methodCall);
       this.generator.Emit(call, methodCall.MethodToCall);
       this.StackSize -= (ushort)IteratorHelper.EnumerableCount(methodCall.Arguments);
       if (!methodCall.IsStaticCall && !methodCall.IsJumpCall) this.StackSize--;
@@ -1668,8 +1949,23 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="modulus">The modulus.</param>
     public override void TraverseChildren(IModulus modulus) {
-      this.Traverse(modulus.LeftOperand);
+      var targetExpression = modulus.LeftOperand as ITargetExpression;
+      if (targetExpression != null) {
+        bool statement = this.currentExpressionIsStatement;
+        this.currentExpressionIsStatement = false;
+        this.VisitAssignment(targetExpression, modulus, (IExpression e) => this.TraverseModulusRightOperandAndDoOperation(e),
+          treatAsStatement: statement, pushTargetRValue: true, resultIsInitialTargetRValue: modulus.ResultIsUnmodifiedLeftOperand);
+      } else {
+        this.Traverse(modulus.LeftOperand);
+        this.TraverseModulusRightOperandAndDoOperation(modulus);
+      }
+    }
+
+    private void TraverseModulusRightOperandAndDoOperation(IExpression expression) {
+      Contract.Assume(expression is IModulus);
+      var modulus = (IModulus)expression;
       this.Traverse(modulus.RightOperand);
+      this.EmitSourceLocation(modulus);
       if (modulus.TreatOperandsAsUnsignedIntegers)
         this.generator.Emit(OperationCode.Rem_Un);
       else
@@ -1682,8 +1978,23 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="multiplication">The multiplication.</param>
     public override void TraverseChildren(IMultiplication multiplication) {
-      this.Traverse(multiplication.LeftOperand);
+      var targetExpression = multiplication.LeftOperand as ITargetExpression;
+      if (targetExpression != null) {
+        bool statement = this.currentExpressionIsStatement;
+        this.currentExpressionIsStatement = false;
+        this.VisitAssignment(targetExpression, multiplication, (IExpression e) => this.TraverseMultiplicationRightOperandAndDoOperation(e),
+          treatAsStatement: statement, pushTargetRValue: true, resultIsInitialTargetRValue: multiplication.ResultIsUnmodifiedLeftOperand);
+      } else {
+        this.Traverse(multiplication.LeftOperand);
+        this.TraverseMultiplicationRightOperandAndDoOperation(multiplication);
+      }
+    }
+
+    private void TraverseMultiplicationRightOperandAndDoOperation(IExpression expression) {
+      Contract.Assume(expression is IMultiplication);
+      var multiplication = (IMultiplication)expression;
       this.Traverse(multiplication.RightOperand);
+      this.EmitSourceLocation(multiplication);
       OperationCode operationCode = OperationCode.Mul;
       if (multiplication.CheckOverflow) {
         if (multiplication.TreatOperandsAsUnsignedIntegers)
@@ -1702,6 +2013,7 @@ namespace Microsoft.Cci {
     public override void TraverseChildren(INotEquality notEquality) {
       this.Traverse(notEquality.LeftOperand);
       this.Traverse(notEquality.RightOperand);
+      this.EmitSourceLocation(notEquality);
       var compileTimeConstant = notEquality.LeftOperand as ICompileTimeConstant;
       if (compileTimeConstant != null) {
         if (compileTimeConstant.Value == null) {
@@ -1739,6 +2051,7 @@ namespace Microsoft.Cci {
     /// <param name="onesComplement">The ones complement.</param>
     public override void TraverseChildren(IOnesComplement onesComplement) {
       this.Traverse(onesComplement.Operand);
+      this.EmitSourceLocation(onesComplement);
       this.generator.Emit(OperationCode.Not);
     }
 
@@ -1887,8 +2200,23 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="rightShift">The right shift.</param>
     public override void TraverseChildren(IRightShift rightShift) {
-      this.Traverse(rightShift.LeftOperand);
+      var targetExpression = rightShift.LeftOperand as ITargetExpression;
+      if (targetExpression != null) {
+        bool statement = this.currentExpressionIsStatement;
+        this.currentExpressionIsStatement = false;
+        this.VisitAssignment(targetExpression, rightShift, (IExpression e) => this.TraverseRightShiftRightOperandAndDoOperation(e),
+          treatAsStatement: statement, pushTargetRValue: true, resultIsInitialTargetRValue: rightShift.ResultIsUnmodifiedLeftOperand);
+      } else {
+        this.Traverse(rightShift.LeftOperand);
+        this.TraverseRightShiftRightOperandAndDoOperation(rightShift);
+      }
+    }
+
+    private void TraverseRightShiftRightOperandAndDoOperation(IExpression expression) {
+      Contract.Assume(expression is IRightShift);
+      var rightShift = (IRightShift)expression;
       this.Traverse(rightShift.RightOperand);
+      this.EmitSourceLocation(rightShift);
       if (TypeHelper.IsUnsignedPrimitiveInteger(rightShift.LeftOperand.Type))
         this.generator.Emit(OperationCode.Shr_Un);
       else
@@ -1910,6 +2238,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="sizeOf">The size of.</param>
     public override void TraverseChildren(ISizeOf sizeOf) {
+      this.EmitSourceLocation(sizeOf);
       this.generator.Emit(OperationCode.Sizeof, sizeOf.TypeToSize);
       this.StackSize++;
     }
@@ -1936,8 +2265,23 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="subtraction">The subtraction.</param>
     public override void TraverseChildren(ISubtraction subtraction) {
-      this.Traverse(subtraction.LeftOperand);
+      var targetExpression = subtraction.LeftOperand as ITargetExpression;
+      if (targetExpression != null) {
+        bool statement = this.currentExpressionIsStatement;
+        this.currentExpressionIsStatement = false;
+        this.VisitAssignment(targetExpression, subtraction, (IExpression e) => this.TraverseSubtractionRightOperandAndDoOperation(e),
+          treatAsStatement: statement, pushTargetRValue: true, resultIsInitialTargetRValue: subtraction.ResultIsUnmodifiedLeftOperand);
+      } else {
+        this.Traverse(subtraction.LeftOperand);
+        this.TraverseSubtractionRightOperandAndDoOperation(subtraction);
+      }
+    }
+
+    private void TraverseSubtractionRightOperandAndDoOperation(IExpression expression) {
+      Contract.Assume(expression is ISubtraction);
+      var subtraction = (ISubtraction)expression;
       this.Traverse(subtraction.RightOperand);
+      this.EmitSourceLocation(subtraction);
       OperationCode operationCode = OperationCode.Sub;
       if (subtraction.CheckOverflow) {
         if (subtraction.TreatOperandsAsUnsignedIntegers)
@@ -2151,6 +2495,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="tokenOf">The token of.</param>
     public override void TraverseChildren(ITokenOf tokenOf) {
+      this.EmitSourceLocation(tokenOf);
       IFieldReference/*?*/ fieldReference = tokenOf.Definition as IFieldReference;
       if (fieldReference != null)
         this.generator.Emit(OperationCode.Ldtoken, fieldReference);
@@ -2169,6 +2514,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="typeOf">The type of.</param>
     public override void TraverseChildren(ITypeOf typeOf) {
+      this.EmitSourceLocation(typeOf);
       this.generator.Emit(OperationCode.Ldtoken, typeOf.TypeToGet);
       this.generator.Emit(OperationCode.Call, this.GetTypeFromHandle);
       this.StackSize++;
@@ -2188,6 +2534,7 @@ namespace Microsoft.Cci {
         return;
       }
       this.Traverse(unaryNegation.Operand);
+      this.EmitSourceLocation(unaryNegation);
       this.generator.Emit(OperationCode.Neg);
     }
 
@@ -2205,6 +2552,7 @@ namespace Microsoft.Cci {
     /// <param name="vectorLength">Length of the vector.</param>
     public override void TraverseChildren(IVectorLength vectorLength) {
       this.Traverse(vectorLength.Vector);
+      this.EmitSourceLocation(vectorLength);
       this.generator.Emit(OperationCode.Ldlen);
     }
 
@@ -4292,7 +4640,7 @@ namespace Microsoft.Cci {
         this.generator.Emit(OperationCode.Ret);
       } else if (returnType.TypeCode == PrimitiveTypeCode.Void && !this.lastStatementWasUnconditionalTransfer)
         this.generator.Emit(OperationCode.Ret);
-      this.generator.AdjustBranchSizesToBestFit();
+      this.generator.AdjustBranchSizesToBestFit(eliminateBranchesToNext:true);
     }
   }
 

@@ -126,7 +126,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     public override void TraverseChildren(ICatchClause catchClause) {
-      if (catchClause.ExceptionContainer != Dummy.LocalVariable)
+      if (!(catchClause.ExceptionContainer is Dummy))
         this.declaredLocals[catchClause.ExceptionContainer] = true;
       base.TraverseChildren(catchClause);
     }

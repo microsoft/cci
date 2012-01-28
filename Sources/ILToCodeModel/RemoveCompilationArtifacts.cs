@@ -671,7 +671,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     public override IExpression Visit(LogicalNot logicalNot) {
-      if (logicalNot.Type == Dummy.TypeReference)
+      if (logicalNot.Type is Dummy)
         return PatternDecompiler.InvertCondition(this.Visit(logicalNot.Operand));
       else if (logicalNot.Operand.Type.TypeCode == PrimitiveTypeCode.Int32)
         return new Equality() {

@@ -309,6 +309,15 @@ namespace Microsoft.Cci.Ast {
       readonly Expression rightOperand;
 
       /// <summary>
+      /// If true, the left operand must be a target expression and the result of the binary operation is the
+      /// value of the target expression before it is assigned the value of the operation performed on
+      /// (right hand) values of the left and right operands.
+      /// </summary>
+      public bool ResultIsUnmodifiedLeftOperand {
+        get { return false; }
+      }
+
+      /// <summary>
       /// If true the operands must be integers and are treated as being unsigned for the purpose of the addition. This only makes a difference if CheckOverflow is true as well.
       /// </summary>
       public bool TreatOperandsAsUnsignedIntegers {
@@ -799,6 +808,28 @@ namespace Microsoft.Cci.Ast {
         //^ ensures result is IPropertyDefinition ==> ((IPropertyDefinition)result).Setter != null;
       {
         return base.Definition;
+      }
+    }
+
+    /// <summary>
+    /// If true, the resolved definition is a property whose getter is virtual.
+    /// </summary>
+    public bool GetterIsVirtual {
+      get {
+        var prop = this.Definition as IPropertyDefinition;
+        if (prop != null && prop.Getter != null) return prop.Getter.ResolvedMethod.IsVirtual;
+        return false;
+      }
+    }
+
+    /// <summary>
+    /// If true, the resolved definition is a property whose setter is virtual.
+    /// </summary>
+    public bool SetterIsVirtual {
+      get {
+        var prop = this.Definition as IPropertyDefinition;
+        if (prop != null && prop.Setter != null) return prop.Setter.ResolvedMethod.IsVirtual;
+        return false;
       }
     }
 
@@ -2928,6 +2959,15 @@ namespace Microsoft.Cci.Ast {
       bool result = this.LeftOperand.HasSideEffect(reportError);
       result |= this.RightOperand.HasSideEffect(reportError);
       return result;
+    }
+
+    /// <summary>
+    /// If true, the left operand must be a target expression and the result of the binary operation is the
+    /// value of the target expression before it is assigned the value of the operation performed on
+    /// (right hand) values of the left and right operands.
+    /// </summary>
+    public bool ResultIsUnmodifiedLeftOperand {
+      get { return false; }
     }
 
     /// <summary>
@@ -13371,6 +13411,28 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// If true, the resolved definition is a property whose getter is virtual.
+    /// </summary>
+    public bool GetterIsVirtual {
+      get {
+        var prop = this.ResolvedDefinition as IPropertyDefinition;
+        if (prop != null && prop.Getter != null) return prop.Getter.ResolvedMethod.IsVirtual;
+        return false;
+      }
+    }
+
+    /// <summary>
+    /// If true, the resolved definition is a property whose setter is virtual.
+    /// </summary>
+    public bool SetterIsVirtual {
+      get {
+        var prop = this.ResolvedDefinition as IPropertyDefinition;
+        if (prop != null && prop.Setter != null) return prop.Setter.ResolvedMethod.IsVirtual;
+        return false;
+      }
+    }
+
+    /// <summary>
     /// Completes the two stage construction of this object. This allows bottom up parsers to construct an Expression before constructing the containing Expression.
     /// This method should be called once only and must be called before this object is made available to client code. The construction code itself should also take
     /// care not to call any other methods or property/event accessors on the object until after this method has been called.
@@ -18961,6 +19023,15 @@ namespace Microsoft.Cci.Ast {
         get { return this.rightOperand.ProjectAsIExpression(); }
       }
       readonly Expression rightOperand;
+
+      /// <summary>
+      /// If true, the left operand must be a target expression and the result of the binary operation is the
+      /// value of the target expression before it is assigned the value of the operation performed on
+      /// (right hand) values of the left and right operands.
+      /// </summary>
+      public bool ResultIsUnmodifiedLeftOperand {
+        get { return false; }
+      }
 
       public ITypeDefinition Type {
         get { return this.subtraction.Type; }

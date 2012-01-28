@@ -160,8 +160,13 @@ namespace Microsoft.Cci.ILToCodeModel {
 
       var result = new Conditional() { Type = conditional.Type };
       result.Condition = InvertCondition(conditional.Condition);
-      result.ResultIfTrue = InvertCondition(conditional.ResultIfFalse);
-      result.ResultIfFalse = InvertCondition(conditional.ResultIfTrue);
+      if (ExpressionHelper.IsIntegralZero(conditional.ResultIfTrue)) {
+        result.ResultIfTrue = conditional.ResultIfFalse;
+        result.ResultIfFalse = conditional.ResultIfTrue;
+      } else {
+        result.ResultIfTrue = InvertCondition(conditional.ResultIfFalse);
+        result.ResultIfFalse = InvertCondition(conditional.ResultIfTrue);
+      }
       return result;
     }
 

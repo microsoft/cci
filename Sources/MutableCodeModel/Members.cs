@@ -109,6 +109,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       if (isNormalized) {
         var converter = new CodeModelToILConverter(this.host, this.MethodDefinition, this.sourceLocationProvider, this.iteratorLocalCount);
+        converter.TrackExpressionSourceLocations = this.trackExpressionSourceLocations;
         converter.ConvertToIL(this.Block);
         iteratorScopes = converter.GetIteratorScopes();
         localScopes = converter.GetLocalScopes();
@@ -304,6 +305,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     public ISourceLocationProvider/*?*/ SourceLocationProvider {
       get { return this.sourceLocationProvider; }
     }
+
+    /// <summary>
+    /// If true, the generated IL keeps track of the source locations of expressions, not just statements.
+    /// </summary>
+    public bool TrackExpressionSourceLocations {
+      get { return this.trackExpressionSourceLocations; }
+      set { this.trackExpressionSourceLocations = value; }
+    }
+    private bool trackExpressionSourceLocations;
 
 
     #region IMethodBody Members
