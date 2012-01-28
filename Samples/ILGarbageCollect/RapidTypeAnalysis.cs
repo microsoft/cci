@@ -36,7 +36,7 @@ namespace ILGarbageCollect {
     private readonly SimpleBytecodeMethodSummarizer simpleBytecodeSummarizer;
     private readonly ReachabilityBasedLocalFlowMethodSummarizer reachabilityFlowBytecodeSummarizer;
 
-    private int countUsedFlowBasedSummarizer;
+    //private int countUsedFlowBasedSummarizer;
 
     private readonly ITypeDefinition systemObjectType;
     private readonly IMethodDefinition systemObjectFinalizeMethod;
@@ -353,7 +353,7 @@ namespace ILGarbageCollect {
       } while (this.worklist.Count > 0);
 
 
-      Console.WriteLine("Used flow-based summarizer for {0}/{1} methods", countUsedFlowBasedSummarizer, ReachableMethods().Count());
+      //Console.WriteLine("Used flow-based summarizer for {0}/{1} methods", countUsedFlowBasedSummarizer, ReachableMethods().Count());
 
     }
 
@@ -567,9 +567,9 @@ namespace ILGarbageCollect {
 
 
     private IMethodSummarizer GetBytecodeSummarizerForMethod(IMethodDefinition methodDefinition) {
-      //return simpleBytecodeSummarizer;
+      return simpleBytecodeSummarizer;
 
-      
+      /*
       TypesLocalFlowMethodSummarizer localFlowSummarizer = new TypesLocalFlowMethodSummarizer();
 
       if (localFlowSummarizer.CanSummarizeMethod(methodDefinition)) {
@@ -579,6 +579,7 @@ namespace ILGarbageCollect {
       else {
         return simpleBytecodeSummarizer;
       }
+       * */
     }
 
     public override string ToString() {

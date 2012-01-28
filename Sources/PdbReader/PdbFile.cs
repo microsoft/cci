@@ -181,7 +181,7 @@ namespace Microsoft.Cci.Pdb {
                   func = f;
                   funcIndex--;
                 }
-             } else {
+              } else {
                 while (funcIndex < funcs.Length-1 && func.lines != null) {
                   var f = funcs[funcIndex+1];
                   if (f.segment != sec.sec || f.address != sec.off) break;
@@ -339,7 +339,7 @@ namespace Microsoft.Cci.Pdb {
       bits.Position = end;
     }
 
-    internal static PdbFunction[] LoadFunctions(Stream read, out Dictionary<uint, PdbTokenLine> tokenToSourceMapping) {
+    internal static PdbFunction[] LoadFunctions(Stream read, out Dictionary<uint, PdbTokenLine> tokenToSourceMapping, out string sourceServerData) {
       tokenToSourceMapping = new Dictionary<uint, PdbTokenLine>();
       BitAccess bits = new BitAccess(512 * 1024);
       PdbFileHeader head = new PdbFileHeader(read, bits);
@@ -354,9 +354,18 @@ namespace Microsoft.Cci.Pdb {
       if (!nameIndex.TryGetValue("/NAMES", out nameStream)) {
         throw new PdbException("No `name' stream");
       }
-
       dir.streams[nameStream].Read(reader, bits);
       IntHashTable names = LoadNameStream(bits);
+
+      int srcsrvStream;
+      if (!nameIndex.TryGetValue("SRCSRV", out srcsrvStream))
+        sourceServerData = string.Empty;
+      else {
+        DataStream dataStream = dir.streams[srcsrvStream];
+        byte[] bytes = new byte[dataStream.contentSize];
+        dataStream.Read(reader, bits);
+        sourceServerData = bits.ReadBString(bytes.Length);
+      }
 
       dir.streams[3].Read(reader, bits);
       LoadDbiStream(bits, out modules, out header, true);
@@ -396,7 +405,7 @@ namespace Microsoft.Cci.Pdb {
       return funcs;
     }
 
-    private static void LoadTokenToSourceInfo(BitAccess bits, DbiModuleInfo module, IntHashTable names, MsfDirectory dir, 
+    private static void LoadTokenToSourceInfo(BitAccess bits, DbiModuleInfo module, IntHashTable names, MsfDirectory dir,
       Dictionary<string, int> nameIndex, PdbReader reader, Dictionary<uint, PdbTokenLine> tokenToSourceMapping) {
       bits.Position = 0;
       int sig;
@@ -477,7 +486,7 @@ namespace Microsoft.Cci.Pdb {
 
     }
 
-    private static IntHashTable ReadSourceFileInfo(BitAccess bits, uint limit, IntHashTable names, MsfDirectory dir, 
+    private static IntHashTable ReadSourceFileInfo(BitAccess bits, uint limit, IntHashTable names, MsfDirectory dir,
       Dictionary<string, int> nameIndex, PdbReader reader) {
       IntHashTable checks = new IntHashTable();
 

@@ -14,6 +14,7 @@ using System.IO;
 using Microsoft.Cci;
 using Microsoft.Cci.MetadataReader;
 using Microsoft.Cci.UtilityDataStructures;
+using Microsoft.Cci.Analysis;
 
 namespace CdfgToText {
   public class SourceEmitter : MetadataTraverser {

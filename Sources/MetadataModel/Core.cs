@@ -1051,6 +1051,7 @@ namespace Microsoft.Cci {
   /// Implemented by classes that visit nodes of object graphs via a double dispatch mechanism, usually performing some computation of a subset of the nodes in the graph.
   /// Contains a specialized Visit routine for each standard type of object defined in this object model. 
   /// </summary>
+  [ContractClass(typeof(IMetadataVisitorContract))]
   public interface IMetadataVisitor {
     /// <summary>
     /// Performs some computation with the given array type reference.
@@ -1322,5 +1323,351 @@ namespace Microsoft.Cci {
     /// </summary>
     void Visit(IWin32Resource win32Resource);
   }
+
+  #region IMetadataVisitor contract binding
+
+  [ContractClassFor(typeof(IMetadataVisitor))]
+  abstract class IMetadataVisitorContract : IMetadataVisitor {
+    #region IMetadataVisitor Members
+
+    public void Visit(IArrayTypeReference arrayTypeReference) {
+      Contract.Requires(arrayTypeReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAssembly assembly) {
+      Contract.Requires(assembly != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IAssemblyReference assemblyReference) {
+      Contract.Requires(assemblyReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICustomAttribute customAttribute) {
+      Contract.Requires(customAttribute != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ICustomModifier customModifier) {
+      Contract.Requires(customModifier != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IEventDefinition eventDefinition) {
+      Contract.Requires(eventDefinition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IFieldDefinition fieldDefinition) {
+      Contract.Requires(fieldDefinition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IFieldReference fieldReference) {
+      Contract.Requires(fieldReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IFileReference fileReference) {
+      Contract.Requires(fileReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IFunctionPointerTypeReference functionPointerTypeReference) {
+      Contract.Requires(functionPointerTypeReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericMethodInstanceReference genericMethodInstanceReference) {
+      Contract.Requires(genericMethodInstanceReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericMethodParameter genericMethodParameter) {
+      Contract.Requires(genericMethodParameter != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericMethodParameterReference genericMethodParameterReference) {
+      Contract.Requires(genericMethodParameterReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGlobalFieldDefinition globalFieldDefinition) {
+      Contract.Requires(globalFieldDefinition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGlobalMethodDefinition globalMethodDefinition) {
+      Contract.Requires(globalMethodDefinition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericTypeInstanceReference genericTypeInstanceReference) {
+      Contract.Requires(genericTypeInstanceReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericTypeParameter genericTypeParameter) {
+      Contract.Requires(genericTypeParameter != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IGenericTypeParameterReference genericTypeParameterReference) {
+      Contract.Requires(genericTypeParameterReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ILocalDefinition localDefinition) {
+      Contract.Requires(localDefinition != null);
+      throw new NotImplementedException();
+    }
+
+    public void VisitReference(ILocalDefinition localDefinition) {
+      Contract.Requires(localDefinition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IManagedPointerTypeReference managedPointerTypeReference) {
+      Contract.Requires(managedPointerTypeReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMarshallingInformation marshallingInformation) {
+      Contract.Requires(marshallingInformation != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMetadataConstant constant) {
+      Contract.Requires(constant != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMetadataCreateArray createArray) {
+      Contract.Requires(createArray != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMetadataExpression expression) {
+      Contract.Requires(expression != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMetadataNamedArgument namedArgument) {
+      Contract.Requires(namedArgument != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMetadataTypeOf typeOf) {
+      Contract.Requires(typeOf != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMethodBody methodBody) {
+      Contract.Requires(methodBody != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMethodDefinition method) {
+      Contract.Requires(method != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMethodImplementation methodImplementation) {
+      Contract.Requires(methodImplementation != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IMethodReference methodReference) {
+      Contract.Requires(methodReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IModifiedTypeReference modifiedTypeReference) {
+      Contract.Requires(modifiedTypeReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IModule module) {
+      Contract.Requires(module != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IModuleReference moduleReference) {
+      Contract.Requires(moduleReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INamespaceAliasForType namespaceAliasForType) {
+      Contract.Requires(namespaceAliasForType != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
+      Contract.Requires(namespaceTypeDefinition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INamespaceTypeReference namespaceTypeReference) {
+      Contract.Requires(namespaceTypeReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedAliasForType nestedAliasForType) {
+      Contract.Requires(nestedAliasForType != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedTypeDefinition nestedTypeDefinition) {
+      Contract.Requires(nestedTypeDefinition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedTypeReference nestedTypeReference) {
+      Contract.Requires(nestedTypeReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedUnitNamespace nestedUnitNamespace) {
+      Contract.Requires(nestedUnitNamespace != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
+      Contract.Requires(nestedUnitNamespaceReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(INestedUnitSetNamespace nestedUnitSetNamespace) {
+      Contract.Requires(nestedUnitSetNamespace != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IOperation operation) {
+      Contract.Requires(operation != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IOperationExceptionInformation operationExceptionInformation) {
+      Contract.Requires(operationExceptionInformation != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IParameterDefinition parameterDefinition) {
+      Contract.Requires(parameterDefinition != null);
+      throw new NotImplementedException();
+    }
+
+    public void VisitReference(IParameterDefinition parameterDefinition) {
+      Contract.Requires(parameterDefinition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IParameterTypeInformation parameterTypeInformation) {
+      Contract.Requires(parameterTypeInformation != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPESection peSection) {
+      Contract.Requires(peSection != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPlatformInvokeInformation platformInvokeInformation) {
+      Contract.Requires(platformInvokeInformation != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPointerTypeReference pointerTypeReference) {
+      Contract.Requires(pointerTypeReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IPropertyDefinition propertyDefinition) {
+      Contract.Requires(propertyDefinition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IResourceReference resourceReference) {
+      Contract.Requires(resourceReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRootUnitNamespace rootUnitNamespace) {
+      Contract.Requires(rootUnitNamespace != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRootUnitNamespaceReference rootUnitNamespaceReference) {
+      Contract.Requires(rootUnitNamespaceReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IRootUnitSetNamespace rootUnitSetNamespace) {
+      Contract.Requires(rootUnitSetNamespace != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISecurityAttribute securityAttribute) {
+      Contract.Requires(securityAttribute != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedEventDefinition specializedEventDefinition) {
+      Contract.Requires(specializedEventDefinition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedFieldDefinition specializedFieldDefinition) {
+      Contract.Requires(specializedFieldDefinition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedFieldReference specializedFieldReference) {
+      Contract.Requires(specializedFieldReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedMethodDefinition specializedMethodDefinition) {
+      Contract.Requires(specializedMethodDefinition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedMethodReference specializedMethodReference) {
+      Contract.Requires(specializedMethodReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedPropertyDefinition specializedPropertyDefinition) {
+      Contract.Requires(specializedPropertyDefinition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedNestedTypeDefinition specializedNestedTypeDefinition) {
+      Contract.Requires(specializedNestedTypeDefinition != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(ISpecializedNestedTypeReference specializedNestedTypeReference) {
+      Contract.Requires(specializedNestedTypeReference != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IUnitSet unitSet) {
+      Contract.Requires(unitSet != null);
+      throw new NotImplementedException();
+    }
+
+    public void Visit(IWin32Resource win32Resource) {
+      Contract.Requires(win32Resource != null);
+      throw new NotImplementedException();
+    }
+
+    #endregion
+  }
+  #endregion
+
 
 }

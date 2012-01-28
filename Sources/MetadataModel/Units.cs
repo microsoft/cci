@@ -177,6 +177,10 @@ namespace Microsoft.Cci {
       get { throw new NotImplementedException(); }
     }
 
+    public string DebugInformationVersion {
+      get { throw new NotImplementedException(); }
+    }
+
     public ushort DllCharacteristics {
       get { throw new NotImplementedException(); }
     }
@@ -757,6 +761,11 @@ namespace Microsoft.Cci {
     string DebugInformationLocation { get; }
 
     /// <summary>
+    /// A hexadecimal string that is used to store and retrieve the debugging symbols from a symbol store.
+    /// </summary>
+    string DebugInformationVersion { get; }
+
+    /// <summary>
     /// Flags that control the behavior of the target operating system. CLI implementations are supposed to ignore this, but some operating system pay attention.
     /// </summary>
     ushort DllCharacteristics { get; }
@@ -974,6 +983,13 @@ namespace Microsoft.Cci {
     }
 
     public string DebugInformationLocation {
+      get {
+        Contract.Ensures(Contract.Result<string>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public string DebugInformationVersion {
       get {
         Contract.Ensures(Contract.Result<string>() != null);
         throw new NotImplementedException();
@@ -1433,14 +1449,14 @@ namespace Microsoft.Cci {
     public IUnit ResolvedUnit {
       get {
         Contract.Ensures(Contract.Result<IUnit>() != null);
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 
     public UnitIdentity UnitIdentity {
       get {
         Contract.Ensures(Contract.Result<UnitIdentity>() != null);
-        throw new NotImplementedException(); 
+        throw new NotImplementedException();
       }
     }
 

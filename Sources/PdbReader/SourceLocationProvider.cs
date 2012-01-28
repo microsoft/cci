@@ -16,26 +16,43 @@ using Microsoft.Cci.MetadataReader;
 
 namespace Microsoft.Cci {
   using Microsoft.Cci.Pdb;
+  using System.Diagnostics.Contracts;
 
   /// <summary>
   /// An object that can map offsets in an IL stream to source locations and block scopes.
   /// </summary>
   public sealed class PdbReader : ISourceLocationProvider, ILocalScopeProvider, IDisposable {
 
+    Stream pdbStream;
     IMetadataHost host;
     Dictionary<uint, PdbFunction> pdbFunctionMap = new Dictionary<uint, PdbFunction>();
     List<StreamReader> sourceFilesOpenedByReader = new List<StreamReader>();
     Dictionary<uint, PdbTokenLine> tokenToSourceMapping;
+    string sourceServerData;
 
     /// <summary>
     /// Allocates an object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. 
     /// For example, a PDB reader that maps offsets in an IL stream to source locations.
     /// </summary>
     public PdbReader(Stream pdbStream, IMetadataHost host) {
+      Contract.Requires(pdbStream != null);
+      Contract.Requires(host != null);
+
+      this.pdbStream = pdbStream;
       this.host = host;
-      foreach (PdbFunction pdbFunction in PdbFile.LoadFunctions(pdbStream, out this.tokenToSourceMapping))
+      foreach (PdbFunction pdbFunction in PdbFile.LoadFunctions(pdbStream, out this.tokenToSourceMapping, out this.sourceServerData))
         this.pdbFunctionMap[pdbFunction.token] = pdbFunction;
     }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.pdbStream != null);
+      Contract.Invariant(this.host != null);
+      Contract.Invariant(this.pdbFunctionMap != null);
+      Contract.Invariant(this.sourceFilesOpenedByReader != null);
+      Contract.Invariant(this.sourceServerData != null);
+    }
+
 
     /// <summary>
     /// Closes all of the source files that have been opened to provide the contents source locations corresponding to IL offsets.
@@ -449,6 +466,17 @@ namespace Microsoft.Cci {
     }
 
     Dictionary<PdbSource, PdbSourceDocument> documentCache = new Dictionary<PdbSource, PdbSourceDocument>();
+
+    ///<summary>
+    /// Retrieves the Source Server Data block, if present.
+    /// Otherwise the empty string is returned.
+    ///</summary>
+    public string SourceServerData {
+      get {
+        Contract.Ensures(Contract.Result<string>() != null);
+        return this.sourceServerData;
+      }
+    }
 
   }
 

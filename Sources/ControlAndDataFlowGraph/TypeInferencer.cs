@@ -13,13 +13,13 @@ using System.Diagnostics.Contracts;
 using Microsoft.Cci.Immutable;
 using Microsoft.Cci.UtilityDataStructures;
 
-namespace Microsoft.Cci.ControlAndDataFlowGraph {
+namespace Microsoft.Cci.Analysis {
   /// <summary>
   /// 
   /// </summary>
   internal class TypeInferencer<BasicBlock, Instruction>
-    where BasicBlock : Microsoft.Cci.BasicBlock<Instruction>, new()
-    where Instruction : Microsoft.Cci.Instruction, new() {
+    where BasicBlock : Microsoft.Cci.Analysis.BasicBlock<Instruction>, new()
+    where Instruction : Microsoft.Cci.Analysis.Instruction, new() {
 
     private TypeInferencer(IMetadataHost host, ControlAndDataFlowGraph<BasicBlock, Instruction> cfg, Stack<Instruction> stack, Queue<BasicBlock> blocksToVisit, SetOfObjects blocksAlreadyVisited) {
       Contract.Requires(host != null);
@@ -123,20 +123,31 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
       switch (instruction.Operation.OperationCode) {
         case OperationCode.Add:
         case OperationCode.Add_Ovf:
-        case OperationCode.And:
         case OperationCode.Div:
         case OperationCode.Mul:
         case OperationCode.Mul_Ovf:
-        case OperationCode.Or:
         case OperationCode.Rem:
         case OperationCode.Sub:
         case OperationCode.Sub_Ovf:
-        case OperationCode.Xor:
           this.stack.Pop();
           this.stack.Pop();
           instruction.Type = this.GetBinaryNumericOperationType(instruction);
           this.stack.Push(instruction);
           break;
+        case OperationCode.And:
+        case OperationCode.Or:
+        case OperationCode.Xor:
+          Contract.Assume(instruction.Operand1 != null);
+          Contract.Assume(instruction.Operand2 is Instruction);
+          if (instruction.Operand1.Type.TypeCode == PrimitiveTypeCode.Boolean && ((Instruction)instruction.Operand2).Type.TypeCode == PrimitiveTypeCode.Boolean) {
+            this.stack.Pop();
+            this.stack.Pop();
+            instruction.Type = this.platformType.SystemBoolean;
+            this.stack.Push(instruction);
+            break;
+          }
+          goto case OperationCode.Add;
+
         case OperationCode.Add_Ovf_Un:
         case OperationCode.Div_Un:
         case OperationCode.Mul_Ovf_Un:
@@ -960,6 +971,7 @@ namespace Microsoft.Cci.ControlAndDataFlowGraph {
             case PrimitiveTypeCode.Int16:
             case PrimitiveTypeCode.Int32:
             case PrimitiveTypeCode.Int64:
+            case PrimitiveTypeCode.Char:
             case PrimitiveTypeCode.UInt8:
             case PrimitiveTypeCode.UInt16:
             case PrimitiveTypeCode.UInt32:

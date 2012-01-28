@@ -13,8 +13,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 
-//^ using Microsoft.Contracts;
-
 namespace Microsoft.Cci.UtilityDataStructures {
 
 #pragma warning disable 1591
@@ -468,9 +466,18 @@ namespace Microsoft.Cci.UtilityDataStructures {
     where Key : class
     where Value : class, new() {
     static Value dummyObject = new Value();
-    struct KeyValuePair {
-      internal Key key;
-      internal Value value;
+    /// <summary>
+    /// 
+    /// </summary>
+    public struct KeyValuePair {
+      /// <summary>
+      /// 
+      /// </summary>
+      public Key key;
+      /// <summary>
+      /// 
+      /// </summary>
+      public Value value;
     }
     KeyValuePair[] keyValueTable;
     uint size; //always a power of two
@@ -499,6 +506,19 @@ namespace Microsoft.Cci.UtilityDataStructures {
       this.size = SizeFromExpectedEntries(expectedEntries);
       this.resizeCount = this.size * 6 / 10;
       this.keyValueTable = new KeyValuePair[this.size];
+      this.count = 0;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public void Clear() {
+      var table = this.keyValueTable;
+      int len = table.Length;
+      for (int i = 0; i < len; ++i) {
+        table[i].key = null;
+        table[i].value = null;
+      }
       this.count = 0;
     }
 
@@ -685,15 +705,84 @@ namespace Microsoft.Cci.UtilityDataStructures {
       }
     }
 
+    /// <summary>
+    /// Enumerator for elements
+    /// </summary>
+    public struct ValuesEnumerator {
+
+      Hashtable<Key, Value> Hashtable;
+      uint CurrentIndex;
+
+      internal ValuesEnumerator(Hashtable<Key, Value> hashtable) {
+        this.Hashtable = hashtable;
+        this.CurrentIndex = 0xFFFFFFFF;
+      }
+
+      /// <summary>
+      /// Current element
+      /// </summary>
+      public KeyValuePair Current {
+        get {
+          return this.Hashtable.keyValueTable[this.CurrentIndex];
+        }
+      }
+
+      /// <summary>
+      /// Move to next element
+      /// </summary>
+      public bool MoveNext() {
+        unchecked {
+          uint size = this.Hashtable.size;
+          uint currentIndex = this.CurrentIndex + 1;
+          if (currentIndex >= size) {
+            return false;
+          }
+          var keyValueTable = this.Hashtable.keyValueTable;
+          while (currentIndex < size && keyValueTable[currentIndex].value == null) {
+            currentIndex++;
+          }
+          this.CurrentIndex = currentIndex;
+          return currentIndex < size && keyValueTable[currentIndex].value != null;
+        }
+      }
+
+      /// <summary>
+      /// Reset the enumerator
+      /// </summary>
+      public void Reset() {
+        this.CurrentIndex = 0xFFFFFFFF;
+      }
+    }
+
+    /// <summary>
+    /// Get the enumerator
+    /// </summary>
+    /// <returns></returns>
+    public ValuesEnumerator GetEnumerator() {
+      return new ValuesEnumerator(this);
+    }
   }
 
   /// <summary>
   /// Hashtable that can hold only single non zero uint per key.
   /// </summary>
+#if !__MonoCS__
+  [DebuggerTypeProxy(typeof(HashtableForUintValues<>.DebugView))]
+#endif
   public sealed class HashtableForUintValues<Key> where Key : class {
-    struct KeyValuePair {
+    /// <summary>
+    /// 
+    /// </summary>
+    public struct KeyValuePair {
       internal Key key;
       internal uint value;
+
+      /// <summary>
+      /// Returns a string containing the key and value.
+      /// </summary>
+      public override string ToString() {
+        return "key = "+this.key+", value = "+this.value;
+      }
     }
     KeyValuePair[] keyValueTable;
     uint size; //always a power of two
@@ -901,6 +990,22 @@ namespace Microsoft.Cci.UtilityDataStructures {
       }
     }
 
+    internal class DebugView {
+
+      public DebugView(HashtableForUintValues<Key> hashTable) {
+        var numEntries = hashTable.Count;
+        this.entries = new KeyValuePair[numEntries];
+        var len = hashTable.keyValueTable.Length;
+        var j = 0;
+        for (int i = 0; i < len; i++) {
+          this.entries[j++] = hashTable.keyValueTable[i];
+        }
+      }
+
+      [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+      public KeyValuePair[] entries;
+
+    }
   }
 
   /// <summary>
@@ -911,6 +1016,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     struct KeyValuePair {
       internal uint Key;
       internal InternalT Value;
+      public override string ToString() {
+        return "key = "+this.Key+", value = "+this.Value;
+      }
     }
     KeyValuePair[] keyValueTable;
     uint size; //always a power of two

@@ -389,6 +389,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
+    string IModule.DebugInformationVersion {
+      get {
+        return this.PEFileToObjectModel.GetDebugInformationVersion();
+      }
+    }
+
     ushort IModule.DllCharacteristics {
       get { return (ushort)this.PEFileToObjectModel.GetDllCharacteristics(); }
     }

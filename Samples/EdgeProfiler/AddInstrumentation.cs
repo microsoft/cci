@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Microsoft.Cci;
+using Microsoft.Cci.Analysis;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.UtilityDataStructures;
 

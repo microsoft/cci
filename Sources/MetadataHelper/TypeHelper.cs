@@ -1095,7 +1095,7 @@ namespace Microsoft.Cci {
     /// Returns an event of the given declaring type that has the given name.
     /// If no such event can be found, Dummy.EventDefinition is returned.
     /// </summary>
-    /// <param name="declaringType">The type thats declares the field.</param>
+    /// <param name="declaringType">The type thats declares the event.</param>
     /// <param name="eventName">The name of the event.</param>
     public static IEventDefinition GetEvent(ITypeDefinition declaringType, IName eventName) {
       Contract.Requires(declaringType != null);
@@ -1321,6 +1321,23 @@ namespace Microsoft.Cci {
         return nestedType;
       }
       return Dummy.NestedTypeDefinition;
+    }
+
+    /// <summary>
+    /// Returns a property of the given declaring type that has the given name.
+    /// If no such property can be found, Dummy.PropertyDefinition is returned.
+    /// </summary>
+    /// <param name="declaringType">The type thats declares the property.</param>
+    /// <param name="propertyName">The name of the property.</param>
+    public static IPropertyDefinition GetProperty(ITypeDefinition declaringType, IName propertyName) {
+      Contract.Requires(declaringType != null);
+      Contract.Requires(propertyName != null);
+
+      foreach (ITypeDefinitionMember member in declaringType.GetMembersNamed(propertyName, false)) {
+        var/*?*/ propertyDef = member as IPropertyDefinition;
+        if (propertyDef != null) return propertyDef;
+      }
+      return Dummy.PropertyDefinition;
     }
 
     /// <summary>

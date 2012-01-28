@@ -14,6 +14,7 @@ using System.Text;
 
 namespace Microsoft.Cci {
   using Microsoft.Cci.ILGeneratorImplementation;
+  using System.Diagnostics.Contracts;
 
   /// <summary>
   /// Generates Microsoft intermediate language (MSIL) instructions.
@@ -31,6 +32,7 @@ namespace Microsoft.Cci {
     IMetadataHost host;
     IMethodDefinition method;
     ILocation location = Dummy.Location;
+    ILocation expressionLocation;
     uint offset;
     List<Operation> operations = new List<Operation>();
     List<ILocalScope>/*?*/ iteratorScopes;
@@ -97,7 +99,7 @@ namespace Microsoft.Cci {
     /// This can result in an updated version of this.operations where some branches that had to be long in the previous
     /// version can now be short as well. Consequently, the adjustment process iterates until no further changes are possible.
     /// Note that all decisions are made based on the offsets at the start of an iteration. </remarks>
-    public void AdjustBranchSizesToBestFit() {
+    public void AdjustBranchSizesToBestFit(bool eliminateBranchesToNext = false) {
       int adjustment;
       uint numberOfAdjustments;
       do {
@@ -130,7 +132,7 @@ namespace Microsoft.Cci {
                 throw new InvalidOperationException(); //A short branch was specified for an offset that is long.
               //The test for isForwardBranch depends on label offsets only decreasing, so it is not an option to replace the short branch with a long one.
             }
-            if (operation.OperationCode == OperationCode.Br_S && operation.offset+2 == label.Offset) {
+            if (eliminateBranchesToNext && operation.OperationCode == OperationCode.Br_S && operation.offset+2 == label.Offset) {
               //eliminate branch to the next instruction
               operation.operationCode = (OperationCode)int.MaxValue;
               numberOfAdjustments++; adjustment -= 2;
@@ -557,8 +559,14 @@ namespace Microsoft.Cci {
     }
 
     private ILocation GetCurrentSequencePoint() {
-      ILocation result = this.location;
-      this.location = Dummy.Location;
+      ILocation result;
+      if (this.expressionLocation != null) {
+        result = this.expressionLocation;
+        this.expressionLocation = null;
+      } else {
+        result = this.location;
+        this.location = Dummy.Location;
+      }
       return result;
     }
 
@@ -570,9 +578,19 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Marks the next IL operation as the final instruction of an expression, whose location is known and is provided as the argument.
+    /// </summary>
+    /// <param name="expressionLocation">The location of the expression whose value will be computed by the next IL instruction.</param>
+    public void MarkExpressionLocation(ILocation expressionLocation) {
+      Contract.Requires(expressionLocation != null);
+      this.expressionLocation = expressionLocation;
+    }
+
+    /// <summary>
     ///  Marks the Microsoft intermediate language (MSIL) stream's current position with the given label.
     /// </summary>
     public void MarkLabel(ILGeneratorLabel label) {
+      Contract.Requires(label != null);
       label.Offset = this.offset;
       this.operations.Add(new Operation((OperationCode)int.MaxValue, this.offset, Dummy.Location, label));
     }
@@ -582,6 +600,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="location">The location of the sequence point.</param>
     public void MarkSequencePoint(ILocation location) {
+      Contract.Requires(location != null);
       this.location = location;
     }
 

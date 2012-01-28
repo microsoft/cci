@@ -6,6 +6,7 @@ using System.Text;
 using System.Diagnostics.Contracts;
 
 using Microsoft.Cci;
+using Microsoft.Cci.Analysis;
 
 namespace ILGarbageCollect.LocalFlow {
 

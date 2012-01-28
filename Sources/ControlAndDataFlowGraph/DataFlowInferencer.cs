@@ -12,11 +12,11 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using Microsoft.Cci.UtilityDataStructures;
 
-namespace Microsoft.Cci.ControlAndDataFlowGraph {
+namespace Microsoft.Cci.Analysis {
 
   internal class DataFlowInferencer<BasicBlock, Instruction>
-    where BasicBlock : Microsoft.Cci.BasicBlock<Instruction>, new()
-    where Instruction : Microsoft.Cci.Instruction, new() {
+    where BasicBlock : Microsoft.Cci.Analysis.BasicBlock<Instruction>, new()
+    where Instruction : Microsoft.Cci.Analysis.Instruction, new() {
 
     private DataFlowInferencer(IMetadataHost host, ControlAndDataFlowGraph<BasicBlock, Instruction> cdfg) {
       Contract.Requires(host != null);

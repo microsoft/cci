@@ -970,6 +970,10 @@ namespace Microsoft.Cci {
       get { return string.Empty; }
     }
 
+    public string DebugInformationVersion {
+      get { return string.Empty; }
+    }
+
     public ushort DllCharacteristics {
       get { return 0; }
     }
@@ -3041,6 +3045,10 @@ namespace Microsoft.Cci {
     }
 
     public string DebugInformationLocation {
+      get { return string.Empty; }
+    }
+
+    public string DebugInformationVersion {
       get { return string.Empty; }
     }
 

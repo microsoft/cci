@@ -464,6 +464,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Calls vistor.Visit(IAssemblyReference).
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
     /// A list of aliases for the root namespace of the referenced assembly.
     /// </summary>
     /// <value></value>
@@ -752,6 +759,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.baseAddress = module.BaseAddress;
       this.containingAssembly = module.ContainingAssembly;
       this.debugInformationLocation = module.DebugInformationLocation;
+      this.debugInformationVersion = module.DebugInformationVersion;
       this.dllCharacteristics = module.DllCharacteristics;
       if (module.Kind == ModuleKind.ConsoleApplication || module.Kind == ModuleKind.WindowsApplication)
         this.entryPoint = module.EntryPoint;
@@ -863,6 +871,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.debugInformationLocation = value; }
     }
     string debugInformationLocation;
+
+    /// <summary>
+    /// A hexadecimal string that is used to store and retrieve the debugging symbols from a symbol store.
+    /// </summary>
+    public virtual string DebugInformationVersion {
+      get { return this.debugInformationVersion; }
+      set { this.debugInformationVersion = value; }
+    }
+    string debugInformationVersion;
 
     /// <summary>
     /// Flags that control the behavior of the target operating system. CLI implementations are supposed to ignore this, but some operating system pay attention.

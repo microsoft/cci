@@ -857,7 +857,11 @@ namespace Microsoft.Cci.MetadataReader {
     }
 
     internal string GetDebugInformationLocation() {
-      return this.PEFileReader.DebugInformationLocation;
+      return this.PEFileReader.DebugInformation.PdbFileName;
+    }
+
+    internal string GetDebugInformationVersion() {
+      return this.PEFileReader.DebugInformation.PdbVersion;
     }
 
     internal DllCharacteristics GetDllCharacteristics() {

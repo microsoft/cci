@@ -1049,7 +1049,7 @@ namespace Microsoft.Cci {
 
 
   /// <summary>
-  /// A collection of IName instances that represent names that are commonly used during compilation.
+  /// An extensible collection of IName instances that represent names that are commonly used during compilation.
   /// </summary>
   [ContractClass(typeof(INameTableContract))]
   public interface INameTable {

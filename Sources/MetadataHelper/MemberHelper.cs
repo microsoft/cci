@@ -275,14 +275,13 @@ namespace Microsoft.Cci {
       Contract.Requires(derivedClass != null);
       Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
 
+      if (baseClassMethod.IsSealed) return Dummy.Method; 
       foreach (ITypeDefinitionMember derivedMember in derivedClass.GetMembersNamed(baseClassMethod.Name, false)) {
         IMethodDefinition/*?*/ derivedMethod = derivedMember as IMethodDefinition;
-        if (derivedMethod == null) continue;
+        if (derivedMethod == null || !derivedMethod.IsVirtual) continue;
         if (MemberHelper.MethodsAreEquivalent(baseClassMethod, derivedMethod)) {
-          if (!derivedMethod.IsVirtual || derivedMethod.IsSealed) return Dummy.MethodDefinition;
+          if (derivedMethod.IsNewSlot) return Dummy.MethodDefinition;
           return derivedMethod;
-        } else {
-          if (!baseClassMethod.IsHiddenBySignature) return Dummy.MethodDefinition;
         }
       }
       return Dummy.MethodDefinition;

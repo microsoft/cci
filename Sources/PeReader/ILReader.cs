@@ -912,7 +912,6 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
             value = this.GetLocal(memReader.ReadUInt16());
             break;
           case OperationCode.Localloc:
-            value = PointerType.GetPointerType(this.PEFileToObjectModel.PlatformType.SystemVoid, this.PEFileToObjectModel.InternFactory);
             break;
           case OperationCode.Endfilter:
             break;

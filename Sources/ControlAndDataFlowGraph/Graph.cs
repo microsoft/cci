@@ -14,16 +14,15 @@ using System.Diagnostics.Contracts;
 using System.Text;
 using Microsoft.Cci.UtilityDataStructures;
 
-namespace Microsoft.Cci {
-  using Microsoft.Cci.ControlAndDataFlowGraph;
+namespace Microsoft.Cci.Analysis {
 
   /// <summary>
   /// A set of basic blocks, each of which has a list of successor blocks and some other information.
   /// Each block consists of a list of instructions, each of which can point to previous instructions that compute the operands it consumes.
   /// </summary>
   public class ControlAndDataFlowGraph<BasicBlock, Instruction>
-    where BasicBlock : Microsoft.Cci.BasicBlock<Instruction>, new()
-    where Instruction : Microsoft.Cci.Instruction, new() {
+    where BasicBlock : Microsoft.Cci.Analysis.BasicBlock<Instruction>, new()
+    where Instruction : Microsoft.Cci.Analysis.Instruction, new() {
 
     internal ControlAndDataFlowGraph(IMethodBody body, List<BasicBlock> successorEdges, List<BasicBlock> allBlocks, List<BasicBlock> rootBlocks, Hashtable<BasicBlock> blockFor) {
       Contract.Requires(body != null);
@@ -173,7 +172,7 @@ namespace Microsoft.Cci {
     /// A list of pseudo instructions that initialize the operand stack when the block is entered. No actual code should be generated for these instructions
     /// as the actual stack will be set up by the code transferring control to this block.
     /// </summary>
-    public Sublist<Instruction> OperandStack; //TODO: should we have explicit Phi nodes?
+    public Sublist<Instruction> OperandStack;
 
     /// <summary>
     /// The instructions making up this block.
@@ -294,9 +293,6 @@ namespace Microsoft.Cci {
 
   }
 
-}
-
-namespace Microsoft.Cci.ControlAndDataFlowGraph {
   internal class Stack<Instruction> where Instruction : class {
 
     internal Stack(int maxStack, List<Instruction> operandStackSetup) {
