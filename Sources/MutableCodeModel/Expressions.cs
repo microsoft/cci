@@ -546,7 +546,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
-      Contract.Invariant(!this.resultIsUnmodifiedLeftOperand || this.LeftOperand is ITargetExpression);
+      //Contract.Invariant(!this.resultIsUnmodifiedLeftOperand || this.LeftOperand is ITargetExpression);
     }
 
     /// <summary>
@@ -555,7 +555,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public IExpression LeftOperand {
       get { return this.leftOperand; }
       set {
-        Contract.Requires(value is ITargetExpression || !this.ResultIsUnmodifiedLeftOperand);
+        //Contract.Requires(value is ITargetExpression || !this.ResultIsUnmodifiedLeftOperand);
         this.leftOperand = value; 
       }
     }
@@ -578,7 +578,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public bool ResultIsUnmodifiedLeftOperand {
       get { return this.resultIsUnmodifiedLeftOperand; }
       set {
-        Contract.Requires(!value || this.LeftOperand is ITargetExpression );
+        //Contract.Requires(!value || this.LeftOperand is ITargetExpression );
         this.resultIsUnmodifiedLeftOperand = value; 
       }
     }

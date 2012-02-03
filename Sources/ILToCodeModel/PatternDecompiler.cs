@@ -98,6 +98,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       PopReplacer pr = new PopReplacer(this.sourceMethodBody.host, statements, i, pc.count-count);
       expressionStatement.Expression = pr.Visit(expressionStatement.Expression);
+      expressionStatement.Locations.AddRange(statements[i].Locations);
       statements.RemoveRange(i, count);
     }
 

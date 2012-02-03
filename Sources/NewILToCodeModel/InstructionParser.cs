@@ -1549,7 +1549,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     private Expression PopOperandStack() {
       Contract.Ensures(Contract.Result<Expression>() != null);
       if (this.operandStack.Count == 0) {
-        Contract.Assume(false);
+        Contract.Assume(this.cdfg.AllBlocks.Count == 1 && this.cdfg.AllBlocks[0] != null && this.cdfg.AllBlocks[0].Instructions.Count <= 1);
         return new PopValue();
       } else {
         var result = this.operandStack.Pop();

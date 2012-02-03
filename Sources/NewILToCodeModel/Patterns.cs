@@ -391,6 +391,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         var conditional = new Conditional() { Condition = ifStatement.Condition, ResultIfTrue = pushTrueCase.ValueToPush, ResultIfFalse = pushFalseCase.ValueToPush };
         TypeInferencer.FixUpType(conditional);
         pushTrueCase.ValueToPush = conditional;
+        pushTrueCase.Locations.AddRange(ifStatement.Locations);
         statements.RemoveAt(i+6);
         statements.RemoveRange(i, 5);
         replacedPattern = true;
@@ -643,6 +644,9 @@ namespace Microsoft.Cci.ILToCodeModel {
         Contract.Assume(i < statements.Count);
         PopReplacer pr = new PopReplacer(this.host, statements, i, pc.count-count);
         pr.Rewrite(nextStatement);
+        var s = nextStatement as Statement;
+        if (s != null)
+          s.Locations.AddRange(statements[i].Locations);
         Contract.Assume(count >= 0);
         Contract.Assert(i+count < statements.Count);
         statements.RemoveRange(i, count);
@@ -1004,6 +1008,9 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (this.singleAssignmentLocalReplacer.Replace(assignment.Source, local, statements[i+j])) {
             this.numberOfAssignmentsToLocal[local]--;
             this.numberOfReferencesToLocal[local] -= referencesToRemove;
+            var s = statements[i + 1] as Statement;
+            if (s != null)
+              s.Locations.AddRange(statements[i].Locations);
             statements.RemoveRange(i, j);
             replacedPattern = true;
           }
