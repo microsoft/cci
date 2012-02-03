@@ -172,7 +172,6 @@ namespace Microsoft.Cci {
 
     public IEnumerable<ILocation> Locations {
       get {
-        Contract.Ensures(Contract.Result<IEnumerable<ILocation>>() != null);
         throw new NotImplementedException(); 
       }
     }

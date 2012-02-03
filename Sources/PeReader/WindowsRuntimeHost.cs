@@ -184,8 +184,6 @@ namespace Microsoft.Cci.MetadataReader {
     IName Xaml;
     WindowsRuntimePlatform platformType;
 
-    //TODO: provide a hook for rewriting the assembly references so that mscorlib and system can be mapped to reference assemblies.
-
     /// <summary>
     /// Returns an object that provides a collection of references to types from the core platform, such as System.Object and System.String.
     /// </summary>
@@ -258,7 +256,7 @@ namespace Microsoft.Cci.MetadataReader {
     /// <returns>
     /// Usually the value in typeReference, but occassionally something else.
     /// </returns>
-    public override ITypeReference Redirect(IUnit definingUnit, ITypeReference typeReference) {
+    public override INamedTypeReference Redirect(IUnit definingUnit, INamedTypeReference typeReference) {
       if (!this.projectToCLRTypes) return typeReference;
       var platformType = (WindowsRuntimePlatform)this.PlatformType;
       var definingAssembly = definingUnit as IAssembly;

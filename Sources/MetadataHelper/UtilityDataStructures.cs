@@ -478,6 +478,14 @@ namespace Microsoft.Cci.UtilityDataStructures {
       /// 
       /// </summary>
       public Value value;
+
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <returns></returns>
+      public override string ToString() {
+        return "Key = "+this.key+", value = "+this.value;
+      }
     }
     KeyValuePair[] keyValueTable;
     uint size; //always a power of two
@@ -1837,10 +1845,22 @@ namespace Microsoft.Cci.UtilityDataStructures {
         uint tableIndex = hash1 & mask;
         var elem = elements[tableIndex];
         if (elem != null) {
+          if (object.ReferenceEquals(elem, dummyObject)) {
+            elements[tableIndex] = element;
+            this.count++;
+            this.dummyCount--;
+            return true;
+          }
           if (object.ReferenceEquals(elem, element)) return false;
           uint hash2 = HashHelper.HashInt2(hash);
           tableIndex = (tableIndex + hash2) & mask;
           while ((elem = elements[tableIndex]) != null) {
+            if (object.ReferenceEquals(elem, dummyObject)) {
+              elements[tableIndex] = element;
+              this.count++;
+              this.dummyCount--;
+              return true;
+            }
             if (object.ReferenceEquals(elem, element)) return false;
             tableIndex = (tableIndex + hash2) & mask;
           }
@@ -2004,6 +2024,262 @@ namespace Microsoft.Cci.UtilityDataStructures {
   }
 
   /// <summary>
+  /// A hash table used to keep track of a set of non zero uint values, providing methods to add values to the set and to determine if an value is a member of the set.
+  /// </summary>
+  public sealed class SetOfUints {
+    uint[] elements;
+    uint size;
+    uint resizeCount;
+    uint count;
+    uint dummyCount;
+    const int loadPercent = 60;
+    // ^ invariant (this.Size&(this.Size-1)) == 0;
+
+    static uint SizeFromExpectedEntries(uint expectedEntries) {
+      uint expectedSize = (expectedEntries * 10) / 6; ;
+      uint initialSize = 16;
+      while (initialSize < expectedSize && initialSize > 0) initialSize <<= 1;
+      return initialSize;
+    }
+
+    /// <summary>
+    /// Constructor for SetOfUints
+    /// </summary>
+    public SetOfUints()
+      : this(16) {
+    }
+
+    /// <summary>
+    /// Constructor for SetOfObjects
+    /// </summary>
+    public SetOfUints(uint expectedEntries) {
+      this.size = SizeFromExpectedEntries(expectedEntries);
+      this.resizeCount = this.size * 6 / 10;
+      this.elements = new uint[this.size];
+      this.count = 0;
+    }
+
+    /// <summary>
+    /// Removes all elements from the set.
+    /// </summary>
+    public void Clear() {
+      this.count = 0;
+      for (int i = 0, n = this.elements.Length; i < n; i++)
+        this.elements[i] = 0;
+    }
+
+    /// <summary>
+    /// Number of elements
+    /// </summary>
+    public uint Count {
+      get {
+        return this.count;
+      }
+    }
+
+    void Expand() {
+      var oldElements = this.elements;
+      this.elements = new uint[this.size*2];
+      lock (this) { //force this.elements into memory before this.size gets increased.
+        this.size <<= 1;
+      }
+      this.count = 0;
+      this.dummyCount = 0;
+      this.resizeCount = this.size * 6 / 10;
+      int len = oldElements.Length;
+      for (int i = 0; i < len; ++i) {
+        var element = oldElements[i];
+        if (element != 0 && element != uint.MaxValue)
+          this.AddInternal(element);
+      }
+    }
+
+    bool AddInternal(uint element) {
+      unchecked {
+        uint mask = this.size - 1;
+        var elements = this.elements;
+        var hash = element;
+        uint hash1 = HashHelper.HashInt1(hash);
+        uint tableIndex = hash1 & mask;
+        var elem = elements[tableIndex];
+        if (elem != 0) {
+          if (elem == uint.MaxValue) {
+            elements[tableIndex] = element;
+            this.dummyCount--;
+            this.count++;
+            return true;
+          }
+          if (elem == element) return false;
+          uint hash2 = HashHelper.HashInt2(hash);
+          tableIndex = (tableIndex + hash2) & mask;
+          while ((elem = elements[tableIndex]) != 0) {
+            if (elem == uint.MaxValue) {
+              elements[tableIndex] = element;
+              this.dummyCount--;
+              this.count++;
+              return true;
+            }
+            if (elem == element) return false;
+            tableIndex = (tableIndex + hash2) & mask;
+          }
+        }
+        elements[tableIndex] = element;
+        this.count++;
+        return true;
+      }
+    }
+
+    /// <summary>
+    /// Returns false if the element is already in the set. Otherwise returns true and adds the element.
+    /// </summary>
+    /// <param name="element"></param>
+    public bool Add(uint element) {
+      if (this.count+this.dummyCount >= this.resizeCount) this.Expand();
+      return this.AddInternal(element);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="element"></param>
+    /// <returns></returns>
+    public bool Contains(uint element) {
+      unchecked {
+        uint mask = this.size - 1;
+        var elements = this.elements;
+        var hash = element;
+        uint hash1 = HashHelper.HashInt1(hash);
+        uint tableIndex = hash1 & mask;
+        var elem = elements[tableIndex];
+        if (elem != 0) {
+          if (elem == element) return true;
+          uint hash2 = HashHelper.HashInt2(hash);
+          tableIndex = (tableIndex + hash2) & mask;
+          while ((elem = elements[tableIndex]) != 0) {
+            if (elem == element) return true;
+            tableIndex = (tableIndex + hash2) & mask;
+          }
+        }
+        return false;
+      }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="element"></param>
+    public void Remove(uint element) {
+      unchecked {
+        uint mask = this.size - 1;
+        var elements = this.elements;
+        var hash = (uint)element.GetHashCode();
+        uint hash1 = HashHelper.HashInt1(hash);
+        uint tableIndex = hash1 & mask;
+        var elem = elements[tableIndex];
+        if (elem != 0) {
+          if (elem == element) {
+            elements[tableIndex] = uint.MaxValue;
+            this.count--;
+            this.dummyCount++;
+            return;
+          }
+          uint hash2 = HashHelper.HashInt2(hash);
+          tableIndex = (tableIndex + hash2) & mask;
+          while ((elem = elements[tableIndex]) != 0) {
+            if (elem == element) {
+              elements[tableIndex] = uint.MaxValue;
+              this.count--;
+              this.dummyCount++;
+              return;
+            }
+            tableIndex = (tableIndex + hash2) & mask;
+          }
+        }
+      }
+    }
+
+    /// <summary>
+    /// Enumerator for elements
+    /// </summary>
+    public struct ValuesEnumerator {
+
+      internal ValuesEnumerator(SetOfUints setOfUints) {
+        this.setOfUints = setOfUints;
+        this.currentIndex = 0xFFFFFFFF;
+      }
+
+      SetOfUints setOfUints;
+      uint currentIndex;
+
+      /// <summary>
+      /// Current element
+      /// </summary>
+      public uint Current {
+        get {
+          return this.setOfUints.elements[this.currentIndex];
+        }
+      }
+
+      /// <summary>
+      /// Move to next element
+      /// </summary>
+      public bool MoveNext() {
+        unchecked {
+          var elements = this.setOfUints.elements;
+          uint size = (uint)elements.Length;
+          uint currentIndex = this.currentIndex + 1;
+          if (currentIndex >= size) return false;
+          while (currentIndex < size) {
+            var elem = elements[currentIndex];
+            if (elem != 0 && elem != uint.MaxValue) {
+              this.currentIndex = currentIndex;
+              return true;
+            }
+            currentIndex++;
+          }
+          this.currentIndex = currentIndex;
+          return false;
+        }
+      }
+
+      /// <summary>
+      /// Reset the enumerator
+      /// </summary>
+      public void Reset() {
+        this.currentIndex = 0xFFFFFFFF;
+      }
+    }
+
+    /// <summary>
+    /// Enumerable for elements
+    /// </summary>
+    public struct ValuesEnumerable {
+      internal ValuesEnumerable(SetOfUints setOfUints) {
+        this.setOfUints = setOfUints;
+      }
+
+      SetOfUints setOfUints;
+
+      /// <summary>
+      /// Get the enumerator
+      /// </summary>
+      /// <returns></returns>
+      public ValuesEnumerator GetEnumerator() {
+        return new ValuesEnumerator(this.setOfUints);
+      }
+    }
+
+    /// <summary>
+    /// Enumerable of all the values
+    /// </summary>
+    public ValuesEnumerable Values {
+      get {
+        return new ValuesEnumerable(this);
+      }
+    }
+  }
+
+  /// <summary>
   /// A list of elements represented as a sublist of a master list. Use this to avoid allocating lots of little list objects.
   /// </summary>
   [ContractVerification(true)]
@@ -2068,7 +2344,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
     public int Count {
       get {
         Contract.Ensures(Contract.Result<int>() >= 0);
-        return this.count; 
+        return this.count;
       }
     }
 

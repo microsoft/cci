@@ -40,6 +40,7 @@ namespace Microsoft.Cci.MetadataReader {
     internal readonly TypeCache typeCache;
     internal readonly byte pointerSize;
     internal readonly MetadataObjectDocument document;
+    internal readonly Hashtable<IGenericTypeInstanceReference> genericInstanceCache = new Hashtable<IGenericTypeInstanceReference>();
 
     readonly Hashtable<IName> StringIndexToNameTable;
     readonly Hashtable<IName> StringIndexToUnmangledNameTable;
@@ -130,6 +131,7 @@ namespace Microsoft.Cci.MetadataReader {
       this.PreLoadTypeDefTableLookup();
       this.ModuleTypeDefArray = new TypeBase/*?*/[peFileReader.TypeDefTable.NumberOfRows + 1];
       this.ModuleTypeDefLoadState = new LoadState[peFileReader.TypeDefTable.NumberOfRows + 1];
+      this.RedirectedTypeDefArray = new INamedTypeReference/*?*/[peFileReader.TypeDefTable.NumberOfRows + 1];
       this.ModuleTypeDefLoadState[0] = LoadState.Loaded;
 
       this.ExportedTypeArray = new ExportedTypeAliasBase/*?*/[peFileReader.ExportedTypeTable.NumberOfRows + 1];
@@ -141,7 +143,7 @@ namespace Microsoft.Cci.MetadataReader {
         this.ModuleMethodSpecHashtable = new DoubleHashtable<IGenericMethodInstanceReference>(peFileReader.MethodSpecTable.NumberOfRows + 1);
       }
 
-      this.ModuleTypeRefReferenceArray = new IMetadataReaderNamedTypeReference[peFileReader.TypeRefTable.NumberOfRows + 1];
+      this.ModuleTypeRefReferenceArray = new INamedTypeReference[peFileReader.TypeRefTable.NumberOfRows + 1];
       this.ModuleTypeRefReferenceLoadState = new LoadState[peFileReader.TypeRefTable.NumberOfRows + 1];
       this.ModuleTypeRefReferenceLoadState[0] = LoadState.Loaded;
       if (peFileReader.TypeSpecTable.NumberOfRows > 0) {
@@ -154,6 +156,9 @@ namespace Microsoft.Cci.MetadataReader {
       this.ModulePropertyArray = new PropertyDefinition[peFileReader.PropertyTable.NumberOfRows + 1];
 
       this.ModuleMemberReferenceArray = new MemberReference/*?*/[peFileReader.MemberRefTable.NumberOfRows + 1];
+      this.UnspecializedMemberReferenceArray = new MemberReference/*?*/[peFileReader.MemberRefTable.NumberOfRows + 1];
+      this.SpecializedFieldHashtable = new DoubleHashtable<ISpecializedFieldReference>();
+      this.SpecializedMethodHashtable = new DoubleHashtable<ISpecializedMethodReference>();
 
       this.CustomAttributeArray = new ICustomAttribute/*?*/[peFileReader.CustomAttributeTable.NumberOfRows + 1];
 
@@ -264,6 +269,7 @@ namespace Microsoft.Cci.MetadataReader {
         int mscorlibKey = peReader.Mscorlib.UniqueKey;
         int systemRuntimeKey = peReader.System_Runtime.UniqueKey;
         TypeRefTableReader trTable = this.PEFileReader.TypeRefTable;
+        var hitCounts = new uint[trTable.NumberOfRows];
         for (uint i = 1; i <= trTable.NumberOfRows; i++) {
           TypeRefRow tr = trTable[i];
           IName nsName = this.GetNameFromOffset(tr.Namespace);
@@ -281,8 +287,22 @@ namespace Microsoft.Cci.MetadataReader {
           uint resolutionScopeKind = (tr.ResolutionScope & TokenTypeIds.TokenTypeMask);
           if (resolutionScopeKind != TokenTypeIds.AssemblyRef) continue;
           uint resolutionScopeRowId = (tr.ResolutionScope & TokenTypeIds.RIDMask);
-          return this.AssemblyReferenceArray[resolutionScopeRowId].AssemblyIdentity;
+          //Just because this reference looks like a mscorlib type, does not mean that it actually is one. Badly behaved assemblies might reuse mscorlib names.
+          //We therefore count the number of references and hope that mscorlib has a majority.
+          hitCounts[resolutionScopeRowId-1]++;
         }
+        uint maxHits = 0;
+        uint rowWithMaxHits = 0;
+        for (uint i = 0; i < hitCounts.Length; i++) {
+          if (hitCounts[i] > rowWithMaxHits) {
+            maxHits = hitCounts[i];
+            rowWithMaxHits = i;
+          }
+        }
+        if (maxHits > 0) {
+          return this.AssemblyReferenceArray[rowWithMaxHits+1].AssemblyIdentity;
+        }
+
         TypeDefTableReader tdTable = this.PEFileReader.TypeDefTable;
         for (uint i = 1; i <= tdTable.NumberOfRows; i++) {
           TypeDefRow td = tdTable[i];
@@ -991,10 +1011,9 @@ namespace Microsoft.Cci.MetadataReader {
     //  <ParentTypeToken(Def/Exported), TypeName> -> TypeDefRowId/ExportedTypeToken
     readonly DoubleHashtable NestedTypeTokenTable;
     readonly TypeBase/*?*/[] ModuleTypeDefArray;
-    //^ [SpecPublic]
+    readonly INamedTypeReference/*?*/[] RedirectedTypeDefArray;
     readonly LoadState[] ModuleTypeDefLoadState;
     readonly ExportedTypeAliasBase/*?*/[] ExportedTypeArray;
-    //^ [SpecPublic]
     readonly LoadState[] ExportedTypeLoadState;
     //^ invariant this.ModuleTypeDefArray.Length == this.ModuleTypeDefLoadState.Length;
     // ^ invariant forall{int i in (0:this.ModuleTypeDefArray.Length-1); this.ModuleTypeDefLoadState[i] == LoadState.Loaded ==> this.ModuleTypeDefArray[i] != null};
@@ -1049,7 +1068,6 @@ namespace Microsoft.Cci.MetadataReader {
         IName unmangledTypeName = this.GetUnmangledNameFromOffset(typeDefRow.Name);
         type = new GenericNamespaceType(this, unmangledTypeName, typeDefRowId, typeDefRow.Flags, moduleNamespace, typeName, genericParamRowIdStart, genericParamRowIdEnd);
       }
-      moduleNamespace.AddMember(type);
       return type;
     }
 
@@ -1073,7 +1091,6 @@ namespace Microsoft.Cci.MetadataReader {
         IName unmangledTypeName = this.GetUnmangledNameFromOffset(typeDefRow.Name);
         type = new GenericNestedType(this, unmangledTypeName, typeDefRowId, typeDefRow.Flags, parentModuleType, typeName, genericParamRowIdStart, genericParamRowIdEnd);
       }
-      parentModuleType.AddMember(type);
       return type;
     }
 
@@ -1109,7 +1126,7 @@ namespace Microsoft.Cci.MetadataReader {
       uint namespaceNameOffset = moduleNamespace.NamespaceNameOffset;
       Debug.Assert(namespaceNameOffset != 0xFFFFFFFF);
       uint numberOfTypeDefs = this.PEFileReader.TypeDefTable.NumberOfRows;
-      TypeBase/*?*/[] moduleTypeArray = this.ModuleTypeDefArray;
+      var moduleTypeArray = this.ModuleTypeDefArray;
       for (uint i = 1; i <= numberOfTypeDefs; ++i) {
         TypeDefRow typeDefRow = this.PEFileReader.TypeDefTable[i];
         //  Check if its in the same namespace
@@ -1119,7 +1136,10 @@ namespace Microsoft.Cci.MetadataReader {
         NamespaceType/*?*/ type = (NamespaceType)moduleTypeArray[i];
         if (type == null) {
           type = this.CreateModuleNamespaceType(i, typeDefRow, moduleNamespace, MetadataReaderSignatureTypeCode.NotModulePrimitive);
-          this.ModuleTypeDefArray[i] = type;
+          var redirectedType = this.ModuleReader.metadataReaderHost.Redirect(this.Module, type);
+          if (redirectedType == type) moduleNamespace.AddMember(type);
+          moduleTypeArray[i] = type;
+          this.RedirectedTypeDefArray[i] = redirectedType;
           this.ModuleTypeDefLoadState[i] = LoadState.Loaded;
         }
       }
@@ -1140,7 +1160,7 @@ namespace Microsoft.Cci.MetadataReader {
       }
     }
 
-    internal TypeBase GetPredefinedTypeDefinitionAtRowWorker(
+    internal NamespaceType GetPredefinedTypeDefinitionAtRowWorker(
       uint typeDefRowId,
       MetadataReaderSignatureTypeCode signatureTypeCode
     ) {
@@ -1149,12 +1169,13 @@ namespace Microsoft.Cci.MetadataReader {
         TypeDefRow typeDefRow = this.PEFileReader.TypeDefTable[typeDefRowId];
         Debug.Assert(!typeDefRow.IsNested); //  TODO: MD Error if this happens
         Namespace parentNamespace = this.GetNamespaceForNameOffset(typeDefRow.Namespace);
-        this.ModuleTypeDefArray[typeDefRowId] = this.CreateModuleNamespaceType(typeDefRowId, typeDefRow, parentNamespace, signatureTypeCode);
+        var type = this.CreateModuleNamespaceType(typeDefRowId, typeDefRow, parentNamespace, signatureTypeCode);
+        parentNamespace.AddMember(type);
+        this.ModuleTypeDefArray[typeDefRowId] = type;
+        this.RedirectedTypeDefArray[typeDefRowId] = type;
         this.ModuleTypeDefLoadState[typeDefRowId] = LoadState.Loaded;
       }
-      TypeBase /*?*/ mt = this.ModuleTypeDefArray[typeDefRowId];
-      //^ assert mt != null;
-      return mt;
+      return (NamespaceType)this.ModuleTypeDefArray[typeDefRowId];
     }
 
     internal _Module_Type/*?*/ Create_Module_Type()
@@ -1169,6 +1190,7 @@ namespace Microsoft.Cci.MetadataReader {
       var typeName = this.GetNameFromOffset(typeDefRow.Name);
       _Module_Type moduleType = new _Module_Type(this, typeName, 1, typeDefRow.Flags, nspace);
       this.ModuleTypeDefArray[1] = moduleType;
+      this.RedirectedTypeDefArray[1] = moduleType;
       this.ModuleTypeDefLoadState[1] = LoadState.Loaded;
       return moduleType;
     }
@@ -1183,31 +1205,36 @@ namespace Microsoft.Cci.MetadataReader {
       }
       if (this.ModuleTypeDefLoadState[typeDefRowId] == LoadState.Uninitialized) {
         CoreTypes dummy = this.CoreTypes; //force core types to be initialized
-        TypeBase/*?*/ cachedCopy = this.ModuleTypeDefArray[typeDefRowId];
+        var cachedCopy = this.ModuleTypeDefArray[typeDefRowId];
         if (cachedCopy != null) return cachedCopy;
         this.ModuleTypeDefLoadState[typeDefRowId] = LoadState.Loading;
         TypeDefRow typeDefRow = this.PEFileReader.TypeDefTable[typeDefRowId];
-        TypeBase/*?*/ type = null;
         if (typeDefRow.IsNested) {
           uint parentTypeRowId = this.PEFileReader.NestedClassTable.FindParentTypeDefRowId(typeDefRowId);
-          TypeBase/*?*/ parentModuleType = this.GetTypeDefinitionAtRowWorker(parentTypeRowId);
+          var parentModuleType = this.GetTypeDefinitionAtRowWorker(parentTypeRowId);
           if (parentModuleType != null) {
-            type = this.CreateModuleNestedType(typeDefRowId, typeDefRow, parentModuleType);
+            var type = this.CreateModuleNestedType(typeDefRowId, typeDefRow, parentModuleType);
+            var redirectedType = this.ModuleReader.metadataReaderHost.Redirect(this.Module, type);
+            if (redirectedType == type) parentModuleType.AddMember(type);
+            this.ModuleTypeDefArray[typeDefRowId] = type;
+            this.RedirectedTypeDefArray[typeDefRowId] = redirectedType;
           } else {
             this.PEFileReader.ErrorContainer.AddMetadataError(TableIndices.NestedClass, typeDefRowId, MetadataReaderErrorKind.NestedClassParentError);
           }
         } else {
           Namespace parentNamespace = this.GetNamespaceForNameOffset(typeDefRow.Namespace);
-          type = this.CreateModuleNamespaceType(typeDefRowId, typeDefRow, parentNamespace, MetadataReaderSignatureTypeCode.NotModulePrimitive);
+          var type = this.CreateModuleNamespaceType(typeDefRowId, typeDefRow, parentNamespace, MetadataReaderSignatureTypeCode.NotModulePrimitive);
+          var redirectedType = this.ModuleReader.metadataReaderHost.Redirect(this.Module, type);
+          if (redirectedType == type) parentNamespace.AddMember(type);
+          this.ModuleTypeDefArray[typeDefRowId] = type;
+          this.RedirectedTypeDefArray[typeDefRowId] = redirectedType;
         }
-        this.ModuleTypeDefArray[typeDefRowId] = type;
         this.ModuleTypeDefLoadState[typeDefRowId] = LoadState.Loaded;
       }
-      TypeBase /*?*/ mt = this.ModuleTypeDefArray[typeDefRowId];
-      return mt;
+      return this.ModuleTypeDefArray[typeDefRowId];
     }
 
-    internal TypeBase/*?*/ GetTypeDefinitionAtRow(
+    internal INamedTypeReference/*?*/ GetTypeDefinitionAtRow(
       uint typeDefRowId
     ) {
       if (typeDefRowId == 0 || typeDefRowId > this.PEFileReader.TypeDefTable.NumberOfRows) {
@@ -1220,8 +1247,7 @@ namespace Microsoft.Cci.MetadataReader {
           }
         }
       }
-      TypeBase /*?*/ mt = this.ModuleTypeDefArray[typeDefRowId];
-      return mt;
+      return this.RedirectedTypeDefArray[typeDefRowId];
     }
 
     internal ExportedTypeAliasBase/*?*/ GetExportedTypeAtRowWorker(
@@ -1317,7 +1343,7 @@ namespace Microsoft.Cci.MetadataReader {
       //if (typeToken == 0 || ((typeToken & TokenTypeIds.TokenTypeMask) != TokenTypeIds.TypeDef)) return null;
       var tokenType = typeToken & TokenTypeIds.TokenTypeMask;
       if (tokenType == TokenTypeIds.TypeDef)
-        return this.GetTypeDefinitionAtRowWorker(typeToken & TokenTypeIds.RIDMask);
+        return this.GetTypeDefinitionAtRow(typeToken & TokenTypeIds.RIDMask) as INamedTypeDefinition;
       if (tokenType == TokenTypeIds.ExportedType) {
         var alias = this.GetExportedTypeAtRowWorker(typeToken & 0xFFFFFF);
         if (alias != null) return alias.AliasedType.ResolvedType;
@@ -1374,8 +1400,9 @@ namespace Microsoft.Cci.MetadataReader {
     internal IEnumerable<INamedTypeDefinition> GetAllTypes() {
       uint lastTypeDefRow = this.PEFileReader.TypeDefTable.NumberOfRows;
       for (uint typeDefRowId = 1; typeDefRowId <= lastTypeDefRow; ++typeDefRowId) {
-        TypeBase/*?*/ typeBase = this.GetTypeDefinitionAtRow(typeDefRowId);
-        if (typeBase != null) yield return typeBase;
+        var redirectedType = this.GetTypeDefinitionAtRow(typeDefRowId);
+        var typedef = this.ModuleTypeDefArray[typeDefRowId];
+        if (typedef != null && typedef == redirectedType) yield return typedef;
       }
     }
 
@@ -1527,7 +1554,7 @@ namespace Microsoft.Cci.MetadataReader {
     /// <summary>
     /// Cache for type ref's in the module.
     /// </summary>
-    readonly IMetadataReaderNamedTypeReference[] ModuleTypeRefReferenceArray;
+    readonly INamedTypeReference[] ModuleTypeRefReferenceArray;
     readonly LoadState[] ModuleTypeRefReferenceLoadState;
 
     readonly DoubleHashtable<TypeSpecReference>/*?*/ ModuleTypeSpecHashtable;
@@ -1622,17 +1649,18 @@ namespace Microsoft.Cci.MetadataReader {
       uint resolutionScopeKind = (typeRefRow.ResolutionScope & TokenTypeIds.TokenTypeMask);
       uint resolutionScopeRowId = (typeRefRow.ResolutionScope & TokenTypeIds.RIDMask);
       Debug.Assert(resolutionScopeKind == TokenTypeIds.AssemblyRef);  //  TODO: MD Error
-      this.ModuleTypeRefReferenceArray[typeRefRowId] = this.CreateTypeRefReference(typeRefRowId, typeRefRow, null, this.AssemblyReferenceArray[resolutionScopeRowId], signatureTypeCode);
+      var result = this.CreateTypeRefReference(typeRefRowId, typeRefRow, null, this.AssemblyReferenceArray[resolutionScopeRowId], signatureTypeCode);
+      this.ModuleTypeRefReferenceArray[typeRefRowId] = result;
       this.ModuleTypeRefReferenceLoadState[typeRefRowId] = LoadState.Loaded;
-      return this.ModuleTypeRefReferenceArray[typeRefRowId];
+      return result;
     }
 
     IMetadataReaderNamedTypeReference/*?*/ GetTypeRefReferenceAtRowWorker(
       uint typeRefRowId
     ) {
-      return this.GetTypeRefReferenceAtRowWorker(typeRefRowId, false);
+      return this.GetTypeRefReferenceAtRowWorker(typeRefRowId, false) as IMetadataReaderNamedTypeReference;
     }
-    IMetadataReaderNamedTypeReference/*?*/ GetTypeRefReferenceAtRowWorker(
+    INamedTypeReference/*?*/ GetTypeRefReferenceAtRowWorker(
       uint typeRefRowId,
       bool mustBeStruct
     ) {
@@ -1680,7 +1708,8 @@ namespace Microsoft.Cci.MetadataReader {
           typeRefReference = this.CreateTypeRefReference(typeRefRowId, typeRefRow, null, moduleReference,
             mustBeStruct ? MetadataReaderSignatureTypeCode.ValueType : MetadataReaderSignatureTypeCode.NotModulePrimitive);
         }
-        this.ModuleTypeRefReferenceArray[typeRefRowId] = typeRefReference;
+        var redirectedTypeReference = this.ModuleReader.metadataReaderHost.Redirect(this.Module, typeRefReference) as INamedTypeReference;
+        this.ModuleTypeRefReferenceArray[typeRefRowId] = redirectedTypeReference??typeRefReference;
         this.ModuleTypeRefReferenceLoadState[typeRefRowId] = LoadState.Loaded;
       }
       return this.ModuleTypeRefReferenceArray[typeRefRowId];
@@ -1709,7 +1738,7 @@ namespace Microsoft.Cci.MetadataReader {
     {
       return this.GetTypeRefReferenceAtRow(typeRefRowId, false);
     }
-    internal IMetadataReaderNamedTypeReference/*?*/ GetTypeRefReferenceAtRow(
+    internal INamedTypeReference/*?*/ GetTypeRefReferenceAtRow(
       uint typeRefRowId,
       bool mustBeStruct
     )
@@ -1769,13 +1798,13 @@ namespace Microsoft.Cci.MetadataReader {
             if (rowId == 0 || rowId > this.PEFileReader.TypeDefTable.NumberOfRows) {
               //  handle Error
             }
-            return this.ModuleReader.metadataReaderHost.Redirect(this.Module, this.GetTypeDefinitionAtRow(rowId));
+            return this.GetTypeDefinitionAtRow(rowId);
           }
         case TokenTypeIds.TypeRef: {
             if (rowId == 0 || rowId > this.PEFileReader.TypeRefTable.NumberOfRows) {
               //  handle Error
             }
-            return this.ModuleReader.metadataReaderHost.Redirect(this.Module, this.GetTypeRefReferenceAtRow(rowId, mustBeStruct));
+            return this.GetTypeRefReferenceAtRow(rowId, mustBeStruct);
           }
         case TokenTypeIds.TypeSpec: {
             if (rowId == 0 || rowId > this.PEFileReader.TypeSpecTable.NumberOfRows) {
@@ -2055,7 +2084,7 @@ namespace Microsoft.Cci.MetadataReader {
     ) {
       uint currentClassRowId = moduleType.TypeDefRowId;
       uint numberOfNestedClassRows = this.PEFileReader.NestedClassTable.NumberOfRows;
-      TypeBase/*?*/[] moduleTypeArray = this.ModuleTypeDefArray;
+      var moduleTypeArray = this.ModuleTypeDefArray;
       uint firstNestedClassRow = 0;
       uint nestedClassCounter = 0;
       for (uint i = 1; i <= numberOfNestedClassRows; ++i) {
@@ -2067,7 +2096,10 @@ namespace Microsoft.Cci.MetadataReader {
         NestedType/*?*/ currType = moduleTypeArray[nestedClassRow.NestedClass] as NestedType;
         if (currType == null) {
           currType = this.CreateModuleNestedType(nestedClassRow.NestedClass, this.PEFileReader.TypeDefTable[nestedClassRow.NestedClass], moduleType);
-          this.ModuleTypeDefArray[nestedClassRow.NestedClass] = currType;
+          var redirectedType = this.ModuleReader.metadataReaderHost.Redirect(this.Module, currType);
+          if (redirectedType == currType) moduleType.AddMember(currType);
+          moduleTypeArray[nestedClassRow.NestedClass] = currType;
+          this.RedirectedTypeDefArray[nestedClassRow.NestedClass] = redirectedType;
           this.ModuleTypeDefLoadState[nestedClassRow.NestedClass] = LoadState.Loaded;
         }
       }
@@ -2295,7 +2327,7 @@ namespace Microsoft.Cci.MetadataReader {
             if (typeDefRowId == 0 || typeDefRowId > this.PEFileReader.TypeDefTable.NumberOfRows) {
               // TODO: MD ERRor
             }
-            TypeBase/*?*/ typeDef = this.GetTypeDefinitionAtRow(typeDefRowId);
+            TypeBase/*?*/ typeDef = this.GetTypeDefinitionAtRowWorker(typeDefRowId);
             if (typeDef == null) {
               return null;
             }
@@ -2323,7 +2355,7 @@ namespace Microsoft.Cci.MetadataReader {
             if (typeDefRowId == 0 || typeDefRowId > this.PEFileReader.TypeDefTable.NumberOfRows) {
               // TODO: MD ERRor
             }
-            TypeBase/*?*/ typeDef = this.GetTypeDefinitionAtRow(typeDefRowId);
+            TypeBase/*?*/ typeDef = this.GetTypeDefinitionAtRowWorker(typeDefRowId);
             if (typeDef == null) {
               return null;
             }
@@ -2860,6 +2892,9 @@ namespace Microsoft.Cci.MetadataReader {
 
     #region Member Reference Information
     readonly MemberReference/*?*/[] ModuleMemberReferenceArray;
+    readonly MemberReference/*?*/[] UnspecializedMemberReferenceArray;
+    readonly DoubleHashtable<ISpecializedFieldReference>/*?*/ SpecializedFieldHashtable;
+    readonly DoubleHashtable<ISpecializedMethodReference>/*?*/ SpecializedMethodHashtable;
     readonly DoubleHashtable<IGenericMethodInstanceReference>/*?*/ ModuleMethodSpecHashtable;
     //^ invariant this.PEFileReader.MethodSpecTable.NumberOfRows >= 1 ==> this.MethodSpecHashtable != null;
 
@@ -2877,10 +2912,10 @@ namespace Microsoft.Cci.MetadataReader {
         ITypeReference/*?*/ parentTypeReference = null;
         switch (classTokenType) {
           case TokenTypeIds.TypeDef:
-            parentTypeReference = this.ModuleReader.metadataReaderHost.Redirect(this.Module, this.GetTypeDefinitionAtRowWorker(classRowId));
+            parentTypeReference = this.GetTypeDefinitionAtRow(classRowId);
             break;
           case TokenTypeIds.TypeRef:
-            parentTypeReference = this.ModuleReader.metadataReaderHost.Redirect(this.Module, this.GetTypeRefReferenceAtRowWorker(classRowId));
+            parentTypeReference = this.GetTypeRefReferenceAtRow(classRowId);
             break;
           case TokenTypeIds.TypeSpec:
             parentTypeReference = this.GetTypeSpecReferenceAtRow(owningObject, classRowId).UnderlyingModuleTypeReference;
@@ -2925,19 +2960,39 @@ namespace Microsoft.Cci.MetadataReader {
         var specializedNestedTypeReference = parentTypeReference as ISpecializedNestedTypeReference;
         if (SignatureHeader.IsFieldSignature(firstByte)) {
           if (genericTypeInstance != null || specializedNestedTypeReference != null) {
-            //The same memberRef token can be shared by distinct instance references, therefore recompute this every time.
-            var unspecializedFieldReference = new FieldReference(this, memberRefRowId, TypeCache.Unspecialize(parentTypeReference), name);
-            //TODO: it is possible to cache the unspecialized reference
-            return new SpecializedFieldReference(parentTypeReference, unspecializedFieldReference, this.InternFactory);
+            //The same memberRef token can be shared by distinct instance references, therefore special caching is required
+            FieldReference unspecializedFieldReference = this.UnspecializedMemberReferenceArray[memberRefRowId] as FieldReference;
+            if (unspecializedFieldReference == null) {
+              unspecializedFieldReference = new FieldReference(this, memberRefRowId, TypeCache.Unspecialize(parentTypeReference), name);
+              this.UnspecializedMemberReferenceArray[memberRefRowId] = unspecializedFieldReference;
+            }
+            uint key1 = parentTypeReference.InternedKey;
+            uint key2 = unspecializedFieldReference.InternedKey;
+            var specializedField = this.SpecializedFieldHashtable.Find(key1, key2);
+            if (specializedField == null) {
+              specializedField = new SpecializedFieldReference(parentTypeReference, unspecializedFieldReference, this.InternFactory);
+              this.SpecializedFieldHashtable.Add(key1, key2, specializedField);
+            }
+            return specializedField;
           } else {
             retModuleMemberReference = new FieldReference(this, memberRefRowId, parentTypeReference, name);
           }
         } else if (SignatureHeader.IsMethodSignature(firstByte)) {
           if (genericTypeInstance != null || specializedNestedTypeReference != null) {
-            //The same memberRef token can be shared by distinct instance references, therefore recompute this every time.
-            var unspecializedMethodReference = new MethodReference(this, memberRefRowId, TypeCache.Unspecialize(parentTypeReference), name, firstByte);
-            //TODO: it is possible to cache the unspecialized reference
-            return new SpecializedMethodReference(parentTypeReference, unspecializedMethodReference, this.InternFactory);
+            //The same memberRef token can be shared by distinct instance references, therefore special caching is required
+            MethodReference unspecializedMethodReference = this.UnspecializedMemberReferenceArray[memberRefRowId] as MethodReference;
+            if (unspecializedMethodReference == null) {
+              unspecializedMethodReference = new MethodReference(this, memberRefRowId, TypeCache.Unspecialize(parentTypeReference), name, firstByte);
+              this.UnspecializedMemberReferenceArray[memberRefRowId] = unspecializedMethodReference;
+            }
+            uint key1 = parentTypeReference.InternedKey;
+            uint key2 = unspecializedMethodReference.InternedKey;
+            var specializedMethod = this.SpecializedMethodHashtable.Find(key1, key2);
+            if (specializedMethod == null) {
+              specializedMethod = new SpecializedMethodReference(parentTypeReference, unspecializedMethodReference, this.InternFactory);
+              this.SpecializedMethodHashtable.Add(key1, key2, specializedMethod);
+            }
+            return specializedMethod;
           } else {
             retModuleMemberReference = new MethodReference(this, memberRefRowId, parentTypeReference, name, firstByte);
           }
@@ -3471,7 +3526,7 @@ namespace Microsoft.Cci.MetadataReader {
       uint templateTypeRowId = templateTypeToken & TokenTypeIds.RIDMask;
       INamedTypeReference/*?*/ templateTypeReference = null;
       if (templateTypeTokenKind == TokenTypeIds.TypeDef) {
-        templateTypeReference = this.PEFileToObjectModel.GetTypeDefinitionAtRowWorker(templateTypeRowId);
+        templateTypeReference = this.PEFileToObjectModel.GetTypeDefinitionAtRow(templateTypeRowId);
       } else if (templateTypeTokenKind == TokenTypeIds.TypeRef) {
         templateTypeReference = this.PEFileToObjectModel.GetTypeRefReferenceAtRow(templateTypeRowId, headByte == ElementType.ValueType);
       } else {
@@ -3505,6 +3560,10 @@ namespace Microsoft.Cci.MetadataReader {
       }
       genericArgumentCount -= genericParametersCount;
       var genericArgumentArray = new ITypeReference[genericParametersCount];
+      //TODO: it would be very desirable to cache these objects by structure so that we can reuse them.
+      //However, it is not safe at this point to use the intern table because we might still be reading the
+      //signature of a generic method whose generic parameters feature in the arguments to the generic type.
+      //We cannot compute the intern key of a generic method type parameter before we are able to compute the intern key of the generic method.
       for (int i = 0; i < genericParametersCount; ++i) genericArgumentArray[i] = this.GetTypeReference()??Dummy.TypeReference;
       if (outer && typeSpecToken != 0xFFFFFFFF)
         return new GenericTypeInstanceReferenceWithToken(typeSpecToken, namedTypeReference, IteratorHelper.GetReadonly(genericArgumentArray), this.PEFileToObjectModel.InternFactory);

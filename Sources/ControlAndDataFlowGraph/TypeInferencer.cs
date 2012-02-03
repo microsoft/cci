@@ -59,6 +59,10 @@ namespace Microsoft.Cci.Analysis {
     internal static void FillInTypes(IMetadataHost host, ControlAndDataFlowGraph<BasicBlock, Instruction> cfg) {
       Contract.Requires(host != null);
       Contract.Requires(cfg != null);
+
+      //If this is a dummy body, do nothing.
+      if (cfg.AllBlocks.Count == 1 && cfg.AllBlocks[0] != null && cfg.AllBlocks[0].Instructions.Count <= 1) return;
+
       var stack = new Stack<Instruction>(cfg.MethodBody.MaxStack, new List<Instruction>(0));
       var numberOfBlocks = cfg.BlockFor.Count;
       var blocksToVisit = new Queue<BasicBlock>((int)numberOfBlocks);

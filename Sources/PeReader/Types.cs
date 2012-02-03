@@ -2833,6 +2833,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       return Dummy.GenericTypeParameter;
     }
 
+    public override string ToString() {
+      return TypeHelper.GetTypeName(this);
+    }
+
     #region IGenericTypeParameter Members
 
     public ITypeDefinition DefiningType {
@@ -2920,6 +2924,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       foreach (var genMethPar in definingMethod.GenericParameters) {
         if (genMethPar.Index == this.Index) { this.resolvedType = genMethPar; return; }
       }
+    }
+
+    public override string ToString() {
+      return TypeHelper.GetTypeName(this);
     }
 
     #region IGenericMethodParameter Members

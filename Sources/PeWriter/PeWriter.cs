@@ -5416,7 +5416,7 @@ namespace Microsoft.Cci.PeWriterInternal {
     // Non primitive namespace as well as nested types always need tokens, and structural types that are referred to from tables need tokens.
     // However, types that are inside custom attributes and structural types that are never referred to from a table don't need tokens.
 
-    SetOfObjects alreadyHasToken = new SetOfObjects();
+    SetOfUints alreadyHasToken = new SetOfUints();
     SetOfObjects alreadyHasBeenTaversed = new SetOfObjects();
     PeWriter peWriter;
     bool traverseAttributes;

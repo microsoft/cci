@@ -66,14 +66,17 @@ namespace Microsoft.Cci.Analysis {
     private void SetupDataFlowFor(IMethodBody methodBody) {
       Contract.Requires(methodBody != null);
 
+      //If this is a dummy body, do nothing.
+      if (this.cdfg.AllBlocks.Count == 1 && this.cdfg.AllBlocks[0] != null && this.cdfg.AllBlocks[0].Instructions.Count <= 1) return;
+
       this.AddStackSetupForExceptionHandlers(methodBody);
-      foreach (var root in cdfg.RootBlocks) {
+      foreach (var root in this.cdfg.RootBlocks) {
         this.blocksToVisit.Enqueue(root);
         while (this.blocksToVisit.Count != 0)
           this.DequeueBlockAndSetupDataFlow();
       }
       //At this point, all reachable code blocks have had their data flow inferred. Now look for unreachable blocks.
-      foreach (var block in cdfg.AllBlocks) {
+      foreach (var block in this.cdfg.AllBlocks) {
         if (this.blocksAlreadyVisited.Contains(block)) continue;
         blocksToVisit.Enqueue(block);
         while (blocksToVisit.Count != 0)

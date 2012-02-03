@@ -644,6 +644,7 @@ namespace Microsoft.Cci {
   /// An interface provided by the application hosting the metadata reader. The interface allows the host application
   /// to control how assembly references are unified, where files are found and so on.
   /// </summary>
+  [ContractClass(typeof(IMetadataReaderHostContract))]
   public interface IMetadataReaderHost : IMetadataHost {
     /// <summary>
     /// Open the binary document as a memory block in host dependent fashion.
@@ -676,9 +677,9 @@ namespace Microsoft.Cci {
     /// This avoids the cost of rewriting the entire unit in order to make such changes.
     /// </summary>
     /// <param name="definingUnit">A reference to the unit that is defining the type.</param>
-    /// <param name="typeReference">A type reference encountered during metadata reading.</param>
+    /// <param name="typeReference">A named type reference encountered during metadata reading.</param>
     /// <returns>Usually the value in typeReference, but occassionally something else.</returns>
-    ITypeReference Redirect(IUnit definingUnit, ITypeReference typeReference);
+    INamedTypeReference Redirect(IUnit definingUnit, INamedTypeReference typeReference);
 
     /// <summary>
     /// Provides the host with an opportunity to substitute a custom attribute with another during metadata reading.
@@ -738,6 +739,266 @@ namespace Microsoft.Cci {
     byte GuessUnderlyingTypeSizeOfUnresolvableReferenceToEnum(ITypeReference reference);
 
   }
+
+  #region IMetadataReaderHost contract binding
+  [ContractClassFor(typeof(IMetadataReaderHost))]
+  abstract class IMetadataReaderHostContract : IMetadataReaderHost {
+    #region IMetadataReaderHost Members
+
+    /// <summary>
+    /// Open the binary document as a memory block in host dependent fashion.
+    /// </summary>
+    /// <param name="sourceDocument">The binary document that is to be opened.</param>
+    /// <returns>
+    /// The unmanaged memory block corresponding to the source document.
+    /// </returns>
+    public IBinaryDocumentMemoryBlock OpenBinaryDocument(IBinaryDocument sourceDocument) {
+      Contract.Requires(sourceDocument != null);
+      Contract.Ensures(Contract.Result<IBinaryDocumentMemoryBlock>() != null);
+      throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Open the child binary document within the context of parent source document.as a memory block in host dependent fashion
+    /// For example: in multimodule assemblies the main module will be parentSourceDocument, where as other modules will be child
+    /// docuements.
+    /// </summary>
+    /// <param name="parentSourceDocument">The source document indicating the child document location.</param>
+    /// <param name="childDocumentName">The name of the child document.</param>
+    /// <returns>
+    /// The unmanaged memory block corresponding to the child document.
+    /// </returns>
+    public IBinaryDocumentMemoryBlock OpenBinaryDocument(IBinaryDocument parentSourceDocument, string childDocumentName) {
+      Contract.Requires(parentSourceDocument != null);
+      Contract.Requires(childDocumentName != null);
+      Contract.Ensures(Contract.Result<IBinaryDocumentMemoryBlock>() != null);
+      throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Provides the host with an opportunity to add, remove or substitute assembly references in the given list.
+    /// This avoids the cost of rewriting the entire unit in order to make such changes.
+    /// </summary>
+    /// <param name="referringUnit">A reference to the unit that has these references.</param>
+    /// <param name="assemblyReferences">The assembly references to substitute.</param>
+    /// <returns>
+    /// Usually assemblyReferences, but occasionally a modified enumeration.
+    /// </returns>
+    public IEnumerable<IAssemblyReference> Redirect(IUnit referringUnit, IEnumerable<IAssemblyReference> assemblyReferences) {
+      Contract.Requires(referringUnit != null);
+      Contract.Requires(assemblyReferences != null);
+      Contract.Ensures(Contract.Result<IEnumerable<IAssemblyReference>>() != null);
+      throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Provides the host with an opportunity to substitute one type reference for another during metadata reading.
+    /// This avoids the cost of rewriting the entire unit in order to make such changes.
+    /// </summary>
+    /// <param name="definingUnit">A reference to the unit that is defining the type.</param>
+    /// <param name="typeReference">A named type reference encountered during metadata reading.</param>
+    /// <returns>
+    /// Usually the value in typeReference, but occassionally something else.
+    /// </returns>
+    public INamedTypeReference Redirect(IUnit definingUnit, INamedTypeReference typeReference) {
+      Contract.Requires(definingUnit != null);
+      Contract.Requires(typeReference != null);
+      Contract.Ensures(Contract.Result<INamedTypeReference>() != null);
+      throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Provides the host with an opportunity to substitute a custom attribute with another during metadata reading.
+    /// This avoids the cost of rewriting the entire unit in order to make such changes.
+    /// </summary>
+    /// <param name="containingUnit">The unit that contains the custom attribute.</param>
+    /// <param name="customAttribute">The custom attribute to rewrite (fix up).</param>
+    /// <returns>
+    /// Usually the value in customAttribute, but occassionally another custom attribute.
+    /// </returns>
+    public ICustomAttribute Rewrite(IUnit containingUnit, ICustomAttribute customAttribute) {
+      Contract.Requires(containingUnit != null);
+      Contract.Requires(customAttribute != null);
+      Contract.Ensures(Contract.Result<ICustomAttribute>() != null);
+      throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Provides the host with an opportunity to substitute one method definition for another during metadata reading.
+    /// This avoids the cost of rewriting the entire unit in order to make such changes.
+    /// </summary>
+    /// <param name="containingUnit">The unit that is defines the method.</param>
+    /// <param name="methodDefinition">A method definition encountered during metadata reading.</param>
+    /// <returns>
+    /// Usually the value in methodDefinition, but occassionally something else.
+    /// </returns>
+    public IMethodDefinition Rewrite(IUnit containingUnit, IMethodDefinition methodDefinition) {
+      Contract.Requires(containingUnit != null);
+      Contract.Requires(methodDefinition != null);
+      Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+      throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// This method is called when the assembly reference is being resolved and its not already loaded by the host.
+    /// </summary>
+    /// <param name="referringUnit">The unit that is referencing the assembly.</param>
+    /// <param name="referencedAssembly">Assembly identifier for the assembly being referenced.</param>
+    public void ResolvingAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
+      Contract.Requires(referringUnit != null);
+      Contract.Requires(referencedAssembly != null);
+      throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// This method is called when the module reference is being resolved and its not already loaded by the host.
+    /// </summary>
+    /// <param name="referringUnit">The unit that is referencing the module.</param>
+    /// <param name="referencedModule">Module identifier for the assembly being referenced.</param>
+    public void ResolvingModuleReference(IUnit referringUnit, ModuleIdentity referencedModule) {
+      Contract.Requires(referringUnit != null);
+      Contract.Requires(referencedModule != null);
+      throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Called by the metadata reader when it is about to start parsing a custom attribute blob.
+    /// </summary>
+    public void StartGuessingGame() {
+      throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Called by the metadata reader when it has unsucessfully tried to parse a custom attribute blob and it now needs to try a new permutation.
+    /// Returns false if no more perumations are possible.
+    /// </summary>
+    /// <returns></returns>
+    public bool TryNextPermutation() {
+      throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Called by the metadata reader when it has successfully parsed a custom attribute blob.
+    /// </summary>
+    public void WinGuessingGame() {
+      throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Returns a guess of the size of the underlying type of the given type reference to an enum type, which is assumed to be unresolvable
+    /// because it is defined an assembly that is not loaded into this host. Successive calls to the method will cycle through these values
+    /// with a periodicity determined by the number of types in the game and the successful guesses made in earlier games.
+    /// </summary>
+    /// <param name="reference">A type reference that cannot be resolved.</param>
+    /// <returns>
+    /// 1, 2, 4 or 8.
+    /// </returns>
+    public byte GuessUnderlyingTypeSizeOfUnresolvableReferenceToEnum(ITypeReference reference) {
+      Contract.Requires(reference != null);
+      Contract.Ensures(Contract.Result<byte>() == 1 || Contract.Result<byte>() == 2 || Contract.Result<byte>() == 4 || Contract.Result<byte>() == 8);
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IMetadataHost Members
+
+#pragma warning disable 67
+    public event EventHandler<ErrorEventArgs> Errors;
+#pragma warning restore 67
+
+    public AssemblyIdentity ContractAssemblySymbolicIdentity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public AssemblyIdentity CoreAssemblySymbolicIdentity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public AssemblyIdentity SystemCoreAssemblySymbolicIdentity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IAssembly FindAssembly(AssemblyIdentity assemblyIdentity) {
+      throw new NotImplementedException();
+    }
+
+    public IModule FindModule(ModuleIdentity moduleIdentity) {
+      throw new NotImplementedException();
+    }
+
+    public IUnit FindUnit(UnitIdentity unitIdentity) {
+      throw new NotImplementedException();
+    }
+
+    public IInternFactory InternFactory {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IAssembly LoadAssembly(AssemblyIdentity assemblyIdentity) {
+      throw new NotImplementedException();
+    }
+
+    public IModule LoadModule(ModuleIdentity moduleIdentity) {
+      throw new NotImplementedException();
+    }
+
+    public IUnit LoadUnit(UnitIdentity unitIdentity) {
+      throw new NotImplementedException();
+    }
+
+    public IUnit LoadUnitFrom(string location) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<IUnit> LoadedUnits {
+      get { throw new NotImplementedException(); }
+    }
+
+    public INameTable NameTable {
+      get { throw new NotImplementedException(); }
+    }
+
+    public byte PointerSize {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void ReportErrors(ErrorEventArgs errorEventArguments) {
+      throw new NotImplementedException();
+    }
+
+    public void ReportError(IErrorMessage error) {
+      throw new NotImplementedException();
+    }
+
+    public AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
+      throw new NotImplementedException();
+    }
+
+    public ModuleIdentity ProbeModuleReference(IUnit referringUnit, ModuleIdentity referencedModule) {
+      throw new NotImplementedException();
+    }
+
+    public AssemblyIdentity UnifyAssembly(AssemblyIdentity assemblyIdentity) {
+      throw new NotImplementedException();
+    }
+
+    public AssemblyIdentity UnifyAssembly(IAssemblyReference assemblyReference) {
+      throw new NotImplementedException();
+    }
+
+    public bool PreserveILLocations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// A base class for an object provided by the application hosting the metadata reader. The object allows the host application
@@ -871,15 +1132,15 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Provides the host with an opportunity to substitute one type reference for another during metadata reading.
+    /// Provides the host with an opportunity to substitute one named type reference for another during metadata reading.
     /// This avoids the cost of rewriting the entire unit in order to make such changes.
     /// </summary>
     /// <param name="definingUnit">A reference to the unit that is defining the type.</param>
-    /// <param name="typeReference">A type reference encountered during metadata reading.</param>
+    /// <param name="typeReference">A named type reference encountered during metadata reading.</param>
     /// <returns>
     /// Usually the value in typeReference, but occassionally something else.
     /// </returns>
-    public virtual ITypeReference Redirect(IUnit definingUnit, ITypeReference typeReference) {
+    public virtual INamedTypeReference Redirect(IUnit definingUnit, INamedTypeReference typeReference) {
       return typeReference;
     }
 
