@@ -839,7 +839,7 @@ namespace Microsoft.Cci.Ast {
 
       internal static bool CheckAndReturnTrueIfFound(Expression expression, LanguageSpecificCompilationHelper helper) {
         ErrorForOutParameterReporter er = new ErrorForOutParameterReporter(helper, expression);
-        er.Traverse((IExpression)expression);
+        er.Traverse(expression.ProjectAsIExpression());
         return er.OutParameterFound;
       }
     }
