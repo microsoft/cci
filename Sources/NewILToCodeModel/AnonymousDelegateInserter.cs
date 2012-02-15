@@ -53,6 +53,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public IBlockStatement InsertAnonymousDelegates(IBlockStatement block, out bool didNothing) {
       Contract.Requires(block != null);
+      Contract.Ensures(Contract.Result<IBlockStatement>() != null);
 
       didNothing = true;
       var closureFinder = new ClosureFinder(this.host);

@@ -532,6 +532,17 @@ namespace CodeModelTestInput
 
         }
 
+        public int Method29(int y)
+        {
+            int __temp_2 = y;
+            int __temp_5 = this.c;
+            int __temp_6 = __temp_5;
+            int CS$0$0001 = __temp_6;
+            this.c = (__temp_5 + 1);
+            return (__temp_2 + CS$0$0001);
+
+        }
+
         public Class1()
         {
             this.c = 0;

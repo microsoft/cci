@@ -230,6 +230,36 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// True if the given expression is a compile time constant with a value that is a boxed -1 of type byte, int, long, sbyte, short, uint, ulong or ushort.
+    /// </summary>
+    [Pure]
+    public static bool IsIntegralMinusOne(IExpression expression) {
+      ICompileTimeConstant/*?*/ constExpression = expression as ICompileTimeConstant;
+      if (constExpression == null) return false;
+      return ExpressionHelper.IsIntegralMinusOne(constExpression);
+    }
+
+    /// <summary>
+    /// True if the value is a boxed -1 of type byte, int, long, sbyte, short, uint, ulong or ushort.
+    /// </summary>
+    [Pure]
+    public static bool IsIntegralMinusOne(ICompileTimeConstant constExpression) {
+      IConvertible/*?*/ ic = constExpression.Value as IConvertible;
+      if (ic == null) return false;
+      switch (ic.GetTypeCode()) {
+        case System.TypeCode.SByte: return ic.ToSByte(null) == -1;
+        case System.TypeCode.Int16: return ic.ToInt16(null) == -1;
+        case System.TypeCode.Int32: return ic.ToInt32(null) == -1;
+        case System.TypeCode.Int64: return ic.ToInt64(null) == -1;
+        case System.TypeCode.Byte: return ic.ToByte(null) == byte.MaxValue;
+        case System.TypeCode.UInt16: return ic.ToUInt16(null) == ushort.MaxValue;
+        case System.TypeCode.UInt32: return ic.ToUInt32(null) == uint.MaxValue;
+        case System.TypeCode.UInt64: return ic.ToUInt64(null) == ulong.MaxValue;
+      }
+      return false;
+    }
+
+    /// <summary>
     /// True if the given expression is a compile time constant with a value that is a boxed integer of type byte, int, long, sbyte, short, uint, ulong or ushort
     /// that is not equal to 0.
     /// </summary>

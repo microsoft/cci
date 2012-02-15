@@ -51,6 +51,7 @@ namespace Microsoft.Cci {
 
     public static ICompileTimeConstant Constant {
       get {
+        Contract.Ensures(Contract.Result<ICompileTimeConstant>() != null);
         if (CodeDummy.constant == null)
           Interlocked.CompareExchange(ref CodeDummy.constant, new DummyCompileTimeConstant(), null);
         return CodeDummy.constant;

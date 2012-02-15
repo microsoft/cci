@@ -490,12 +490,31 @@ namespace Microsoft.Cci.ILToCodeModel {
           assign1.Source = binaryOp;
           exprS1.Expression = assign1;
         } else {
-          if (!(assign2.Source is IPopValue)) continue;
-          if (!(assign2.Target.Instance is IPopValue)) continue;
-          assign1.Source = assign2;
-          assign2.Source = push2.ValueToPush;
-          ((TargetExpression)assign2.Target).Instance = push1.ValueToPush;
-          exprS1.Expression = this.CollapseOpAssign(assign1);
+          if (!(assign2.Source is IPopValue)) {
+            if (!(assign2.Target.Instance is IPopValue)) continue;
+            var binOp = assign2.Source as BinaryOperation;
+            if (binOp == null) continue;
+            if (!(binOp.LeftOperand is IPopValue)) continue;
+            var constVal = binOp.RightOperand as ICompileTimeConstant;
+            if (constVal == null) continue;
+            var boundExpr = push2.ValueToPush as BoundExpression;
+            if (boundExpr == null) continue;
+            if (!(boundExpr.Instance is IDupValue)) continue;
+            var target2 = assign2.Target as TargetExpression;
+            if (target2 == null) continue;
+            if (target2.Definition != boundExpr.Definition) continue;
+            target2.Instance = push1.ValueToPush;
+            binOp.LeftOperand = target2;
+            binOp.ResultIsUnmodifiedLeftOperand = true;
+            assign1.Source = binOp;
+            exprS1.Expression = assign1;
+          } else {
+            if (!(assign2.Target.Instance is IPopValue)) continue;
+            assign1.Source = assign2;
+            assign2.Source = push2.ValueToPush;
+            ((TargetExpression)assign2.Target).Instance = push1.ValueToPush;
+            exprS1.Expression = this.CollapseOpAssign(assign1);
+          }
         }
         statements[i] = exprS1;
         statements.RemoveRange(i+1, 3);
@@ -559,7 +578,8 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (!(assign1.Target.Instance is IPopValue && bound1.Instance is IDupValue)) continue;
         }
         if (!(assign1.Source is DupValue)) continue;
-        var statement = statements[i+2];
+        var statement = statements[i+2] as Statement;
+        if (statement == null) continue;
         var popCounter = new PopCounter();
         popCounter.Traverse(statement);
         if (popCounter.count != 1) continue;
@@ -581,6 +601,11 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
 
       BinaryOperation prefixOp;
+
+      [ContractInvariantMethod]
+      private void ObjectInvariant() {
+        Contract.Invariant(this.prefixOp != null);
+      }
 
       public override IExpression Rewrite(IPopValue popValue) {
         return this.prefixOp;

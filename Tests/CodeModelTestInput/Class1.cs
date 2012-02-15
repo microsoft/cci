@@ -240,6 +240,9 @@ namespace CodeModelTestInput {
       return 0;
     }
 
+    public int Method29(int y) {
+      return y + this.c++;
+    }
   }
 
   public class Class2 {

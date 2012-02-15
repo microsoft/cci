@@ -1238,7 +1238,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       switch (currentOperation.OperationCode) {
         case OperationCode.Box:
           Contract.Assume(currentOperation.Value is ITypeReference);
-          ((Expression)result.ValueToConvert).Type = (ITypeReference)currentOperation.Value;
+          var type = (ITypeReference)currentOperation.Value;
+          var innerConversion = result.ValueToConvert as Conversion;
+          if (innerConversion != null) 
+            innerConversion.TypeAfterConversion = type;
+          else
+            ((Expression)result.ValueToConvert).Type = type;
           var cc = result.ValueToConvert as CompileTimeConstant;
           if (cc != null) cc.Value = this.ConvertBoxedValue(cc.Value, cc.Type);
           result.TypeAfterConversion = this.platformType.SystemObject;
@@ -1334,6 +1339,14 @@ namespace Microsoft.Cci.ILToCodeModel {
       foreach (var par in result.MethodToCall.Parameters)
         result.Arguments.Add(this.PopOperandStack());
       result.Arguments.Reverse();
+      //Convert ints to bools and enums
+      var i = 0;
+      foreach (var par in result.MethodToCall.Parameters) {
+        Contract.Assume(par != null);
+        Contract.Assume(i < result.Arguments.Count);
+        Contract.Assume(result.Arguments[i] != null);
+        result.Arguments[i] = TypeInferencer.Convert(result.Arguments[i++], par.Type);
+      }
       return result;
     }
 

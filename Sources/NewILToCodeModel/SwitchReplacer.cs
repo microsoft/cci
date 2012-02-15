@@ -38,7 +38,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       Contract.Assume(block is BlockStatement);
       var decompiledBlock = (BlockStatement)block;
       var statements = decompiledBlock.Statements;
-      for (int i = 0; i < statements.Count; i++) {
+      for (int i = 0; i < statements.Count-1; i++) {
         var switchInstruction = statements[i] as SwitchInstruction;
         if (switchInstruction == null) continue;
         SwitchStatement result = new SwitchStatement();

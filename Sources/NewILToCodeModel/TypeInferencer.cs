@@ -526,6 +526,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     internal static IExpression Convert(IExpression expression, ITypeReference targetType) {
       Contract.Requires(expression != null);
       Contract.Requires(targetType != null);
+      Contract.Ensures(Contract.Result<IExpression>() != null);
       
       Contract.Assume(!(targetType is Dummy)); //Nice check, but too onerous for client to prove statically.
       if (targetType.TypeCode == PrimitiveTypeCode.Boolean && TypeHelper.IsPrimitiveInteger(expression.Type))
@@ -547,6 +548,8 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private static IExpression ConvertToBoolean(IExpression expression) {
       Contract.Requires(expression != null);
+      Contract.Ensures(Contract.Result<IExpression>() != null);
+
       IPlatformType platformType = expression.Type.PlatformType;
       var cc = expression as CompileTimeConstant;
       if (cc != null && TypeHelper.IsPrimitiveInteger(cc.Type)) {
@@ -616,6 +619,8 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private static IExpression ConvertToCharacter(IExpression expression) {
       Contract.Requires(expression != null);
+      Contract.Ensures(Contract.Result<IExpression>() != null);
+
       IPlatformType platformType = expression.Type.PlatformType;
       var cc = expression as CompileTimeConstant;
       if (cc != null && cc.Value is int) {
