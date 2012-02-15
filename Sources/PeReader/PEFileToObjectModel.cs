@@ -47,6 +47,12 @@ namespace Microsoft.Cci.MetadataReader {
     //^ invariant this.PEFileReader.ReaderState >= ReaderState.Metadata;
     internal readonly _Module_Type _Module_;
 
+    internal AssemblyReference/*?*/ SystemEnumAssembly;
+    internal AssemblyReference/*?*/ SystemValueTypeAssembly;
+    internal AssemblyReference/*?*/ SystemMulticastDelegateAssembly;
+    internal AssemblyReference/*?*/ SystemTypeAssembly;
+    internal AssemblyReference/*?*/ SystemParamArrayAttributeAssembly;
+
     CoreTypes CoreTypes {
       get {
         if (this.coreTypes == null) {
@@ -290,11 +296,21 @@ namespace Microsoft.Cci.MetadataReader {
           //Just because this reference looks like a mscorlib type, does not mean that it actually is one. Badly behaved assemblies might reuse mscorlib names.
           //We therefore count the number of references and hope that mscorlib has a majority.
           hitCounts[resolutionScopeRowId-1]++;
+          if (tKey == enumKey)
+            this.SystemEnumAssembly = this.AssemblyReferenceArray[resolutionScopeRowId];
+          else if (tKey == valueTypeKey)
+            this.SystemValueTypeAssembly = this.AssemblyReferenceArray[resolutionScopeRowId];
+          else if (tKey == multicastDelegateKey)
+            this.SystemMulticastDelegateAssembly = this.AssemblyReferenceArray[resolutionScopeRowId];
+          else if (tKey == typeKey)
+            this.SystemTypeAssembly = this.AssemblyReferenceArray[resolutionScopeRowId];
+          else if (tKey == paramArrayAttributeKey)
+            this.SystemParamArrayAttributeAssembly = this.AssemblyReferenceArray[resolutionScopeRowId];
         }
         uint maxHits = 0;
         uint rowWithMaxHits = 0;
         for (uint i = 0; i < hitCounts.Length; i++) {
-          if (hitCounts[i] > rowWithMaxHits) {
+          if (hitCounts[i] > maxHits) {
             maxHits = hitCounts[i];
             rowWithMaxHits = i;
           }
@@ -1089,6 +1105,10 @@ namespace Microsoft.Cci.MetadataReader {
         type = new NonGenericNestedType(this, typeName, typeDefRowId, typeDefRow.Flags, parentModuleType);
       } else {
         IName unmangledTypeName = this.GetUnmangledNameFromOffset(typeDefRow.Name);
+        if (typeDefRow.Namespace != 0) {
+          IName namespaceName = this.GetNameFromOffset(typeDefRow.Namespace);
+          unmangledTypeName = this.NameTable.GetNameFor(namespaceName.Value+"."+unmangledTypeName.Value);
+        }
         type = new GenericNestedType(this, unmangledTypeName, typeDefRowId, typeDefRow.Flags, parentModuleType, typeName, genericParamRowIdStart, genericParamRowIdEnd);
       }
       return type;
@@ -2029,6 +2049,12 @@ namespace Microsoft.Cci.MetadataReader {
       Debug.Assert(fieldDefRowId > 0 && fieldDefRowId <= this.PEFileReader.FieldTable.NumberOfRows);
       FieldRow fieldRow = this.PEFileReader.FieldTable[fieldDefRowId];
       IName fieldName = this.GetNameFromOffset(fieldRow.Name);
+      if ((fieldRow.Flags & FieldFlags.AccessMask) == FieldFlags.CompilerControlledAccess) {
+        //Methods that are compiler controlled access are excempted from duplicate checking and may thus have names that cause
+        //their intern keys to clash with other methods. Avoid this by mangling the names of such methods.
+        //compiler controlled methods are always referred to via their tokens, so this renaming is safe to do.
+        fieldName = NameTable.GetNameFor(fieldName.Value+"$PST"+((int)TableIndices.Field+fieldDefRowId));
+      }
       FieldDefinition moduleField = new FieldDefinition(this, fieldName, parentModuleType, fieldDefRowId, fieldRow.Flags);
       if (fieldName.UniqueKey != this.ModuleReader._Deleted_.UniqueKey) {
         parentModuleType.AddMember(moduleField);
@@ -2042,6 +2068,12 @@ namespace Microsoft.Cci.MetadataReader {
       Debug.Assert(methodDefRowId > 0 && methodDefRowId <= this.PEFileReader.MethodTable.NumberOfRows);
       MethodRow methodRow = this.PEFileReader.MethodTable[methodDefRowId];
       IName methodName = this.GetNameFromOffset(methodRow.Name);
+      if ((methodRow.Flags & MethodFlags.AccessMask) == MethodFlags.CompilerControlledAccess) {
+        //Methods that are compiler controlled access are excempted from duplicate checking and may thus have names that cause
+        //their intern keys to clash with other methods. Avoid this by mangling the names of such methods.
+        //compiler controlled methods are always referred to via their tokens, so this renaming is safe to do.
+        methodName = NameTable.GetNameFor(methodName.Value+"$PST"+((int)TableIndices.Method+methodDefRowId));
+      }
       uint genericParamRowIdStart;
       uint genericParamRowIdEnd;
       this.GetGenericParamInfoForMethod(methodDefRowId, out genericParamRowIdStart, out genericParamRowIdEnd);

@@ -144,11 +144,9 @@ namespace Microsoft.Cci {
     /// If none of the loaded units have an opinion, the identity of the runtime executing the compiler itself is returned.
     /// </summary>
     protected virtual AssemblyIdentity GetCoreAssemblySymbolicIdentity() {
-      var coreAssemblyName = typeof(object).Assembly.GetName();
-      string loc = GetLocalPath(coreAssemblyName);
+      AssemblyIdentity/*?*/ result = null;
+      IUnit referringUnit = Dummy.Unit;
       if (this.unitCache.Count > 0) {
-        AssemblyIdentity/*?*/ result = null;
-        IUnit referringUnit = Dummy.Unit;
         var dummyVersion = new Version(255, 255, 255, 255);
         lock (GlobalLock.LockingObject) {
           foreach (IUnit unit in this.unitCache.Values) {
@@ -162,27 +160,22 @@ namespace Microsoft.Cci {
             }
           }
         }
-        if (result != null) {
-          //The loaded assemblies have an opinion on the identity of the core assembly. By default, we are going to respect that opinion.
-          if (result.Location.Length == 0) {
-            //However, they do not know where to find it. (This will only be non empty if one of the loaded assemblies itself is the core assembly.)
-            if (loc.Length > 0) {
-              //We don't know where to find the core assembly that the loaded assemblies want, but we do know where to find the core assembly
-              //that we are running on. Perhaps it is the same assembly as the one we've identified. In that case we know where it can be found.
-              var myCore = new AssemblyIdentity(this.NameTable.GetNameFor(coreAssemblyName.Name), "", coreAssemblyName.Version, coreAssemblyName.GetPublicKeyToken(), loc);
-              if (myCore.Equals(result)) return myCore; //myCore is the same as result, but also has a non null location.
-            }
-            //Now use host specific heuristics for finding the assembly.
-            this.coreAssemblySymbolicIdentity = result; //in case ProbeAssemblyReference wants to know the core identity
-            return this.ProbeAssemblyReference(referringUnit, result);
-          }
-          return result;
-        }
       }
-      //If we get here, none of the assemblies in the unit cache has an opinion on the identity of the core assembly.
-      //Usually this will be because this method was called before any assemblies have been loaded.
-      //In this case, we have little option but to choose the identity of the core assembly of the platform we are running on.
-      return new AssemblyIdentity(this.NameTable.GetNameFor(coreAssemblyName.Name), "", coreAssemblyName.Version, coreAssemblyName.GetPublicKeyToken(), loc);
+      if (result == null) {
+        //If we get here, none of the assemblies in the unit cache has an opinion on the identity of the core assembly.
+        //Usually this will be because this method was called before any assemblies have been loaded.
+        //In this case, we have little option but to choose the identity of the core assembly of the platform we are running on.
+        var coreAssemblyName = typeof(object).Assembly.GetName();
+        result = new AssemblyIdentity(this.NameTable.GetNameFor(coreAssemblyName.Name), "", coreAssemblyName.Version, coreAssemblyName.GetPublicKeyToken(), "");
+      }
+      if (result.Location.Length == 0) {
+        //We either found a plausible identity by polling the assemblies in the unit cache, or we used the identity of our own core assembly.
+        //However, we defer to ProbeAssemblyReference to find an actual location for the assembly.
+        //(Note that if result.Location.Length > 0, then the core assembly has already been loaded and we thus know the location and don't have to probe.)
+        this.coreAssemblySymbolicIdentity = result; //in case ProbeAssemblyReference wants to know the core identity
+        result = this.ProbeAssemblyReference(referringUnit, result);
+      }
+      return this.coreAssemblySymbolicIdentity = result;
     }
 
     /// <summary>

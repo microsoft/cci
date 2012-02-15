@@ -1405,33 +1405,36 @@ namespace Microsoft.Cci.MetadataReader {
         }
         exprList[i++] = argument;
       }
-      ushort numOfNamedArgs = this.SignatureMemoryReader.ReadUInt16();
       IMetadataNamedArgument[]/*?*/ namedArgumentArray = null;
-      if (numOfNamedArgs > 0) {
-        namedArgumentArray = new IMetadataNamedArgument[numOfNamedArgs];
-        for (i = 0; i < numOfNamedArgs; ++i) {
-          bool isField = this.SignatureMemoryReader.ReadByte() == SerializationType.Field;
-          ITypeReference/*?*/ memberType = this.GetFieldOrPropType();
-          if (memberType == null) {
-            //  Error...
-            return;
+      if (2 <= (int)this.SignatureMemoryReader.RemainingBytes) {
+        ushort numOfNamedArgs = this.SignatureMemoryReader.ReadUInt16();
+        if (numOfNamedArgs > 0) {
+          namedArgumentArray = new IMetadataNamedArgument[numOfNamedArgs];
+          for (i = 0; i < numOfNamedArgs; ++i) {
+            if (0 >= (int)this.SignatureMemoryReader.RemainingBytes) break;
+            bool isField = this.SignatureMemoryReader.ReadByte() == SerializationType.Field;
+            ITypeReference/*?*/ memberType = this.GetFieldOrPropType();
+            if (memberType == null) {
+              //  Error...
+              return;
+            }
+            string/*?*/ memberStr = this.GetSerializedString();
+            if (memberStr == null)
+              return;
+            IName memberName = this.PEFileToObjectModel.NameTable.GetNameFor(memberStr);
+            ExpressionBase/*?*/ value = this.ReadSerializedValue(memberType);
+            if (value == null) {
+              //  Error...
+              return;
+            }
+            ITypeReference/*?*/ moduleTypeRef = attributeConstructor.ContainingType;
+            if (moduleTypeRef == null) {
+              //  Error...
+              return;
+            }
+            FieldOrPropertyNamedArgumentExpression namedArg = new FieldOrPropertyNamedArgumentExpression(memberName, moduleTypeRef, isField, memberType, value);
+            namedArgumentArray[i] = namedArg;
           }
-          string/*?*/ memberStr = this.GetSerializedString();
-          if (memberStr == null)
-            return;
-          IName memberName = this.PEFileToObjectModel.NameTable.GetNameFor(memberStr);
-          ExpressionBase/*?*/ value = this.ReadSerializedValue(memberType);
-          if (value == null) {
-            //  Error...
-            return;
-          }
-          ITypeReference/*?*/ moduleTypeRef = attributeConstructor.ContainingType;
-          if (moduleTypeRef == null) {
-            //  Error...
-            return;
-          }
-          FieldOrPropertyNamedArgumentExpression namedArg = new FieldOrPropertyNamedArgumentExpression(memberName, moduleTypeRef, isField, memberType, value);
-          namedArgumentArray[i] = namedArg;
         }
       }
       this.CustomAttribute = peFileToObjectModel.ModuleReader.metadataReaderHost.Rewrite(peFileToObjectModel.Module,

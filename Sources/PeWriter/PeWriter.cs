@@ -2729,8 +2729,18 @@ namespace Microsoft.Cci {
         INamespaceTypeDefinition/*?*/ nsType = typeDef as INamespaceTypeDefinition;
         r.Flags = GetTypeDefFlags(typeDef);
         string name = GetMangledName(typeDef);
+        StringIdx nsName = StringIdx.Empty;
+        if (nsType != null) {
+          nsName = this.GetStringIndex(TypeHelper.GetNamespaceName(nsType.ContainingUnitNamespace, NameFormattingOptions.None));
+        } else {
+          var lastDot = name.LastIndexOf('.');
+          if (lastDot > 0) {
+            nsName = this.GetStringIndex(name.Substring(0, lastDot));
+            name = name.Substring(lastDot+1, name.Length-lastDot-1);
+          }
+        }
         r.Name = this.GetStringIndex(name);
-        r.Namespace = nsType == null ? StringIdx.Empty : this.GetStringIndex(TypeHelper.GetNamespaceName(nsType.ContainingUnitNamespace, NameFormattingOptions.None));
+        r.Namespace = nsName;
         r.Extends = 0;
         foreach (ITypeReference baseType in typeDef.BaseClasses) {
           r.Extends = this.GetTypeDefOrRefCodedIndex(baseType);
@@ -5630,6 +5640,11 @@ namespace Microsoft.Cci.PeWriterInternal {
     }
 
     public override void TraverseChildren(ISecurityAttribute securityAttribute) {
+      //In principle these attributes do not need to be traversed because their constructors are not serialized.
+      //However, the C# compiler (or possibly the CLR metadata writer) creates (but does not emit) tokens for the constructors.
+      //The ildasm output differs when the constructors do not have tokens (it seems to search the member ref table). 
+      //This is a problem for some clients.
+      this.Traverse(securityAttribute.Attributes);
     }
 
     public override void TraverseChildren(ISpecializedMethodReference specializedMethodReference) {
