@@ -166,6 +166,7 @@ namespace CciSharp.Mutators
                 {
                     MethodDefinition = getter
                 };
+                getter.Attributes = new List<ICustomAttribute>(1);
                 getter.Attributes.Add(this.CompilerGeneratedAttribute);
                 getter.Body = body;
                 getter.Locations.Clear();
@@ -263,6 +264,7 @@ namespace CciSharp.Mutators
                 Contract.Ensures(resultInitializedFieldDefinition.Type == this.booleanType);
 
                 resultFieldDefinition = new FieldDefinition {
+                  Attributes = new List<ICustomAttribute>(2),
                   ContainingTypeDefinition = declaringType,
                   InternFactory = this.Host.InternFactory,
                   Type = propertyDefinition.Type,
@@ -271,8 +273,10 @@ namespace CciSharp.Mutators
                 };
                 resultFieldDefinition.Attributes.Add(this.CompilerGeneratedAttribute);
                 resultFieldDefinition.Attributes.Add(this.NonSerializedAttribute);
+                declaringType.Fields = new List<IFieldDefinition>(1);
                 declaringType.Fields.Add(resultFieldDefinition);
                 resultInitializedFieldDefinition = new FieldDefinition {
+                  Attributes = new List<ICustomAttribute>(2),
                   ContainingTypeDefinition = declaringType,
                   InternFactory = this.Host.InternFactory,
                   Type = booleanType,
