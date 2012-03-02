@@ -437,7 +437,7 @@ namespace Microsoft.Cci {
           PdbLine mid = array[midPointIndex];
           if (midPointIndex == maxIndex ||
             (mid.offset <= desiredOffset && desiredOffset < array[midPointIndex + 1].offset)) {
-            if (exact && desiredOffset != mid.offset) return null;
+            if (exact && desiredOffset != mid.offset) break;
             PdbLine line = mid;
             PdbSourceDocument psDoc = this.GetPrimarySourceDocumentFor(pdbSourceFile);
             return new PdbSourceLineLocation(psDoc, (int)line.lineBegin, line.colBegin, (int)line.lineEnd, line.colEnd);
