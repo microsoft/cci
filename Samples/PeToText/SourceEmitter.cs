@@ -118,10 +118,14 @@ namespace PeToText {
     protected virtual string GetLocalName(ILocalDefinition local) {
       string localName = local.Name.Value;
       if (this.pdbReader != null) {
-        foreach (IPrimarySourceLocation psloc in this.pdbReader.GetPrimarySourceLocationsForDefinitionOf(local)) {
-          if (psloc.Source.Length > 0) {
-            localName = psloc.Source;
-            break;
+        bool isCompilerGenerated;
+        localName = this.pdbReader.GetSourceNameFor(local, out isCompilerGenerated);
+        if (object.ReferenceEquals(localName, local.Name.Value)) {
+          foreach (IPrimarySourceLocation psloc in this.pdbReader.GetPrimarySourceLocationsForDefinitionOf(local)) {
+            if (psloc.Source.Length > 0) {
+              localName = psloc.Source;
+              break;
+            }
           }
         }
       }
