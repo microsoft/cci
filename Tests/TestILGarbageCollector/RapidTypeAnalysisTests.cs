@@ -2513,7 +2513,7 @@ namespace Ns {
           string genericParameterCountAsString = match.Groups[2].Value;
           int genericParameterCount = int.Parse(genericParameterCountAsString);
 
-          Console.WriteLine("Successful match! Type=[{0}] Count=[{1}]", bareTypeName, genericParameterCount);
+          //Console.WriteLine("Successful match! Type=[{0}] Count=[{1}]", bareTypeName, genericParameterCount);
 
           ITypeDefinition genericTypeDefinition = FindTypeWithName(bareTypeName, genericParameterCount);
 
@@ -2535,7 +2535,7 @@ namespace Ns {
         string typeName = match.Groups[1].Value;
         string methodName = match.Groups[2].Value;
 
-        Console.WriteLine("Successful match! Type=[{0}] Method=[{1}]", typeName, methodName);
+        //Console.WriteLine("Successful match! Type=[{0}] Method=[{1}]", typeName, methodName);
 
         return FindMethodWithName(typeName, methodName);
 

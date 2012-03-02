@@ -6,6 +6,7 @@ using System.Text;
 using System.Diagnostics.Contracts;
 
 using Microsoft.Cci;
+using Microsoft.Cci.Analysis;
 
 using ILGarbageCollect.Mark;
 
@@ -80,7 +81,7 @@ namespace ILGarbageCollect.Summaries {
 
   }
 
-  class DebuggableBasicBlock<T> : Microsoft.Cci.BasicBlock<T> {
+  class DebuggableBasicBlock<T> : BasicBlock<T> where T : Microsoft.Cci.Analysis.Instruction {
     public override string ToString() {
       return "Blam!";
     }
