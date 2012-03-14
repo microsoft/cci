@@ -243,7 +243,31 @@ namespace CodeModelTestInput {
     public int Method29(int y) {
       return y + this.c++;
     }
+
+    private int Method30(int[] xs) {
+      return xs[0]++;
+    }
+
+    private int Method31(int[] xs) {
+      return xs[0]+=3;
+    }
+
+    private void Method32() {
+      SomeStruct sstr = new SomeStruct();
+      sstr.Width >>= 1;
+    }
+
   }
+
+  struct SomeStruct {
+    public int Width {
+      get { return this.width; }
+      set { this.width = value; }
+    }
+
+    int width;
+  }
+
 
   public class Class2 {
     public interface IIncrementable<T> {

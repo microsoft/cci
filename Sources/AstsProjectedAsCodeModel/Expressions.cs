@@ -1060,19 +1060,19 @@ namespace Microsoft.Cci.Ast {
       private bool result = false;
 
       public override void TraverseChildren(IAddressDereference addressDereference) {
-        this.Traverse(addressDereference.Address);
+        this.TraverseChildren(addressDereference.Address);
       }
 
       public override void TraverseChildren(IAddition addition) {
-        this.Traverse(addition.LeftOperand);
+        this.TraverseChildren(addition.LeftOperand);
       }
 
       public override void TraverseChildren(IConversion conversion) {
-        this.Traverse(conversion.ValueToConvert);
+        this.TraverseChildren(conversion.ValueToConvert);
       }
 
       public override void TraverseChildren(IAddressOf addressOf) {
-        this.Traverse(addressOf.Expression);
+        this.TraverseChildren(addressOf.Expression);
       }
 
       public override void TraverseChildren(IAddressableExpression addressableExpression) {

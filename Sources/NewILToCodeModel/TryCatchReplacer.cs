@@ -287,6 +287,8 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private ILocalDefinition ExtractExceptionContainer(DecompiledBlock nestedBlock) {
       Contract.Requires(nestedBlock != null);
+      Contract.Ensures(Contract.Result<ILocalDefinition>() != null);
+
       Contract.Assume(nestedBlock.Statements.Count > 0);
       int i = 0;
       while (nestedBlock.Statements[i] is LocalDeclarationStatement) { i++; Contract.Assume(i < nestedBlock.Statements.Count); };

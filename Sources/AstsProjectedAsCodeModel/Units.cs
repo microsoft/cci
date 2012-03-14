@@ -707,6 +707,20 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// The first part of a two part version number indicating the operating subsystem that is expected to be the target environment for this module.
+    /// </summary>
+    public ushort SubsystemMajorVersion {
+      get { return 4; } //TODO: provide an option for setting this
+    }
+
+    /// <summary>
+    /// The second part of a two part version number indicating the operating subsystem that is expected to be the target environment for this module.
+    /// </summary>
+    public ushort SubsystemMinorVersion {
+      get { return 0; } //TODO: provide an option for setting this
+    }
+
+    /// <summary>
     /// Identifies the version of the CLR that is required to load this module or assembly.
     /// </summary>
     public string TargetRuntimeVersion {

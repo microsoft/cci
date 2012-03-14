@@ -94,7 +94,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// Decompile the IL operations of this method body into a block of statements.
     /// </summary>
     protected override IBlockStatement GetBlock() {
-      var block = new DecompiledBlock(0, GetSizeOf(this.ilMethodBody), new Sublist<BasicBlock<Instruction>>(this.cdfg.AllBlocks, 0, this.cdfg.AllBlocks.Count), isLexicalScope: true);
+      var block = new DecompiledBlock(0, this.ilMethodBody.Size, new Sublist<BasicBlock<Instruction>>(this.cdfg.AllBlocks, 0, this.cdfg.AllBlocks.Count), isLexicalScope: true);
       this.CreateExceptionBlocks(block);
       bool addDeclarations = true;
       if (this.localScopeProvider != null) {
@@ -134,14 +134,6 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (!didNothing) new DeclarationUnifier(this).Traverse(result);
       }
       return result;
-    }
-
-    private static uint GetSizeOf(IMethodBody methodBody) {
-      Contract.Requires(methodBody != null);
-      //TODO: IMethodBody should expose this information directly. Meanwhile, just get somewhat close.
-      uint lastOffset = 0;
-      foreach (var operation in methodBody.Operations) lastOffset = operation.Offset;
-      return lastOffset+1;
     }
 
     private void CreateExceptionBlocks(DecompiledBlock block) {

@@ -57,9 +57,13 @@ namespace Microsoft.Cci.ILToCodeModel {
       for (int i = 0; i < n; i++) {
         var nestedBlock = statements[i] as BlockStatement;
         if (nestedBlock != null) {
-          if (nestedBlock.Statements.Count == 1)
+          if (nestedBlock.Statements.Count == 1) {
+            var decompiledBlock = nestedBlock as DecompiledBlock;
+            if (decompiledBlock != null && decompiledBlock.IsLexicalScope)
+              continue;
+            if (nestedBlock.Statements[0] is ILocalDeclarationStatement) continue;
             statements[i] = nestedBlock.Statements[0];
-          else if (n == 1) {
+          } else if (n == 1) {
             block.Statements = nestedBlock.Statements;
             return;
           }

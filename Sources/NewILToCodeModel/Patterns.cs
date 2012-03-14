@@ -127,6 +127,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.ReplacePushPopPattern(b) ||
       this.ReplaceDupPopPattern(b) ||
       this.ReplacePostBinopPattern(b) ||
+      this.ReplacePropertyBinopPattern(b) ||
       this.ReplaceReturnViaGoto(b) ||
       this.ReplaceSelfAssignment(b) ||
       this.ReplaceShortCircuitAnd(b) ||
@@ -449,6 +450,41 @@ namespace Microsoft.Cci.ILToCodeModel {
       return replacedPattern;
     }
 
+    private bool ReplacePropertyBinopPattern(BlockStatement b) {
+      Contract.Requires(b != null);
+      bool replacedPattern = false;
+      var statements = b.Statements;
+      for (int i = 0; i < statements.Count-1; i++) {
+        var es1 = statements[i] as ExpressionStatement;
+        if (es1 == null) continue;
+        var setterCall = es1.Expression as MethodCall;
+        if (setterCall == null || setterCall.IsStaticCall || setterCall.Arguments.Count != 1) continue;
+        var binaryOp = setterCall.Arguments[0] as BinaryOperation;
+        if (binaryOp == null) continue;
+        var getterCall = binaryOp.LeftOperand as MethodCall;
+        if (getterCall == null || getterCall.IsStaticCall || getterCall.Arguments.Count != 0) continue;
+        if (!(getterCall.ThisArgument is IDupValue)) continue;
+        var setterName = setterCall.MethodToCall.Name.Value;
+        var getterName = getterCall.MethodToCall.Name.Value;
+        if (setterName.Length != getterName.Length || setterName.Length <= 4) continue;
+        if (string.CompareOrdinal(setterName, 4, getterName, 4, setterName.Length-4) != 0) continue;
+        if (!setterName.StartsWith("set_") || !getterName.StartsWith("get_")) continue;
+        var propertyNameStr = setterCall.MethodToCall.Name.Value.Substring(4);
+        var propertyName = this.host.NameTable.GetNameFor(propertyNameStr);
+        var property = new PropertyDefinition() {
+          CallingConvention = CallingConvention.HasThis,
+          Name = propertyName, Getter = getterCall.MethodToCall, Setter = setterCall.MethodToCall, Type = getterCall.Type
+        };
+        binaryOp.LeftOperand = new TargetExpression() {
+          Definition = property, Instance = setterCall.ThisArgument,
+          GetterIsVirtual = getterCall.IsVirtualCall, SetterIsVirtual = setterCall.IsVirtualCall
+        };
+        es1.Expression = binaryOp;
+        replacedPattern = true;
+      }
+      return replacedPattern;
+    }
+
     private bool ReplacePushPushDupPopPopPattern(BlockStatement b) {
       Contract.Requires(b != null);
       bool replacedPattern = false;
@@ -483,6 +519,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           var propertyNameStr = setterCall.MethodToCall.Name.Value.Substring(4);
           var propertyName = this.host.NameTable.GetNameFor(propertyNameStr);
           var property = new PropertyDefinition() {
+            CallingConvention = Cci.CallingConvention.HasThis,
             Name = propertyName, Getter = getterCall.MethodToCall, Setter = setterCall.MethodToCall, Type = getterCall.Type
           };
           binaryOp.LeftOperand = new TargetExpression() { Definition = property, Instance = push1.ValueToPush, 
@@ -491,23 +528,42 @@ namespace Microsoft.Cci.ILToCodeModel {
           exprS1.Expression = assign1;
         } else {
           if (!(assign2.Source is IPopValue)) {
-            if (!(assign2.Target.Instance is IPopValue)) continue;
-            var binOp = assign2.Source as BinaryOperation;
-            if (binOp == null) continue;
-            if (!(binOp.LeftOperand is IPopValue)) continue;
-            var constVal = binOp.RightOperand as ICompileTimeConstant;
-            if (constVal == null) continue;
-            var boundExpr = push2.ValueToPush as BoundExpression;
-            if (boundExpr == null) continue;
-            if (!(boundExpr.Instance is IDupValue)) continue;
-            var target2 = assign2.Target as TargetExpression;
-            if (target2 == null) continue;
-            if (target2.Definition != boundExpr.Definition) continue;
-            target2.Instance = push1.ValueToPush;
-            binOp.LeftOperand = target2;
-            binOp.ResultIsUnmodifiedLeftOperand = true;
-            assign1.Source = binOp;
-            exprS1.Expression = assign1;
+            if (!(assign2.Target.Instance is IPopValue)) {
+              var addrDeref = assign2.Target.Definition as AddressDereference;
+              if (addrDeref == null || !(addrDeref.Address is IPopValue)) continue;
+              var binOp = assign2.Source as BinaryOperation;
+              if (binOp == null) continue;
+              if (!(binOp.LeftOperand is IPopValue)) continue;
+              var constVal = binOp.RightOperand as ICompileTimeConstant;
+              if (constVal == null) continue;
+              var addrDeref2 = push2.ValueToPush as IAddressDereference;
+              if (addrDeref2 == null) continue;
+              if (!(addrDeref2.Address is IDupValue)) continue;
+              var target2 = assign2.Target as TargetExpression;
+              if (target2 == null) continue;
+              addrDeref.Address = push1.ValueToPush;
+              binOp.LeftOperand = target2;
+              binOp.ResultIsUnmodifiedLeftOperand = true;
+              assign1.Source = binOp;
+              exprS1.Expression = assign1;
+            } else {
+              var binOp = assign2.Source as BinaryOperation;
+              if (binOp == null) continue;
+              if (!(binOp.LeftOperand is IPopValue)) continue;
+              var constVal = binOp.RightOperand as ICompileTimeConstant;
+              if (constVal == null) continue;
+              var boundExpr = push2.ValueToPush as BoundExpression;
+              if (boundExpr == null) continue;
+              if (!(boundExpr.Instance is IDupValue)) continue;
+              var target2 = assign2.Target as TargetExpression;
+              if (target2 == null) continue;
+              if (target2.Definition != boundExpr.Definition) continue;
+              target2.Instance = push1.ValueToPush;
+              binOp.LeftOperand = target2;
+              binOp.ResultIsUnmodifiedLeftOperand = true;
+              assign1.Source = binOp;
+              exprS1.Expression = assign1;
+            }
           } else {
             if (!(assign2.Target.Instance is IPopValue)) continue;
             assign1.Source = assign2;

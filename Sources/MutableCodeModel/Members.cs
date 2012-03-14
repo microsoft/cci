@@ -97,6 +97,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       IEnumerable<IOperation> operations;
       IEnumerable<IOperationExceptionInformation> operationExceptionInformation;
       List<ITypeDefinition>/*?*/ privateHelperTypes = this.privateHelperTypes;
+      uint size;
 
       var isNormalized = this.isNormalized;
       NormalizationChecker checker = null;
@@ -115,6 +116,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         localScopes = converter.GetLocalScopes();
         localVariables = converter.GetLocalVariables();
         maxStack = converter.MaximumStackSizeNeeded;
+        size = converter.GetBodySize();
         namespaceScopes = converter.GetNamespaceScopes();
         operations = converter.GetOperations();
         operationExceptionInformation = converter.GetOperationExceptionInformation();
@@ -133,6 +135,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         localScopes = normalizedBody.LocalScopes;
         localVariables = normalizedBody.LocalVariables;
         maxStack = normalizedBody.MaxStack;
+        size = normalizedBody.Size;
         namespaceScopes = normalizedBody.NamespaceScopes;
         operations = normalizedBody.Operations;
         operationExceptionInformation = normalizedBody.OperationExceptionInformation;
@@ -153,6 +156,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.operations = operations;
         this.operationExceptionInformation = operationExceptionInformation;
         this.privateHelperTypes = privateHelperTypes;
+        this.size = size;
       }
     }
 
@@ -315,6 +319,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     private bool trackExpressionSourceLocations;
 
+    /// <summary>
+    /// The size in bytes of the method body when serialized.
+    /// </summary>
+    public uint Size {
+      get {
+        if (!this.ilWasGenerated) this.GenerateIL();
+        return this.size; 
+      }
+    }
+    uint size;
 
     #region IMethodBody Members
 

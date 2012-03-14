@@ -380,11 +380,7 @@ namespace Microsoft.Cci.Ast {
           this.FillInWithGlobalFieldsAndMethods(members, nestedUnitNamespace);
         else {
           ITypeDefinitionMember/*?*/ typeMember = namespaceMember as ITypeDefinitionMember;
-          if (typeMember != null)
-          {
-            members.Add(typeMember);
-            this.AddMemberToCache(typeMember);
-          }
+          if (typeMember != null) members.Add(typeMember);
         }
       }
     }

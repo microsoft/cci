@@ -14,6 +14,7 @@ using System.IO;
 using Microsoft.Cci.Contracts;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.MutableCodeModel.Contracts;
+using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci.MutableContracts {
 
@@ -399,10 +400,16 @@ namespace Microsoft.Cci.MutableContracts {
     /// T.M that is used as the implicit interface implementation of J.M).
     /// 2) Otherwise, the method from T that is an override of M.
     /// </summary>
+    /// <param name="methodDefinition">
+    /// This must be an unspecialized method definition.
+    /// </param>
+    /// <returns>
+    /// If the method definition is from a generic type, e.g., J&lt;T&gt;, and its contract class is
+    /// JContract&lt;U&gt;, then the returned contract method will have the "correct" instantiation, i.e.,
+    /// JContract&lt;T&gt;.
+    /// </returns>
     public static IMethodDefinition/*?*/ GetMethodFromContractClass(IMetadataHost host, IMethodDefinition methodDefinition) {
-
-      //var unspecializedMethodDefinition = UninstantiateAndUnspecialize(methodDefinition);
-      //ITypeDefinition definingType = unspecializedMethodDefinition.ResolvedMethod.ContainingTypeDefinition;
+      Contract.Requires(!(methodDefinition is ISpecializedMethodDefinition));
 
       var definingType = methodDefinition.ContainingTypeDefinition;
 
@@ -419,38 +426,24 @@ namespace Microsoft.Cci.MutableContracts {
         }
         #endregion Explicit Interface Implementations
         #region Implicit Interface Implementations
-        var implicitImplementations = typeHoldingContractDefinition.GetMatchingMembers(
-          tdm => {
-            IMethodDefinition md = tdm as IMethodDefinition;
-            if (md == null) return false;
-            if (md.Name != methodDefinition.Name) return false;
-            return ImplicitlyImplementsInterfaceMethod(md, methodDefinition);
-          });
-        if (IteratorHelper.EnumerableIsNotEmpty(implicitImplementations))
-          return IteratorHelper.Single(implicitImplementations) as IMethodDefinition;
-        #endregion Implicit Interface Implementations
-        return null;
-      } else if (methodDefinition.IsAbstract) {
-        var smd = methodDefinition as ISpecializedMethodDefinition;
-        if (smd != null) {
+
+        if (typeHoldingContractDefinition.IsGeneric) {
           // need to instantiate the type holding the contracts to match the instantiation of the containing type of the method
-          var gti = (IGenericTypeInstanceReference)smd.ContainingType;
-          typeHoldingContractDefinition = Immutable.GenericTypeInstance.GetGenericTypeInstance((INamedTypeDefinition)typeHoldingContractDefinition, gti.GenericArguments, host.InternFactory);
-          
+          typeHoldingContractDefinition = Immutable.GenericTypeInstance.GetGenericTypeInstance((INamedTypeDefinition)typeHoldingContractDefinition, definingType.GenericParameters, host.InternFactory);
+
+        }
+        var method = TypeHelper.GetMethod(typeHoldingContractDefinition, methodDefinition);
+        return (method is Dummy) ? null : method;
+
+        #endregion Implicit Interface Implementations
+      } else if (methodDefinition.IsAbstract) {
+        if (typeHoldingContractDefinition.IsGeneric) {
+          // need to instantiate the type holding the contracts to match the instantiation of the containing type of the method
+          typeHoldingContractDefinition = Immutable.GenericTypeInstance.GetGenericTypeInstance((INamedTypeDefinition)typeHoldingContractDefinition, definingType.GenericParameters, host.InternFactory);
+
         }
         IMethodDefinition method = MemberHelper.GetImplicitlyOverridingDerivedClassMethod(methodDefinition, typeHoldingContractDefinition);
-        var implicitImplementations = typeHoldingContractDefinition.GetMatchingMembers(
-          tdm => {
-            IMethodDefinition md = tdm as IMethodDefinition;
-            if (md == null) return false;
-            if (md.Name != methodDefinition.Name) return false;
-            return true;
-          });
-        if (IteratorHelper.EnumerableIsNotEmpty(implicitImplementations)) {
-          return IteratorHelper.First(implicitImplementations) as IMethodDefinition;
-        }
-        if (method is Dummy) return null;
-        return method;
+        return (method is Dummy) ? null : method;
       }
       return null;
     }

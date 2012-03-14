@@ -2786,6 +2786,7 @@ namespace Microsoft.Cci.Ast {
       this.operations = converter.GetOperations();
       this.operationExceptionInformation = converter.GetOperationExceptionInformation();
       this.privateHelperTypes = normalizedBody.PrivateHelperTypes;
+      this.size = converter.GetBodySize();
     }
 
     bool ilWasGenerated;
@@ -2926,6 +2927,17 @@ namespace Microsoft.Cci.Ast {
       }
     }
     IEnumerable<ITypeDefinition>/*?*/ privateHelperTypes;
+
+    /// <summary>
+    /// The size in bytes of the method body when serialized.
+    /// </summary>
+    public uint Size {
+      get {
+        if (!this.ilWasGenerated) this.GenerateIL();
+        return this.size;
+      }
+    }
+    uint size;
 
     #region ISourceMethodBody Members
 

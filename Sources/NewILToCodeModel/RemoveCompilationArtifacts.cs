@@ -25,6 +25,9 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     HashtableForUintValues<object> numberOfAssignmentsToLocal;
     HashtableForUintValues<object> numberOfReferencesToLocal;
+    ILocalDefinition/*?*/ currentSingleUseSingleReferenceLocal;
+    IExpression/*?*/ expressionToSubstituteForSingleUseSingleReferenceLocal;
+    SetOfObjects/*?*/ localsToEliminate;
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
@@ -33,22 +36,13 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
 
-    public override IExpression Rewrite(IBlockExpression blockExpression) {
-      var e = base.Rewrite(blockExpression);
-      var be = e as IBlockExpression;
-      if (be == null) return e;
-      if (IteratorHelper.EnumerableIsEmpty(be.BlockStatement.Statements))
-        return be.Expression;
-      return be;
-    }
-
     public override IExpression Rewrite(IAssignment assignment) {
       var binOp = assignment.Source as BinaryOperation;
       if (binOp != null) {
         var addressDeref = binOp.LeftOperand as IAddressDereference;
         if (addressDeref != null) {
           var dupValue = addressDeref.Address as IDupValue;
-          if (dupValue != null) {
+          if (dupValue != null && assignment.Target.Definition is IAddressDereference) {
             if (binOp is IAddition || binOp is IBitwiseAnd || binOp is IBitwiseOr || binOp is IDivision || binOp is IExclusiveOr ||
             binOp is ILeftShift || binOp is IModulus || binOp is IMultiplication || binOp is IRightShift || binOp is ISubtraction) {
               binOp.LeftOperand = assignment.Target;
@@ -65,8 +59,74 @@ namespace Microsoft.Cci.ILToCodeModel {
             }
           }
         }
+      } else {
+        var assign2 = assignment.Source as Assignment;
+        if (assign2 != null) {
+          var targetLocal = assign2.Target.Definition as ILocalDefinition;
+          if (targetLocal != null) {
+            binOp = assign2.Source as BinaryOperation;
+            if (binOp != null) {
+              var addressDeref = binOp.LeftOperand as IAddressDereference;
+              if (addressDeref != null) {
+                var dupValue = addressDeref.Address as IDupValue;
+                if (dupValue != null && assignment.Target.Definition is IAddressDereference) {
+                  if (binOp is IAddition || binOp is IBitwiseAnd || binOp is IBitwiseOr || binOp is IDivision || binOp is IExclusiveOr ||
+                  binOp is ILeftShift || binOp is IModulus || binOp is IMultiplication || binOp is IRightShift || binOp is ISubtraction) {
+                    binOp.LeftOperand = assignment.Target;
+                    if (this.numberOfReferencesToLocal[targetLocal] == 1 && this.numberOfAssignmentsToLocal[targetLocal] == 1)
+                      this.currentSingleUseSingleReferenceLocal = targetLocal;
+                    return assign2;
+                  }
+                }
+              }
+            }
+          }
+        }
       }
       return base.Rewrite(assignment);
+    }
+
+    public override IExpression Rewrite(IBlockExpression blockExpression) {
+      var e = base.Rewrite(blockExpression);
+      var be = e as IBlockExpression;
+      if (be == null) return e;
+      if (IteratorHelper.EnumerableIsEmpty(be.BlockStatement.Statements))
+        return be.Expression;
+      return be;
+    }
+
+    public override void RewriteChildren(BlockStatement block) {
+      base.RewriteChildren(block);
+      if (this.localsToEliminate != null && this.localsToEliminate.Count > 0) {
+        var statements = block.Statements;
+        var n = statements.Count;
+        var j = 0;
+        for (int i = 0; i < n; i++) {
+          var s = statements[i];
+          var localDecl = s as LocalDeclarationStatement;
+          if (localDecl != null) {
+            if (this.localsToEliminate.Contains(localDecl.LocalVariable)) continue;
+          } else {
+            var exprSt = s as ExpressionStatement;
+            if (exprSt != null) {
+              var assign = exprSt.Expression as Assignment;
+              if (assign != null && this.localsToEliminate.Contains(assign.Target.Definition)) continue;
+            }
+          }          
+          Contract.Assume(j <= i);
+          statements[j++] = s;
+        }
+        if (j < n) statements.RemoveRange(j, n-j);
+      }
+    }
+
+    public override IExpression Rewrite(IBoundExpression boundExpression) {
+      if (this.expressionToSubstituteForSingleUseSingleReferenceLocal != null && boundExpression.Definition == this.currentSingleUseSingleReferenceLocal) {
+        if (this.localsToEliminate == null) this.localsToEliminate = new SetOfObjects();
+        this.localsToEliminate.Add(this.currentSingleUseSingleReferenceLocal);
+        return this.expressionToSubstituteForSingleUseSingleReferenceLocal;
+      }
+      return base.Rewrite(boundExpression);
     }
 
     public override IExpression Rewrite(ICreateObjectInstance createObjectInstance) {
@@ -84,6 +144,26 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
       }
       return base.Rewrite(createObjectInstance);
+    }
+
+    public override IExpression Rewrite(IExpression expression) {
+      var result = base.Rewrite(expression);
+      this.expressionToSubstituteForSingleUseSingleReferenceLocal = null;
+      return result;
+    }
+
+    public override IStatement Rewrite(IExpressionStatement expressionStatement) {
+      this.currentSingleUseSingleReferenceLocal = null;
+      var result = base.Rewrite(expressionStatement);
+      if (this.currentSingleUseSingleReferenceLocal != null) {
+        var exprStat = result as IExpressionStatement;
+        if (exprStat != null) {
+          var assign = exprStat.Expression as IAssignment;
+          if (assign != null && assign.Target.Definition == this.currentSingleUseSingleReferenceLocal)
+            this.expressionToSubstituteForSingleUseSingleReferenceLocal = assign.Source;
+        }
+      }
+      return result;
     }
 
     public override IExpression Rewrite(IGreaterThan greaterThan) {

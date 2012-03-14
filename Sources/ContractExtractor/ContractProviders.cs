@@ -124,6 +124,10 @@ namespace Microsoft.Cci.Contracts {
 
         IMethodContract proxyContract = this.underlyingContractProvider.GetMethodContractFor(proxyMethod);
         ITypeReference contractClass = proxyMethod.ContainingTypeDefinition;
+        var gtir = contractClass as IGenericTypeInstanceReference;
+        if (gtir != null) {
+          contractClass = gtir.GenericType;
+        }
 
         if (proxyContract == null) {
           if (underlyingContract == null) {
@@ -138,38 +142,6 @@ namespace Microsoft.Cci.Contracts {
         }
         var copier = new CodeAndContractDeepCopier(this.host);
         proxyContract = copier.Copy(proxyContract);
-
-
-        //var cccc = new ConvertContractClassContract(this.host, contractClass, unspecializedMethodDefinition.ContainingType);
-        //proxyContract = cccc.Rewrite(mutableContract);
-        //proxyContract = ContractHelper.CopyContractIntoNewContext(this.host, proxyContract, unspecializedMethodDefinition, proxyMethod);
-
-        if (unspecializedMethodDefinition != methodDefinition) {
-          // need to replace the generic instantiations and specializations in the contract so they are for the
-          // context of the *unspecialized* method definition. That is what should get cached here.
-
-          var targetTypeReferences = new List<ITypeReference>();
-          foreach (var t in proxyMethod.GenericParameters) {
-            targetTypeReferences.Add(t);
-          }
-          var sourceTypeReferences = new List<ITypeReference>();
-          foreach (var t in unspecializedMethodDefinition.GenericParameters) {
-            sourceTypeReferences.Add(t);
-          }
-          foreach (var t in proxyMethod.ContainingTypeDefinition.GenericParameters) {
-            targetTypeReferences.Add(t);
-          }
-          foreach (var t in unspecializedMethodDefinition.ContainingTypeDefinition.GenericParameters) {
-            sourceTypeReferences.Add(t);
-          }
-          var d = new Dictionary<uint, ITypeReference>();
-          IteratorHelper.Zip(targetTypeReferences, sourceTypeReferences,
-            (u, s) => d.Add(u.InternedKey, s)
-              );
-          var specializer = new CodeSpecializer(host, d);
-          proxyContract = specializer.Rewrite(proxyContract);
-
-        }
 
         var cccc = new ConvertContractClassContract(this.host, contractClass, unspecializedMethodDefinition.ContainingType);
         proxyContract = cccc.Rewrite(proxyContract);

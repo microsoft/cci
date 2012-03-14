@@ -543,6 +543,41 @@ namespace CodeModelTestInput
 
         }
 
+        private int Method30(int[] xs)
+        {
+            push &xs[0];
+            push dup;
+            int __temp_2 = *pop;
+            int __temp_3 = __temp_2;
+            int CS$0$0001 = __temp_3;
+            pop = (__temp_2 + 1);
+            return CS$0$0001;
+
+        }
+
+        private int Method31(int[] xs)
+        {
+            push &xs[0];
+            push dup;
+            int __temp_2 = (*pop + 3);
+            int __temp_3 = __temp_2;
+            int CS$0$0001 = __temp_3;
+            pop = __temp_2;
+            return CS$0$0001;
+
+        }
+
+        private void Method32()
+        {
+            CodeModelTestInput.SomeStruct sstr;
+            sstr = default(CodeModelTestInput.SomeStruct);
+            push &sstr;
+            push dup;
+            pop.Width = (pop.Width >> 1);
+            return;
+
+        }
+
         public Class1()
         {
             this.c = 0;
@@ -552,6 +587,27 @@ namespace CodeModelTestInput
         }
 
         private int c;
+    }
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    struct SomeStruct
+    {
+        public int Width
+        {
+            get
+            {
+                return this.width;
+
+            }
+            set
+            {
+                this.width = value;
+                return;
+
+            }
+        }
+
+        private int width;
     }
 
     public class Class2
