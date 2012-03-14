@@ -751,6 +751,8 @@ namespace Microsoft.Cci.Analysis {
 
     private ITypeReference GetBinaryNumericOperationType(Instruction instruction) {
       Contract.Requires(instruction != null);
+      Contract.Ensures(Contract.Result<ITypeReference>() != null);
+
       var leftOperand = instruction.Operand1;
       var rightOperand = (Instruction)instruction.Operand2;
       Contract.Assume(leftOperand != null); //Assumed because of the informal specification of the DataFlowInferencer

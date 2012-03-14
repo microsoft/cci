@@ -3692,6 +3692,10 @@ namespace Microsoft.Cci {
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores", MessageId="Member")]
     Array_Addr,
+    /// <summary>
+    /// Not a valid operation.
+    /// </summary>
+    Invalid,
   }
 
   /// <summary>

@@ -293,6 +293,14 @@ namespace Microsoft.Cci {
       get { throw new NotImplementedException(); }
     }
 
+    public ushort SubsystemMajorVersion {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort SubsystemMinorVersion {
+      get { throw new NotImplementedException(); }
+    }
+
     public string TargetRuntimeVersion {
       get { throw new NotImplementedException(); }
     }
@@ -929,6 +937,16 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// The first part of a two part version number indicating the operating subsystem that is expected to be the target environment for this module.
+    /// </summary>
+    ushort SubsystemMajorVersion { get; }
+
+    /// <summary>
+    /// The second part of a two part version number indicating the operating subsystem that is expected to be the target environment for this module.
+    /// </summary>
+    ushort SubsystemMinorVersion { get; }
+
+    /// <summary>
     /// Identifies the version of the CLR that is required to load this module or assembly.
     /// </summary>
     string TargetRuntimeVersion { get; }
@@ -1134,6 +1152,14 @@ namespace Microsoft.Cci {
         Contract.Ensures(Contract.Result<ulong>() <= uint.MaxValue || this.Requires64bits);
         throw new NotImplementedException();
       }
+    }
+
+    public ushort SubsystemMajorVersion {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort SubsystemMinorVersion {
+      get { throw new NotImplementedException(); }
     }
 
     public string TargetRuntimeVersion {

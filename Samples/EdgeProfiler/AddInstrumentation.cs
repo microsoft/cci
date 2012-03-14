@@ -178,8 +178,7 @@ namespace EdgeProfiler {
     }
 
     private void InstrumentBlock(BasicBlock<Instruction> block) {
-      var blockOffset = block.Instructions[0].Operation.Offset;
-      this.ilGenerator.MarkLabel(this.GetLabelFor(blockOffset));
+      this.ilGenerator.MarkLabel(this.GetLabelFor(block.Offset));
       for (int i = 0, n = block.Instructions.Count-1; i < n; i++) {
         var operation = block.Instructions[i].Operation;
         this.EmitDebugInformationFor(operation);

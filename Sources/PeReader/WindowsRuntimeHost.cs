@@ -220,30 +220,35 @@ namespace Microsoft.Cci.MetadataReader {
     /// Provides the host with an opportunity to add, remove or substitute assembly references in the given list.
     /// This avoids the cost of rewriting the entire unit in order to make such changes.
     /// </summary>
-    /// <param name="referringUnit">A reference to the unit that has these references.</param>
+    /// <param name="referringUnit">The unit that contains these references.</param>
     /// <param name="assemblyReferences">The assembly references to substitute.</param>
     /// <returns>Usually assemblyReferences, but occasionally a modified enumeration.</returns>
     public override IEnumerable<IAssemblyReference> Redirect(IUnit referringUnit, IEnumerable<IAssemblyReference> assemblyReferences) {
       if (!this.projectToCLRTypes) return assemblyReferences;
-      if (!string.Equals(this.CoreAssemblySymbolicIdentity.Name.Value, "System.Runtime", StringComparison.OrdinalIgnoreCase)) return assemblyReferences;
+      var referringModule = referringUnit as IModule;
+      if (referringModule == null || referringModule.ContainingAssembly == null || !(referringModule.ContainingAssembly.ContainsForeignTypes)) return assemblyReferences;
       var platformType = (WindowsRuntimePlatform)this.PlatformType;
-      var standardRefs = new Hashtable<AssemblyIdentity, object>();
-      standardRefs.Add(platformType.CoreAssemblyRef.AssemblyIdentity, platformType.CoreAssemblyRef);
-      standardRefs.Add(platformType.SystemRuntimeInteropServicesWindowsRuntime.AssemblyIdentity, platformType.SystemRuntimeInteropServicesWindowsRuntime);
-      standardRefs.Add(platformType.SystemRuntimeWindowsRuntime.AssemblyIdentity, platformType.SystemRuntimeWindowsRuntime);
-      standardRefs.Add(platformType.SystemRuntimeWindowsRuntimeUIXaml.AssemblyIdentity, platformType.SystemRuntimeWindowsRuntimeUIXaml);
-      standardRefs.Add(platformType.SystemObjectModel.AssemblyIdentity, platformType.SystemObjectModel);
+      var standardRefs = new SetOfObjects();
+      if (string.Equals(this.CoreAssemblySymbolicIdentity.Name.Value, "System.Runtime", StringComparison.OrdinalIgnoreCase)) {
+        standardRefs.Add(platformType.SystemObjectModel.AssemblyIdentity);
+      } else {
+        standardRefs.Add(platformType.System.AssemblyIdentity);
+      }
+      standardRefs.Add(platformType.CoreAssemblyRef.AssemblyIdentity);
+      standardRefs.Add(platformType.SystemRuntimeWindowsRuntime.AssemblyIdentity);
+      standardRefs.Add(platformType.SystemRuntimeWindowsRuntimeUIXaml.AssemblyIdentity);
       var result = new List<IAssemblyReference>();
       foreach (var aref in assemblyReferences) {
         if (string.Equals(aref.Name.Value, "mscorlib", StringComparison.OrdinalIgnoreCase)) continue;
         result.Add(aref);
         standardRefs.Remove(aref.AssemblyIdentity);
       }
-      if (standardRefs.ContainsKey(platformType.CoreAssemblyRef.AssemblyIdentity)) result.Add(platformType.CoreAssemblyRef);
-      if (standardRefs.ContainsKey(platformType.SystemRuntimeInteropServicesWindowsRuntime.AssemblyIdentity)) result.Add(platformType.SystemRuntimeInteropServicesWindowsRuntime);
-      if (standardRefs.ContainsKey(platformType.SystemRuntimeWindowsRuntime.AssemblyIdentity)) result.Add(platformType.SystemRuntimeWindowsRuntime);
-      if (standardRefs.ContainsKey(platformType.SystemRuntimeWindowsRuntimeUIXaml.AssemblyIdentity)) result.Add(platformType.SystemRuntimeWindowsRuntimeUIXaml);
-      if (standardRefs.ContainsKey(platformType.SystemObjectModel.AssemblyIdentity)) result.Add(platformType.SystemObjectModel);
+      if (standardRefs.Contains(platformType.CoreAssemblyRef.AssemblyIdentity)) result.Add(platformType.CoreAssemblyRef);
+      if (standardRefs.Contains(platformType.SystemRuntimeInteropServicesWindowsRuntime.AssemblyIdentity)) result.Add(platformType.SystemRuntimeInteropServicesWindowsRuntime);
+      if (standardRefs.Contains(platformType.SystemRuntimeWindowsRuntime.AssemblyIdentity)) result.Add(platformType.SystemRuntimeWindowsRuntime);
+      if (standardRefs.Contains(platformType.SystemRuntimeWindowsRuntimeUIXaml.AssemblyIdentity)) result.Add(platformType.SystemRuntimeWindowsRuntimeUIXaml);
+      if (standardRefs.Contains(platformType.SystemObjectModel.AssemblyIdentity)) result.Add(platformType.SystemObjectModel);
+      if (standardRefs.Contains(platformType.System.AssemblyIdentity)) result.Add(platformType.System);
       return IteratorHelper.GetReadonly(result.ToArray());
     }
 
@@ -251,16 +256,16 @@ namespace Microsoft.Cci.MetadataReader {
     /// Provides the host with an opportunity to substitute one type reference for another during metadata reading.
     /// This avoids the cost of rewriting the entire unit in order to make such changes.
     /// </summary>
-    /// <param name="definingUnit">A reference to the unit that is defining the type.</param>
+    /// <param name="referringUnit">The unit that contains the reference.</param>
     /// <param name="typeReference">A type reference encountered during metadata reading.</param>
     /// <returns>
     /// Usually the value in typeReference, but occassionally something else.
     /// </returns>
-    public override INamedTypeReference Redirect(IUnit definingUnit, INamedTypeReference typeReference) {
+    public override INamedTypeReference Redirect(IUnit referringUnit, INamedTypeReference typeReference) {
       if (!this.projectToCLRTypes) return typeReference;
+      var referringModule = referringUnit as IModule;
+      if (referringModule == null || referringModule.ContainingAssembly == null || !(referringModule.ContainingAssembly.ContainsForeignTypes)) return typeReference;
       var platformType = (WindowsRuntimePlatform)this.PlatformType;
-      var definingAssembly = definingUnit as IAssembly;
-      if (definingAssembly == null || !(definingAssembly.ContainsForeignTypes)) return typeReference;
       var namespaceTypeReference = typeReference as INamespaceTypeReference;
       if (namespaceTypeReference == null) return typeReference;
       var namespaceReference = namespaceTypeReference.ContainingUnitNamespace as INestedUnitNamespaceReference;
@@ -336,7 +341,7 @@ namespace Microsoft.Cci.MetadataReader {
     /// Provides the host with an opportunity to substitute a custom attribute with another during metadata reading.
     /// This avoids the cost of rewriting the entire unit in order to make such changes.
     /// </summary>
-    /// <param name="referringUnit">The unit that is referencing the type.</param>
+    /// <param name="referringUnit">The unit that contains the custom attribute.</param>
     /// <param name="customAttribute">The custom attribute to rewrite (fix up).</param>
     /// <returns>
     /// Usually the value in customAttribute, but occassionally another custom attribute.
@@ -344,8 +349,8 @@ namespace Microsoft.Cci.MetadataReader {
     public override ICustomAttribute Rewrite(IUnit referringUnit, ICustomAttribute customAttribute) {
       CustomAttribute customAttr = customAttribute as CustomAttribute;
       if (customAttr == null) return customAttribute;
-      var referringAssembly = referringUnit as IAssembly;
-      if (referringAssembly == null || !(referringAssembly.ContainsForeignTypes)) return customAttribute;
+      var referringModule = referringUnit as IModule;
+      if (referringModule == null || referringModule.ContainingAssembly == null || !(referringModule.ContainingAssembly.ContainsForeignTypes)) return customAttribute;
       if (!TypeHelper.TypesAreEquivalent(customAttribute.Type, this.PlatformType.SystemAttributeUsageAttribute)) return customAttribute;
       //The custom attribute constructor has been redirected from Windows.Foundation.AttributeUsageAttribute, which has a different
       //set of flags from System.AttributeUsageAttribute for its first and only constructor parameter and also does not have an AllowMultiple property. 

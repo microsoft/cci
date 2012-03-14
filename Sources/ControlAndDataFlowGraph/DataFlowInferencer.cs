@@ -414,7 +414,7 @@ namespace Microsoft.Cci.Analysis {
         case OperationCode.Dup:
           var dupop = this.stack.Pop();
           instruction.Operand1 = dupop;
-          this.stack.Push(dupop);
+          this.stack.Push(instruction);
           this.stack.Push(instruction);
           break;
 
@@ -444,10 +444,16 @@ namespace Microsoft.Cci.Analysis {
           Contract.Assume(instruction.Operation.Value is ISignature); //This is an informally specified property of the Metadata model.
           signature = (ISignature)instruction.Operation.Value;
           var numArguments = (int)IteratorHelper.EnumerableCount(signature.Parameters);
-          var arguments = new Instruction[numArguments];
-          instruction.Operand2 = arguments;
-          for (var i = numArguments-1; i >= 0; i--)
-            arguments[i] = stack.Pop();
+          if (numArguments > 0) {
+            if (numArguments > 1) {
+              numArguments--;
+              var arguments = new Instruction[numArguments];
+              instruction.Operand2 = arguments;
+              for (var i = numArguments-1; i >= 0; i--)
+                arguments[i] = stack.Pop();
+            }
+            instruction.Operand1 = stack.Pop();
+          }
           this.stack.Push(instruction);
           break;
 
@@ -464,12 +470,17 @@ namespace Microsoft.Cci.Analysis {
       Contract.Requires(signature != null);
 
       var numArguments = IteratorHelper.EnumerableCount(signature.Parameters);
-      var arguments = new Instruction[numArguments];
-      instruction.Operand2 = arguments;
-      for (var i = numArguments; i > 0; i--)
-        arguments[i-1] = stack.Pop();
-      if (!signature.IsStatic)
+      if (!signature.IsStatic) numArguments++;
+      if (numArguments > 0) {
+        numArguments--;
+        if (numArguments > 0) {
+          var arguments = new Instruction[numArguments];
+          instruction.Operand2 = arguments;
+          for (var i = numArguments; i > 0; i--)
+            arguments[i-1] = stack.Pop();
+        }
         instruction.Operand1 = stack.Pop();
+      }
       if (signature.Type.TypeCode != PrimitiveTypeCode.Void)
         stack.Push(instruction);
     }
@@ -497,11 +508,17 @@ namespace Microsoft.Cci.Analysis {
       IArrayTypeReference arrayType = (IArrayTypeReference)currentOperation.Value;
       Contract.Assume(arrayType != null); //This is an informally specified property of the Metadata model.
       var rank = arrayType.Rank;
-      if (currentOperation.OperationCode == OperationCode.Array_Create_WithLowerBound) rank *= 2;
-      var indices = new Instruction[rank];
-      instruction.Operand2 = indices;
-      for (var i = rank; i > 0; i--)
-        indices[i-1] = stack.Pop();
+      if (rank > 0) {
+        if (currentOperation.OperationCode == OperationCode.Array_Create_WithLowerBound) rank *= 2;
+        rank--;
+        if (rank > 0) {
+          var indices = new Instruction[rank];
+          instruction.Operand2 = indices;
+          for (var i = rank; i > 0; i--)
+            indices[i-1] = stack.Pop();
+        }
+        instruction.Operand1 = stack.Pop();
+      }
       stack.Push(instruction);
     }
 

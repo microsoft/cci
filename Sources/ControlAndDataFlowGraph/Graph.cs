@@ -156,10 +156,10 @@ namespace Microsoft.Cci.Analysis {
   /// <summary>
   /// A block of instructions of which only the first instruction can be reached via explicit control flow.
   /// </summary>
-  public class BasicBlock<Instruction> {
+  public class BasicBlock<Instruction> where Instruction : Microsoft.Cci.Analysis.Instruction {
 
     /// <summary>
-    /// The first edge in the ControlAndDataFlowGraph that contains the basic block, which represents a control flow from this block to a successor block.
+    /// The first edge that leaves this block. The edges are a contiguous sublist of the the SuccessorEdges list of the ControlAndDataFlowGraph that contains this block.
     /// </summary>
     internal int firstSuccessorEdge;
 
@@ -178,6 +178,23 @@ namespace Microsoft.Cci.Analysis {
     /// The instructions making up this block.
     /// </summary>
     public Sublist<Instruction> Instructions;
+
+    /// <summary>
+    /// The IL offset of the first instruction in this basic block. If the block is empty, it is the same as the Offset of the following block. If there is no following block, 
+    /// it is the offset where the next instruction would have appeared.
+    /// </summary>
+    public uint Offset {
+      get { if (this.Instructions.Count == 0) return 0; else return this.Instructions[0].Operation.Offset; }
+    }
+
+    /// <summary>
+    /// Returns a string describing the basic block.
+    /// </summary>
+    /// <returns></returns>
+    public override string ToString() {
+      if (this.Instructions.Count == 0) return "Empty BasicBlock";
+      return "BasicBlock at "+this.Offset.ToString("x4");
+    }
 
   }
 

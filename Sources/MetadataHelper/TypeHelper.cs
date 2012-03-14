@@ -1274,7 +1274,11 @@ namespace Microsoft.Cci {
         if (meth == null) continue;
         if (meth.GenericParameterCount != methodSignature.GenericParameterCount) continue;
         if (meth.ParameterCount != methodSignature.ParameterCount) continue;
-        if (MemberHelper.SignaturesAreEqual(meth, methodSignature, resolveTypes)) return meth;
+        if (meth.IsGeneric) {
+          if (MemberHelper.GenericMethodSignaturesAreEqual(meth, methodSignature, resolveTypes)) return meth;
+        } else {
+          if (MemberHelper.SignaturesAreEqual(meth, methodSignature, resolveTypes)) return meth;
+        }
       }
       return Dummy.MethodDefinition;
     }
@@ -2065,6 +2069,15 @@ namespace Microsoft.Cci {
       if (type1 == null || type2 == null) return false;
       if (type1 == type2) return true;
       if (type1.InternedKey == type2.InternedKey) return true;
+
+      if (resolveTypes) {
+        var td1 = type1.ResolvedType;
+        var td2 = type2.ResolvedType;
+        if (!(td1 is Dummy)) type1 = td1;
+        if (!(td2 is Dummy)) type2 = td2;
+        if (type1 == type2) return true;
+        if (type1.InternedKey == type2.InternedKey) return true;
+      }
 
       var genMethPar1 = type1 as IGenericMethodParameterReference;
       var genMethPar2 = type2 as IGenericMethodParameterReference;

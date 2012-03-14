@@ -1066,6 +1066,14 @@ namespace Microsoft.Cci {
       get { return 0; }
     }
 
+    public ushort SubsystemMajorVersion {
+      get { return 0; }
+    }
+
+    public ushort SubsystemMinorVersion {
+      get { return 0; }
+    }
+
     public string TargetRuntimeVersion {
       get { return string.Empty; }
     }
@@ -2601,6 +2609,10 @@ namespace Microsoft.Cci {
       get { return Enumerable<IOperationExceptionInformation>.Empty; }
     }
 
+    public uint Size {
+      get { return 0; }
+    }
+
     #endregion
 
     #region IDoubleDispatcher Members
@@ -3141,6 +3153,14 @@ namespace Microsoft.Cci {
     }
 
     public ulong SizeOfStackCommit {
+      get { return 0; }
+    }
+
+    public ushort SubsystemMajorVersion {
+      get { return 0; }
+    }
+
+    public ushort SubsystemMinorVersion {
       get { return 0; }
     }
 

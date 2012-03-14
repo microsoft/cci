@@ -4368,8 +4368,8 @@ namespace Microsoft.Cci {
       writer.WriteUshort(0); //MinorOperatingSystemVersion 44
       writer.WriteUshort(0); //MajorImageVersion 46
       writer.WriteUshort(0); //MinorImageVersion 48
-      writer.WriteUshort(4); //MajorSubsystemVersion 50
-      writer.WriteUshort(0); //MinorSubsystemVersion 52
+      writer.WriteUshort(module.SubsystemMajorVersion); //50
+      writer.WriteUshort(module.SubsystemMinorVersion); //52
       writer.WriteUint(0); //Win32VersionValue 56
       writer.WriteUint(ntHeader.SizeOfImage); //60
       writer.WriteUint(ntHeader.SizeOfHeaders); //64

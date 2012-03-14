@@ -1223,6 +1223,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.privateHelperTypes = new List<ITypeDefinition>(methodBody.PrivateHelperTypes);
       else
         this.privateHelperTypes = null;
+      this.size = methodBody.Size;
     }
 
     /// <summary>
@@ -1301,6 +1302,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     List<ITypeDefinition>/*?*/ privateHelperTypes;
 
+    /// <summary>
+    /// The size in bytes of the method body when serialized.
+    /// </summary>
+    public uint Size {
+      get { return this.size; }
+      set { this.size = value; }
+    }
+    uint size;
 
     #region IMethodBody Members
 

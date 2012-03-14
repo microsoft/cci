@@ -727,7 +727,8 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A metadata (IL) level represetation of the body of a method or of a property/event accessor.
   /// </summary>
-  public partial interface IMethodBody {
+  [ContractClass(typeof(IMethodBodyContract))]
+  public interface IMethodBody {
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
@@ -775,14 +776,14 @@ namespace Microsoft.Cci {
     /// </summary>
     IEnumerable<ITypeDefinition> PrivateHelperTypes { get; }
 
+    /// <summary>
+    /// The size in bytes of the method body when serialized.
+    /// </summary>
+    uint Size { get; }
+
   }
 
   #region IMethodBody contract binding
-  [ContractClass(typeof(IMethodBodyContract))]
-  public partial interface IMethodBody {
-    
-  }
-
   [ContractClassFor(typeof(IMethodBody))]
   abstract class IMethodBodyContract : IMethodBody {
     #region IMethodBody Members
@@ -838,6 +839,12 @@ namespace Microsoft.Cci {
         Contract.Ensures(Contract.Result<IEnumerable<ITypeDefinition>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<ITypeDefinition>>(), x => x != null));
         throw new NotImplementedException(); 
+      }
+    }
+
+    public uint Size {
+      get {
+        throw new NotImplementedException();
       }
     }
 

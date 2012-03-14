@@ -43,10 +43,22 @@ namespace Microsoft.Cci {
     /// in the same location should be replaced with this collection.
     /// </param>
     public ErrorEventArgs(object errorReporter, ILocation location, IEnumerable<IErrorMessage> errors) {
+      Contract.Requires(errorReporter != null);
+      Contract.Requires(location != null);
+      Contract.Requires(errors != null);
+
       this.errorReporter = errorReporter;
       this.location = location;
       this.errors = errors;
     }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.errorReporter != null);
+      Contract.Invariant(this.location != null);
+      Contract.Invariant(this.errors != null);
+    }
+
 
     /// <summary>
     /// The object reporting the errors. This can be used to filter out events coming from non interesting sources.
@@ -55,7 +67,10 @@ namespace Microsoft.Cci {
     /// can ignore any events that come from a reporter that does not implement this interface.
     /// </summary>
     public object ErrorReporter {
-      get { return this.errorReporter; }
+      get {
+        Contract.Ensures(Contract.Result<object>() != null);
+        return this.errorReporter; 
+      }
     }
     readonly object errorReporter;
 
@@ -63,7 +78,10 @@ namespace Microsoft.Cci {
     /// Identifies the portion of the document that was analyzed to arrive at the error list.
     /// </summary>
     public ILocation Location {
-      get { return this.location; }
+      get {
+        Contract.Ensures(Contract.Result<ILocation>() != null);
+        return this.location; 
+      }
     }
     readonly ILocation location;
 
@@ -72,7 +90,10 @@ namespace Microsoft.Cci {
     /// in the same location should be replaced with this collection.
     /// </summary>
     public IEnumerable<IErrorMessage> Errors {
-      get { return this.errors; }
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IErrorMessage>>() != null);
+        return this.errors; 
+      }
     }
     readonly IEnumerable<IErrorMessage> errors;
   }
@@ -90,6 +111,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Provides efficient readonly access to the content of an IBinaryDocument instance via an unsafe byte pointer.
   /// </summary>
+  [ContractClass(typeof(IBinaryDocumentMemoryBlockContract))]
   public unsafe interface IBinaryDocumentMemoryBlock {
     /// <summary>
     /// The binary document for which this is the memory block
@@ -107,9 +129,34 @@ namespace Microsoft.Cci {
     uint Length { get; }
   }
 
+  #region IBinaryDocumentMemoryBlock contract binding
+  [ContractClassFor(typeof(IBinaryDocumentMemoryBlock))]
+  abstract class IBinaryDocumentMemoryBlockContract : IBinaryDocumentMemoryBlock {
+    #region IBinaryDocumentMemoryBlock Members
+
+    public unsafe IBinaryDocument BinaryDocument {
+      get {
+        Contract.Ensures(Contract.Result<IBinaryDocument>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public unsafe byte* Pointer {
+      get { throw new NotImplementedException(); }
+    }
+
+    public unsafe uint Length {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
   /// <summary>
   /// Represents the location in binary document.
   /// </summary>
+  [ContractClass(typeof(IBinaryLocationContract))]
   public interface IBinaryLocation : ILocation {
     /// <summary>
     /// The binary document containing this location range.
@@ -126,6 +173,37 @@ namespace Microsoft.Cci {
       //^ ensures result <= this.BinaryDocument.Length;
     }
   }
+
+  #region IBinaryLocation contract binding
+  [ContractClassFor(typeof(IBinaryLocation))]
+  abstract class IBinaryLocationContract : IBinaryLocation {
+    #region IBinaryLocation Members
+
+    public IBinaryDocument BinaryDocument {
+      get {
+        Contract.Ensures(Contract.Result<IBinaryDocument>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public uint Offset {
+      get {
+        Contract.Ensures(Contract.Result<uint>() <= this.BinaryDocument.Length);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+
+    #region ILocation Members
+
+    public IDocument Document {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
 
   /// <summary>
   /// Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.
@@ -297,6 +375,7 @@ namespace Microsoft.Cci {
     bool PreserveILLocations { get; }
   }
 
+  #region IMetadataHost contract binding
   [ContractClassFor(typeof(IMetadataHost))]
   abstract class IMetadataHostContract : IMetadataHost {
     public event EventHandler<ErrorEventArgs> Errors;
@@ -444,6 +523,7 @@ namespace Microsoft.Cci {
       get { throw new NotImplementedException(); }
     }
   }
+  #endregion
 
   /// <summary>
   /// Implemented by types that contain a collection of members of type MemberType. For example a namespace contains a collection of INamespaceMember instances.
@@ -458,6 +538,7 @@ namespace Microsoft.Cci {
     IEnumerable<MemberType> Members { get; }
   }
 
+  #region IContainer contract binding
   [ContractClassFor(typeof(IContainer<>))]
   abstract class IContainerContract<MemberType> : IContainer<MemberType>
     where MemberType : class {
@@ -469,6 +550,7 @@ namespace Microsoft.Cci {
       }
     }
   }
+  #endregion
 
   /// <summary>
   /// Implemented by types whose instances belong to a specific type of container (see IContainer&lt;MemberType&gt;).
@@ -517,7 +599,6 @@ namespace Microsoft.Cci {
     #endregion
   }
   #endregion
-
 
   /// <summary>
   /// An object corresponding to a metadata entity such as a type or a field.
@@ -586,10 +667,10 @@ namespace Microsoft.Cci {
   }
   #endregion
 
-
   /// <summary>
   /// An object that represents a document. This can be either source or binary or designer surface etc
   /// </summary>
+  [ContractClass(typeof(IDocumentContract))]
   public interface IDocument {
 
     /// <summary>
@@ -605,9 +686,33 @@ namespace Microsoft.Cci {
 
   }
 
+  #region IDocument contract binding
+  [ContractClassFor(typeof(IDocument))]
+  abstract class IDocumentContract : IDocument {
+    #region IDocument Members
+
+    public string Location {
+      get {
+        Contract.Ensures(Contract.Result<string>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IName Name {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+  }
+  #endregion
+
   /// <summary>
   /// Error information relating to a portion of a document.
   /// </summary>
+  [ContractClass(typeof(IErrorMessageContract))]
   public interface IErrorMessage {
 
     /// <summary>
@@ -648,6 +753,62 @@ namespace Microsoft.Cci {
     IEnumerable<ILocation> RelatedLocations { get; }
 
   }
+
+  #region IErrorMessage contract binding
+  [ContractClassFor(typeof(IErrorMessage))]
+  abstract class IErrorMessageContract : IErrorMessage {
+    #region IErrorMessage Members
+
+    public object ErrorReporter {
+      get {
+        Contract.Ensures(Contract.Result<object>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public string ErrorReporterIdentifier {
+      get {
+        Contract.Ensures(Contract.Result<string>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public long Code {
+      get { 
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public bool IsWarning {
+      get { 
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public string Message {
+      get {
+        Contract.Ensures(Contract.Result<string>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public ILocation Location {
+      get {
+        Contract.Ensures(Contract.Result<ILocation>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IEnumerable<ILocation> RelatedLocations {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<ILocation>>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+  }
+  #endregion
 
   /// <summary>
   /// Implemented by metadata objects that have been obtained from a CLR PE file.
@@ -720,6 +881,7 @@ namespace Microsoft.Cci {
     IEnumerable<MemberType> Members { get; }
   }
 
+  #region IScope<MemberType> contract binding
   [ContractClassFor(typeof(IScope<>))]
   abstract class ISCopeContract<MemberType> : IScope<MemberType>
     where MemberType : class, INamedEntity {
@@ -769,18 +931,43 @@ namespace Microsoft.Cci {
       }
     }
   }
-
+  #endregion
 
   /// <summary>
   /// Implemented by types whose instances belong to a specific type of scope (see IScope&lt;MemberType&gt;).
   /// </summary>
   /// <typeparam name="ScopeType">The type of the scope that has members of this type.</typeparam>
+  [ContractClass(typeof(IScopeMemberContract<>))]
   public interface IScopeMember<ScopeType> : INamedEntity {
     /// <summary>
     /// The scope instance with a Members collection that includes this instance.
     /// </summary>
     ScopeType ContainingScope { get; }
   }
+
+  #region IScopeMember<ScopeType> contract binding
+  [ContractClassFor(typeof(IScopeMember<>))]
+  abstract class IScopeMemberContract<ScopeType> : IScopeMember<ScopeType> {
+    #region IScopeMember<ScopeType> Members
+
+    public ScopeType ContainingScope {
+      get {
+        Contract.Ensures(Contract.Result<ScopeType>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+
+    #region INamedEntity Members
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
 
   /// <summary>
   /// Implemented by types whose instances are usually derived from documents.
@@ -795,6 +982,7 @@ namespace Microsoft.Cci {
 
   }
 
+  #region IObjectWithLocations contract binding
   [ContractClassFor(typeof(IObjectWithLocations))]
   abstract class IObjectWithLocationsContract : IObjectWithLocations {
     public IEnumerable<ILocation> Locations {
@@ -805,10 +993,12 @@ namespace Microsoft.Cci {
       }
     }
   }
+  #endregion
 
   /// <summary>
   /// Represents a location in IL operation stream.
   /// </summary>
+  [ContractClass(typeof(IILLocationContract))]
   public interface IILLocation : ILocation {
 
     /// <summary>
@@ -822,9 +1012,38 @@ namespace Microsoft.Cci {
     uint Offset { get; }
   }
 
+  #region IILLocation contract binding
+  [ContractClassFor(typeof(IILLocation))]
+  abstract class IILLocationContract : IILLocation {
+    #region IILLocation Members
+
+    public IMethodDefinition MethodDefinition {
+      get {
+        Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public uint Offset {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region ILocation Members
+
+    public IDocument Document {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
   /// <summary>
   /// A location that represents a metadata object with a token.
   /// </summary>
+  [ContractClass(typeof(IMetadataLocationContract))]
   public interface IMetadataLocation : ILocation {
 
     /// <summary>
@@ -834,9 +1053,34 @@ namespace Microsoft.Cci {
 
   }
 
+  #region IMetadataLocation contract binding
+  [ContractClassFor(typeof(IMetadataLocation))]
+  abstract class IMetadataLocationContract : IMetadataLocation {
+    #region IMetadataLocation Members
+
+    public IMetadataObjectWithToken Definition {
+      get {
+        Contract.Ensures(Contract.Result<IMetadataObjectWithToken>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+
+    #region ILocation Members
+
+    public IDocument Document {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
   /// <summary>
   /// Represents a location in some document.
   /// </summary>
+  [ContractClass(typeof(ILocationContract))]
   public interface ILocation {
     /// <summary>
     /// The document containing this location.
@@ -845,6 +1089,22 @@ namespace Microsoft.Cci {
       get;
     }
   }
+
+  #region ILocation contract binding
+  [ContractClassFor(typeof(ILocation))]
+  abstract class ILocationContract : ILocation {
+    #region ILocation Members
+
+    public IDocument Document {
+      get {
+        Contract.Ensures(Contract.Result<IDocument>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+  }
+  #endregion
 
   /// <summary>
   /// A collection of methods that associate unique integers with metadata model entities.
@@ -1045,7 +1305,6 @@ namespace Microsoft.Cci {
     #endregion
   }
   #endregion
-
 
   /// <summary>
   /// Implemented by classes that visit nodes of object graphs via a double dispatch mechanism, usually performing some computation of a subset of the nodes in the graph.
@@ -1325,7 +1584,6 @@ namespace Microsoft.Cci {
   }
 
   #region IMetadataVisitor contract binding
-
   [ContractClassFor(typeof(IMetadataVisitor))]
   abstract class IMetadataVisitorContract : IMetadataVisitor {
     #region IMetadataVisitor Members

@@ -588,6 +588,7 @@ namespace Microsoft.Cci {
   /// An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. 
   /// For example, a PDB reader that maps offsets in an IL stream to source locations.
   /// </summary>
+  [ContractClass(typeof(ISourceLocationProviderContract))]
   public interface ISourceLocationProvider {
     /// <summary>
     /// Return zero or more locations in primary source documents that correspond to one or more of the given derived (non primary) document locations.
@@ -612,6 +613,36 @@ namespace Microsoft.Cci {
     /// </summary>
     string GetSourceNameFor(ILocalDefinition localDefinition, out bool isCompilerGenerated);
   }
+
+  #region ISourceLocationProvider contract binding
+  [ContractClassFor(typeof(ISourceLocationProvider))]
+  abstract class ISourceLocationProviderContract : ISourceLocationProvider {
+    #region ISourceLocationProvider Members
+
+    public IEnumerable<IPrimarySourceLocation> GetPrimarySourceLocationsFor(IEnumerable<ILocation> locations) {
+      Contract.Ensures(Contract.Result<IEnumerable<IPrimarySourceLocation>>() != null);
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<IPrimarySourceLocation> GetPrimarySourceLocationsFor(ILocation location) {
+      Contract.Ensures(Contract.Result<IEnumerable<IPrimarySourceLocation>>() != null);
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<IPrimarySourceLocation> GetPrimarySourceLocationsForDefinitionOf(ILocalDefinition localDefinition) {
+      Contract.Ensures(Contract.Result<IEnumerable<IPrimarySourceLocation>>() != null);
+      throw new NotImplementedException();
+    }
+
+    public string GetSourceNameFor(ILocalDefinition localDefinition, out bool isCompilerGenerated) {
+      Contract.Ensures(Contract.Result<string>() != null);
+      throw new NotImplementedException();
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// A range of CLR IL operations that comprise a lexical scope, specified as an IL offset and a length.
@@ -724,6 +755,7 @@ namespace Microsoft.Cci {
   /// A description of the lexical scope in which a namespace type has been nested. This scope is tied to a particular
   /// method body, so that partial types can be accommodated.
   /// </summary>
+  [ContractClass(typeof(INamespaceScopeContract))]
   public interface INamespaceScope {
 
     /// <summary>
@@ -733,10 +765,26 @@ namespace Microsoft.Cci {
 
   }
 
+  #region INamespaceScope contract binding
+  [ContractClassFor(typeof(INamespaceScope))]
+  abstract class INamespaceScopeContract : INamespaceScope {
+    #region INamespaceScope Members
+
+    public IEnumerable<IUsedNamespace> UsedNamespaces {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IUsedNamespace>>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+  }
+  #endregion
 
   /// <summary>
   /// A namespace that is used (imported) inside a namespace scope.
   /// </summary>
+  [ContractClass(typeof(IUsedNamespaceContract))]
   public interface IUsedNamespace {
     /// <summary>
     /// An alias for a namespace. For example the "x" of "using x = y.z;" in C#. Empty if no alias is present.
@@ -748,6 +796,29 @@ namespace Microsoft.Cci {
     /// </summary>
     IName NamespaceName { get; }
   }
+
+  #region IUsedNamedspace contract binding
+  [ContractClassFor(typeof(IUsedNamespace))]
+  abstract class IUsedNamespaceContract : IUsedNamespace {
+    #region IUsedNamespace Members
+
+    public IName Alias {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IName NamespaceName {
+      get {
+        Contract.Ensures(Contract.Result<IName>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+  }
+  #endregion
 
 
   /// <summary>

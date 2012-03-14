@@ -2558,7 +2558,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
     #region Fields and Properties [PEFile]
     COFFFileHeader COFFFileHeader;
     OptionalHeaderStandardFields OptionalHeaderStandardFields;
-    OptionalHeaderNTAdditionalFields OptionalHeaderNTAdditionalFields;
+    internal OptionalHeaderNTAdditionalFields OptionalHeaderNTAdditionalFields;
     OptionalHeaderDirectoryEntries OptionalHeaderDirectoryEntries;
     internal SectionHeader[] SectionHeaders;
     internal MemoryReader Win32ResourceMemoryReader;

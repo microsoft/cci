@@ -492,6 +492,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.PEFileToObjectModel.PEFileReader.SizeOfStackReserve; }
     }
 
+    ushort IModule.SubsystemMajorVersion {
+      get { return this.PEFileToObjectModel.SubsystemMajorVersion; }
+    }
+
+    ushort IModule.SubsystemMinorVersion {
+      get { return this.PEFileToObjectModel.SubsystemMinorVersion; }
+    }
+
     string IModule.TargetRuntimeVersion {
       get { return this.PEFileToObjectModel.TargetRuntimeVersion; }
     }

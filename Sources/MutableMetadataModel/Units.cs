@@ -732,6 +732,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.sizeOfStackCommit = 0x1000;
       this.sizeOfStackReserve = 0x100000;
       this.strings = null;
+      this.subsystemMajorVersion = 4;
+      this.subsystemMinorVersion = 0;
       this.targetRuntimeVersion = "";
       this.trackDebugData = false;
       this.typeMemberReferences = null;
@@ -797,6 +799,8 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.strings = new List<string>(strs);
       else
         this.strings = null;
+      this.subsystemMajorVersion = module.SubsystemMajorVersion;
+      this.subsystemMinorVersion = module.SubsystemMinorVersion;
       this.targetRuntimeVersion = module.TargetRuntimeVersion;
       this.trackDebugData = module.TrackDebugData;
       var memberRefs = module.GetTypeMemberReferences();
@@ -1165,6 +1169,24 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.strings = value; }
     }
     List<string>/*?*/ strings;
+
+    /// <summary>
+    /// The first part of a two part version number indicating the operating subsystem that is expected to be the target environment for this module.
+    /// </summary>
+    public ushort SubsystemMajorVersion {
+      get { return this.subsystemMajorVersion; }
+      set { this.subsystemMajorVersion = value; }
+    }
+    ushort subsystemMajorVersion;
+
+    /// <summary>
+    /// The second part of a two part version number indicating the operating subsystem that is expected to be the target environment for this module.
+    /// </summary>
+    public ushort SubsystemMinorVersion {
+      get { return this.subsystemMinorVersion; }
+      set { this.subsystemMinorVersion = value; }
+    }
+    ushort subsystemMinorVersion;
 
     /// <summary>
     /// Identifies the version of the CLR that is required to load this module or assembly.

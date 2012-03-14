@@ -63,6 +63,10 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.result = this.rewriter.Rewrite(arrayTypeReference);
       }
 
+      public override void Visit(IAssembly assembly) {
+        this.result = this.rewriter.Rewrite(assembly);
+      }
+
       public override void Visit(IAssemblyReference assemblyReference) {
         this.result = this.rewriter.Rewrite(assemblyReference);
       }
@@ -140,6 +144,10 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       public override void Visit(IModifiedTypeReference modifiedTypeReference) {
         this.result = this.rewriter.Rewrite(modifiedTypeReference);
+      }
+
+      public override void Visit(IModule module) {
+        this.result = this.rewriter.Rewrite(module);
       }
 
       public override void Visit(IModuleReference moduleReference) {

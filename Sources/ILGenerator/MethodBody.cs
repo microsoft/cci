@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci {
   using Microsoft.Cci.ILGeneratorImplementation;
@@ -34,6 +35,11 @@ namespace Microsoft.Cci {
     /// which are local to method.</param>
     public ILGeneratorMethodBody(ILGenerator generator, bool localsAreZeroed, ushort maxStack, IMethodDefinition methodDefinition,
       IEnumerable<ILocalDefinition> localVariables, IEnumerable<ITypeDefinition> privateHelperTypes) {
+      Contract.Requires(generator != null);
+      Contract.Requires(methodDefinition != null);
+      Contract.Requires(localVariables != null);
+      Contract.Requires(privateHelperTypes != null);
+
       this.localsAreZeroed = localsAreZeroed;
       this.operationExceptionInformation = generator.GetOperationExceptionInformation();
       this.operations = generator.GetOperations();
@@ -42,6 +48,7 @@ namespace Microsoft.Cci {
       this.localVariables = localVariables;
       this.maxStack = maxStack;
       this.methodDefinition = methodDefinition;
+      this.size = generator.CurrentOffset;
     }
 
     /// <summary>
@@ -80,6 +87,7 @@ namespace Microsoft.Cci {
     /// A list exception data within the method body IL.
     /// </summary>
     public IEnumerable<IOperationExceptionInformation> OperationExceptionInformation {
+      [ContractVerification(false)]
       get { return this.operationExceptionInformation; }
     }
     readonly IEnumerable<IOperationExceptionInformation> operationExceptionInformation;
@@ -96,6 +104,7 @@ namespace Microsoft.Cci {
     /// The local variables of the method.
     /// </summary>
     public IEnumerable<ILocalDefinition> LocalVariables {
+      [ContractVerification(false)]
       get { return this.localVariables; }
     }
     readonly IEnumerable<ILocalDefinition> localVariables;
@@ -113,6 +122,7 @@ namespace Microsoft.Cci {
     /// A list CLR IL operations that implement this method body.
     /// </summary>
     public IEnumerable<IOperation> Operations {
+      [ContractVerification(false)]
       get { return this.operations; }
     }
     readonly IEnumerable<IOperation> operations;
@@ -132,10 +142,18 @@ namespace Microsoft.Cci {
     /// which are local to method.
     /// </summary>
     public IEnumerable<ITypeDefinition> PrivateHelperTypes {
+      [ContractVerification(false)]
       get { return this.privateHelperTypes; }
     }
     readonly IEnumerable<ITypeDefinition> privateHelperTypes;
 
+    /// <summary>
+    /// The size in bytes of the method body when serialized.
+    /// </summary>
+    public uint Size {
+      get { return this.size; }
+    }
+    readonly uint size;
   }
 
   /// <summary>

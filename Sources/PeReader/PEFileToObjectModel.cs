@@ -443,6 +443,14 @@ namespace Microsoft.Cci.MetadataReader {
       }
     }
 
+    internal ushort SubsystemMajorVersion {
+      get { return this.PEFileReader.OptionalHeaderNTAdditionalFields.MajorSubsystemVersion; }
+    }
+
+    internal ushort SubsystemMinorVersion {
+      get { return this.PEFileReader.OptionalHeaderNTAdditionalFields.MinorSubsystemVersion; }
+    }
+
     internal string TargetRuntimeVersion {
       get {
         return this.PEFileReader.MetadataHeader.VersionString;
@@ -2621,6 +2629,7 @@ namespace Microsoft.Cci.MetadataReader {
         case ".rdata": sectionKind = PESectionKind.ConstantData; break;
         case ".cover": sectionKind = PESectionKind.CoverageData; break;
         case ".datax": sectionKind = PESectionKind.ExtendedData; break;
+        case ".data": sectionKind = PESectionKind.ExtendedData; break; //TODO: instead of an enum, use an IName.
       }
       int sizeOfField = (int)this.GetFieldSizeIfPossibleToDoSoWithoutResolving(fieldDefinition.Type);
       if (sizeOfField == 0) {

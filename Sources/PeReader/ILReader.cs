@@ -25,16 +25,14 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     IEnumerable<IOperationExceptionInformation>/*?*/ cilExceptionInformation;
     internal readonly bool IsLocalsInited;
     internal readonly ushort StackSize;
+    readonly uint bodySize;
 
-    internal MethodBody(
-      MethodDefinition methodDefinition,
-      bool isLocalsInited,
-      ushort stackSize
-    ) {
+    internal MethodBody(MethodDefinition methodDefinition, bool isLocalsInited, ushort stackSize, uint bodySize) {
       this.MethodDefinition = methodDefinition;
       this.IsLocalsInited = isLocalsInited;
       this.LocalVariables = null;
       this.StackSize = stackSize;
+      this.bodySize = bodySize;
     }
 
     internal void SetLocalVariables(ILocalDefinition[] localVariables) {
@@ -89,6 +87,12 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
       get {
         if (this.cilExceptionInformation == null) return Enumerable<IOperationExceptionInformation>.Empty;
         return this.cilExceptionInformation;
+      }
+    }
+
+    public uint Size {
+      get {
+        return this.bodySize;
       }
     }
 
@@ -397,7 +401,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     internal readonly MethodDefinition MethodDefinition;
     internal readonly MethodBody MethodBody;
     readonly MethodIL MethodIL;
-    readonly uint EndOfMethodOffset;
+    internal readonly uint EndOfMethodOffset;
 
     internal ILReader(
       MethodDefinition methodDefinition,
@@ -406,8 +410,8 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
       this.MethodDefinition = methodDefinition;
       this.PEFileToObjectModel = methodDefinition.PEFileToObjectModel;
       this.MethodIL = methodIL;
-      this.MethodBody = new MethodBody(methodDefinition, methodIL.LocalVariablesInited, methodIL.MaxStack);
       this.EndOfMethodOffset = (uint)methodIL.EncodedILMemoryBlock.Length;
+      this.MethodBody = new MethodBody(methodDefinition, methodIL.LocalVariablesInited, methodIL.MaxStack, this.EndOfMethodOffset);
     }
 
     bool LoadLocalSignature() {

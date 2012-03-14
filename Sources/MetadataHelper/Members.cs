@@ -2414,6 +2414,10 @@ namespace Microsoft.Cci.Immutable {
     }
     IEnumerable<ITypeDefinition>/*?*/ privateHelperTypes;
 
+    public uint Size {
+      get { return this.unspecializedBody.Size; }
+    }
+
     #endregion
   }
 

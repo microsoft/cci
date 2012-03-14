@@ -660,7 +660,7 @@ namespace Microsoft.Cci {
     /// Provides the host with an opportunity to add, remove or substitute assembly references in the given list.
     /// This avoids the cost of rewriting the entire unit in order to make such changes.
     /// </summary>
-    /// <param name="referringUnit">A reference to the unit that has these references.</param>
+    /// <param name="referringUnit">The unit that contains these references.</param>
     /// <param name="assemblyReferences">The assembly references to substitute.</param>
     /// <returns>Usually assemblyReferences, but occasionally a modified enumeration.</returns>
     IEnumerable<IAssemblyReference> Redirect(IUnit referringUnit, IEnumerable<IAssemblyReference> assemblyReferences);
@@ -669,10 +669,10 @@ namespace Microsoft.Cci {
     /// Provides the host with an opportunity to substitute one type reference for another during metadata reading.
     /// This avoids the cost of rewriting the entire unit in order to make such changes.
     /// </summary>
-    /// <param name="definingUnit">A reference to the unit that is defining the type.</param>
+    /// <param name="referringUnit">The unit that contains the reference.</param>
     /// <param name="typeReference">A named type reference encountered during metadata reading.</param>
     /// <returns>Usually the value in typeReference, but occassionally something else.</returns>
-    INamedTypeReference Redirect(IUnit definingUnit, INamedTypeReference typeReference);
+    INamedTypeReference Redirect(IUnit referringUnit, INamedTypeReference typeReference);
 
     /// <summary>
     /// Provides the host with an opportunity to substitute a custom attribute with another during metadata reading.
@@ -772,7 +772,7 @@ namespace Microsoft.Cci {
     /// Provides the host with an opportunity to add, remove or substitute assembly references in the given list.
     /// This avoids the cost of rewriting the entire unit in order to make such changes.
     /// </summary>
-    /// <param name="referringUnit">A reference to the unit that has these references.</param>
+    /// <param name="referringUnit">The unit that contains these references.</param>
     /// <param name="assemblyReferences">The assembly references to substitute.</param>
     /// <returns>
     /// Usually assemblyReferences, but occasionally a modified enumeration.
@@ -788,13 +788,13 @@ namespace Microsoft.Cci {
     /// Provides the host with an opportunity to substitute one type reference for another during metadata reading.
     /// This avoids the cost of rewriting the entire unit in order to make such changes.
     /// </summary>
-    /// <param name="definingUnit">A reference to the unit that is defining the type.</param>
+    /// <param name="referringUnit">The unit that contains the reference.</param>
     /// <param name="typeReference">A named type reference encountered during metadata reading.</param>
     /// <returns>
     /// Usually the value in typeReference, but occassionally something else.
     /// </returns>
-    public INamedTypeReference Redirect(IUnit definingUnit, INamedTypeReference typeReference) {
-      Contract.Requires(definingUnit != null);
+    public INamedTypeReference Redirect(IUnit referringUnit, INamedTypeReference typeReference) {
+      Contract.Requires(referringUnit != null);
       Contract.Requires(typeReference != null);
       Contract.Ensures(Contract.Result<INamedTypeReference>() != null);
       throw new NotImplementedException();
@@ -1117,7 +1117,7 @@ namespace Microsoft.Cci {
     /// Provides the host with an opportunity to add, remove or substitute assembly references in the given list.
     /// This avoids the cost of rewriting the entire unit in order to make such changes.
     /// </summary>
-    /// <param name="referringUnit">A reference to the unit that has these references.</param>
+    /// <param name="referringUnit">The unit that contains these references.</param>
     /// <param name="assemblyReferences">The assembly references to substitute.</param>
     /// <returns>Usually assemblyReferences, but occasionally a modified enumeration.</returns>
     public virtual IEnumerable<IAssemblyReference> Redirect(IUnit referringUnit, IEnumerable<IAssemblyReference> assemblyReferences) {
@@ -1128,12 +1128,12 @@ namespace Microsoft.Cci {
     /// Provides the host with an opportunity to substitute one named type reference for another during metadata reading.
     /// This avoids the cost of rewriting the entire unit in order to make such changes.
     /// </summary>
-    /// <param name="definingUnit">A reference to the unit that is defining the type.</param>
+    /// <param name="referringUnit">The unit that contains the reference.</param>
     /// <param name="typeReference">A named type reference encountered during metadata reading.</param>
     /// <returns>
     /// Usually the value in typeReference, but occassionally something else.
     /// </returns>
-    public virtual INamedTypeReference Redirect(IUnit definingUnit, INamedTypeReference typeReference) {
+    public virtual INamedTypeReference Redirect(IUnit referringUnit, INamedTypeReference typeReference) {
       return typeReference;
     }
 

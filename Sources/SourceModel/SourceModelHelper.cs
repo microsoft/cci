@@ -26,10 +26,17 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Copies the contents of the table
     /// </summary>
-    public AggregatingSourceLocationProvider(Dictionary<IUnit, ISourceLocationProvider> unit2ProviderMap) {
+    public AggregatingSourceLocationProvider(IDictionary<IUnit, ISourceLocationProvider> unit2ProviderMap) {
       foreach (var keyValuePair in unit2ProviderMap) {
         this.unit2Provider.Add(keyValuePair.Key, keyValuePair.Value);
       }
+    }
+
+    /// <summary>
+    /// Uses the given dictionary to find the appropriate provider for a query.
+    /// </summary>
+    public AggregatingSourceLocationProvider(Dictionary<IUnit, ISourceLocationProvider> unit2ProviderMap) {
+      this.unit2Provider = unit2ProviderMap;
     }
 
     #region ISourceLocationProvider Members
@@ -160,10 +167,18 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Copies the contents of the table
     /// </summary>
-    public AggregatingLocalScopeProvider(Dictionary<IUnit, ILocalScopeProvider> unit2ProviderMap) {
+    public AggregatingLocalScopeProvider(IDictionary<IUnit, ILocalScopeProvider> unit2ProviderMap) {
       foreach (var keyValuePair in unit2ProviderMap) {
         this.unit2Provider.Add(keyValuePair.Key, keyValuePair.Value);
       }
+    }
+
+    /// <summary>
+    /// Uses the given dictionary to find the appropriate provider for a query.
+    /// </summary>
+    /// <param name="unit2ProviderMap"></param>
+    public AggregatingLocalScopeProvider(Dictionary<IUnit, ILocalScopeProvider> unit2ProviderMap) {
+      this.unit2Provider = unit2ProviderMap;
     }
 
     #region ILocalScopeProvider Members

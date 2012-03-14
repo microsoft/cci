@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci {
   using Microsoft.Cci.ILGeneratorImplementation;
@@ -46,8 +47,23 @@ namespace Microsoft.Cci {
     /// <param name="host">Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.</param>
     /// <param name="methodDefinition">The method to generate MSIL for.</param>
     public ILGenerator(IMetadataHost host, IMethodDefinition methodDefinition) {
+      Contract.Requires(host != null);
+      Contract.Requires(methodDefinition != null);
+
       this.host = host;
       this.method = methodDefinition;
+    }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.host != null);
+      Contract.Invariant(this.method != null);
+      Contract.Invariant(this.location != null);
+      Contract.Invariant(this.handlers != null);
+      Contract.Invariant(this.operations != null);
+      Contract.Invariant(this.scopes != null);
+      Contract.Invariant(this.scopeStack != null);
+      Contract.Invariant(this.tryBodyStack != null);
     }
 
     /// <summary>
@@ -55,9 +71,14 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="local">The local constant to add to the current scope.</param>
     public void AddConstantToCurrentScope(ILocalDefinition local) {
-      //^ requires local.MethodDefinition == this.method;
+      Contract.Requires(local != null);
+      //Contract.Assume(local.MethodDefinition == this.Method);
+
       if (this.scopeStack.Count == 0) this.BeginScope();
-      this.scopeStack.Peek().constants.Add(local);
+      var topScope = this.scopeStack.Peek();
+      Contract.Assume(topScope != null);
+      Contract.Assume(topScope.constants != null);
+      topScope.constants.Add(local);
     }
 
     /// <summary>
@@ -65,9 +86,14 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="local">The local variable to add to the current scope.</param>
     public void AddVariableToCurrentScope(ILocalDefinition local) {
-      //^ requires local.MethodDefinition == this.method;
+      Contract.Requires(local != null);
+      //Contract.Assume(local.MethodDefinition == this.Method);
+
       if (this.scopeStack.Count == 0) this.BeginScope();
-      this.scopeStack.Peek().locals.Add(local);
+      var topScope = this.scopeStack.Peek();
+      Contract.Assume(topScope != null);
+      Contract.Assume(topScope.locals != null);
+      topScope.locals.Add(local);
     }
 
     /// <summary>
@@ -84,6 +110,12 @@ namespace Microsoft.Cci {
     /// <param name="filterStart">A label identifying the first instruction of the filter decision block. May be null.</param>
     public void AddExceptionHandlerInformation(HandlerKind kind, ITypeReference exceptionType, ILGeneratorLabel tryStart, ILGeneratorLabel tryEnd,
       ILGeneratorLabel handlerStart, ILGeneratorLabel handlerEnd, ILGeneratorLabel/*?*/ filterStart) {
+      Contract.Requires(exceptionType != null);
+      Contract.Requires(tryStart != null);
+      Contract.Requires(tryEnd != null);
+      Contract.Requires(handlerStart != null);
+      Contract.Requires(handlerEnd != null);
+
       var handler = new ExceptionHandler() {
         Kind = kind, ExceptionType = exceptionType, TryStart = tryStart, TryEnd = tryEnd,
         HandlerStart = handlerStart, HandlerEnd = handlerEnd, FilterDecisionStart = filterStart
@@ -107,12 +139,13 @@ namespace Microsoft.Cci {
         numberOfAdjustments = 0;
         for (int i = 0, n = this.operations.Count; i < n; i++) {
           Operation operation = this.operations[i];
+          Contract.Assume(operation != null);
           uint oldOffset = operation.offset;
           uint newOffset = (uint)(((int)oldOffset) + adjustment);
           operation.offset = newOffset;
           ILGeneratorLabel/*?*/ label = operation.value as ILGeneratorLabel;
           if (label != null) {
-            if (operation.OperationCode == (OperationCode)int.MaxValue) {
+            if (operation.OperationCode == OperationCode.Invalid) {
               //Dummy operation that serves as label definition.
               label.Offset = operation.offset;
               continue;
@@ -134,7 +167,7 @@ namespace Microsoft.Cci {
             }
             if (eliminateBranchesToNext && operation.OperationCode == OperationCode.Br_S && operation.offset+2 == label.Offset) {
               //eliminate branch to the next instruction
-              operation.operationCode = (OperationCode)int.MaxValue;
+              operation.operationCode = OperationCode.Invalid;
               numberOfAdjustments++; adjustment -= 2;
             }
           }
@@ -146,9 +179,10 @@ namespace Microsoft.Cci {
     /// Begins a catch block.
     /// </summary>
     /// <param name="exceptionType">The Type object that represents the exception.</param>
-    public void BeginCatchBlock(ITypeReference exceptionType)
-      //^ requires InTryBody;
-    {
+    public void BeginCatchBlock(ITypeReference exceptionType) {
+      Contract.Requires(exceptionType != null);
+      Contract.Requires(this.InTryBody);
+
       ExceptionHandler handler = this.BeginHandler(HandlerKind.Catch);
       handler.ExceptionType = exceptionType;
     }
@@ -156,9 +190,9 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Begins an exception block for a filtered exception. See also BeginFilterBody.
     /// </summary>
-    public void BeginFilterBlock()
-      //^ requires InTryBody;
-    {
+    public void BeginFilterBlock() {
+      Contract.Requires(this.InTryBody);
+
       ExceptionHandler handler = this.BeginHandler(HandlerKind.Filter);
       handler.FilterDecisionStart = handler.HandlerStart;
     }
@@ -167,25 +201,34 @@ namespace Microsoft.Cci {
     /// Begins the part of a filter handler that is invoked on the second pass if the filter condition returns true on the first pass.
     /// </summary>
     public void BeginFilterBody() {
+      Contract.Requires(this.InTryBody);
+
       this.Emit(OperationCode.Endfilter);
       ILGeneratorLabel handlerStart = new ILGeneratorLabel(false);
       this.MarkLabel(handlerStart);
-      this.handlers[handlers.Count-1].HandlerStart = handlerStart;
+      Contract.Assume(this.handlers.Count > 0);
+      var handler = this.handlers[this.handlers.Count-1];
+      Contract.Assume(handler != null);
+      handler.HandlerStart = handlerStart;
     }
 
-    private ExceptionHandler BeginHandler(HandlerKind kind)
-      //^ requires InTryBody;
-    {
+    private ExceptionHandler BeginHandler(HandlerKind kind) {
+      Contract.Requires(this.InTryBody);
+      Contract.Ensures(Contract.Result<ExceptionHandler>() != null);
+
       ILGeneratorLabel handlerStart = new ILGeneratorLabel(false);
       this.MarkLabel(handlerStart);
       TryBody currentTryBody = this.tryBodyStack.Peek();
+      Contract.Assume(currentTryBody != null);
       ExceptionHandler handler = new ExceptionHandler(kind, currentTryBody, handlerStart);
       if (currentTryBody.end == null)
         currentTryBody.end = handlerStart;
       else if (this.handlers.Count > 0) {
         for (int i = this.handlers.Count-1; i >= 0; i--) {
-          if (this.handlers[i].HandlerEnd == null) {
-            this.handlers[i].HandlerEnd = handlerStart;
+          var handleri = this.handlers[i];
+          Contract.Assume(handleri != null);
+          if (handleri.HandlerEnd == null) {
+            handleri.HandlerEnd = handlerStart;
             break;
           }
         }
@@ -197,9 +240,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Begins the body of a try statement.
     /// </summary>
-    public void BeginTryBody()
-      //^ ensures InTryBody;
-    {
+    public void BeginTryBody() {
       ILGeneratorLabel tryBodyStart = new ILGeneratorLabel(false);
       this.MarkLabel(tryBodyStart);
       this.tryBodyStack.Push(new TryBody(tryBodyStart));
@@ -208,18 +249,18 @@ namespace Microsoft.Cci {
     /// <summary>
     ///  Begins an exception fault block in the Microsoft intermediate language (MSIL) stream.
     /// </summary>
-    public void BeginFaultBlock()
-      //^ requires InFilterBlock;
-    {
+    public void BeginFaultBlock() {
+      Contract.Requires(this.InTryBody);
+
       this.BeginHandler(HandlerKind.Fault);
     }
 
     /// <summary>
     /// Begins a finally block in the Microsoft intermediate language (MSIL) instruction stream.
     /// </summary>
-    public void BeginFinallyBlock()
-      //^ requires InTryBody;
-    {
+    public void BeginFinallyBlock() {
+      Contract.Requires(this.InTryBody);
+
       this.BeginHandler(HandlerKind.Finally);
     }
 
@@ -267,7 +308,9 @@ namespace Microsoft.Cci {
         int i = this.operations.Count;
         while (--i >= 0) {
           Operation previousOp = this.operations[i];
-          if (previousOp.OperationCode != (OperationCode)int.MaxValue) break;
+          Contract.Assume(previousOp != null);
+          if (previousOp.OperationCode != OperationCode.Invalid) break;
+          Contract.Assume(previousOp.value is ILGeneratorLabel);
           ILGeneratorLabel labelOfBranch = (ILGeneratorLabel)previousOp.value;
           labelOfBranch.locationOfReturnInstruction = loc;
         }
@@ -281,6 +324,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="opcode">The Intermediate Language (IL) instruction to be put onto the stream.</param>
     /// <param name="value">An argument that parameterizes the IL instruction at compile time (not a runtime operand for the instruction).</param>
+    [ContractVerification(false)]
     public void Emit(OperationCode opcode, object value) {
       switch (System.Convert.GetTypeCode(value)) {
         case TypeCode.Byte: this.Emit(opcode, (byte)value); break;
@@ -402,9 +446,13 @@ namespace Microsoft.Cci {
     /// <param name="opcode">The Microsoft intermediate language (MSIL) instruction to be put onto the stream.</param>
     /// <param name="label">The label to which to branch from this location.</param>
     public void Emit(OperationCode opcode, ILGeneratorLabel label) {
+      Contract.Requires(label != null);
+
       if (opcode == OperationCode.Br && this.operations.Count > 0) {
         Operation previousOp = this.operations[this.operations.Count-1];
-        if (previousOp.OperationCode == (OperationCode)int.MaxValue) {
+        Contract.Assume(previousOp != null);
+        if (previousOp.OperationCode == OperationCode.Invalid) {
+          Contract.Assume(previousOp.value is ILGeneratorLabel);
           ILGeneratorLabel labelOfBranch = (ILGeneratorLabel)previousOp.value;
           if (labelOfBranch.mayAlias) labelOfBranch.alias = label;
         }
@@ -419,6 +467,8 @@ namespace Microsoft.Cci {
     /// <param name="opcode">The Microsoft intermediate language (MSIL) instruction to be put onto the stream.</param>
     /// <param name="labels">An array of labels to which to branch from this location.</param>
     public void Emit(OperationCode opcode, params ILGeneratorLabel[] labels) {
+      Contract.Requires(labels != null);
+
       this.operations.Add(new Operation(opcode, this.offset, this.GetCurrentSequencePoint(), labels));
       this.offset += SizeOfOperationCode(opcode)+4*((uint)labels.Length+1);
     }
@@ -429,6 +479,8 @@ namespace Microsoft.Cci {
     /// <param name="opcode">The Microsoft intermediate language (MSIL) instruction to be put onto the stream.</param>
     /// <param name="local">A local variable.</param>
     public void Emit(OperationCode opcode, ILocalDefinition local) {
+      Contract.Requires(local != null);
+
       this.operations.Add(new Operation(opcode, this.offset, this.GetCurrentSequencePoint(), local));
       this.offset += SizeOfOperationCode(opcode);
       if (opcode == OperationCode.Ldloc_S || opcode == OperationCode.Ldloca_S || opcode == OperationCode.Stloc_S)
@@ -452,9 +504,10 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="opcode">The Microsoft intermediate language (MSIL) instruction to be put onto the stream.</param>
     /// <param name="meth">A reference to a method. Generic methods can only be referenced via instances.</param>
-    public void Emit(OperationCode opcode, IMethodReference meth)
-      //^ requires meth.GenericParameterCount > 0 ==> meth is IGenericMethodInstanceReference;
-    {
+    public void Emit(OperationCode opcode, IMethodReference meth) {
+      Contract.Requires(meth != null);
+      Contract.Requires(meth.GenericParameterCount == 0 || meth is IGenericMethodInstanceReference);
+
       this.operations.Add(new Operation(opcode, this.offset, this.GetCurrentSequencePoint(), meth));
       this.offset += SizeOfOperationCode(opcode)+4;
     }
@@ -463,8 +516,10 @@ namespace Microsoft.Cci {
     /// Puts the specified instruction onto the Microsoft intermediate language (MSIL) stream followed by the index of the given local variable.
     /// </summary>
     /// <param name="opcode">The Microsoft intermediate language (MSIL) instruction to be put onto the stream.</param>
-    /// <param name="parameter">A parameter definition.</param>
-    public void Emit(OperationCode opcode, IParameterDefinition parameter) {
+    /// <param name="parameter">A parameter definition. May be null.</param>
+    public void Emit(OperationCode opcode, IParameterDefinition/*?*/ parameter) {
+      //Contract.Requires(parameter == null || parameter.ContainingSignature == this.Method);
+
       this.operations.Add(new Operation(opcode, this.offset, this.GetCurrentSequencePoint(), parameter));
       this.offset += SizeOfOperationCode(opcode);
       if (opcode == OperationCode.Ldarg_S || opcode == OperationCode.Ldarga_S || opcode == OperationCode.Starg_S)
@@ -499,6 +554,8 @@ namespace Microsoft.Cci {
     /// <param name="opcode">The Microsoft intermediate language (MSIL) instruction to be put onto the stream.</param>
     /// <param name="signature">The signature of the method or function pointer to call. Can include information about extra arguments.</param>
     public void Emit(OperationCode opcode, ISignature signature) {
+      Contract.Requires(signature != null);
+
       this.operations.Add(new Operation(opcode, this.offset, this.GetCurrentSequencePoint(), signature));
       this.offset += SizeOfOperationCode(opcode)+4;
     }
@@ -509,6 +566,8 @@ namespace Microsoft.Cci {
     /// <param name="opcode">The Microsoft intermediate language (MSIL) instruction to be put onto the stream.</param>
     /// <param name="str">The String to be emitted.</param>
     public void Emit(OperationCode opcode, string str) {
+      Contract.Requires(str != null);
+
       this.operations.Add(new Operation(opcode, this.offset, this.GetCurrentSequencePoint(), str));
       this.offset += SizeOfOperationCode(opcode)+4;
     }
@@ -519,6 +578,8 @@ namespace Microsoft.Cci {
     /// <param name="opcode">The Microsoft intermediate language (MSIL) instruction to be put onto the stream.</param>
     /// <param name="cls">The referenced type.</param>
     public void Emit(OperationCode opcode, ITypeReference cls) {
+      Contract.Requires(cls != null);
+
       this.operations.Add(new Operation(opcode, this.offset, this.GetCurrentSequencePoint(), cls));
       this.offset += SizeOfOperationCode(opcode)+SizeOfOffset(opcode);
     }
@@ -526,15 +587,16 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Ends a try body.
     /// </summary>
-    public void EndTryBody()
-      //^ requires InTryBody;
-    {
+    public void EndTryBody() {
+      Contract.Requires(this.InTryBody);
+
       this.tryBodyStack.Pop();
       if (this.handlers.Count > 0) {
         ILGeneratorLabel handlerEnd = new ILGeneratorLabel(false);
         this.MarkLabel(handlerEnd);
         for (int i = this.handlers.Count-1; i >= 0; i--) {
           var handler = this.handlers[i];
+          Contract.Assume(handler != null);
           if (handler.HandlerEnd == null) {
             handler.HandlerEnd = handlerEnd;
             if (i < this.handlers.Count-1) {
@@ -554,11 +616,15 @@ namespace Microsoft.Cci {
       if (this.scopeStack.Count > 0) {
         var endLabel = new ILGeneratorLabel();
         this.MarkLabel(endLabel);
-        this.scopeStack.Pop().CloseScope(endLabel);
+        var topScope = this.scopeStack.Pop();
+        Contract.Assume(topScope != null);
+        topScope.CloseScope(endLabel);
       }
     }
 
     private ILocation GetCurrentSequencePoint() {
+      Contract.Ensures(Contract.Result<ILocation>() != null);
+
       ILocation result;
       if (this.expressionLocation != null) {
         result = this.expressionLocation;
@@ -583,6 +649,7 @@ namespace Microsoft.Cci {
     /// <param name="expressionLocation">The location of the expression whose value will be computed by the next IL instruction.</param>
     public void MarkExpressionLocation(ILocation expressionLocation) {
       Contract.Requires(expressionLocation != null);
+
       this.expressionLocation = expressionLocation;
     }
 
@@ -591,8 +658,10 @@ namespace Microsoft.Cci {
     /// </summary>
     public void MarkLabel(ILGeneratorLabel label) {
       Contract.Requires(label != null);
+
+      Contract.Assume(label.Offset == 0);
       label.Offset = this.offset;
-      this.operations.Add(new Operation((OperationCode)int.MaxValue, this.offset, Dummy.Location, label));
+      this.operations.Add(new Operation(OperationCode.Invalid, this.offset, Dummy.Location, label));
     }
 
     /// <summary>
@@ -601,7 +670,18 @@ namespace Microsoft.Cci {
     /// <param name="location">The location of the sequence point.</param>
     public void MarkSequencePoint(ILocation location) {
       Contract.Requires(location != null);
+
       this.location = location;
+    }
+
+    /// <summary>
+    /// The method for which this generator helps to produce a method body.
+    /// </summary>
+    public IMethodDefinition Method {
+      get {
+        Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+        return this.method;
+      }
     }
 
     /// <summary>
@@ -684,7 +764,10 @@ namespace Microsoft.Cci {
     /// </summary>
     public void UseNamespace(string namespaceToUse) {
       if (this.scopeStack.Count == 0) this.BeginScope();
-      this.scopeStack.Peek().usedNamespaces.Add(namespaceToUse);
+      var topScope = this.scopeStack.Peek();
+      Contract.Assume(topScope != null);
+      Contract.Assume(topScope.usedNamespaces != null);
+      topScope.usedNamespaces.Add(namespaceToUse);
     }
 
     /// <summary>
@@ -702,6 +785,7 @@ namespace Microsoft.Cci {
     /// Returns a sequence of all of the block scopes that have been defined for this method body. Includes nested block scopes.
     /// </summary>
     public IEnumerable<ILGeneratorScope> GetLocalScopes() {
+      Contract.Ensures(Contract.Result<IEnumerable<ILGeneratorScope>>() != null);
       return this.scopes.AsReadOnly();
     }
 
@@ -712,6 +796,7 @@ namespace Microsoft.Cci {
     /// is for the y.
     /// </summary>
     public IEnumerable<INamespaceScope> GetNamespaceScopes() {
+      Contract.Ensures(Contract.Result<IEnumerable<INamespaceScope>>() != null);
       foreach (var generatorScope in this.scopes) {
         if (generatorScope.usedNamespaces.Count > 0)
           yield return generatorScope;
@@ -722,8 +807,9 @@ namespace Microsoft.Cci {
     /// Returns a sequence of all of the IL operations that make up this method body.
     /// </summary>
     public IEnumerable<IOperation> GetOperations() {
+      Contract.Ensures(Contract.Result<IEnumerable<IOperation>>() != null);
       foreach (Operation operation in this.operations) {
-        if (operation.OperationCode == (OperationCode)int.MaxValue) continue; //dummy operation for label
+        if (operation.OperationCode == OperationCode.Invalid) continue; //dummy operation for label
         yield return operation;
       }
     }
@@ -732,6 +818,7 @@ namespace Microsoft.Cci {
     /// Returns a sequence of descriptors that define where try blocks and their associated handlers can be found in the instruction sequence.
     /// </summary>
     public IEnumerable<IOperationExceptionInformation> GetOperationExceptionInformation() {
+      Contract.Ensures(Contract.Result<IEnumerable<IOperationExceptionInformation>>() != null);
       return IteratorHelper.GetConversionEnumerable<ExceptionHandler, IOperationExceptionInformation>(this.handlers);
     }
 
@@ -745,10 +832,17 @@ namespace Microsoft.Cci {
       /// </summary>
       /// <param name="originalLocalScopeProvider">The local scope provider to use for methods that have not been decompiled.</param>
       public LocalScopeProvider(ILocalScopeProvider originalLocalScopeProvider) {
+        Contract.Requires(originalLocalScopeProvider != null);
+
         this.originalLocalScopeProvider = originalLocalScopeProvider;
       }
 
       ILocalScopeProvider originalLocalScopeProvider;
+
+      [ContractInvariantMethod]
+      private void ObjectInvariant() {
+        Contract.Invariant(this.originalLocalScopeProvider != null);
+      }
 
       #region ILocalScopeProvider Members
 
@@ -882,13 +976,28 @@ namespace Microsoft.Cci {
       this.type = Dummy.TypeReference;
     }
 
+    [ContractInvariantMethod]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Justification = "Required for code contracts.")]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.compileTimeValue != null);
+      Contract.Invariant(this.customModifiers != null);
+      Contract.Invariant(this.locations != null);
+      Contract.Invariant(this.name != null);
+      Contract.Invariant(this.methodDefinition != null);
+      Contract.Invariant(this.type != null);
+    }
+
+
     /// <summary>
     /// The compile time value of the definition, if it is a local constant.
     /// </summary>
     /// <value></value>
     public IMetadataConstant CompileTimeValue {
       get { return this.compileTimeValue; }
-      set { this.compileTimeValue = value; }
+      set {
+        Contract.Requires(value != null);
+        this.compileTimeValue = value; 
+      }
     }
     IMetadataConstant compileTimeValue;
 
@@ -898,7 +1007,10 @@ namespace Microsoft.Cci {
     /// <value></value>
     public List<ICustomModifier> CustomModifiers {
       get { return this.customModifiers; }
-      set { this.customModifiers = value; }
+      set {
+        Contract.Requires(value != null);
+        this.customModifiers = value; 
+      }
     }
     List<ICustomModifier> customModifiers;
 
@@ -956,7 +1068,10 @@ namespace Microsoft.Cci {
     /// <value></value>
     public IName Name {
       get { return this.name; }
-      set { this.name = value; }
+      set {
+        Contract.Requires(value != null);
+        this.name = value; 
+      }
     }
     IName name;
 
@@ -966,7 +1081,10 @@ namespace Microsoft.Cci {
     /// <value></value>
     public List<ILocation> Locations {
       get { return this.locations; }
-      set { this.locations = value; }
+      set {
+        Contract.Requires(value != null);
+        this.locations = value; 
+      }
     }
     List<ILocation> locations;
 
@@ -975,7 +1093,10 @@ namespace Microsoft.Cci {
     /// </summary>
     public IMethodDefinition MethodDefinition {
       get { return this.methodDefinition; }
-      set { this.methodDefinition = value; }
+      set {
+        Contract.Requires(value != null);
+        this.methodDefinition = value; 
+      }
     }
     IMethodDefinition methodDefinition;
 
@@ -985,7 +1106,10 @@ namespace Microsoft.Cci {
     /// <value></value>
     public ITypeReference Type {
       get { return this.type; }
-      set { this.type = value; }
+      set {
+        Contract.Requires(value != null);
+        this.type = value; 
+      }
     }
     ITypeReference type;
 
@@ -996,6 +1120,7 @@ namespace Microsoft.Cci {
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
+      [ContractVerification(false)]
       get { return this.locations.AsReadOnly(); }
     }
 
@@ -1009,17 +1134,29 @@ namespace Microsoft.Cci {
   public class ILGeneratorScope : ILocalScope, INamespaceScope {
 
     internal ILGeneratorScope(ILGeneratorLabel startLabel, INameTable nameTable, IMethodDefinition containingMethod) {
+      Contract.Requires(startLabel != null);
+      Contract.Requires(nameTable != null);
+      Contract.Requires(containingMethod != null);
+
       this.startLabel = startLabel;
       this.nameTable = nameTable;
       this.methodDefinition = containingMethod;
     }
 
+    ILGeneratorLabel startLabel;
+    ILGeneratorLabel endLabel;
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.startLabel != null);
+      Contract.Invariant(this.constants != null);
+      Contract.Invariant(this.locals != null);
+      Contract.Invariant(this.usedNamespaces != null);
+    }
+
     internal void CloseScope(ILGeneratorLabel endLabel) {
       this.endLabel = endLabel;
     }
-
-    ILGeneratorLabel startLabel;
-    ILGeneratorLabel endLabel;
 
     /// <summary>
     /// The local definitions (constants) defined in the source code corresponding to this scope.(A debugger can use this when evaluating expressions in a program
@@ -1035,7 +1172,10 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <value></value>
     public uint Length {
-      get { return this.endLabel.Offset - this.startLabel.Offset; }
+      get {
+        Contract.Assume(this.endLabel != null);
+        return this.endLabel.Offset - this.startLabel.Offset; 
+      }
     }
 
     /// <summary>
@@ -1130,6 +1270,7 @@ namespace Microsoft.Cci.ILGeneratorImplementation {
     }
 
     uint IOperationExceptionInformation.TryStartOffset {
+      [ContractVerification(false)]
       get {
         if (this.TryStart != null) return this.TryStart.Offset;
         return this.tryBlock.start.Offset;
@@ -1137,6 +1278,7 @@ namespace Microsoft.Cci.ILGeneratorImplementation {
     }
 
     uint IOperationExceptionInformation.TryEndOffset {
+      [ContractVerification(false)]
       get {
         if (this.TryEnd != null) return this.TryEnd.Offset;
         return this.tryBlock.end.Offset;
@@ -1164,6 +1306,8 @@ namespace Microsoft.Cci.ILGeneratorImplementation {
   internal class Operation : IOperation {
 
     internal Operation(OperationCode operationCode, uint offset, ILocation location, object/*?*/ value) {
+      Contract.Requires(location != null);
+
       this.operationCode = operationCode;
       this.offset = offset;
       this.location = location;
@@ -1192,8 +1336,11 @@ namespace Microsoft.Cci.ILGeneratorImplementation {
         ILGeneratorLabel[]/*?*/ labels = this.value as ILGeneratorLabel[];
         if (labels != null) {
           uint[] labelOffsets = new uint[labels.Length];
-          for (int i = 0; i < labels.Length; i++)
-            labelOffsets[i] = labels[i].Offset;
+          for (int i = 0; i < labels.Length; i++) {
+            var labeli = labels[i];
+            Contract.Assume(labeli != null);
+            labelOffsets[i] = labeli.Offset;
+          }
           this.value = labelOffsets;
           return labelOffsets;
         }
@@ -1214,6 +1361,8 @@ namespace Microsoft.Cci.ILGeneratorImplementation {
     /// </summary>
     /// <param name="namespaceName">The name of a namepace that has been aliased.  For example the "y.z" of "using x = y.z;" or "using y.z" in C#.</param>
     internal UsedNamespace(IName namespaceName) {
+      Contract.Requires(namespaceName != null);
+
       this.namespaceName = namespaceName;
     }
 
@@ -1240,21 +1389,33 @@ namespace Microsoft.Cci.ILGeneratorImplementation {
 
     T[] elements = new T[16];
 
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.elements != null);
+      Contract.Invariant(this.elements.Length > 0);
+    }
+
     internal int Count { get; set; }
 
     internal T Peek() {
+      Contract.Assume(this.Count > 0);
+      Contract.Assume(this.Count <= this.elements.Length);
       return this.elements[this.Count-1];
     }
 
     internal T Pop() {
+      Contract.Assume(this.Count > 0);
+      Contract.Assume(this.Count <= this.elements.Length);
       var i = this.Count-1;
       this.Count = i;
       return this.elements[i];
     }
 
     internal void Push(T element) {
+      Contract.Assume(this.Count >= 0);
       if (this.Count == this.elements.Length)
         Array.Resize(ref this.elements, this.elements.Length*2);
+      Contract.Assume(this.Count < this.elements.Length);
       var i = this.Count;
       this.Count = i+1;
       this.elements[i] = element;
