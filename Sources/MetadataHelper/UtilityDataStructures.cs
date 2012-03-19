@@ -294,15 +294,8 @@ namespace Microsoft.Cci.UtilityDataStructures {
     /// Enumerator to enumerate values with given key.
     /// </summary>
     public struct KeyedValuesEnumerator {
-      MultiHashtable<InternalT> MultiHashtable;
-      uint Key;
-      uint Hash1;
-      uint Hash2;
-      uint CurrentIndex;
-      internal KeyedValuesEnumerator(
-        MultiHashtable<InternalT> multiHashtable,
-        uint key
-      ) {
+
+      internal KeyedValuesEnumerator(MultiHashtable<InternalT> multiHashtable, uint key) {
         this.MultiHashtable = multiHashtable;
         this.Key = key;
         this.Hash1 = HashHelper.HashInt1(key);
@@ -310,12 +303,20 @@ namespace Microsoft.Cci.UtilityDataStructures {
         this.CurrentIndex = 0xFFFFFFFF;
       }
 
+      MultiHashtable<InternalT> MultiHashtable;
+      uint Key;
+      uint Hash1;
+      uint Hash2;
+      uint CurrentIndex;
+
       /// <summary>
       /// Get the current element.
       /// </summary>
       /// <returns></returns>
       public InternalT Current {
+        [ContractVerification(false)]
         get {
+          Contract.Ensures(Contract.Result<InternalT>() != null);
           return this.MultiHashtable.keyValueTable[this.CurrentIndex].Value;
         }
       }
@@ -363,10 +364,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
       MultiHashtable<InternalT> MultiHashtable;
       uint Key;
 
-      internal KeyedValuesEnumerable(
-        MultiHashtable<InternalT> multiHashtable,
-        uint key
-      ) {
+      internal KeyedValuesEnumerable(MultiHashtable<InternalT> multiHashtable, uint key) {
         this.MultiHashtable = multiHashtable;
         this.Key = key;
       }
@@ -396,9 +394,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
       MultiHashtable<InternalT> MultiHashtable;
       uint CurrentIndex;
 
-      internal ValuesEnumerator(
-        MultiHashtable<InternalT> multiHashtable
-      ) {
+      internal ValuesEnumerator(MultiHashtable<InternalT> multiHashtable) {
         this.MultiHashtable = multiHashtable;
         this.CurrentIndex = 0xFFFFFFFF;
       }
@@ -408,7 +404,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
       /// </summary>
       /// <returns></returns>
       public InternalT Current {
+        [ContractVerification(false)]
         get {
+          Contract.Ensures(Contract.Result<InternalT>() != null);
           return this.MultiHashtable.keyValueTable[this.CurrentIndex].Value;
         }
       }
@@ -918,6 +916,21 @@ namespace Microsoft.Cci.UtilityDataStructures {
       this.resizeCount = this.size * 6 / 10;
       this.keyValueTable = new KeyValuePair[this.size];
       this.count = 0;
+    }
+
+    /// <summary>
+    /// Constructs a hashtable that is a copy of the given hashtable.
+    /// </summary>
+    /// <param name="tableToClone"></param>
+    public Hashtable(Hashtable<Key, Value> tableToClone) {
+      Contract.Requires(tableToClone != null);
+
+      this.size = tableToClone.size;
+      this.resizeCount = tableToClone.resizeCount;
+      this.count = tableToClone.count;
+      var keyValueTable = this.keyValueTable = new KeyValuePair[tableToClone.keyValueTable.Length];
+      for (int i = 0, n = keyValueTable.Length; i < n; i++)
+        keyValueTable[i] = tableToClone.keyValueTable[i];
     }
 
     /// <summary>
@@ -2454,6 +2467,21 @@ namespace Microsoft.Cci.UtilityDataStructures {
       this.resizeCount = this.size * 6 / 10;
       this.elements = new object[this.size];
       this.count = 0;
+    }
+
+    /// <summary>
+    /// Makes a clone of the given set.
+    /// </summary>
+    public SetOfObjects(SetOfObjects setToClone) {
+      Contract.Requires(setToClone != null);
+      this.size = setToClone.size;
+      this.resizeCount = setToClone.resizeCount;
+      this.count = setToClone.count;
+      this.dummyCount = setToClone.dummyCount;
+      var n = setToClone.elements.Length;
+      this.elements = new object[n];
+      for (int i = 0; i < n; i++)
+        this.elements[i] = setToClone.elements[i];     
     }
 
     /// <summary>

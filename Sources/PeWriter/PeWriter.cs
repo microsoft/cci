@@ -5653,6 +5653,11 @@ namespace Microsoft.Cci.PeWriterInternal {
     }
 
     public override void TraverseChildren(ISpecializedNestedTypeReference specializedNestedTypeReference) {
+      if (this.typeReferenceNeedsToken) {
+        this.typeReferenceNeedsToken = false;
+        if (this.alreadyHasToken.Add(specializedNestedTypeReference.InternedKey))
+          this.peWriter.RecordTypeReference(specializedNestedTypeReference);
+      }
       this.Traverse(specializedNestedTypeReference.UnspecializedVersion);
       this.Traverse(specializedNestedTypeReference.ContainingType);
     }

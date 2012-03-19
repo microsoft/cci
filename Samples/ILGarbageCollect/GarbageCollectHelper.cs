@@ -118,21 +118,34 @@ namespace ILGarbageCollect {
 
       var classHierarchyChain = new ITypeDefinition[] { derived }.Concat(GarbageCollectHelper.AllSuperClasses(derived));
 
-
       foreach (IMethodDefinition mSpecializedForDerived in versionsOfMSpecializedForDerived) {
-        // Check explicit implementation overrides before implicit methods
+
         IMethodDefinition foundImplementation = null;
 
-        foreach (var classInHierarchy in classHierarchyChain) {
+        // If this is a method defined on an inteface, we must first search the hierarchy for explicit implementations,
+        // since an explicit implementation on a base type supercedes an implicit implementation on a derived type
 
-          IMethodDefinition specializedImplementation = ImplementationForMethodInClass(mSpecializedForDerived, classInHierarchy);
-
-          if (specializedImplementation != null) {
-            foundImplementation = specializedImplementation;
-            break;
+        if (m.ContainingTypeDefinition.IsInterface) {
+          foreach (var classInHierarchy in classHierarchyChain) {
+            foreach (IMethodImplementation methodImplementation in classInHierarchy.ExplicitImplementationOverrides) {
+              if (methodImplementation.ImplementedMethod.InternedKey == mSpecializedForDerived.InternedKey) {
+                foundImplementation = methodImplementation.ImplementingMethod.ResolvedMethod;
+                break;
+              }
+            }
+            if (foundImplementation != null) break;
+            if (TypeHelper.TypesAreEquivalent(GarbageCollectHelper.UnspecializeAndResolveTypeReference(classInHierarchy), upto)) break;
           }
+        }
 
-          if (TypeHelper.TypesAreEquivalent(GarbageCollectHelper.UnspecializeAndResolveTypeReference(classInHierarchy), upto)) break;
+        // If we found an explicit implementation, don't seach for an implicit one
+
+        if (foundImplementation == null) {
+          foreach (var classInHierarchy in classHierarchyChain) {
+            foundImplementation = ImplementationForMethodInClass(mSpecializedForDerived, classInHierarchy);
+            if (foundImplementation != null) break;
+            if (TypeHelper.TypesAreEquivalent(GarbageCollectHelper.UnspecializeAndResolveTypeReference(classInHierarchy), upto)) break;
+          }
         }
 
         // Do we really expect to find an implementation for EACH mSpecializedForDerived; or do we expect to find at least one overall all?
@@ -202,12 +215,16 @@ namespace ILGarbageCollect {
       }
 
       // t-devinc: We should probably use MemberHelper.GetImplicitlyOverridingDerivedClassMethod here
+      // cteidt: ... but it returns null if the implicitly overriding method is declared newSlot
+      // (which can still override an interface method), so the code is duplicated here, without
+      // the newSlot check
 
-      foreach (var mprime in /*classInHierarchy.GetMembersNamed(m.Name, false)*/ classDefinition.Methods) {
-        var mprimedef = mprime as IMethodDefinition;
-
-        if (mprimedef != null && method.Name.UniqueKey == mprimedef.Name.UniqueKey && MemberHelper.MethodsAreEquivalent(method, mprimedef))
-          return mprimedef;
+      foreach (ITypeDefinitionMember derivedMember in classDefinition.GetMembersNamed(method.Name, false)) {
+        IMethodDefinition/*?*/ derivedMethod = derivedMember as IMethodDefinition;
+        if (derivedMethod == null || !derivedMethod.IsVirtual) continue;
+        if (MemberHelper.MethodsAreEquivalent(method, derivedMethod)) {
+          return derivedMethod;
+        }
       }
 
       return null;

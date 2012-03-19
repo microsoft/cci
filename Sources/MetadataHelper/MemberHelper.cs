@@ -1010,6 +1010,10 @@ namespace Microsoft.Cci {
         sb.Append(this.GetVisibility(field.ResolvedField));
         sb.Append(' ');
       }
+      if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0)
+        sb.Append("F:");
+      else if ((formattingOptions & NameFormattingOptions.MemberKind) != 0)
+        sb.Append("field ");
       if ((formattingOptions & NameFormattingOptions.Modifiers) != 0) {
         if (field.IsStatic) sb.Append("static ");
         if (field.IsModified && (formattingOptions & NameFormattingOptions.OmitCustomModifiers) == 0) {
@@ -1020,10 +1024,10 @@ namespace Microsoft.Cci {
           sb.Append(' ');
         }
       }
-      if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0)
-        sb.Append("F:");
-      else if ((formattingOptions & NameFormattingOptions.MemberKind) != 0)
-        sb.Append("field ");
+      if ((formattingOptions & NameFormattingOptions.Signature) != 0 && (formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) == 0) {
+        sb.Append(this.typeNameFormatter.GetTypeName(field.Type, formattingOptions));
+        sb.Append(' ');
+      }
       if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
         sb.Append(this.typeNameFormatter.GetTypeName(field.ContainingType, formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind)));
         sb.Append(".");

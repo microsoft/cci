@@ -494,7 +494,6 @@ namespace Microsoft.Cci {
     public AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
       Contract.Requires(referringUnit != null);
       Contract.Requires(referencedAssembly != null);
-      Contract.Requires(referringUnit.Location.Length > 0);
       Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
 
       throw new NotImplementedException();

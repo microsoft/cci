@@ -16,8 +16,16 @@ using System.Reflection.Emit;
 
 namespace Microsoft.Cci.ReflectionEmitter {
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class DynamicLoader {
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sourceLocationProvider"></param>
+    /// <param name="localScopeProvider"></param>
     public DynamicLoader(ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider) {
       this.sourceLocationProvider = sourceLocationProvider;
       this.localScopeProvider = localScopeProvider;
@@ -51,6 +59,9 @@ namespace Microsoft.Cci.ReflectionEmitter {
     }
     AssemblyBuilder/*?*/ assemblyBuilder;
 
+    /// <summary>
+    /// 
+    /// </summary>
     public ModuleBuilder ModuleBuilder {
       get {
         if (this.moduleBuilder == null)
@@ -64,6 +75,11 @@ namespace Microsoft.Cci.ReflectionEmitter {
     }
     ModuleBuilder/*?*/ moduleBuilder;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="assembly"></param>
+    /// <returns></returns>
     public AssemblyBuilder Load(IAssembly assembly) {
       //first create (but do not initialize) all typeBuilder builders, since they are needed to create member builders.
       this.typeBuilderAllocator.Traverse(assembly);
@@ -79,6 +95,11 @@ namespace Microsoft.Cci.ReflectionEmitter {
       return this.AssemblyBuilder;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="namespaceTypeDefinition"></param>
+    /// <returns></returns>
     public Type Load(INamespaceTypeDefinition namespaceTypeDefinition) {
       //first create (but do not initialize) all typeBuilder builders, since they are needed to create member builders.
       this.typeBuilderAllocator.Traverse(namespaceTypeDefinition);
@@ -91,6 +112,12 @@ namespace Microsoft.Cci.ReflectionEmitter {
       return this.mapper.GetType(namespaceTypeDefinition);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="method"></param>
+    /// <param name="skipVisibility"></param>
+    /// <returns></returns>
     public DynamicMethod Load(IMethodDefinition method, bool skipVisibility) {
       var savedLocalScopeProvider = this.localScopeProvider;
       var savedSourceLocationProvider = this.sourceLocationProvider;
@@ -199,6 +226,10 @@ namespace Microsoft.Cci.ReflectionEmitter {
 
       DynamicLoader loader;
 
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="eventDefinition"></param>
       public override void TraverseChildren(IEventDefinition eventDefinition) {
         EventAttributes attributes = EventAttributes.None;
         if (eventDefinition.IsSpecialName) attributes |= EventAttributes.SpecialName;
@@ -209,6 +240,10 @@ namespace Microsoft.Cci.ReflectionEmitter {
         this.loader.builderMap.Add(eventDefinition, eventBuilder);
       }
 
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="fieldDefinition"></param>
       public override void TraverseChildren(IFieldDefinition fieldDefinition) {
         var containingType = (TypeBuilder)this.loader.mapper.GetType(fieldDefinition.ContainingTypeDefinition);
         var fieldType = this.loader.mapper.GetType(fieldDefinition.Type);
@@ -252,6 +287,10 @@ namespace Microsoft.Cci.ReflectionEmitter {
         return attributes;
       }
 
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="genericParameter"></param>
       public override void TraverseChildren(IGenericParameter genericParameter) {
         //Setting the constraints here seems a little out of place since no new builders are being allocated
         //and setting the constraints of generic parameter really is initializing its builder, not allocating a builder.
@@ -301,6 +340,10 @@ namespace Microsoft.Cci.ReflectionEmitter {
         return result;
       }
 
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="propertyDefinition"></param>
       public override void TraverseChildren(IPropertyDefinition propertyDefinition) {
         var containingType = (TypeBuilder)this.loader.mapper.GetType(propertyDefinition.ContainingTypeDefinition);
         PropertyAttributes attributes = PropertyAttributes.None;
@@ -320,6 +363,10 @@ namespace Microsoft.Cci.ReflectionEmitter {
         this.loader.builderMap.Add(propertyDefinition, propertyBuilder);
       }
 
+      /// <summary>
+      /// Traverses the children of the method definition.
+      /// </summary>
+      /// <param name="method"></param>
       public override void TraverseChildren(IMethodDefinition method) {
         var containingType = (TypeBuilder)this.loader.mapper.GetType(method.ContainingTypeDefinition);
         var attributes = GetMethodAttributes(method);
@@ -498,6 +545,10 @@ namespace Microsoft.Cci.ReflectionEmitter {
       ISymbolDocumentWriter currentDocumentWriter;
       Dictionary<IDocument, ISymbolDocumentWriter> documentMap = new Dictionary<IDocument, ISymbolDocumentWriter>();
 
+      /// <summary>
+      /// Performs some computation with the given event definition.
+      /// </summary>
+      /// <param name="eventDefinition"></param>
       public override void Visit(IEventDefinition eventDefinition) {
         var eventBuilder = (EventBuilder)this.loader.builderMap[eventDefinition];
         foreach (var accessor in eventDefinition.Accessors) {
@@ -555,10 +606,18 @@ namespace Microsoft.Cci.ReflectionEmitter {
 
       object value;
 
+      /// <summary>
+      /// Performs some computation with the given metadata constant.
+      /// </summary>
+      /// <param name="constant"></param>
       public override void Visit(IMetadataConstant constant) {
         this.value = constant.Value;
       }
 
+      /// <summary>
+      /// Performs some computation with the given metadata array creation expression.
+      /// </summary>
+      /// <param name="createArray"></param>
       public override void Visit(IMetadataCreateArray createArray) {
         object[] vector = new object[IteratorHelper.EnumerableCount(createArray.Initializers)];
         int i = 0;
@@ -569,10 +628,18 @@ namespace Microsoft.Cci.ReflectionEmitter {
         this.value = vector;
       }
 
+      /// <summary>
+      /// Performs some computation with the given metadata typeof expression.
+      /// </summary>
+      /// <param name="typeOf"></param>
       public override void Visit(IMetadataTypeOf typeOf) {
         this.value = this.loader.mapper.GetType(typeOf.TypeToGet);
       }
 
+      /// <summary>
+      /// Performs some computation with the given field definition.
+      /// </summary>
+      /// <param name="fieldDefinition"></param>
       public override void Visit(IFieldDefinition fieldDefinition) {
         var fieldBuilder = (FieldBuilder)this.loader.builderMap[fieldDefinition];
         if (!(fieldDefinition.CompileTimeValue is Dummy)) {
@@ -635,6 +702,10 @@ namespace Microsoft.Cci.ReflectionEmitter {
         return new CustomAttributeBuilder(constructor, arguments, fields.ToArray(), fieldValues.ToArray());
       }
 
+      /// <summary>
+      /// Performs some computation with the given method definition.
+      /// </summary>
+      /// <param name="method"></param>
       public override void Visit(IMethodDefinition method) {
         if (method.IsConstructor || method.IsStaticConstructor) {
           var constructorBuilder = (ConstructorBuilder)this.loader.builderMap[method];
@@ -716,6 +787,10 @@ namespace Microsoft.Cci.ReflectionEmitter {
         return result;
       }
 
+      /// <summary>
+      /// Performs some computation with the given generic parameter.
+      /// </summary>
+      /// <param name="genericParameter"></param>
       public override void Visit(IGenericParameter genericParameter) {
         var genericTypeParameterBuilder = (GenericTypeParameterBuilder)this.loader.builderMap[genericParameter];
         foreach (var customAttribute in genericParameter.Attributes) {
@@ -801,6 +876,10 @@ namespace Microsoft.Cci.ReflectionEmitter {
         }
       }
 
+      /// <summary>
+      /// Performs some computation with the given property definition.
+      /// </summary>
+      /// <param name="propertyDefinition"></param>
       public override void Visit(IPropertyDefinition propertyDefinition) {
         var propertyBuilder = (PropertyBuilder)this.loader.builderMap[propertyDefinition];
         foreach (var accessor in propertyDefinition.Accessors) {
@@ -822,11 +901,19 @@ namespace Microsoft.Cci.ReflectionEmitter {
         }
       }
 
+      /// <summary>
+      /// Performs some computation with the given namespace type definition.
+      /// </summary>
+      /// <param name="namespaceTypeDefinition"></param>
       public override void Visit(INamespaceTypeDefinition namespaceTypeDefinition) {
         var builder = (TypeBuilder)this.loader.builderMap[namespaceTypeDefinition];
         this.Visit(namespaceTypeDefinition, builder);
       }
 
+      /// <summary>
+      /// Performs some computation with the given nested type definition.
+      /// </summary>
+      /// <param name="nestedTypeDefinition"></param>
       public override void Visit(INestedTypeDefinition nestedTypeDefinition) {
         var builder = (TypeBuilder)this.loader.builderMap[nestedTypeDefinition];
         this.Visit(nestedTypeDefinition, builder);
@@ -1475,6 +1562,10 @@ namespace Microsoft.Cci.ReflectionEmitter {
         }
       }
 
+      /// <summary>
+      /// Traverses the children of the namespace type definition.
+      /// </summary>
+      /// <param name="namespaceTypeDefinition"></param>
       public override void TraverseChildren(INamespaceTypeDefinition namespaceTypeDefinition) {
         object builder;
         if (!this.loader.builderMap.TryGetValue(namespaceTypeDefinition, out builder)) return;
@@ -1487,10 +1578,18 @@ namespace Microsoft.Cci.ReflectionEmitter {
         this.Traverse(namespaceTypeDefinition.NestedTypes);
       }
 
+      /// <summary>
+      /// Traverses the children of the namespace type reference.
+      /// </summary>
+      /// <param name="namespaceTypeReference"></param>
       public override void TraverseChildren(INamespaceTypeReference namespaceTypeReference) {
         this.TraverseChildren(namespaceTypeReference.ResolvedType);
       }
 
+      /// <summary>
+      /// Traverses the children of the nested type definition.
+      /// </summary>
+      /// <param name="nestedTypeDefinition"></param>
       public override void TraverseChildren(INestedTypeDefinition nestedTypeDefinition) {
         object builder;
         if (!this.loader.builderMap.TryGetValue(nestedTypeDefinition, out builder)) return;
@@ -1503,6 +1602,10 @@ namespace Microsoft.Cci.ReflectionEmitter {
         this.Traverse(nestedTypeDefinition.NestedTypes);
       }
 
+      /// <summary>
+      /// Traverses the children of the nested type reference.
+      /// </summary>
+      /// <param name="nestedTypeReference"></param>
       public override void TraverseChildren(INestedTypeReference nestedTypeReference) {
         this.Traverse(nestedTypeReference.ContainingType);
         this.TraverseChildren(nestedTypeReference.ResolvedType);

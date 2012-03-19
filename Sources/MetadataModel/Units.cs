@@ -1292,6 +1292,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A reference to a .NET module.
   /// </summary>
+  [ContractClass(typeof(IModuleReferenceContract))]
   public interface IModuleReference : IUnitReference {
 
     /// <summary>
@@ -1311,6 +1312,79 @@ namespace Microsoft.Cci {
     ModuleIdentity ModuleIdentity { get; }
 
   }
+
+  #region IModuleReference contract binding
+  [ContractClassFor(typeof(IModuleReference))]
+  abstract class IModuleReferenceContract : IModuleReference {
+
+    #region IModuleReference Members
+
+    public IAssemblyReference ContainingAssembly {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IModule ResolvedModule {
+      get {
+        Contract.Ensures(Contract.Result<IModule>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public ModuleIdentity ModuleIdentity {
+      get {
+        Contract.Ensures(Contract.Result<ModuleIdentity>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+
+    #region IUnitReference Members
+
+    public IUnit ResolvedUnit {
+      get { throw new NotImplementedException(); }
+    }
+
+    public UnitIdentity UnitIdentity {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IReference Members
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region INamedEntity Members
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
+
 
   /// <summary>
   /// A unit of metadata stored as a single artifact and potentially produced and revised independently from other units.

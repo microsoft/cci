@@ -211,6 +211,7 @@ namespace Microsoft.Cci {
     public IUnitNamespaceReference ContainingUnitNamespace {
       get {
         Contract.Ensures(Contract.Result<IUnitNamespaceReference>() != null);
+        Contract.Ensures(Contract.Result<IUnitNamespaceReference>() != this);
         throw new NotImplementedException();
       }
     }

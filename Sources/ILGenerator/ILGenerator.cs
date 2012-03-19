@@ -817,6 +817,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns a sequence of descriptors that define where try blocks and their associated handlers can be found in the instruction sequence.
     /// </summary>
+    [ContractVerification(false)]
     public IEnumerable<IOperationExceptionInformation> GetOperationExceptionInformation() {
       Contract.Ensures(Contract.Result<IEnumerable<IOperationExceptionInformation>>() != null);
       return IteratorHelper.GetConversionEnumerable<ExceptionHandler, IOperationExceptionInformation>(this.handlers);

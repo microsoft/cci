@@ -21,6 +21,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.
   /// </summary>
+  [ContractVerification(true)]
   public abstract class MetadataHostEnvironment : IMetadataHost {
 
     /// <summary>
@@ -43,19 +44,30 @@ namespace Microsoft.Cci {
     /// to find an assembly that either requires 32 bit pointers or 64 bit pointers. If no such assembly is found, the default is 32 bit pointers.
     /// </param>
     /// <param name="searchPaths">
-    /// A collection of strings that are interpreted as valid paths which are used to search for units.
+    /// A collection of strings that are interpreted as valid paths which are used to search for units. May be null.
     /// </param>
     /// <param name="searchInGAC">
     /// Whether the GAC (Global Assembly Cache) should be searched when resolving references.
     /// </param>
-    protected MetadataHostEnvironment(INameTable nameTable, IInternFactory factory, byte pointerSize, IEnumerable<string> searchPaths, bool searchInGAC)
+    protected MetadataHostEnvironment(INameTable nameTable, IInternFactory factory, byte pointerSize, IEnumerable<string>/*?*/ searchPaths, bool searchInGAC)
       //^ requires pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
     {
+      Contract.Requires(nameTable != null);
+      Contract.Requires(factory != null);
+
       this.nameTable = nameTable;
       this.internFactory = factory;
       this.pointerSize = pointerSize;
       this.libPaths = searchPaths == null ? new List<string>(0) : new List<string>(searchPaths);
       this.SearchInGAC = searchInGAC;
+    }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.nameTable != null);
+      Contract.Invariant(this.internFactory != null);
+      Contract.Invariant(this.coreIdentities != null);
+      //Contract.Invariant(this.pointerSize == 0 || this.pointerSize == 4 || this.pointerSize == 8);
     }
 
     /// <summary>
@@ -72,12 +84,13 @@ namespace Microsoft.Cci {
     /// </summary>
     protected List<string> LibPaths {
       get {
+        Contract.Ensures(Contract.Result<List<String>>() != null);
         if (this.libPaths == null)
           this.libPaths = new List<string>();
         return this.libPaths;
       }
     }
-    List<string> libPaths;
+    List<string>/*?*/ libPaths;
 
     /// <summary>
     /// Sets or gets the boolean that determines if lookups of assemblies searches the GAC by default.
@@ -99,6 +112,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public AssemblyIdentity ContractAssemblySymbolicIdentity {
       get {
+        Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
         if (this.contractAssemblySymbolicIdentity == null)
           this.contractAssemblySymbolicIdentity = this.GetContractAssemblySymbolicIdentity();
         return this.contractAssemblySymbolicIdentity;
@@ -107,15 +121,28 @@ namespace Microsoft.Cci {
     AssemblyIdentity/*?*/ contractAssemblySymbolicIdentity;
 
     /// <summary>
+    /// The set of identities that results from the individual opinions of all of the units loaded into this host.
+    /// </summary>
+    protected SetOfObjects CoreIdentities {
+      get {
+        Contract.Ensures(Contract.Result<SetOfObjects>() != null);
+        return this.coreIdentities; 
+      }
+    }
+    SetOfObjects coreIdentities = new SetOfObjects();
+
+    /// <summary>
     /// Returns the identity of the assembly containing the Microsoft.Contracts.Contract, by asking
     /// each of the loaded units for its opinion on the matter and returning the opinion with the highest version number.
     /// If none of the loaded units have an opinion, the result is the same as CoreAssemblySymbolicIdentity.
     /// </summary>
     protected virtual AssemblyIdentity GetContractAssemblySymbolicIdentity() {
+      Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
       if (this.unitCache.Count > 0) {
         AssemblyIdentity/*?*/ result = null;
         lock (GlobalLock.LockingObject) {
           foreach (IUnit unit in this.unitCache.Values) {
+            Contract.Assume(unit != null);
             AssemblyIdentity contractId = unit.ContractAssemblySymbolicIdentity;
             if (contractId.Name.Value.Length == 0) continue;
             if (result == null || result.Version < contractId.Version) result = contractId;
@@ -144,14 +171,17 @@ namespace Microsoft.Cci {
     /// If none of the loaded units have an opinion, the identity of the runtime executing the compiler itself is returned.
     /// </summary>
     protected virtual AssemblyIdentity GetCoreAssemblySymbolicIdentity() {
+      Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
       AssemblyIdentity/*?*/ result = null;
       IUnit referringUnit = Dummy.Unit;
       if (this.unitCache.Count > 0) {
         var dummyVersion = new Version(255, 255, 255, 255);
         lock (GlobalLock.LockingObject) {
           foreach (IUnit unit in this.unitCache.Values) {
+            Contract.Assume(unit != null);
             AssemblyIdentity coreId = unit.CoreAssemblySymbolicIdentity;
             if (coreId.Name.Value.Length == 0) continue;
+            this.coreIdentities.Add(coreId);
             if (result == null || result.Version == dummyVersion ||
                (result.Version < coreId.Version && coreId.Version != dummyVersion) ||
                 result.Version == coreId.Version && unit.UnitIdentity.Equals(coreId)) {
@@ -166,7 +196,11 @@ namespace Microsoft.Cci {
         //Usually this will be because this method was called before any assemblies have been loaded.
         //In this case, we have little option but to choose the identity of the core assembly of the platform we are running on.
         var coreAssemblyName = typeof(object).Assembly.GetName();
-        result = new AssemblyIdentity(this.NameTable.GetNameFor(coreAssemblyName.Name), "", coreAssemblyName.Version, coreAssemblyName.GetPublicKeyToken(), "");
+        var version = coreAssemblyName.Version;
+        Contract.Assume(version != null);
+        var publicKeyToken = coreAssemblyName.GetPublicKeyToken();
+        Contract.Assume(publicKeyToken != null);
+        result = new AssemblyIdentity(this.NameTable.GetNameFor(coreAssemblyName.Name), "", version, publicKeyToken, "");
       }
       if (result.Location.Length == 0) {
         //We either found a plausible identity by polling the assemblies in the unit cache, or we used the identity of our own core assembly.
@@ -194,6 +228,7 @@ namespace Microsoft.Cci {
     /// Returns an identity that is the same as CoreAssemblyIdentity, except that the name is "System.Core" and the version is at least 3.5.
     /// </summary>
     protected virtual AssemblyIdentity GetSystemCoreAssemblySymbolicIdentity() {
+      Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
       var core = this.CoreAssemblySymbolicIdentity;
       var name = this.NameTable.GetNameFor("System.Core");
       var location = "";
@@ -253,6 +288,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="assemblyName">The name of the assembly whose location is desired.</param>
     public static string GetLocalPath(System.Reflection.AssemblyName assemblyName) {
+      Contract.Requires(assemblyName != null);
+
       var loc = assemblyName.CodeBase;
       if (loc == null) loc = "";
       if (loc.StartsWith("file://", StringComparison.OrdinalIgnoreCase)) {
@@ -295,6 +332,7 @@ namespace Microsoft.Cci {
           if (result != null && this.UnifyAssembly(result).Equals(assemblyIdentity))
             lock (GlobalLock.LockingObject) {
               this.unitCache[assemblyIdentity] = result;
+              this.coreIdentities.Add(result.CoreAssemblySymbolicIdentity);
             }
         }
       }
@@ -306,7 +344,6 @@ namespace Microsoft.Cci {
     /// The module that matches the given reference, or a dummy module if no matching module can be found.
     /// </summary>
     public virtual IModule LoadModule(ModuleIdentity moduleIdentity) {
-      if (moduleIdentity.Location == null) return Dummy.Module;
       IUnit/*?*/ unit;
       lock (GlobalLock.LockingObject) {
         this.unitCache.TryGetValue(moduleIdentity, out unit);
@@ -326,6 +363,7 @@ namespace Microsoft.Cci {
           if (result != null)
             lock (GlobalLock.LockingObject) {
               this.unitCache.Add(moduleIdentity, result);
+              this.coreIdentities.Add(result.CoreAssemblySymbolicIdentity);
             }
         }
       }
@@ -385,6 +423,7 @@ namespace Microsoft.Cci {
     /// Returns an object that provides a collection of references to types from the core platform, such as System.Object and System.String.
     /// </summary>
     protected virtual IPlatformType GetPlatformType() {
+      Contract.Ensures(Contract.Result<IPlatformType>() != null);
       return new PlatformType(this);
     }
 
@@ -394,14 +433,13 @@ namespace Microsoft.Cci {
     /// </summary>
     public byte PointerSize {
       get {
-        //^^ ensures result == 4 || result == 8;
+        Contract.Assume(this.pointerSize == 0 || this.pointerSize == 4 || this.pointerSize == 8);
         if (this.pointerSize == 0)
           this.pointerSize = this.GetTargetPlatformPointerSize();
         return this.pointerSize;
       }
     }
     byte pointerSize;
-    //^ invariant pointerSize == 0 || pointerSize == 4 || pointerSize == 8;
 
     /// <summary>
     /// Returns an opinion about the size of a pointer on the target runtime for the set of modules
@@ -409,9 +447,8 @@ namespace Microsoft.Cci {
     /// the result is 4 (i.e. 32 bit pointers). This method is only called if a host application has not
     /// explicitly provided the pointer size of the target platform.
     /// </summary>
-    protected virtual byte GetTargetPlatformPointerSize()
-      //^ ensures result == 4 || result == 8;
-    {
+    protected virtual byte GetTargetPlatformPointerSize() {
+      Contract.Ensures(Contract.Result<byte>() == 4 || Contract.Result<byte>() == 8);
       lock (GlobalLock.LockingObject) {
         if (this.unitCache.Count > 0) {
           foreach (IUnit unit in this.unitCache.Values) {
@@ -464,13 +501,18 @@ namespace Microsoft.Cci {
     /// </remarks>
     [Pure]
     public virtual AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
-      // probe for in the same directory as the referring unit
-      var referringDir = Path.GetDirectoryName(Path.GetFullPath(referringUnit.Location));
-      AssemblyIdentity result = this.Probe(referringDir, referencedAssembly);
-      if (result != null) return result;
+      AssemblyIdentity result;
+
+      if (!string.IsNullOrEmpty(referringUnit.Location)) {
+        // probe for in the same directory as the referring unit
+        var referringDir = Path.GetDirectoryName(Path.GetFullPath(referringUnit.Location));
+        result = this.Probe(referringDir, referencedAssembly);
+        if (result != null) return result;
+      }
 
       // Probe in the libPaths directories
       foreach (string libPath in this.LibPaths) {
+        Contract.Assume(libPath != null);
         result = this.Probe(libPath, referencedAssembly);
         if (result != null) return result;
       }
@@ -537,6 +579,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="unit">The unit to register.</param>
     public void RegisterAsLatest(IUnit unit) {
+      Contract.Requires(unit != null);
+
       lock (GlobalLock.LockingObject) {
         this.unitCache[unit.UnitIdentity] = unit;
       }
@@ -603,6 +647,7 @@ namespace Microsoft.Cci {
         assemblyIdentity.Culture == this.CoreAssemblySymbolicIdentity.Culture && 
         IteratorHelper.EnumerablesAreEqual(assemblyIdentity.PublicKeyToken, this.CoreAssemblySymbolicIdentity.PublicKeyToken))
         return this.CoreAssemblySymbolicIdentity;
+      if (this.CoreIdentities.Contains(assemblyIdentity)) return this.CoreAssemblySymbolicIdentity;
       return assemblyIdentity;
     }
 
@@ -1280,6 +1325,7 @@ namespace Microsoft.Cci {
   /// The association is based on the identities of the entities and the factory does not retain
   /// references to the given metadata model objects.
   /// </summary>
+  [ContractVerification(true)]
   public sealed class InternFactory : IInternFactory {
 
     sealed class AssemblyStore {
@@ -1489,12 +1535,40 @@ namespace Microsoft.Cci {
       this.FieldReferenceHashtable = new Hashtable<DoubleHashtable>();
     }
 
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.AssemblyHashtable != null);
+      Contract.Invariant(this.ModuleHashtable != null);
+      Contract.Invariant(this.NestedNamespaceHashtable != null);
+      Contract.Invariant(this.NamespaceTypeHashtable != null);
+      Contract.Invariant(this.NestedTypeHashtable != null);
+      Contract.Invariant(this.VectorTypeHashTable != null);
+      Contract.Invariant(this.PointerTypeHashTable != null);
+      Contract.Invariant(this.ManagedPointerTypeHashTable != null);
+      Contract.Invariant(this.MatrixTypeHashtable != null);
+      Contract.Invariant(this.TypeListHashtable != null);
+      Contract.Invariant(this.GenericTypeInstanceHashtable != null);
+      Contract.Invariant(this.GenericMethodInstanceHashtable != null);
+      Contract.Invariant(this.GenericTypeParameterHashtable != null);
+      Contract.Invariant(this.GenericMethodTypeParameterHashTable != null);
+      Contract.Invariant(this.CustomModifierHashTable != null);
+      Contract.Invariant(this.CustomModifierListHashTable != null);
+      Contract.Invariant(this.ParameterTypeHashtable != null);
+      Contract.Invariant(this.ParameterTypeListHashtable != null);
+      Contract.Invariant(this.SignatureHashtable != null);
+      Contract.Invariant(this.FunctionTypeHashTable != null);
+      Contract.Invariant(this.ModifiedTypeHashtable != null);
+      Contract.Invariant(this.MethodReferenceHashtable != null);
+      Contract.Invariant(this.FieldReferenceHashtable != null);
+    }
+
     AssemblyStore GetAssemblyStore(AssemblyIdentity assemblyIdentity) {
+      Contract.Requires(assemblyIdentity != null);
+      Contract.Ensures(Contract.Result<AssemblyStore>() != null);
+
       IName assemblyName = assemblyIdentity.Name;
       foreach (AssemblyStore aStore in this.AssemblyHashtable.GetValuesFor((uint)assemblyName.UniqueKey)) {
-        if (assemblyIdentity.Equals(aStore.AssemblyIdentity)) {
-          return aStore;
-        }
+        if (assemblyIdentity.Equals(aStore.AssemblyIdentity)) return aStore;
       }
       uint value = this.CurrentAssemblyInternValue;
       this.CurrentAssemblyInternValue += 0x00001000;
@@ -1504,11 +1578,12 @@ namespace Microsoft.Cci {
     }
 
     ModuleStore GetModuleStore(ModuleIdentity moduleIdentity) {
+      Contract.Requires(moduleIdentity != null);
+      Contract.Ensures(Contract.Result<ModuleStore>() != null);
+
       IName moduleName = moduleIdentity.Name;
       foreach (ModuleStore mStore in this.ModuleHashtable.GetValuesFor((uint)moduleName.UniqueKey)) {
-        if (moduleIdentity.Equals(mStore.ModuleIdentitity)) {
-          return mStore;
-        }
+        if (moduleIdentity.Equals(mStore.ModuleIdentitity)) return mStore;
       }
       uint value;
       if (moduleIdentity.ContainingAssembly != null) {
@@ -1524,6 +1599,8 @@ namespace Microsoft.Cci {
     }
 
     uint GetUnitRootNamespaceInternId(IUnitReference unitReference) {
+      Contract.Requires(unitReference != null);
+
       IAssemblyReference/*?*/ assemblyReference = unitReference as IAssemblyReference;
       if (assemblyReference != null) {
         AssemblyStore assemblyStore = this.GetAssemblyStore(assemblyReference.UnifiedAssemblyIdentity);
@@ -1539,7 +1616,6 @@ namespace Microsoft.Cci {
 
     uint GetNestedNamespaceInternId(INestedUnitNamespaceReference nestedUnitNamespaceReference) {
       Contract.Requires(nestedUnitNamespaceReference != null);
-      Contract.Requires(nestedUnitNamespaceReference.ContainingUnitNamespace != nestedUnitNamespaceReference);
 
       uint parentNamespaceInternedId = this.GetUnitNamespaceInternId(nestedUnitNamespaceReference.ContainingUnitNamespace);
       uint value = this.NestedNamespaceHashtable.Find(parentNamespaceInternedId, (uint)nestedUnitNamespaceReference.Name.UniqueKey);
@@ -1562,15 +1638,11 @@ namespace Microsoft.Cci {
 
     uint GetNamespaceTypeReferenceInternId(IUnitNamespaceReference containingUnitNamespace, IName typeName, uint genericParameterCount) {
       Contract.Requires(containingUnitNamespace != null);
-      Contract.Requires(!(containingUnitNamespace is Dummy));
       Contract.Requires(typeName != null);
 
       uint containingUnitNamespaceInteredId = this.GetUnitNamespaceInternId(containingUnitNamespace);
       foreach (NamespaceTypeStore nsTypeStore in this.NamespaceTypeHashtable.GetValuesFor((uint)typeName.UniqueKey)) {
-        if (
-          nsTypeStore.ContainingNamespaceInternedId == containingUnitNamespaceInteredId
-          && nsTypeStore.GenericParameterCount == genericParameterCount
-        ) {
+        if (nsTypeStore.ContainingNamespaceInternedId == containingUnitNamespaceInteredId && nsTypeStore.GenericParameterCount == genericParameterCount) {
           return nsTypeStore.InternedId;
         }
       }
@@ -1579,13 +1651,13 @@ namespace Microsoft.Cci {
       return nsTypeStore1.InternedId;
     }
 
-    uint GetNestedTypeReferenceInternId(
-      ITypeReference containingTypeReference,
-      IName typeName,
-      uint genericParameterCount
-    ) {
+    uint GetNestedTypeReferenceInternId(ITypeReference containingTypeReference, IName typeName, uint genericParameterCount) {
+      Contract.Requires(containingTypeReference != null);
+      Contract.Requires(typeName != null);
+
       uint containingTypeReferenceInteredId = this.GetTypeReferenceInternId(containingTypeReference);
       foreach (NestedTypeStore nstTypeStore in this.NestedTypeHashtable.GetValuesFor((uint)typeName.UniqueKey)) {
+        Contract.Assume(nstTypeStore != null);
         if (
           nstTypeStore.ContainingTypeInternedId == containingTypeReferenceInteredId
           && nstTypeStore.GenericParameterCount == genericParameterCount
@@ -1599,6 +1671,8 @@ namespace Microsoft.Cci {
     }
 
     uint GetVectorTypeReferenceInternId(ITypeReference elementTypeReference) {
+      Contract.Requires(elementTypeReference != null);
+
       uint elementTypeReferenceInternId = this.GetTypeReferenceInternId(elementTypeReference);
       uint value = this.VectorTypeHashTable.Find(elementTypeReferenceInternId);
       if (value == 0) {
@@ -1608,21 +1682,16 @@ namespace Microsoft.Cci {
       return value;
     }
 
-    uint GetMatrixTypeReferenceInternId(
-      ITypeReference elementTypeReference,
-      int rank,
-      IEnumerable<ulong> sizes,
-      IEnumerable<int> lowerBounds
-    ) {
+    uint GetMatrixTypeReferenceInternId(ITypeReference elementTypeReference, int rank, IEnumerable<ulong> sizes, IEnumerable<int> lowerBounds) {
+      Contract.Requires(elementTypeReference != null);
+      Contract.Requires(sizes != null);
+      Contract.Requires(lowerBounds != null);
+
       uint elementTypeReferenceInternId = this.GetTypeReferenceInternId(elementTypeReference);
       foreach (MatrixTypeStore matrixTypeStore in this.MatrixTypeHashtable.GetValuesFor(elementTypeReferenceInternId)) {
-        if (
-          matrixTypeStore.Rank == rank
-          && IteratorHelper.EnumerablesAreEqual<ulong>(matrixTypeStore.Sizes, sizes)
-          && IteratorHelper.EnumerablesAreEqual<int>(matrixTypeStore.LowerBounds, lowerBounds)
-        ) {
+        Contract.Assume(matrixTypeStore != null);
+        if (matrixTypeStore.Rank == rank && IteratorHelper.EnumerablesAreEqual<ulong>(matrixTypeStore.Sizes, sizes) && IteratorHelper.EnumerablesAreEqual<int>(matrixTypeStore.LowerBounds, lowerBounds))
           return matrixTypeStore.InternedId;
-        }
       }
       MatrixTypeStore matrixTypeStore1 = new MatrixTypeStore(rank, new List<int>(lowerBounds).ToArray(), new List<ulong>(sizes).ToArray(), this.CurrentTypeInternValue++);
       this.MatrixTypeHashtable.Add(elementTypeReferenceInternId, matrixTypeStore1);
@@ -1630,11 +1699,11 @@ namespace Microsoft.Cci {
     }
 
     uint GetTypeReferenceListInternedId(IEnumerator<ITypeReference> typeReferences) {
-      if (!typeReferences.MoveNext()) {
-        return 0;
-      }
+      Contract.Requires(typeReferences != null);
+
+      if (!typeReferences.MoveNext()) return 0;
       ITypeReference currentTypeRef = typeReferences.Current;
-      Contract.Assume(currentTypeRef != null && !(currentTypeRef is Dummy));
+      Contract.Assume(currentTypeRef != null);
       uint currentTypeRefInternedId = this.GetTypeReferenceInternId(currentTypeRef);
       uint tailInternedId = this.GetTypeReferenceListInternedId(typeReferences);
       uint value = this.TypeListHashtable.Find(currentTypeRefInternedId, tailInternedId);
@@ -1645,10 +1714,10 @@ namespace Microsoft.Cci {
       return value;
     }
 
-    uint GetGenericTypeInstanceReferenceInternId(
-      ITypeReference genericTypeReference,
-      IEnumerable<ITypeReference> genericArguments
-    ) {
+    uint GetGenericTypeInstanceReferenceInternId(ITypeReference genericTypeReference, IEnumerable<ITypeReference> genericArguments) {
+      Contract.Requires(genericTypeReference != null);
+      Contract.Requires(genericArguments != null);
+
       uint genericTypeInternedId = this.GetTypeReferenceInternId(genericTypeReference);
       uint genericArgumentsInternedId = this.GetTypeReferenceListInternedId(genericArguments.GetEnumerator());
       uint value = this.GenericTypeInstanceHashtable.Find(genericTypeInternedId, genericArgumentsInternedId);
@@ -1660,6 +1729,8 @@ namespace Microsoft.Cci {
     }
 
     uint GetPointerTypeReferenceInternId(ITypeReference targetTypeReference) {
+      Contract.Requires(targetTypeReference != null);
+
       uint targetTypeReferenceInternId = this.GetTypeReferenceInternId(targetTypeReference);
       uint value = this.PointerTypeHashTable.Find(targetTypeReferenceInternId);
       if (value == 0) {
@@ -1670,6 +1741,8 @@ namespace Microsoft.Cci {
     }
 
     uint GetManagedPointerTypeReferenceInternId(ITypeReference targetTypeReference) {
+      Contract.Requires(targetTypeReference != null);
+
       uint targetTypeReferenceInternId = this.GetTypeReferenceInternId(targetTypeReference);
       uint value = this.ManagedPointerTypeHashTable.Find(targetTypeReferenceInternId);
       if (value == 0) {
@@ -1678,10 +1751,10 @@ namespace Microsoft.Cci {
       }
       return value;
     }
-    uint GetGenericTypeParameterReferenceInternId(
-      ITypeReference definingTypeReference,
-      int index
-    ) {
+    
+    uint GetGenericTypeParameterReferenceInternId(ITypeReference definingTypeReference, int index) {
+      Contract.Requires(definingTypeReference != null);
+
       uint definingTypeReferenceInternId = this.GetTypeReferenceInternId(GetUninstantiatedGenericType(definingTypeReference));
       uint value = this.GenericTypeParameterHashtable.Find(definingTypeReferenceInternId, (uint)index);
       if (value == 0) {
@@ -1692,6 +1765,9 @@ namespace Microsoft.Cci {
     }
 
     private static ITypeReference GetUninstantiatedGenericType(ITypeReference typeReference) {
+      Contract.Requires(typeReference != null);
+      Contract.Ensures(Contract.Result<ITypeReference>() != null);
+
       IGenericTypeInstanceReference/*?*/ genericTypeInstanceReference = typeReference as IGenericTypeInstanceReference;
       if (genericTypeInstanceReference != null) return genericTypeInstanceReference.GenericType;
       INestedTypeReference/*?*/ nestedTypeReference = typeReference as INestedTypeReference;
@@ -1709,10 +1785,9 @@ namespace Microsoft.Cci {
     /// <param name="definingMethodReference">A reference to the method defining the referenced generic parameter.</param>
     /// <param name="index">The index of the referenced generic parameter. This is an index rather than a name because metadata in CLR
     /// PE files contain only the index, not the name.</param>
-    uint GetGenericMethodParameterReferenceInternId(
-      IMethodReference definingMethodReference,
-      uint index
-    ) {
+    uint GetGenericMethodParameterReferenceInternId(IMethodReference definingMethodReference, uint index) {
+      Contract.Requires(definingMethodReference != null);
+
       if (!(this.CurrentMethodReference is Dummy)) {
         //this happens when the defining method reference contains a type in its signature which either is, or contains,
         //a reference to this generic method type parameter. In that case we break the cycle by just using the index of 
@@ -1733,11 +1808,14 @@ namespace Microsoft.Cci {
     }
 
     uint GetParameterTypeInternId(IParameterTypeInformation parameterTypeInformation) {
+      Contract.Requires(parameterTypeInformation != null);
+
       uint typeReferenceInternId = this.GetTypeReferenceInternId(parameterTypeInformation.Type);
       uint customModifiersInternId = 0;
       if (parameterTypeInformation.IsModified)
         customModifiersInternId = this.GetCustomModifierListInternId(parameterTypeInformation.CustomModifiers.GetEnumerator());
       foreach (ParameterTypeStore parameterTypeStore in this.ParameterTypeHashtable.GetValuesFor(typeReferenceInternId)) {
+        Contract.Assume(parameterTypeStore != null);
         if (
           parameterTypeStore.IsByReference == parameterTypeInformation.IsByReference
           && parameterTypeStore.CustomModifiersInternId == customModifiersInternId
@@ -1751,9 +1829,10 @@ namespace Microsoft.Cci {
     }
 
     uint GetParameterTypeListInternId(IEnumerator<IParameterTypeInformation> parameterTypeInformations) {
-      if (!parameterTypeInformations.MoveNext()) {
-        return 0;
-      }
+      Contract.Requires(parameterTypeInformations != null);
+
+      if (!parameterTypeInformations.MoveNext()) return 0;
+      Contract.Assume(parameterTypeInformations.Current != null);
       uint currentParameterInternedId = this.GetParameterTypeInternId(parameterTypeInformations.Current);
       uint tailInternedId = this.GetParameterTypeListInternId(parameterTypeInformations);
       uint value = this.ParameterTypeListHashtable.Find(currentParameterInternedId, tailInternedId);
@@ -1764,14 +1843,13 @@ namespace Microsoft.Cci {
       return value;
     }
 
-    uint GetSignatureInternId(
-      CallingConvention callingConvention,
-      IEnumerable<IParameterTypeInformation> parameters,
-      IEnumerable<IParameterTypeInformation> extraArgumentTypes,
-      IEnumerable<ICustomModifier> returnValueCustomModifiers,
-      bool returnValueIsByRef,
-      ITypeReference returnType
-    ) {
+    uint GetSignatureInternId(CallingConvention callingConvention, IEnumerable<IParameterTypeInformation> parameters, IEnumerable<IParameterTypeInformation> extraArgumentTypes,
+      IEnumerable<ICustomModifier> returnValueCustomModifiers, bool returnValueIsByRef, ITypeReference returnType) {
+      Contract.Requires(parameters != null);
+      Contract.Requires(extraArgumentTypes != null);
+      Contract.Requires(returnValueCustomModifiers != null);
+      Contract.Requires(returnType != null);
+
       uint requiredParameterTypesInternedId = this.GetParameterTypeListInternId(parameters.GetEnumerator());
       uint extraArgumentTypesInteredId = this.GetParameterTypeListInternId(extraArgumentTypes.GetEnumerator());
       uint returnValueCustomModifiersInternedId = this.GetCustomModifierListInternId(returnValueCustomModifiers.GetEnumerator());
@@ -1793,9 +1871,9 @@ namespace Microsoft.Cci {
       return signatureStore1.InternedId;
     }
 
-    uint GetMethodReferenceInternedId(
-      IMethodReference methodReference
-    ) {
+    uint GetMethodReferenceInternedId(IMethodReference methodReference) {
+      Contract.Requires(methodReference != null);
+
       var genInstanceRef = methodReference as IGenericMethodInstanceReference;
       if (genInstanceRef != null) return this.GetGenericMethodInstanceReferenceInternedKey(genInstanceRef);
       uint containingTypeReferenceInternedId = this.GetTypeReferenceInternId(methodReference.ContainingType);
@@ -1811,6 +1889,7 @@ namespace Microsoft.Cci {
         this.MethodReferenceHashtable.Add(containingTypeReferenceInternedId, methods);
       }
       foreach (SignatureStore signatureStore in methods.GetValuesFor((uint)methodReference.Name.UniqueKey)) {
+        Contract.Assume(signatureStore != null);
         if (
           signatureStore.CallingConvention == methodReference.CallingConvention
           && signatureStore.RequiredParameterListInternedId == requiredParameterTypesInternedId
@@ -1829,9 +1908,9 @@ namespace Microsoft.Cci {
       return signatureStore1.InternedId;
     }
 
-    uint GetGenericMethodInstanceReferenceInternedKey(
-      IGenericMethodInstanceReference genericMethodInstanceReference
-    ) {
+    uint GetGenericMethodInstanceReferenceInternedKey(IGenericMethodInstanceReference genericMethodInstanceReference) {
+      Contract.Requires(genericMethodInstanceReference != null);
+
       var genericMethodInternedId = genericMethodInstanceReference.GenericMethod.InternedKey;
       uint genericArgumentsInternedId = this.GetTypeReferenceListInternedId(genericMethodInstanceReference.GenericArguments.GetEnumerator());
       uint value = this.GenericMethodInstanceHashtable.Find(genericMethodInternedId, genericArgumentsInternedId);
@@ -1842,9 +1921,9 @@ namespace Microsoft.Cci {
       return value;
     }
 
-    uint GetFieldReferenceInternedId(
-      IFieldReference fieldReference
-    ) {
+    uint GetFieldReferenceInternedId(IFieldReference fieldReference) {
+      Contract.Requires(fieldReference != null);
+
       uint containingTypeReferenceInternedId = this.GetTypeReferenceInternId(fieldReference.ContainingType);
       uint fieldTypeInternedId;
       if (fieldReference.IsModified)
@@ -1865,22 +1944,14 @@ namespace Microsoft.Cci {
       return result;
     }
 
-    uint GetFunctionPointerTypeReferenceInternId(
-      CallingConvention callingConvention,
-      IEnumerable<IParameterTypeInformation> parameters,
-      IEnumerable<IParameterTypeInformation> extraArgumentTypes,
-      IEnumerable<ICustomModifier> returnValueCustomModifiers,
-      bool returnValueIsByRef,
-      ITypeReference returnType
-    ) {
-      uint signatureInternedId = this.GetSignatureInternId(
-        callingConvention,
-        parameters,
-        extraArgumentTypes,
-        returnValueCustomModifiers,
-        returnValueIsByRef,
-        returnType
-      );
+    uint GetFunctionPointerTypeReferenceInternId(CallingConvention callingConvention, IEnumerable<IParameterTypeInformation> parameters, IEnumerable<IParameterTypeInformation> extraArgumentTypes,
+      IEnumerable<ICustomModifier> returnValueCustomModifiers, bool returnValueIsByRef, ITypeReference returnType) {
+      Contract.Requires(parameters != null);
+      Contract.Requires(extraArgumentTypes != null);
+      Contract.Requires(returnValueCustomModifiers != null);
+      Contract.Requires(returnType != null);
+
+      uint signatureInternedId = this.GetSignatureInternId(callingConvention, parameters, extraArgumentTypes, returnValueCustomModifiers, returnValueIsByRef, returnType);
       uint value = this.FunctionTypeHashTable.Find(signatureInternedId);
       if (value == 0) {
         value = this.CurrentTypeInternValue++;
@@ -1890,6 +1961,8 @@ namespace Microsoft.Cci {
     }
 
     uint GetCustomModifierInternId(ICustomModifier customModifier) {
+      Contract.Requires(customModifier != null);
+
       uint currentTypeRefInternedId = this.GetTypeReferenceInternId(customModifier.Modifier);
       uint isOptionalIntneredId = customModifier.IsOptional ? 0xF0F0F0F0 : 0x0F0F0F0F;  //  Just for the heck of it...
       uint value = this.CustomModifierHashTable.Find(currentTypeRefInternedId, isOptionalIntneredId);
@@ -1901,10 +1974,12 @@ namespace Microsoft.Cci {
     }
 
     uint GetCustomModifierListInternId(IEnumerator<ICustomModifier> customModifiers) {
-      if (!customModifiers.MoveNext()) {
-        return 0;
-      }
-      uint currentCustomModifierInternedId = this.GetCustomModifierInternId(customModifiers.Current);
+      Contract.Requires(customModifiers != null);
+
+      if (!customModifiers.MoveNext()) return 0;
+      var current = customModifiers.Current;
+      Contract.Assume(current != null);
+      uint currentCustomModifierInternedId = this.GetCustomModifierInternId(current);
       uint tailInternedId = this.GetCustomModifierListInternId(customModifiers);
       uint value = this.CustomModifierListHashTable.Find(currentCustomModifierInternedId, tailInternedId);
       if (value == 0) {
@@ -1916,7 +1991,6 @@ namespace Microsoft.Cci {
 
     uint GetTypeReferenceInterendIdIgnoringCustomModifiers(ITypeReference typeReference) {
       Contract.Requires(typeReference != null);
-      Contract.Requires(!(typeReference is Dummy));
 
       INamespaceTypeReference/*?*/ namespaceTypeReference = typeReference as INamespaceTypeReference;
       if (namespaceTypeReference != null) {
@@ -1994,6 +2068,9 @@ namespace Microsoft.Cci {
     }
 
     uint GetModifiedTypeReferenceInternId(ITypeReference typeReference, IEnumerable<ICustomModifier> customModifiers) {
+      Contract.Requires(typeReference != null);
+      Contract.Requires(customModifiers != null);
+
       uint typeReferenceInternId = this.GetTypeReferenceInterendIdIgnoringCustomModifiers(typeReference);
       uint customModifiersInternId = this.GetCustomModifierListInternId(customModifiers.GetEnumerator());
       uint value = this.ModifiedTypeHashtable.Find(typeReferenceInternId, customModifiersInternId);
@@ -2006,12 +2083,10 @@ namespace Microsoft.Cci {
 
     uint GetTypeReferenceInternId(ITypeReference typeReference) {
       Contract.Requires(typeReference != null);
-      Contract.Requires(!(typeReference is Dummy));
 
       IModifiedTypeReference/*?*/ modifiedTypeReference = typeReference as IModifiedTypeReference;
-      if (modifiedTypeReference != null) {
+      if (modifiedTypeReference != null)
         return this.GetModifiedTypeReferenceInternId(modifiedTypeReference.UnmodifiedType, modifiedTypeReference.CustomModifiers);
-      }
       return this.GetTypeReferenceInterendIdIgnoringCustomModifiers(typeReference);
     }
 

@@ -1362,7 +1362,7 @@ class SubClass2 : SuperClass {
 
     static void AssertRTATypesNotDummy(RapidTypeAnalysis rta) {
       foreach (var typeDefinition in rta.ReachableTypes()) {
-        Assert.IsTrue(typeDefinition != Dummy.Type);
+        Assert.IsTrue(!(typeDefinition is Dummy));
       }
     }
 
@@ -1867,7 +1867,7 @@ namespace Ns {
   }
 
   public class SubHasFAndM<T> : HasFAndM<T> {
-   public void F(T f) {}
+   public override void F(T f) {}
   }
 
   public class MultipleMs : IHasFAndM<string>, IHasFAndM<int> {
@@ -2473,7 +2473,7 @@ namespace Ns {
         foreach (IAssembly assembly in WholeProgram.AllAssemblies()) {
           INamedTypeDefinition foundType = UnitHelper.FindType(this.Host.NameTable, assembly, typeName, genericParameterCount);
 
-          if (foundType != Dummy.Type && foundType != Dummy.NamespaceTypeDefinition) {
+          if (!(foundType is Dummy)) {
             return foundType;
           }
         }
@@ -2513,7 +2513,7 @@ namespace Ns {
           string genericParameterCountAsString = match.Groups[2].Value;
           int genericParameterCount = int.Parse(genericParameterCountAsString);
 
-          //Console.WriteLine("Successful match! Type=[{0}] Count=[{1}]", bareTypeName, genericParameterCount);
+          Console.WriteLine("Successful match! Type=[{0}] Count=[{1}]", bareTypeName, genericParameterCount);
 
           ITypeDefinition genericTypeDefinition = FindTypeWithName(bareTypeName, genericParameterCount);
 
@@ -2535,7 +2535,7 @@ namespace Ns {
         string typeName = match.Groups[1].Value;
         string methodName = match.Groups[2].Value;
 
-        //Console.WriteLine("Successful match! Type=[{0}] Method=[{1}]", typeName, methodName);
+        Console.WriteLine("Successful match! Type=[{0}] Method=[{1}]", typeName, methodName);
 
         return FindMethodWithName(typeName, methodName);
 

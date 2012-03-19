@@ -402,6 +402,7 @@ namespace Microsoft.Cci.MetadataReader {
         assemblyIdentity.Culture == this.CoreAssemblySymbolicIdentity.Culture && 
         IteratorHelper.EnumerablesAreEqual(assemblyIdentity.PublicKeyToken, this.CoreAssemblySymbolicIdentity.PublicKeyToken))
         return this.CoreAssemblySymbolicIdentity;
+      if (this.CoreIdentities.Contains(assemblyIdentity)) return this.CoreAssemblySymbolicIdentity;
       if (string.Equals(assemblyIdentity.Name.Value, "mscorlib", StringComparison.OrdinalIgnoreCase) && assemblyIdentity.Version == new Version(255, 255, 255, 255))
         return this.CoreAssemblySymbolicIdentity;
       return assemblyIdentity;

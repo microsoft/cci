@@ -549,9 +549,10 @@ namespace ILGarbageCollect {
 
       using (pdbReader) {
         var localScopeProvider = pdbReader == null ? null : new ILGenerator.LocalScopeProvider(pdbReader);
+        var pdbPath = Path.ChangeExtension(outputPath, ".pdb");
         var outputFileName = Path.GetFileNameWithoutExtension(outputPath);
         using (var peStream = File.Create(outputPath)) {
-          using (var pdbWriter = new PdbWriter(outputFileName + ".pdb", pdbReader)) {
+          using (var pdbWriter = new PdbWriter(pdbPath, pdbReader)) {
             var rewriter = new TreeShakingRewriter(host, assemblyReport, dryRun, removeMethods, fullDebugStubs, stubEmitter);
             IAssembly rewrittenCopy = rewriter.Rewrite(copy);
 

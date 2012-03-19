@@ -247,6 +247,7 @@ namespace Microsoft.Cci {
   /// Modifies the set of allowed values for a type, or the semantics of operations allowed on those values. 
   /// Custom modifiers are not associated directly with types, but rather with typed storage locations for values.
   /// </summary>
+  [ContractClass(typeof(ICustomModifierContract))]
   public interface ICustomModifier {
 
     /// <summary>
@@ -260,6 +261,22 @@ namespace Microsoft.Cci {
     ITypeReference Modifier { get; }
 
   }
+
+  #region ICustomModifier contract binding
+  [ContractClassFor(typeof(ICustomModifier))]
+  abstract class ICustomModifierContract : ICustomModifier {
+    public bool IsOptional {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference Modifier {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+  }
+  #endregion
 
   /// <summary>
   /// Information that describes a method or property parameter, but does not include all the information in a IParameterDefinition.
@@ -1201,6 +1218,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// The definition of a type parameter of a generic type.
   /// </summary>
+  [ContractClass(typeof(IGenericTypeParameterContract))]
   public interface IGenericTypeParameter : IGenericParameter, IGenericTypeParameterReference {
 
     /// <summary>
@@ -1209,6 +1227,264 @@ namespace Microsoft.Cci {
     new ITypeDefinition DefiningType { get; }
 
   }
+
+  #region IGenericTypeParameter contract binding
+  [ContractClassFor(typeof(IGenericTypeParameter))]
+  abstract class IGenericTypeParameterContract : IGenericTypeParameter {
+    public ITypeDefinition DefiningType {
+      get {
+        Contract.Ensures(Contract.Result<ITypeDefinition>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public IEnumerable<ITypeReference> Constraints {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort GenericParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool MustBeReferenceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool MustBeValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool MustHaveDefaultConstructor {
+      get { throw new NotImplementedException(); }
+    }
+
+    public TypeParameterVariance Variance {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort Alignment {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeReference> BaseClasses {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IEventDefinition> Events {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IFieldDefinition> Fields {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IGenericTypeParameter> GenericParameters {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool HasDeclarativeSecurity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeReference> Interfaces {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IGenericTypeInstanceReference InstanceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAbstract {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsBeforeFieldInit {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsClass {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsComObject {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsDelegate {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsGeneric {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsInterface {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsReferenceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsRuntimeSpecial {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSerializable {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSpecialName {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStruct {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSealed {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStatic {
+      get { throw new NotImplementedException(); }
+    }
+
+    public LayoutKind Layout {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeDefinitionMember> Members {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IMethodDefinition> Methods {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<INestedTypeDefinition> NestedTypes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IPropertyDefinition> Properties {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ISecurityAttribute> SecurityAttributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint SizeOf {
+      get { throw new NotImplementedException(); }
+    }
+
+    public StringFormatKind StringFormat {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference UnderlyingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool Contains(ITypeDefinitionMember member) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
+      throw new NotImplementedException();
+    }
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+
+    public bool MangleName {
+      get { throw new NotImplementedException(); }
+    }
+
+    INamedTypeDefinition INamedTypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort Index {
+      get { throw new NotImplementedException(); }
+    }
+
+    ITypeReference IGenericTypeParameterReference.DefiningType {
+      get { throw new NotImplementedException(); }
+    }
+
+    IGenericTypeParameter IGenericTypeParameterReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+  }
+  #endregion
+
 
   /// <summary>
   /// A reference to a type parameter of a generic type.
@@ -1426,6 +1702,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A named type definition, such as an INamespaceTypeDefinition or an INestedTypeDefinition.
   /// </summary>
+  [ContractClass(typeof(INamedTypeDefinitionContract))]
   public interface INamedTypeDefinition : ITypeDefinition, INamedTypeReference {
 
     /// <summary>
@@ -1434,6 +1711,245 @@ namespace Microsoft.Cci {
     new ushort GenericParameterCount { get; }
 
   }
+
+  #region INamedTypeDefinition contract binding
+  [ContractClassFor(typeof(INamedTypeDefinition))]
+  abstract class INamedTypeDefinitionContract : INamedTypeDefinition {
+    ushort INamedTypeDefinition.GenericParameterCount {
+      get { 
+        Contract.Ensures(this.IsGeneric || Contract.Result<ushort>() == 0);
+        Contract.Ensures(!this.IsGeneric || Contract.Result<ushort>() > 0);
+        throw new NotImplementedException();
+      }
+    }
+
+    public ushort Alignment {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeReference> BaseClasses {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IEventDefinition> Events {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IFieldDefinition> Fields {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IGenericTypeParameter> GenericParameters {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool HasDeclarativeSecurity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeReference> Interfaces {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IGenericTypeInstanceReference InstanceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAbstract {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsBeforeFieldInit {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsClass {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsComObject {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsDelegate {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsGeneric {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsInterface {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsReferenceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsRuntimeSpecial {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSerializable {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSpecialName {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStruct {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSealed {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStatic {
+      get { throw new NotImplementedException(); }
+    }
+
+    public LayoutKind Layout {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeDefinitionMember> Members {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IMethodDefinition> Methods {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<INestedTypeDefinition> NestedTypes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IPropertyDefinition> Properties {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ISecurityAttribute> SecurityAttributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint SizeOf {
+      get { throw new NotImplementedException(); }
+    }
+
+    public StringFormatKind StringFormat {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference UnderlyingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool Contains(ITypeDefinitionMember member) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
+      throw new NotImplementedException();
+    }
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+
+    public bool MangleName {
+      get { throw new NotImplementedException(); }
+    }
+
+    INamedTypeDefinition INamedTypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    #region ITypeDefinition Members
+
+
+    ushort ITypeDefinition.GenericParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region INamedTypeReference Members
+
+    ushort INamedTypeReference.GenericParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
 
   /// <summary>
   /// A type definition that is a member of a namespace definition.
@@ -1915,6 +2431,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A type definition that is a member of another type definition.
   /// </summary>
+  [ContractClass(typeof(INestedTypeDefinitionContract))]
   public interface INestedTypeDefinition : INamedTypeDefinition, ITypeDefinitionMember, INestedTypeReference {
 
     /// <summary>
@@ -1922,6 +2439,343 @@ namespace Microsoft.Cci {
     /// </summary>
     new ushort GenericParameterCount { get; }
   }
+
+  #region INestedTypeDefinition contract binding
+  [ContractClassFor(typeof(INestedTypeDefinition))]
+  abstract class INestedTypeDefinitionContract : INestedTypeDefinition {
+
+    #region INestedTypeDefinition Members
+
+    ushort INestedTypeDefinition.GenericParameterCount {
+      get {
+        Contract.Ensures(this.IsGeneric || Contract.Result<ushort>() == 0);
+        Contract.Ensures(!this.IsGeneric || Contract.Result<ushort>() > 0);
+        throw new NotImplementedException();
+      }
+    }
+
+    #endregion
+
+    #region ITypeDefinition Members
+
+    public ushort Alignment {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeReference> BaseClasses {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IEventDefinition> Events {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IFieldDefinition> Fields {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IGenericTypeParameter> GenericParameters {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool HasDeclarativeSecurity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeReference> Interfaces {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IGenericTypeInstanceReference InstanceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAbstract {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsBeforeFieldInit {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsClass {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsComObject {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsDelegate {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsGeneric {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsInterface {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsReferenceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsRuntimeSpecial {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSerializable {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSpecialName {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStruct {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSealed {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStatic {
+      get { throw new NotImplementedException(); }
+    }
+
+    public LayoutKind Layout {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeDefinitionMember> Members {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IMethodDefinition> Methods {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<INestedTypeDefinition> NestedTypes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IPropertyDefinition> Properties {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ISecurityAttribute> SecurityAttributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint SizeOf {
+      get { throw new NotImplementedException(); }
+    }
+
+    public StringFormatKind StringFormat {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference UnderlyingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IReference Members
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region IObjectWithLocations Members
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IScope<ITypeDefinitionMember> Members
+
+    public bool Contains(ITypeDefinitionMember member) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region ITypeReference Members
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region INamedTypeReference Members
+
+
+    public bool MangleName {
+      get { throw new NotImplementedException(); }
+    }
+
+    INamedTypeDefinition INamedTypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region INamedEntity Members
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region ITypeDefinitionMember Members
+
+    public ITypeDefinition ContainingTypeDefinition {
+      get { throw new NotImplementedException(); }
+    }
+
+    public TypeMemberVisibility Visibility {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region ITypeMemberReference Members
+
+    public ITypeReference ContainingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IContainerMember<ITypeDefinition> Members
+
+    public ITypeDefinition Container {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region IScopeMember<IScope<ITypeDefinitionMember>> Members
+
+    public IScope<ITypeDefinitionMember> ContainingScope {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region INestedTypeReference Members
+
+
+    INestedTypeDefinition INestedTypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region INamedTypeDefinition Members
+
+    ushort INamedTypeDefinition.GenericParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region ITypeDefinition Members
+
+
+    ushort ITypeDefinition.GenericParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region INamedTypeReference Members
+
+    ushort INamedTypeReference.GenericParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+
+    #region INestedTypeReference Members
+
+    ushort INestedTypeReference.GenericParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    #endregion
+  }
+  #endregion
 
   /// <summary>
   /// A type definition that is a member of another type definition.
@@ -2036,6 +2890,7 @@ namespace Microsoft.Cci {
   /// It is specialized, because if it had any references to the type parameters of the generic type, then those references have been replaced with the type arguments of the instance.
   /// In other words, it may be less generic than before, and hence it has been "specialized".
   /// </summary>
+  [ContractClass(typeof(ISpecializedNestedTypeDefinitionContract))]
   public interface ISpecializedNestedTypeDefinition : INestedTypeDefinition, ISpecializedNestedTypeReference {
 
     /// <summary>
@@ -2048,6 +2903,264 @@ namespace Microsoft.Cci {
     }
 
   }
+
+  #region ISpecializedNestedTypeDefinition contract binding
+  [ContractClassFor(typeof(ISpecializedNestedTypeDefinition))]
+  abstract class ISpecializedNestedTypeDefinitionContract : ISpecializedNestedTypeDefinition {
+    public INestedTypeDefinition UnspecializedVersion {
+      get {
+        Contract.Ensures(Contract.Result<INestedTypeDefinition>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public ushort GenericParameterCount {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ushort Alignment {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeReference> BaseClasses {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IEventDefinition> Events {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IMethodImplementation> ExplicitImplementationOverrides {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IFieldDefinition> Fields {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IGenericTypeParameter> GenericParameters {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool HasDeclarativeSecurity {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeReference> Interfaces {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IGenericTypeInstanceReference InstanceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAbstract {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsBeforeFieldInit {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsClass {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsComObject {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsDelegate {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsGeneric {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsInterface {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsReferenceType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsRuntimeSpecial {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSerializable {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSpecialName {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStruct {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsSealed {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsStatic {
+      get { throw new NotImplementedException(); }
+    }
+
+    public LayoutKind Layout {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeDefinitionMember> Members {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IMethodDefinition> Methods {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<INestedTypeDefinition> NestedTypes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ITypeDefinitionMember> PrivateHelperMembers {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<IPropertyDefinition> Properties {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ISecurityAttribute> SecurityAttributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint SizeOf {
+      get { throw new NotImplementedException(); }
+    }
+
+    public StringFormatKind StringFormat {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference UnderlyingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IEnumerable<ICustomAttribute> Attributes {
+      get { throw new NotImplementedException(); }
+    }
+
+    public void Dispatch(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public void DispatchAsReference(IMetadataVisitor visitor) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ILocation> Locations {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool Contains(ITypeDefinitionMember member) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMatchingMembers(Function<ITypeDefinitionMember, bool> predicate) {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeDefinitionMember> GetMembersNamed(IName name, bool ignoreCase) {
+      throw new NotImplementedException();
+    }
+
+    public IAliasForType AliasForType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public uint InternedKey {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsAlias {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsEnum {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool IsValueType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IPlatformType PlatformType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public PrimitiveTypeCode TypeCode {
+      get { throw new NotImplementedException(); }
+    }
+
+
+    public bool MangleName {
+      get { throw new NotImplementedException(); }
+    }
+
+    INamedTypeDefinition INamedTypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition ContainingTypeDefinition {
+      get { throw new NotImplementedException(); }
+    }
+
+    public TypeMemberVisibility Visibility {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeReference ContainingType {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinitionMember ResolvedTypeDefinitionMember {
+      get { throw new NotImplementedException(); }
+    }
+
+    public ITypeDefinition Container {
+      get { throw new NotImplementedException(); }
+    }
+
+    public IScope<ITypeDefinitionMember> ContainingScope {
+      get { throw new NotImplementedException(); }
+    }
+
+
+    INestedTypeDefinition INestedTypeReference.ResolvedType {
+      get { throw new NotImplementedException(); }
+    }
+
+    INestedTypeReference ISpecializedNestedTypeReference.UnspecializedVersion {
+      get { throw new NotImplementedException(); }
+    }
+  }
+  #endregion
 
   /// <summary>
   /// A reference to a type definition that is a specialized nested type.
@@ -2216,7 +3329,6 @@ namespace Microsoft.Cci {
     #endregion
   }
   #endregion
-
 
   /// <summary>
   /// A type reference that has custom modifiers associated with it. For example a reference to the target type of a managed pointer to a constant.
@@ -3964,7 +5076,6 @@ namespace Microsoft.Cci {
       throw new NotImplementedException();
     }
   }
-
 
   /// <summary>
   /// A enumeration of all of the value types that are built into the Runtime (and thus have specialized IL instructions that manipulate them).
