@@ -55,6 +55,9 @@ namespace Microsoft.Cci.Contracts {
 
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class ContractChecker {
 
     private ContractChecker() { }

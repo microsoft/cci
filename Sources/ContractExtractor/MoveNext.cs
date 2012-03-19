@@ -40,6 +40,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// <summary>
     /// For an iterator method, find the closure class' MoveNext method and return its body.
     /// </summary>
+    /// <param name="host"></param>
     /// <param name="possibleIterator">The (potential) iterator method.</param>
     /// <returns>Dummy.MethodBody if <paramref name="possibleIterator"/> does not fit into the code pattern of an iterator method, 
     /// or the body of the MoveNext method of the corresponding closure class if it does.
@@ -78,11 +79,26 @@ namespace Microsoft.Cci.MutableContracts {
       }
       return null;
     }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="host"></param>
+    /// <param name="closureClass"></param>
+    /// <returns></returns>
     public static ISourceMethodBody/*?*/ FindClosureGetEnumerator(IMetadataHost host, INestedTypeDefinition closureClass) {
       return null;
     }
-
+    
     // TODO: First search the moveNextBody to see if there are any contracts at all.
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="host"></param>
+    /// <param name="extractor"></param>
+    /// <param name="iteratorMethodBody"></param>
+    /// <param name="moveNextBody"></param>
+    /// <param name="pdbReader"></param>
+    /// <returns></returns>
     public static MethodContract GetMethodContractFromMoveNext(
       IContractAwareHost host,
       ContractExtractor extractor,
@@ -216,7 +232,7 @@ namespace Microsoft.Cci.MutableContracts {
 
     }
 
-    public class HermansAlwaysRight : CodeRewriter {
+    internal class HermansAlwaysRight : CodeRewriter {
 
       ContractExtractor extractor;
       IContractAwareHost contractAwareHost;

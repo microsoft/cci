@@ -556,28 +556,28 @@ namespace Microsoft.Cci.Contracts {
     private UnitIdentity sourceUnitIdentity;
     private IUnit targetUnit = null;
 
-    public MappingMutator(IMetadataHost host, IUnit targetUnit, IUnit sourceUnit) {
+    internal MappingMutator(IMetadataHost host, IUnit targetUnit, IUnit sourceUnit) {
       this.host = host;
       this.sourceUnitIdentity = sourceUnit.UnitIdentity;
       this.targetUnit = targetUnit;
     }
 
-    public IMethodReference Map(IMethodReference methodReference) {
+    internal IMethodReference Map(IMethodReference methodReference) {
       var result = new MetadataDeepCopier(host).Copy(methodReference);
       var rewriter = new ActualMutator(host, targetUnit, sourceUnitIdentity);
       return rewriter.Rewrite(result);
     }
-    public ITypeReference Map(ITypeReference typeReference) {
+    internal ITypeReference Map(ITypeReference typeReference) {
       var result = new MetadataDeepCopier(host).Copy(typeReference);
       var rewriter = new ActualMutator(host, targetUnit, sourceUnitIdentity);
       return rewriter.Rewrite(result);
     }
-    public IMethodContract Map(IMethodContract methodContract) {
+    internal IMethodContract Map(IMethodContract methodContract) {
       var result = new CodeAndContractDeepCopier(host).Copy(methodContract);
       var rewriter = new ActualMutator(host, targetUnit, sourceUnitIdentity);
       return rewriter.Rewrite(result);
     }
-    public ITypeContract Map(ITypeDefinition newParentTypeDefinition, ITypeContract typeContract) {
+    internal ITypeContract Map(ITypeDefinition newParentTypeDefinition, ITypeContract typeContract) {
       var result = new CodeAndContractDeepCopier(host).Copy(typeContract);
       // Need to reparent any ContractFields and ContractMethods so that their ContainingTypeDefinition
       // points to the correct type
@@ -600,31 +600,41 @@ namespace Microsoft.Cci.Contracts {
       private IUnit targetUnit = null;
 
       /// <summary>
-      /// A mutator that, when it visits anything, converts any references defined in the <paramref name="sourceUnit"/>
+      /// A mutator that, when it visits anything, converts any references defined in the <paramref name="sourceUnitIdentity"/>
       /// into references defined in the <paramref name="targetUnit"/>
       /// </summary>
       /// <param name="host">
       /// The host that loaded the <paramref name="targetUnit"/>
       /// </param>
       /// <param name="targetUnit">
-      /// The unit to which all references in the <paramref name="sourceUnit"/>
+      /// The unit to which all references in the <paramref name="sourceUnitIdentity"/>
       /// will mapped.
       /// </param>
-      /// <param name="sourceUnit">
+      /// <param name="sourceUnitIdentity">
       /// The unit from which references will be mapped into references from the <paramref name="targetUnit"/>
       /// </param>
-      public ActualMutator(IMetadataHost host, IUnit targetUnit, UnitIdentity sourceUnitIdentity)
+      internal ActualMutator(IMetadataHost host, IUnit targetUnit, UnitIdentity sourceUnitIdentity)
         : base(host) {
         this.sourceUnitIdentity = sourceUnitIdentity;
         this.targetUnit = targetUnit;
       }
 
+      /// <summary>
+      /// Rewrites the given module reference.
+      /// </summary>
+      /// <param name="moduleReference"></param>
+      /// <returns></returns>
       public override IModuleReference Rewrite(IModuleReference moduleReference) {
         if (moduleReference.UnitIdentity.Equals(this.sourceUnitIdentity)) {
           return (IModuleReference)this.targetUnit;
         }
         return base.Rewrite(moduleReference);
       }
+      /// <summary>
+      /// Rewrites the given assembly reference.
+      /// </summary>
+      /// <param name="assemblyReference"></param>
+      /// <returns></returns>
       public override IAssemblyReference Rewrite(IAssemblyReference assemblyReference) {
         if (assemblyReference.UnitIdentity.Equals(this.sourceUnitIdentity)) {
           return (IAssemblyReference)this.targetUnit;

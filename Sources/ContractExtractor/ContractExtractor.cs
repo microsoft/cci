@@ -291,6 +291,10 @@ namespace Microsoft.Cci.MutableContracts {
       return invariant;
     }
 
+    /// <summary>
+    /// Rewrites the children.
+    /// </summary>
+    /// <param name="blockStatement">The block statement.</param>
     public override void RewriteChildren(BlockStatement blockStatement) {
       if (blockStatement == null) return;
       var stmts = blockStatement.Statements;
@@ -1057,15 +1061,28 @@ namespace Microsoft.Cci.MutableContracts {
       }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public sealed class AssertAssumeExtractor : CodeRewriter {
 
       PdbReader/*?*/ pdbReader;
 
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="host"></param>
+      /// <param name="pdbReader"></param>
       public AssertAssumeExtractor(IMetadataHost host, PdbReader/*?*/ pdbReader)
         : base(host) {
         this.pdbReader = pdbReader;
       }
 
+      /// <summary>
+      /// Rewrites the given expression statement.
+      /// </summary>
+      /// <param name="expressionStatement"></param>
+      /// <returns></returns>
       public override IStatement Rewrite(IExpressionStatement expressionStatement) {
         IMethodCall/*?*/ methodCall = expressionStatement.Expression as IMethodCall;
         if (methodCall == null) goto JustVisit;

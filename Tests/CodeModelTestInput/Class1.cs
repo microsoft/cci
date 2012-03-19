@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Contracts;
+using System.Diagnostics.Contracts;
 
 namespace CodeModelTestInput {
   public class Class1 {
@@ -255,6 +255,12 @@ namespace CodeModelTestInput {
     private void Method32() {
       SomeStruct sstr = new SomeStruct();
       sstr.Width >>= 1;
+    }
+
+    static void Method33() {
+      short[] a = new short[1];
+      short[] b = new short[1];
+      a[0] += b[0];
     }
 
   }

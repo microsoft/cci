@@ -313,6 +313,11 @@ namespace Microsoft.Cci.MutableContracts {
       return result;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="method"></param>
+    /// <returns></returns>
     public static IMethodDefinition UninstantiateAndUnspecializeMethodDefinition(IMethodDefinition method) {
       IMethodDefinition result = method;
       var gmi = result as IGenericMethodInstance;
@@ -400,6 +405,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// T.M that is used as the implicit interface implementation of J.M).
     /// 2) Otherwise, the method from T that is an override of M.
     /// </summary>
+    /// <param name="host"></param>
     /// <param name="methodDefinition">
     /// This must be an unspecialized method definition.
     /// </param>
@@ -606,6 +612,12 @@ namespace Microsoft.Cci.MutableContracts {
       return null;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="host"></param>
+    /// <param name="methodReference"></param>
+    /// <returns></returns>
     public static bool IsPure(IMetadataHost host, IMethodReference methodReference) {
       var contractAssemblyReference = new Immutable.AssemblyReference(host, host.ContractAssemblySymbolicIdentity);
       var pureAttribute = ContractHelper.CreateTypeReference(host, contractAssemblyReference, "System.Diagnostics.Contracts.PureAttribute"); 
@@ -798,10 +810,14 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     /// <summary>
-    /// Given a method contract (<paramref name="methodContact"/> for a unspecialized/uninstantiated method reference/definition
+    /// Given a method contract (<paramref name="methodContract"/> for a unspecialized/uninstantiated method reference/definition
     /// (<paramref name="unspec"/>), specialize and instantiate (i.e., the generics) in the contract so that it is a contract
     /// relative to the specialized/instantiated method reference/definition (<paramref name="mr"/>).
     /// </summary>
+    /// <param name="host"></param>
+    /// <param name="methodContract"></param>
+    /// <param name="mr"></param>
+    /// <param name="unspec"></param>
     /// <returns>
     /// A deep copy of <paramref name="methodContract"/>, properly specialized and instantiated.
     /// </returns>
@@ -1072,6 +1088,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// only preconditions.
     /// If an invariant does not mention the property, then it is not represented in the returned contract.
     /// </summary>
+    /// <param name="host"></param>
     /// <param name="typeContract">
     /// This must be the type contract corresponding to the containing type of <paramref name="methodDefinition"/>.
     /// </param>
@@ -1343,6 +1360,13 @@ namespace Microsoft.Cci.MutableContracts {
     private List<IParameterDefinition> fromParameters;
     private  List<IExpression> expressions;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="host"></param>
+    /// <param name="fromMethod"></param>
+    /// <param name="toMethod"></param>
+    /// <param name="expressions"></param>
     public BetaReducer(IMetadataHost host, IMethodDefinition fromMethod, IMethodDefinition toMethod, List<IExpression> expressions)
       : base(host) {
       this.fromParameters = new List<IParameterDefinition>(fromMethod.Parameters);
@@ -1359,12 +1383,21 @@ namespace Microsoft.Cci.MutableContracts {
       };
     }
 
+    /// <summary>
+    /// Rewrites the children of the specified local definition.
+    /// </summary>
+    /// <param name="localDefinition"></param>
     public override void RewriteChildren(LocalDefinition localDefinition) {
       if (localDefinition.MethodDefinition.InternedKey == this.targetMethod.InternedKey)
         localDefinition.MethodDefinition = this.sourceMethod;
       base.RewriteChildren(localDefinition);
     }
 
+    /// <summary>
+    /// Rewrites the given this reference expression.
+    /// </summary>
+    /// <param name="thisReference"></param>
+    /// <returns></returns>
     public override IExpression Rewrite(IThisReference thisReference) {
       var t = thisReference.Type;
       var gt = t as IGenericTypeInstanceReference;
@@ -1379,6 +1412,10 @@ namespace Microsoft.Cci.MutableContracts {
       return base.Rewrite(thisReference);
     }
 
+    /// <summary>
+    /// Rewrites the children of the given method call.
+    /// </summary>
+    /// <param name="methodCall"></param>
     public override void RewriteChildren(MethodCall methodCall) {
       base.RewriteChildren(methodCall);
       if (!methodCall.IsStaticCall && methodCall.ThisArgument is IThisReference && this.targetType.IsValueType && !this.sourceType.IsValueType) {
@@ -1389,6 +1426,11 @@ namespace Microsoft.Cci.MutableContracts {
       }
     }
 
+    /// <summary>
+    /// Rewrites the given bound expression.
+    /// </summary>
+    /// <param name="boundExpression"></param>
+    /// <returns></returns>
     public override IExpression Rewrite(IBoundExpression boundExpression) {
       // Can't depend on object identity. A copy might have been made of the paramter
       // definition as part of specializing the contract.
@@ -1405,8 +1447,17 @@ namespace Microsoft.Cci.MutableContracts {
     }
   }
 
+  /// <summary>
+  /// 
+  /// </summary>
   public class CodeSpecializer : CodeAndContractRewriter {
     Dictionary<uint, ITypeReference> typeRefMap;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="host"></param>
+    /// <param name="typeRefMap"></param>
     public CodeSpecializer(IMetadataHost host, Dictionary<uint, ITypeReference> typeRefMap)
       : base(host, true){
       this.typeRefMap = typeRefMap;
@@ -1419,23 +1470,45 @@ namespace Microsoft.Cci.MutableContracts {
         return null;
     }
 
+    /// <summary>
+    /// Rewrites the given generic method parameter reference.
+    /// </summary>
+    /// <param name="genericMethodParameterReference"></param>
+    /// <returns></returns>
     public override ITypeReference Rewrite(IGenericMethodParameterReference genericMethodParameterReference) {
       var result = this.TryMap(genericMethodParameterReference);
       return result ?? base.Rewrite(genericMethodParameterReference);
     }
+    /// <summary>
+    /// Rewrites the given generic type parameter reference.
+    /// </summary>
+    /// <param name="genericTypeParameterReference"></param>
+    /// <returns></returns>
     public override ITypeReference Rewrite(IGenericTypeParameterReference genericTypeParameterReference) {
       var result = this.TryMap(genericTypeParameterReference);
       return result ?? base.Rewrite(genericTypeParameterReference);
     }
+    /// <summary>
+    /// Rewrites the given specialized field reference.
+    /// </summary>
+    /// <param name="fieldReference"></param>
     public override void RewriteChildren(SpecializedFieldReference fieldReference) {
       fieldReference.ContainingType = this.Rewrite(fieldReference.ContainingType);
       fieldReference.Type = this.Rewrite(fieldReference.Type);
     }
+    /// <summary>
+    /// Rewrites the given specialized method reference.
+    /// </summary>
+    /// <param name="specializedMethodReference"></param>
     public override void RewriteChildren(SpecializedMethodReference specializedMethodReference) {
       specializedMethodReference.ContainingType = this.Rewrite(specializedMethodReference.ContainingType);
       specializedMethodReference.Parameters = this.Rewrite(specializedMethodReference.Parameters);
       specializedMethodReference.Type = this.Rewrite(specializedMethodReference.Type);
     }
+    /// <summary>
+    /// Rewrites the given specialized nested type reference.
+    /// </summary>
+    /// <param name="specializedNestedTypeReference"></param>
     public override void RewriteChildren(SpecializedNestedTypeReference specializedNestedTypeReference) {
       specializedNestedTypeReference.ContainingType = this.Rewrite(specializedNestedTypeReference.ContainingType);
     }
@@ -1450,11 +1523,17 @@ namespace Microsoft.Cci.MutableContracts {
 
   internal class SimpleHostEnvironment : MetadataReaderHost, IContractAwareHost {
     PeReader peReader;
-    public SimpleHostEnvironment(INameTable nameTable, IInternFactory internFactory)
+    internal SimpleHostEnvironment(INameTable nameTable, IInternFactory internFactory)
       : base(nameTable, internFactory, 0, null, false) {
       this.peReader = new PeReader(this);
     }
 
+    /// <summary>
+    /// Returns the unit that is stored at the given location, or a dummy unit if no unit exists at that location or if the unit at that location is not accessible.
+    /// Implementations should do enough caching to avoid repeating work: this method gets called very often for already loaded units as part of the probing logic.
+    /// </summary>
+    /// <param name="location"></param>
+    /// <returns></returns>
     public override IUnit LoadUnitFrom(string location) {
       IUnit result = this.peReader.OpenModule(BinaryDocument.GetBinaryDocumentForFile(location, this));
       this.RegisterAsLatest(result);
@@ -1483,6 +1562,9 @@ namespace Microsoft.Cci.MutableContracts {
     #region Fields
     PeReader peReader;
     readonly List<string> libPaths = new List<string>();
+    /// <summary>
+    /// 
+    /// </summary>
     protected Dictionary<UnitIdentity, IContractExtractor> unit2ContractExtractor = new Dictionary<UnitIdentity, IContractExtractor>();
     List<IContractProviderCallback> callbacks = new List<IContractProviderCallback>();
     private List<IMethodDefinition> methodsBeingExtracted = new List<IMethodDefinition>();
@@ -1655,6 +1737,20 @@ namespace Microsoft.Cci.MutableContracts {
       }
     }
 
+    /// <summary>
+    /// Given the identity of a referenced assembly (but not its location), apply host specific policies for finding the location
+    /// of the referenced assembly.
+    /// Returns an assembly identity that matches the given referenced assembly identity, but which includes a location.
+    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".
+    /// </summary>
+    /// <param name="referringUnit">The unit that is referencing the assembly. It will have been loaded from somewhere and thus
+    /// has a known location, which will typically be probed for the referenced assembly.</param>
+    /// <param name="referencedAssembly">The assembly being referenced. This will not have a location since there is no point in probing
+    /// for the location of an assembly when you already know its location.</param>
+    /// <returns>
+    /// An assembly identity that matches the given referenced assembly identity, but which includes a location.
+    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".
+    /// </returns>
     public override AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
       string pathFromTable;
       var assemblyName = referencedAssembly.Name.Value;
@@ -1933,6 +2029,11 @@ namespace Microsoft.Cci.MutableContracts {
       return true;
     }
 
+    /// <summary>
+    /// Returns the unit that is stored at the given location, or a dummy unit if no unit exists at that location or if the unit at that location is not accessible.
+    /// </summary>
+    /// <param name="location">A path to the file that contains the unit of metdata to load.</param>
+    /// <returns></returns>
     public override IUnit LoadUnitFrom(string location) {
       string pathFromTable;
       var assemblyName = Path.GetFileNameWithoutExtension(location);
@@ -1943,6 +2044,20 @@ namespace Microsoft.Cci.MutableContracts {
       }
     }
 
+    /// <summary>
+    /// Given the identity of a referenced assembly (but not its location), apply host specific policies for finding the location
+    /// of the referenced assembly.
+    /// Returns an assembly identity that matches the given referenced assembly identity, but which includes a location.
+    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".
+    /// </summary>
+    /// <param name="referringUnit">The unit that is referencing the assembly. It will have been loaded from somewhere and thus
+    /// has a known location, which will typically be probed for the referenced assembly.</param>
+    /// <param name="referencedAssembly">The assembly being referenced. This will not have a location since there is no point in probing
+    /// for the location of an assembly when you already know its location.</param>
+    /// <returns>
+    /// An assembly identity that matches the given referenced assembly identity, but which includes a location.
+    /// If the probe failed to find the location of the referenced assembly, the location will be "unknown://location".
+    /// </returns>
     public override AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly) {
       string pathFromTable;
       var assemblyName = referencedAssembly.Name.Value;

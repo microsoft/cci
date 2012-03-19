@@ -81,6 +81,33 @@ namespace Microsoft.Cci.ILToCodeModel {
               }
             }
           }
+        } else {
+          var conversion = assignment.Source as IConversion;
+          if (conversion != null) {
+            binOp = conversion.ValueToConvert as BinaryOperation;
+            if (binOp != null) {
+              var addressDeref = binOp.LeftOperand as IAddressDereference;
+              if (addressDeref != null) {
+                var dupValue = addressDeref.Address as IDupValue;
+                if (dupValue != null && assignment.Target.Definition is IAddressDereference) {
+                  if (binOp is IAddition || binOp is IBitwiseAnd || binOp is IBitwiseOr || binOp is IDivision || binOp is IExclusiveOr ||
+                  binOp is ILeftShift || binOp is IModulus || binOp is IMultiplication || binOp is IRightShift || binOp is ISubtraction) {
+                    binOp.LeftOperand = assignment.Target;
+                    return binOp;
+                  }
+                }
+              } else {
+                var boundExpr = binOp.LeftOperand as IBoundExpression;
+                if (boundExpr != null && boundExpr.Definition == assignment.Target.Definition && boundExpr.Instance is IDupValue) {
+                  if (binOp is IAddition || binOp is IBitwiseAnd || binOp is IBitwiseOr || binOp is IDivision || binOp is IExclusiveOr ||
+                  binOp is ILeftShift || binOp is IModulus || binOp is IMultiplication || binOp is IRightShift || binOp is ISubtraction) {
+                    binOp.LeftOperand = assignment.Target;
+                    return binOp;
+                  }
+                }
+              }
+            }
+          }
         }
       }
       return base.Rewrite(assignment);
@@ -113,7 +140,6 @@ namespace Microsoft.Cci.ILToCodeModel {
               if (assign != null && this.localsToEliminate.Contains(assign.Target.Definition)) continue;
             }
           }          
-          Contract.Assume(j <= i);
           statements[j++] = s;
         }
         if (j < n) statements.RemoveRange(j, n-j);
