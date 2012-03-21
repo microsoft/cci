@@ -32,14 +32,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Metadata\Sources\ControlAndDataFlowGraph\ControlAndDataFlowGraph.csproj">
+      <Project>{2596EFB0-87AE-42CE-89EB-84F35D6350D2}</Project>
+      <Name>ControlAndDataFlowGraph</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Metadata\Sources\ILGenerator\ILGenerator.csproj">
       <Project>{08156C78-403A-4112-AD81-8646AC51CD2F}</Project>
       <Name>ILGenerator</Name>
@@ -72,41 +71,25 @@
       <Project>{304A8B0B-851B-4AA6-A17D-5F87F39C5E5C}</Project>
       <Name>PeWriter</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Metadata\Sources\ReflectionEmitter\ReflectionEmitter.csproj">
+      <Project>{4343021F-2848-4770-A0F5-8C9768F9DA98}</Project>
+      <Name>ReflectionEmitter</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Metadata\Sources\SourceModel\SourceModel.csproj">
       <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
       <Name>SourceModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Metadata\Tests\PEReaderTests\PEReaderTests.csproj">
-      <Project>{A6BABD10-C384-4F9F-93D7-99B935A41719}</Project>
-      <Name>PEReaderTests</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Metadata\Tests\RoundtripTests\RoundtripTests.csproj">
-      <Project>{71B89CE8-CD33-4BC1-A411-4002D367F38D}</Project>
-      <Name>RoundtripTests</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Samples\PeToPe\PeToPeViaCodeModel.csproj">
-      <Project>{47D44A88-A9EE-46E9-8781-5B42A503A493}</Project>
-      <Name>PeToPeViaCodeModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Samples\PeToText\PeToTextViaCodeModel.csproj">
-      <Project>{DDB020B7-6B28-40E8-B3D6-FD998EBDD552}</Project>
-      <Name>PeToTextViaCodeModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Sources\AssertionAdder\AssertionAdder.csproj">
-      <Project>{402F6E0A-9762-400D-94F9-BA5D48A538CD}</Project>
-      <Name>AssertionAdder</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Sources\AstsProjectedAsCodeModel\AstsProjectedAsCodeModel.csproj">
       <Project>{15FF2982-EBD1-45DC-8FDF-4D901236E3D9}</Project>
       <Name>AstsProjectedAsCodeModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Sources\CodeModelToIL\CodeModelToIL.csproj">
-      <Project>{CEB76EA1-A168-49B0-A410-2C4195FEE86F}</Project>
-      <Name>CodeModelToIL</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Sources\CodeModel\CodeModel.csproj">
       <Project>{035FEA7F-0D36-4AE4-B694-EC45191B9AF2}</Project>
       <Name>CodeModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\ContractExtractor\ContractExtractor.csproj">
+      <Project>{0703D916-A881-45E6-A5CD-6BC50E2E30E2}</Project>
+      <Name>ContractExtractor</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Sources\ILToCodeModel\ILToCodeModel.csproj">
       <Project>{27F2A417-B6ED-43AD-A38E-A0B6142216F6}</Project>
@@ -116,24 +99,25 @@
       <Project>{319E150C-8F33-49E7-81CA-30F02F9BA90A}</Project>
       <Name>MutableCodeModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Tests\CodeModelRoundtripTests\CodeModelRoundtripTests.csproj">
-      <Project>{71B89CE8-CD33-4BC1-A411-4002D377F38D}</Project>
-      <Name>CodeModelRoundtripTests</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Tests\CodeModelTestInput\CodeModelTestInput.csproj">
-      <Project>{965AF57D-DCE4-4112-BDC5-64CD63ACA88C}</Project>
-      <Name>CodeModelTestInput</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Tests\CodeModelTests\CodeModelTests.csproj">
-      <Project>{98966A5A-CCE7-4E94-B6D9-34B1B45A19B9}</Project>
-      <Name>CodeModelTests</Name>
+    <ProjectReference Include="..\..\Sources\NewILToCodeModel\NewILToCodeModel.csproj">
+      <Project>{A555D4CB-F16F-4049-A8CF-180B8A05C755}</Project>
+      <Name>NewILToCodeModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Tests\CSharpSourceEmitter\CSharpSourceEmitter.csproj">
       <Project>{A9103DDA-3A93-441A-8326-6EB20518C251}</Project>
       <Name>CSharpSourceEmitter</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="CCI.1.0.0.nuspec">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>nuget pack CCI.1.0.0.nuspec -Symbols
+nuget push CCI.1.0.0.nupkg</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

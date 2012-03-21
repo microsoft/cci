@@ -8,8 +8,8 @@
     <ProjectGuid>{A9103DDA-3A93-441A-8326-6EB20518C251}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CSharpSourceEmitter</RootNamespace>
-    <AssemblyName>CSharpSourceEmitter</AssemblyName>
+    <RootNamespace>Microsoft.Cci</RootNamespace>
+    <AssemblyName>Microsoft.Cci.CSharpSourceEmitter</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <StartupObject>
     </StartupObject>

@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <version>1.0.0</version>
+    <authors>hermanv@microsoft.com</authors>
+    <owners />
+    <licenseUrl>http://cciast.codeplex.com/license</licenseUrl>
+    <projectUrl>http://cciast.codeplex.com/</projectUrl>
+    <frameworkAssemblies>
+      <frameworkAssembly assemblyName="System" targetFramework="" />
+    </frameworkAssemblies>
+    <id>CCI</id>
+    <title>Microsoft Research Common Compiler Infrastructure</title>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>Microsoft Research Common Compiler Infrastructure (CCI) is a set of libraries and an application programming interface (API) that supports some of the functionality that is common to compilers and related programming tools. CCI is used primarily by applications that create, modify or analyze .NET portable executable (PE) and debug (PDB) files.</description>
+    <summary>A set of libraries and an application programming interface (API) that supports some of the functionality that is common to compilers and related programming tools.</summary>
+    <copyright>Copyright (c) Microsoft. All rights reserved.</copyright>
+    <tags>compiler analysis IL metadata</tags>
+  </metadata>
+  <files>
+    <file src="Microsoft.Cci.Analysis.ControlAndDataFlowGraph.dll" target="lib\net40\Microsoft.Cci.Analysis.ControlAndDataFlowGraph.dll" />
+    <file src="Microsoft.Cci.Analysis.ControlAndDataFlowGraph.pdb" target="lib\net40\Microsoft.Cci.Analysis.ControlAndDataFlowGraph.pdb" />
+    <file src="Microsoft.Cci.Analysis.ControlAndDataFlowGraph.xml" target="lib\net40\Microsoft.Cci.Analysis.ControlAndDataFlowGraph.xml" />
+    <file src="Microsoft.Cci.AstsProjectedAsCodeModel.dll" target="lib\net40\Microsoft.Cci.AstsProjectedAsCodeModel.dll" />
+    <file src="Microsoft.Cci.AstsProjectedAsCodeModel.pdb" target="lib\net40\Microsoft.Cci.AstsProjectedAsCodeModel.pdb" />
+    <file src="Microsoft.Cci.AstsProjectedAsCodeModel.xml" target="lib\net40\Microsoft.Cci.AstsProjectedAsCodeModel.xml" />
+    <file src="Microsoft.Cci.CodeModel.dll" target="lib\net40\Microsoft.Cci.CodeModel.dll" />
+    <file src="Microsoft.Cci.CodeModel.pdb" target="lib\net40\Microsoft.Cci.CodeModel.pdb" />
+    <file src="Microsoft.Cci.CodeModel.xml" target="lib\net40\Microsoft.Cci.CodeModel.xml" />
+    <file src="Microsoft.Cci.CodeModelToIL.dll" target="lib\net40\Microsoft.Cci.CodeModelToIL.dll" />
+    <file src="Microsoft.Cci.CodeModelToIL.pdb" target="lib\net40\Microsoft.Cci.CodeModelToIL.pdb" />
+    <file src="Microsoft.Cci.CodeModelToIL.xml" target="lib\net40\Microsoft.Cci.CodeModelToIL.xml" />
+    <file src="Microsoft.Cci.ContractExtractor.dll" target="lib\net40\Microsoft.Cci.ContractExtractor.dll" />
+    <file src="Microsoft.Cci.ContractExtractor.pdb" target="lib\net40\Microsoft.Cci.ContractExtractor.pdb" />
+    <file src="Microsoft.Cci.ContractExtractor.xml" target="lib\net40\Microsoft.Cci.ContractExtractor.xml" />
+    <file src="Microsoft.Cci.CSharpSourceEmitter.dll" target="lib\net40\Microsoft.Cci.CSharpSourceEmitter.dll" />
+    <file src="Microsoft.Cci.CSharpSourceEmitter.pdb" target="lib\net40\Microsoft.Cci.CSharpSourceEmitter.pdb" />
+    <file src="Microsoft.Cci.CSharpSourceEmitter.xml" target="lib\net40\Microsoft.Cci.CSharpSourceEmitter.xml" />
+    <file src="Microsoft.Cci.ILGenerator.dll" target="lib\net40\Microsoft.Cci.ILGenerator.dll" />
+    <file src="Microsoft.Cci.ILGenerator.pdb" target="lib\net40\Microsoft.Cci.ILGenerator.pdb" />
+    <file src="Microsoft.Cci.ILGenerator.xml" target="lib\net40\Microsoft.Cci.ILGenerator.xml" />
+    <file src="Microsoft.Cci.ILToCodeModel.dll" target="lib\net40\Microsoft.Cci.ILToCodeModel.dll" />
+    <file src="Microsoft.Cci.ILToCodeModel.pdb" target="lib\net40\Microsoft.Cci.ILToCodeModel.pdb" />
+    <file src="Microsoft.Cci.ILToCodeModel.XML" target="lib\net40\Microsoft.Cci.ILToCodeModel.xml" />
+    <file src="Microsoft.Cci.MetadataHelper.dll" target="lib\net40\Microsoft.Cci.MetadataHelper.dll" />
+    <file src="Microsoft.Cci.MetadataHelper.pdb" target="lib\net40\Microsoft.Cci.MetadataHelper.pdb" />
+    <file src="Microsoft.Cci.MetadataHelper.xml" target="lib\net40\Microsoft.Cci.MetadataHelper.xml" />
+    <file src="Microsoft.Cci.MetadataModel.dll" target="lib\net40\Microsoft.Cci.MetadataModel.dll" />
+    <file src="Microsoft.Cci.MetadataModel.pdb" target="lib\net40\Microsoft.Cci.MetadataModel.pdb" />
+    <file src="Microsoft.Cci.MetadataModel.xml" target="lib\net40\Microsoft.Cci.MetadataModel.xml" />
+    <file src="Microsoft.Cci.MutableCodeModel.dll" target="lib\net40\Microsoft.Cci.MutableCodeModel.dll" />
+    <file src="Microsoft.Cci.MutableCodeModel.pdb" target="lib\net40\Microsoft.Cci.MutableCodeModel.pdb" />
+    <file src="Microsoft.Cci.MutableCodeModel.xml" target="lib\net40\Microsoft.Cci.MutableCodeModel.xml" />
+    <file src="Microsoft.Cci.MutableMetadataModel.dll" target="lib\net40\Microsoft.Cci.MutableMetadataModel.dll" />
+    <file src="Microsoft.Cci.MutableMetadataModel.pdb" target="lib\net40\Microsoft.Cci.MutableMetadataModel.pdb" />
+    <file src="Microsoft.Cci.MutableMetadataModel.xml" target="lib\net40\Microsoft.Cci.MutableMetadataModel.xml" />
+    <file src="Microsoft.Cci.NewILToCodeModel.dll" target="lib\net40\Microsoft.Cci.NewILToCodeModel.dll" />
+    <file src="Microsoft.Cci.NewILToCodeModel.pdb" target="lib\net40\Microsoft.Cci.NewILToCodeModel.pdb" />
+    <file src="Microsoft.Cci.NewILToCodeModel.xml" target="lib\net40\Microsoft.Cci.NewILToCodeModel.xml" />
+    <file src="Microsoft.Cci.PdbReader.dll" target="lib\net40\Microsoft.Cci.PdbReader.dll" />
+    <file src="Microsoft.Cci.PdbReader.pdb" target="lib\net40\Microsoft.Cci.PdbReader.pdb" />
+    <file src="Microsoft.Cci.PdbReader.xml" target="lib\net40\Microsoft.Cci.PdbReader.xml" />
+    <file src="Microsoft.Cci.PdbWriter.dll" target="lib\net40\Microsoft.Cci.PdbWriter.dll" />
+    <file src="Microsoft.Cci.PdbWriter.pdb" target="lib\net40\Microsoft.Cci.PdbWriter.pdb" />
+    <file src="Microsoft.Cci.PdbWriter.xml" target="lib\net40\Microsoft.Cci.PdbWriter.xml" />
+    <file src="Microsoft.Cci.PeReader.dll" target="lib\net40\Microsoft.Cci.PeReader.dll" />
+    <file src="Microsoft.Cci.PeReader.pdb" target="lib\net40\Microsoft.Cci.PeReader.pdb" />
+    <file src="Microsoft.Cci.PeReader.xml" target="lib\net40\Microsoft.Cci.PeReader.xml" />
+    <file src="Microsoft.Cci.PeWriter.dll" target="lib\net40\Microsoft.Cci.PeWriter.dll" />
+    <file src="Microsoft.Cci.PeWriter.pdb" target="lib\net40\Microsoft.Cci.PeWriter.pdb" />
+    <file src="Microsoft.Cci.PeWriter.xml" target="lib\net40\Microsoft.Cci.PeWriter.xml" />
+    <file src="Microsoft.Cci.ReflectionEmitter.dll" target="lib\net40\Microsoft.Cci.ReflectionEmitter.dll" />
+    <file src="Microsoft.Cci.ReflectionEmitter.pdb" target="lib\net40\Microsoft.Cci.ReflectionEmitter.pdb" />
+    <file src="Microsoft.Cci.ReflectionEmitter.xml" target="lib\net40\Microsoft.Cci.ReflectionEmitter.xml" />
+    <file src="Microsoft.Cci.SourceModel.dll" target="lib\net40\Microsoft.Cci.SourceModel.dll" />
+    <file src="Microsoft.Cci.SourceModel.pdb" target="lib\net40\Microsoft.Cci.SourceModel.pdb" />
+    <file src="Microsoft.Cci.SourceModel.xml" target="lib\net40\Microsoft.Cci.SourceModel.xml" />
+    <file src="..\..\Sources\AstsProjectedAsCodeModel\*.cs" target="src\Ast\Sources\AstsProjectedAsCodeModel" />
+    <file src="..\..\Sources\CodeModel\*.cs" target="src\Ast\Sources\CodeModel" />
+    <file src="..\..\Sources\CodeModelToIL\*.cs" target="src\Ast\Sources\CodeModelToIL" />
+    <file src="..\..\Sources\ContractExtractor\*.cs" target="src\Ast\Sources\ContractExtractor" />
+    <file src="..\..\Sources\MutableCodeModel\*.cs" target="src\Ast\Sources\MutableCodeModel" />
+    <file src="..\..\Sources\NewILToCodeModel\*.cs" target="src\Ast\Sources\NewILToCodeModel" />
+    <file src="..\..\Metadata\Sources\ControlAndDataFlowGraph\*.cs" target="src\Metadata\Sources\ControlAndDataFlowGraph" />
+    <file src="..\..\Metadata\Sources\ILGenerator\*.cs" target="src\Metadata\Sources\ILGenerator" />
+    <file src="..\..\Metadata\Sources\MetadataHelper\*.cs" target="src\Metadata\Sources\MetadataHelper" />
+    <file src="..\..\Metadata\Sources\MetadataModel\*.cs" target="src\Metadata\Sources\MetadataModel" />
+    <file src="..\..\Metadata\Sources\MutableMetadataModel\*.cs" target="src\Metadata\Sources\MutableMetadataModel" />
+    <file src="..\..\Metadata\Sources\PdbReader\*.cs" target="src\Metadata\Sources\PdbReader" />
+    <file src="..\..\Metadata\Sources\PdbWriter\*.cs" target="src\Metadata\Sources\PdbWriter" />
+    <file src="..\..\Metadata\Sources\PeReader\*.cs" target="src\Metadata\Sources\PeReader" />
+    <file src="..\..\Metadata\Sources\PeWriter\*.cs" target="src\Metadata\Sources\PeWriter" />
+    <file src="..\..\Metadata\Sources\ReflectionEmitter\*.cs" target="src\Metadata\Sources\ReflectionEmitter" />
+    <file src="..\..\Metadata\Sources\SourceModel\*.cs" target="src\Metadata\Sources\SourceModel" />
+  </files>
+</package>
