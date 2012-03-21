@@ -8,8 +8,8 @@
     <ProjectGuid>{4343021F-2848-4770-A0F5-8C9768F9DA98}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Microsoft.Cci.ReflectionEmitter</RootNamespace>
-    <AssemblyName>ReflectionEmitter</AssemblyName>
+    <RootNamespace>Microsoft.Cci</RootNamespace>
+    <AssemblyName>Microsoft.Cci.ReflectionEmitter</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SignAssembly>true</SignAssembly>

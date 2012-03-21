@@ -8,8 +8,8 @@
     <ProjectGuid>{2596EFB0-87AE-42CE-89EB-84F35D6350D2}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Microsoft.Cci</RootNamespace>
-    <AssemblyName>CFG and SSE</AssemblyName>
+    <RootNamespace>Microsoft.Cci.Analysis</RootNamespace>
+    <AssemblyName>Microsoft.Cci.Analysis.ControlAndDataFlowGraph</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <CodeContractsAssemblyMode>0</CodeContractsAssemblyMode>
@@ -50,7 +50,7 @@
     <CodeContractsRuntimeCheckingLevel>Full</CodeContractsRuntimeCheckingLevel>
     <CodeContractsReferenceAssembly>Build</CodeContractsReferenceAssembly>
     <CodeContractsAnalysisWarningLevel>2</CodeContractsAnalysisWarningLevel>
-    <DocumentationFile>bin\Debug\CFG and SSE.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\Microsoft.Cci.Analysis.ControlAndDataFlowGraph.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
