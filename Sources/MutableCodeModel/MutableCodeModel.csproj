@@ -89,8 +89,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AssemblyOriginatorKeyFile>..\Common\InterimKey.snk</AssemblyOriginatorKeyFile>
-    <DocumentationFile>
-    </DocumentationFile>
+    <DocumentationFile>bin\Release\Microsoft.Cci.MutableCodeModel.XML</DocumentationFile>
     <CodeAnalysisRuleSet>Migrated rules for MutableCodeModel.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules />
   </PropertyGroup>

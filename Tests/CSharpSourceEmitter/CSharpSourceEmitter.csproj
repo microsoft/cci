@@ -45,6 +45,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\Microsoft.Cci.CSharpSourceEmitter.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AttributeSourceEmitter.cs" />
