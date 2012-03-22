@@ -34,6 +34,9 @@
     <DocumentationFile>bin\Release\Microsoft.Cci.ReflectionEmitter.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\common\include\Version.cs">
+      <Link>Build\Version.cs</Link>
+    </Compile>
     <Compile Include="Emitter.cs" />
     <Compile Include="Mapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

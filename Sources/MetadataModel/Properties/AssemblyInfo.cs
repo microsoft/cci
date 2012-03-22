@@ -18,10 +18,6 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyTitle("Microsoft.Cci.MetadataModel")]
 [assembly: AssemblyDescription("An object model for CLR metadata and IL")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyProduct("CCI")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 

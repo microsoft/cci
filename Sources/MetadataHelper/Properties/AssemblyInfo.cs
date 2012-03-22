@@ -16,12 +16,8 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("MetadataHelper")]
+[assembly: AssemblyTitle("Microsof.Cci.MetadataHelper")]
 [assembly: AssemblyDescription("A collection of convenience methods that are implemented solely in terms of the metadata object model.")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyProduct("CCI")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
