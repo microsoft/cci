@@ -18,10 +18,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Microsoft.Cci.Ast")]
 [assembly: AssemblyDescription(@"A set of base classes that provide common implementations of the functionality
 required by the Microsoft.Cci object model.")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyProduct("CCI")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM componenets.  If you need to access a type in this assembly from 

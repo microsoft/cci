@@ -71,6 +71,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\Metadata\Sources\common\include\Version.cs">
+      <Link>Build\Version.cs</Link>
+    </Compile>
     <Compile Include="ContractChecker.cs" />
     <Compile Include="ContractExtractor.cs" />
     <Compile Include="ContractHelper.cs" />

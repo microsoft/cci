@@ -130,8 +130,8 @@
     <CodeAnalysisRules />
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\common\include\version.cs">
-      <Link>Build\version.cs</Link>
+    <Compile Include="..\..\Metadata\Sources\common\include\Version.cs">
+      <Link>Build\Version.cs</Link>
     </Compile>
     <Compile Include="Contracts.cs" />
     <Compile Include="Copier.cs" />

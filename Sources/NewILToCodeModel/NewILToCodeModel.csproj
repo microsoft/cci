@@ -76,6 +76,9 @@
     <AssemblyOriginatorKeyFile>..\Common\InterimKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\Metadata\Sources\common\include\Version.cs">
+      <Link>Build\Version.cs</Link>
+    </Compile>
     <Compile Include="AnonymousDelegateInserter.cs" />
     <Compile Include="AnonymousDelegateCachingRemover.cs" />
     <Compile Include="ClosureFinder.cs" />

@@ -64,6 +64,9 @@
     <AssemblyOriginatorKeyFile>..\Common\InterimKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\Metadata\Sources\common\include\Version.cs">
+      <Link>Build\Version.cs</Link>
+    </Compile>
     <Compile Include="BlockRemover.cs" />
     <Compile Include="ControlFlowDecompiler.cs" />
     <Compile Include="DeclarationAdder.cs" />
