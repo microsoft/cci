@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>1.0.0</version>
+    <version>1.0.4</version>
     <authors>hermanv@microsoft.com</authors>
     <owners />
     <licenseUrl>http://cciast.codeplex.com/license</licenseUrl>
@@ -39,9 +39,6 @@
     <file src="Microsoft.Cci.ILGenerator.dll" target="lib\net40\Microsoft.Cci.ILGenerator.dll" />
     <file src="Microsoft.Cci.ILGenerator.pdb" target="lib\net40\Microsoft.Cci.ILGenerator.pdb" />
     <file src="Microsoft.Cci.ILGenerator.xml" target="lib\net40\Microsoft.Cci.ILGenerator.xml" />
-    <file src="Microsoft.Cci.ILToCodeModel.dll" target="lib\net40\Microsoft.Cci.ILToCodeModel.dll" />
-    <file src="Microsoft.Cci.ILToCodeModel.pdb" target="lib\net40\Microsoft.Cci.ILToCodeModel.pdb" />
-    <file src="Microsoft.Cci.ILToCodeModel.XML" target="lib\net40\Microsoft.Cci.ILToCodeModel.xml" />
     <file src="Microsoft.Cci.MetadataHelper.dll" target="lib\net40\Microsoft.Cci.MetadataHelper.dll" />
     <file src="Microsoft.Cci.MetadataHelper.pdb" target="lib\net40\Microsoft.Cci.MetadataHelper.pdb" />
     <file src="Microsoft.Cci.MetadataHelper.xml" target="lib\net40\Microsoft.Cci.MetadataHelper.xml" />

@@ -109,14 +109,17 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="CCI.1.0.0.nuspec">
+    <Content Include="CCIAll.nuspec">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>nuget pack CCI.1.0.0.nuspec -Symbols
-nuget push CCI.1.0.0.nupkg</PostBuildEvent>
+    <PostBuildEvent>nuget pack CCIAll.nuspec -Symbols
+nuget push CCI.1.0.3.nupkg</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>del *.* /q</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
