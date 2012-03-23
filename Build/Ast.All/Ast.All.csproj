@@ -116,7 +116,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>nuget pack CCIAll.nuspec -Symbols
-rem nuget push CCI.1.0.5.nupkg</PostBuildEvent>
+nuget push CCI.1.0.7.nupkg</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>del *.* /q</PreBuildEvent>

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>1.0.5</version>
+    <version>1.0.7</version>
     <authors>hermanv@microsoft.com</authors>
     <owners />
     <licenseUrl>http://cciast.codeplex.com/license</licenseUrl>
@@ -79,6 +79,7 @@
     <file src="..\..\Sources\MutableCodeModel\*.cs" target="src\Ast\Sources\MutableCodeModel" />
     <file src="..\..\Sources\MutableCodeModel\Normalizer\*.cs" target="src\Ast\Sources\MutableCodeModel\Normalizer" />
     <file src="..\..\Sources\NewILToCodeModel\*.cs" target="src\Ast\Sources\NewILToCodeModel" />
+    <file src="..\..\Tests\CSharpSourceEmitter\*.cs" target="src\Ast\Tests\CSharpSourceEmitter" />
     <file src="..\..\Metadata\Sources\ControlAndDataFlowGraph\*.cs" target="src\Metadata\Sources\ControlAndDataFlowGraph" />
     <file src="..\..\Metadata\Sources\ILGenerator\*.cs" target="src\Metadata\Sources\ILGenerator" />
     <file src="..\..\Metadata\Sources\MetadataHelper\*.cs" target="src\Metadata\Sources\MetadataHelper" />
