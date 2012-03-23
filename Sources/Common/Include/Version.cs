@@ -12,8 +12,8 @@
 // Generated at 
 
 using System.Reflection;
-[assembly: AssemblyVersion("1.0.5.0")]
-[assembly: AssemblyFileVersion("1.0.5.0")]
+[assembly: AssemblyVersion("1.0.7.0")]
+[assembly: AssemblyFileVersion("1.0.7.0")]
 [assembly: AssemblyCompany("Microsoft Corporation")]
 [assembly: AssemblyTrademark("Microsoft")]
 [assembly: AssemblyCopyright("Copyright (c) Microsoft Corporation. All rights reserved.")]
