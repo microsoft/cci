@@ -329,12 +329,13 @@ namespace Microsoft.Cci.MutableContracts {
       var currentStatementIndex = firstStatementIndex;
 
       if (this.extractingFromACtorInAClass) {
-        // Find the expression statement that is a call to a ctor with its
-        // ThisArgument being either "this" or "base"
+        // Find the expression statement that is a call to a ctor. It must be the
+        // result of a "this" or "base" call because any other object construction
+        // would result in a newobj, not a call.
         int blockIndex; int stmtIndex;
         var foundCtorCall = IndexOf(s => {
           var mc = IsMethodCall(s);
-          return mc != null && mc.MethodToCall.ResolvedMethod.IsConstructor && mc.ThisArgument is IThisReference;
+          return mc != null && mc.MethodToCall.ResolvedMethod.IsConstructor;
         }, linearBlockIndex, 0, // start at first block
           firstStatementIndex, // start at first statement after any local declaration statements
           out blockIndex, out stmtIndex);

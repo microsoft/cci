@@ -162,7 +162,7 @@ namespace Microsoft.Cci.MutableContracts {
           if (spec3 != null) k3 = spec3.UnspecializedVersion.InternedKey;
           IExpression capturedThing = null;
           if (!capturedThings.TryGetValue(k3, out capturedThing)) continue;
-          capturedThings.Add(k, capturedThing);
+          capturedThings[k] = capturedThing;
         }
       }
 
@@ -291,11 +291,14 @@ namespace Microsoft.Cci.MutableContracts {
         // back up to the beginning of the switch-case in which the contracts sit
         var i = indexOfContract-1;
         while (0 <= i && !(statements[i] is ILabeledStatement)) i--;
-        if (i < 0) {
-          // error!!
-          return statements;
+        if (0 <= i) {
+          i += 2; // skip the label and the update to the state machine's state variable
+        } else {
+          // the body was not decompiled into a switch statement, but an if-then-else
+          // so just start at the statement containing the method call to a contract method
+          // and hope that the decompiler was good enough to make this statement be self-contained.
+          i = indexOfContract;
         }
-        i += 2; // skip the label and the update to the state machine's state variable
         while (indexOfContract != -1) {
           var clump = new List<IStatement>();
           for (int j = i; j <= indexOfContract; j++) {
