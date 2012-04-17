@@ -589,6 +589,13 @@ namespace CodeModelTestInput
 
         }
 
+        private void Method33(System.Collections.ICollection c)
+        {
+            System.Console.WriteLine(((c != default(System.Collections.ICollection)) ? c.Count : 32));
+            return;
+
+        }
+
         public Class1()
         {
             this.c = 0;

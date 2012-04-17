@@ -286,7 +286,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           Contract.Assume(!nb.IsLexicalScope); //lexical scopes are assumed to nest cleanly.
           this.SplitBlock(nb, splitOffset, leftStatements, rightStatements);
         } else {
-          rightList.Add(nb);
+          rightStatements.Add(nb);
         }
       }
       Consolidate(leftBlock);

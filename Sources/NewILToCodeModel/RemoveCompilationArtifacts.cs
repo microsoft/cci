@@ -144,6 +144,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
         if (j < n) statements.RemoveRange(j, n-j);
       }
+      PatternReplacer.ReplacePushPopPattern(block, this.host);
     }
 
     public override IExpression Rewrite(IBoundExpression boundExpression) {
@@ -153,6 +154,34 @@ namespace Microsoft.Cci.ILToCodeModel {
         return this.expressionToSubstituteForSingleUseSingleReferenceLocal;
       }
       return base.Rewrite(boundExpression);
+    }
+
+    public override IStatement Rewrite(IConditionalStatement conditionalStatement) {
+      var result = base.Rewrite(conditionalStatement);
+      var mutableConditionalStatement = result as ConditionalStatement;
+      if (mutableConditionalStatement == null) return result;
+      var expressionPushedByTrueBranch = GetPushedExpressionFrom(conditionalStatement.TrueBranch);
+      var expressionPushedByFalseBranch = GetPushedExpressionFrom(conditionalStatement.FalseBranch);
+      if (expressionPushedByFalseBranch != null && expressionPushedByTrueBranch != null) {
+        return new PushStatement() {
+          ValueToPush = new Conditional() {
+            Condition = conditionalStatement.Condition, ResultIfFalse = expressionPushedByFalseBranch, ResultIfTrue = expressionPushedByTrueBranch
+          },
+          Locations = mutableConditionalStatement.Locations
+        };
+      }
+      return result;
+    }
+
+    private static IExpression/*?*/ GetPushedExpressionFrom(IStatement statement) {
+      var pushStatement = statement as PushStatement;
+      if (pushStatement == null) {
+        var blockStatement = statement as BlockStatement;
+        if (blockStatement == null || blockStatement.Statements.Count != 1) return null;
+        pushStatement = blockStatement.Statements[0] as PushStatement;
+      }
+      if (pushStatement == null) return null;
+      return pushStatement.ValueToPush;
     }
 
     public override IExpression Rewrite(ICreateObjectInstance createObjectInstance) {

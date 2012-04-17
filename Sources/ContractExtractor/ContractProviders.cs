@@ -416,6 +416,13 @@ namespace Microsoft.Cci.Contracts {
 
       var unspecializedMethodDefintion = ContractHelper.UninstantiateAndUnspecializeMethodDefinition(methodDefinition);
 
+      if (unspecializedMethodDefintion != methodDefinition) {
+        contract = this.underlyingContractProvider.GetMethodContractFor(unspecializedMethodDefintion);
+        if (contract != null) {
+          return ContractHelper.InstantiateAndSpecializeContract(this.host, contract, methodDefinition, unspecializedMethodDefintion);
+        }
+      }
+
       IMethodBody methodBody = unspecializedMethodDefintion.Body;
 
       if (methodBody is Dummy) {

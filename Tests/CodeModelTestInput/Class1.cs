@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics.Contracts;
+using System.Collections;
 
 namespace CodeModelTestInput {
   public class Class1 {
@@ -263,6 +264,9 @@ namespace CodeModelTestInput {
       a[0] += b[0];
     }
 
+    private void Method33(ICollection c) {
+      Console.WriteLine(c == null ? 32 : c.Count);
+    }
   }
 
   struct SomeStruct {

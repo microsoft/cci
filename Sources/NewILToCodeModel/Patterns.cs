@@ -124,7 +124,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.ReplaceConditionalExpressionPattern(b) ||
       this.ReplacePushPushDupPopPopPattern(b) ||
       this.ReplacePushDupPopPattern(b) ||
-      this.ReplacePushPopPattern(b) ||
+      ReplacePushPopPattern(b, this.host) ||
       this.ReplaceDupPopPattern(b) ||
       this.ReplacePostBinopPattern(b) ||
       this.ReplacePropertyBinopPattern(b) ||
@@ -669,8 +669,10 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     }
 
-    private bool ReplacePushPopPattern(BlockStatement b) {
+    internal static bool ReplacePushPopPattern(BlockStatement b, IMetadataHost host) {
       Contract.Requires(b != null);
+      Contract.Requires(host != null);
+
       bool replacedPattern = false;
       var statements = b.Statements;
       for (int i = 0; i < statements.Count-1; i++) {
@@ -699,7 +701,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (pcc.count > 0) {
             if (pcc.count < numberOfPushesToRemove) numberOfPushesToRemove = pcc.count;
             int firstPushToRemove = j - numberOfPushesToRemove;
-            PopReplacer prr = new PopReplacer(this.host, statements, firstPushToRemove, pcc.count-numberOfPushesToRemove);
+            PopReplacer prr = new PopReplacer(host, statements, firstPushToRemove, pcc.count-numberOfPushesToRemove);
             st.ValueToPush = prr.Rewrite(st.ValueToPush);
             statements.RemoveRange(firstPushToRemove, numberOfPushesToRemove);
             if (pcc.count > numberOfPushesToRemove) return true; //We've consumed all of the pushes and we're done.
@@ -723,7 +725,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           count = pc.count;
         }
         Contract.Assume(i < statements.Count);
-        PopReplacer pr = new PopReplacer(this.host, statements, i, pc.count-count);
+        PopReplacer pr = new PopReplacer(host, statements, i, pc.count-count);
         pr.Rewrite(nextStatement);
         var s = nextStatement as Statement;
         if (s != null)

@@ -15,13 +15,14 @@ using Microsoft.Cci.Contracts;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.MutableCodeModel.Contracts;
 using System.Diagnostics.Contracts;
+using System.Linq;
 
 namespace Microsoft.Cci.MutableContracts {
 
   /// <summary>
   /// Helper class for performing common tasks on mutable contracts
   /// </summary>
-  public class ContractHelper {
+  public static class ContractHelper {
 
     /// <summary>
     /// Accumulates all elements from <paramref name="sourceContract"/> into <paramref name="targetContract"/>
@@ -372,6 +373,30 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     /// <summary>
+    /// Searches for the method used as the implementation for <paramref name="interfaceMethod"/> in the type
+    /// <paramref name="typeDefinition"/>. Note that the method may not be from a type that implements the interface
+    /// itself: it might be inherited from a base class, but matches the signature.
+    /// </summary>
+    /// <param name="typeDefinition">The type to start the search at.</param>
+    /// <param name="interfaceMethod">The interface method whose implementation is being searched for.</param>
+    /// <returns>
+    /// The method definition if found, otherwise a Dummy.
+    /// </returns>
+    public static IMethodDefinition GetMethodImplementingInterfaceMethod(ITypeDefinition typeDefinition, IMethodDefinition interfaceMethod) {
+      Contract.Requires(interfaceMethod != null);
+      Contract.Requires(interfaceMethod.ContainingTypeDefinition.IsInterface);
+      Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+      while (!(typeDefinition is Dummy)) {
+        var m = TypeHelper.GetMethod(typeDefinition, interfaceMethod);
+        if (!(m is Dummy)) return m;
+        foreach (var b in typeDefinition.BaseClasses) {
+          typeDefinition = b.ResolvedType;
+        }
+      }
+      return Dummy.Method;
+    }
+
+    /// <summary>
     /// Returns a type definition for a type referenced in a custom attribute.
     /// </summary>
     /// <param name="typeDefinition">The type definition whose attributes will be searched</param>
@@ -475,6 +500,9 @@ namespace Microsoft.Cci.MutableContracts {
       if (abstractTypeDefinition.IsInterface) {
         foreach (IMethodReference methodReference in MemberHelper.GetExplicitlyOverriddenMethods(methodDefinition)) {
           return methodReference.ResolvedMethod;
+        }
+        foreach (var ifm in ContractHelper.GetAllImplicitlyImplementedInterfaceMethods(methodDefinition)) {
+          return ifm;
         }
       } else if (abstractTypeDefinition.IsAbstract) {
         IMethodDefinition method = MemberHelper.GetImplicitlyOverriddenBaseClassMethod(methodDefinition);
@@ -1245,7 +1273,160 @@ namespace Microsoft.Cci.MutableContracts {
       }
     }
 
+    /// <summary>
+    /// Converts a metadata expression representing a string to the string.
+    /// </summary>
+    [Pure]
+    public static bool AsLiteralString(this IMetadataExpression exp, out string value) {
+      value = null;
+      var c = exp as IMetadataConstant;
+      if (c == null) return false;
+      value = c.Value as string;
+      return value != null;
+    }
+    /// <summary>
+    /// Converts a metadata expression representing a boolean to the boolean.
+    /// </summary>
+    [Pure]
+    public static bool AsLiteralBool(this IMetadataExpression exp, out bool value) {
+      value = false;
+      var c = exp as IMetadataConstant;
+      if (c == null) return false;
+      if (!(c.Value is bool)) return false;
+      value = (bool)c.Value;
+      return true;
+    }
+    /// <summary>
+    /// Returns true iff the attribute is [System.Diagnostics.Contracts.ContractOption].
+    /// When it returns true, then the three out parameters are set to the values
+    /// of the three arguments to the attribute.
+    /// </summary>
+    [Pure]
+    public static bool IsContractOptionAttribute(ICustomAttribute attr, out string category, out string setting, out bool toggle) {
+      category = null; setting = null; toggle = false;
+      if (attr == null) {
+        return false;
+      }
+      if (attr.Type == null) return false;
+      // TODO: Replace string comparison.
+      if (!TypeHelper.GetTypeName(attr.Type).Equals("System.Diagnostics.Contracts.ContractOption")) return false;
+      if (attr.Arguments.Count() != 3) return false;
+      if (!attr.Arguments.ElementAt(0).AsLiteralString(out category)) return false;
+      if (!attr.Arguments.ElementAt(1).AsLiteralString(out setting)) return false;
+      if (!attr.Arguments.ElementAt(2).AsLiteralBool(out toggle)) return false;
+      return true;
+    }
 
+    private enum ThreeValued {
+      False, True, Maybe
+    }
+    [Pure]
+    private static ThreeValued ContractOption(ICustomAttribute attr, string category, string setting) {
+      string c, s;
+      bool value;
+      if (IsContractOptionAttribute(attr, out c, out s, out value)) {
+        if (category.Equals(c, StringComparison.OrdinalIgnoreCase)) {
+          if (setting.Equals(s, StringComparison.OrdinalIgnoreCase)) {
+            if (value) return ThreeValued.True;
+            else return ThreeValued.False;
+          }
+        }
+      }
+      return ThreeValued.Maybe;
+    }
+    [Pure]
+    private static ThreeValued ContractOption(IEnumerable<ICustomAttribute> attributes, string category, string setting) {
+      if (attributes == null) return ThreeValued.Maybe;
+      foreach (var a in attributes) {
+        var tv = ContractOption(a, category, setting);
+        if (tv != ThreeValued.Maybe) return tv;
+      }
+      return ThreeValued.Maybe;
+    }
+    /// <summary>
+    /// Returns the value of the [ContractOption] attribute. Inherited from containing type
+    /// (or module if no containing type).
+    /// </summary>
+    /// <param name="method">
+    /// The method to start the search at.
+    /// </param>
+    /// <param name="category">
+    /// The first argument of the ContractOption attribute.
+    /// E.g., "contract" or "runtime". (Case-insensitive)
+    /// </param>
+    /// <param name="setting">
+    /// The second argument of the ContractOption attribute.
+    /// E.g., "inheritance" or "checking". (Case-insensitive)
+    /// </param>
+    /// <returns>
+    /// True if not found or found and third argument is "true". Otherwise "false".
+    /// </returns>
+    [Pure]
+    public static bool ContractOption(IMethodDefinition method, string category, string setting) {
+      switch (ContractOption(method.Attributes, category, setting)) {
+        case ThreeValued.True: return true;
+        case ThreeValued.False: return false;
+        default: return ContractOption(method.ContainingTypeDefinition, category, setting);
+      }
+    }
+    /// <summary>
+    /// Returns the value of the [ContractOption] attribute. Inherited from containing type
+    /// (or module if no containing type).
+    /// </summary>
+    /// <param name="type">
+    /// The type to start the search at.
+    /// </param>
+    /// <param name="category">
+    /// The first argument of the ContractOption attribute.
+    /// E.g., "contract" or "runtime". (Case-insensitive)
+    /// </param>
+    /// <param name="setting">
+    /// The second argument of the ContractOption attribute.
+    /// E.g., "inheritance" or "checking". (Case-insensitive)
+    /// </param>
+    /// <returns>
+    /// True if not found or found and third argument is "true". Otherwise "false".
+    /// </returns>
+    [Pure]
+    public static bool ContractOption(ITypeDefinition type, string category, string setting) {
+      switch (ContractOption(type.Attributes, category, setting)) {
+        case ThreeValued.True: return true;
+        case ThreeValued.False: return false;
+        default:
+          var ntd = type as INestedTypeDefinition;
+          if (ntd != null) {
+            return ContractOption(ntd.ContainingTypeDefinition, category, setting);
+          } else {
+            return ContractOption(TypeHelper.GetDefiningUnit(type) as IAssembly, category, setting);
+          }
+      }
+    }
+    /// <summary>
+    /// Returns the value of the [ContractOption] attribute. 
+    /// </summary>
+    /// <param name="assembly">
+    /// The assembly containing the attributes to search.
+    /// </param>
+    /// <param name="category">
+    /// The first argument of the ContractOption attribute.
+    /// E.g., "contract" or "runtime". (Case-insensitive)
+    /// </param>
+    /// <param name="setting">
+    /// The second argument of the ContractOption attribute.
+    /// E.g., "inheritance" or "checking". (Case-insensitive)
+    /// </param>
+    /// <returns>
+    /// True if not found or found and third argument is "true". Otherwise "false".
+    /// </returns>
+    [Pure]
+    public static bool ContractOption(IAssembly assembly, string category, string setting) {
+      if (assembly == null) return true; // default
+      var tv = ContractOption(assembly.Attributes, category, setting);
+      switch (tv) {
+        case ThreeValued.False: return false;
+        default: return true;
+      }
+    }
 
   }
   /// <summary>
@@ -1711,7 +1892,7 @@ namespace Microsoft.Cci.MutableContracts {
         this.assemblyNameToPath.Add(fileName, path);
       return true;
     }
-    private Dictionary<string, string> assemblyNameToPath = new Dictionary<string, string>();
+    private Dictionary<string, string> assemblyNameToPath = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
     #endregion
 
     #region MetadataReaderHost Overrides
