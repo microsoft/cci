@@ -43,6 +43,7 @@ namespace ILMutator {
         }
         using (pdbReader) {
           var localScopeProvider = pdbReader == null ? null : new ILGenerator.LocalScopeProvider(pdbReader);
+
           ILMutator mutator = new ILMutator(host, pdbReader);
           module = mutator.Rewrite(module);
 

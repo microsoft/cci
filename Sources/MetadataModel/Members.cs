@@ -2629,6 +2629,10 @@ namespace Microsoft.Cci {
   /// Represents a global field in symbol table.
   /// </summary>
   public interface IGlobalFieldDefinition : IFieldDefinition, INamespaceMember {
+    /// <summary>
+    /// The name of the field.
+    /// </summary>
+    new IName Name { get; }
   }
 
   /// <summary>

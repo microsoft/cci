@@ -2038,6 +2038,14 @@ namespace Microsoft.Cci.MutableCodeModel {
       visitor.Visit((INestedTypeReference)this);
     }
 
+    ushort INamedTypeDefinition.GenericParameterCount {
+      get { return this.GenericParameterCount; }
+    }
+
+    ushort INestedTypeDefinition.GenericParameterCount {
+      get { return this.GenericParameterCount; }
+    }
+
     #region IContainerMember<ITypeDefinition> Members
 
     ITypeDefinition IContainerMember<ITypeDefinition>.Container {

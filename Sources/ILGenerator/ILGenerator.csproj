@@ -110,6 +110,7 @@
       <Link>Build\version.cs</Link>
     </Compile>
     <Compile Include="ILGenerator.cs" />
+    <Compile Include="ILRewriter.cs" />
     <Compile Include="MethodBody.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -153,9 +154,6 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -2398,6 +2398,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       internal IRootUnitNamespace Substitute(IRootUnitNamespace rootUnitNamespace) {
         if (rootUnitNamespace is Dummy) return rootUnitNamespace;
         var mutableCopy = (RootUnitNamespace)this.DefinitionCache[rootUnitNamespace];
+        object copy;
+        if (this.DefinitionCache.TryGetValue(mutableCopy.Unit, out copy))
+          mutableCopy.Unit = (IUnit)copy;
         this.Substitute((UnitNamespace)mutableCopy);
         return mutableCopy;
       }
@@ -2684,9 +2687,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       private void Substitute(UnitNamespace mutableCopy) {
         this.SubstituteElements(mutableCopy.Attributes);
         this.SubstituteElements(mutableCopy.Members);
-        object copy;
-        if (this.DefinitionCache.TryGetValue(mutableCopy.Unit, out copy))
-          mutableCopy.Unit = (IUnit)copy;
       }
 
       private void Substitute(UnitNamespaceReference mutableCopy) {
@@ -6570,6 +6570,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="rootUnitNamespace">The root unit namespace.</param>
     /// <returns></returns>
     protected virtual RootUnitNamespace DeepCopy(RootUnitNamespace rootUnitNamespace) {
+      rootUnitNamespace.Unit = this.GetMutableCopyIfItExists(rootUnitNamespace.Unit);
       this.DeepCopy((UnitNamespace)rootUnitNamespace);
       return rootUnitNamespace;
     }
@@ -6647,7 +6648,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       unitNamespace.Attributes = this.DeepCopy(unitNamespace.Attributes);
       unitNamespace.Locations = this.DeepCopy(unitNamespace.Locations);
       unitNamespace.Members = this.DeepCopy(unitNamespace.Members);
-      unitNamespace.Unit = this.GetMutableCopyIfItExists(unitNamespace.Unit);
       return unitNamespace;
     }
 

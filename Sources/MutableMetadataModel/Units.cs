@@ -84,7 +84,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     /// <summary>
     /// A list of objects representing persisted instances of types that extend System.Attribute. Provides an extensible way to associate metadata
-    /// with this assembly.
+    /// with this assembly. May be null.
     /// </summary>
     /// <value></value>
     public List<ICustomAttribute>/*?*/ AssemblyAttributes {
@@ -126,7 +126,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// Public types defined in other modules making up this assembly and to which other assemblies may refer to via this assembly.
+    /// Public types defined in other modules making up this assembly and to which other assemblies may refer to via this assembly. May be null.
     /// </summary>
     public List<IAliasForType>/*?*/ ExportedTypes {
       get { return this.exportedTypes; }
@@ -147,7 +147,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// A list of the files that constitute the assembly. These are not the source language files that may have been
     /// used to compile the assembly, but the files that contain constituent modules of a multi-module assembly as well
-    /// as any external resources. It corresonds to the File table of the .NET assembly file format.
+    /// as any external resources. It corresonds to the File table of the .NET assembly file format. May be null.
     /// </summary>
     /// <value></value>
     public List<IFileReference>/*?*/ Files {
@@ -194,7 +194,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// A list of the modules that constitute the assembly.
+    /// A list of the modules that constitute the assembly. May be null.
     /// </summary>
     /// <value></value>
     public List<IModule>/*?*/ MemberModules {
@@ -251,7 +251,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     List<byte>/*?*/ publicKey;
 
     /// <summary>
-    /// A list of named byte sequences persisted with the assembly and used during execution, typically via .NET Framework helper classes.
+    /// A list of named byte sequences persisted with the assembly and used during execution, typically via .NET Framework helper classes. May be null.
     /// </summary>
     /// <value></value>
     public List<IResourceReference>/*?*/ Resources {
@@ -262,7 +262,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     /// <summary>
     /// A list of objects representing persisted instances of pairs of security actions and sets of security permissions.
-    /// These apply by default to every method reachable from the module.
+    /// These apply by default to every method reachable from the module. May be null.
     /// </summary>
     /// <value></value>
     public List<ISecurityAttribute>/*?*/ SecurityAttributes {
@@ -1020,7 +1020,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     /// <summary>
     /// A list of objects representing persisted instances of types that extend System.Attribute. Provides an extensible way to associate metadata
-    /// with this module.
+    /// with this module. May be null.
     /// </summary>
     /// <value></value>
     public List<ICustomAttribute>/*?*/ ModuleAttributes {
@@ -1039,7 +1039,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// A list of the modules that are referenced by this module.
+    /// A list of the modules that are referenced by this module. May be null.
     /// </summary>
     /// <value></value>
     public List<IModuleReference>/*?*/ ModuleReferences {
@@ -1262,7 +1262,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// A list of named byte sequences persisted with the module and used during execution, typically via the Win32 API.
     /// A module will define Win32 resources rather than "managed" resources mainly to present metadata to legacy tools
-    /// and not typically use the data in its own code.
+    /// and not typically use the data in its own code. May be null.
     /// </summary>
     /// <value></value>
     public List<IWin32Resource>/*?*/ Win32Resources {
@@ -1591,13 +1591,13 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     /// <summary>
     /// A sequence of PE sections that are not well known to PE readers and thus have not been decompiled into 
-    /// other parts of the Metadata Model. These sections may have meaning to other tools. 
+    /// other parts of the Metadata Model. These sections may have meaning to other tools.  May be null.
     /// </summary>
-    public virtual List<IPESection> UninterpretedSections {
+    public virtual List<IPESection>/*?*/ UninterpretedSections {
       get { return this.uninterpretedSections; }
       set { this.uninterpretedSections = value; }
     }
-    List<IPESection> uninterpretedSections;
+    List<IPESection>/*?*/ uninterpretedSections;
 
     /// <summary>
     /// A collection of well known types that must be part of every target platform and that are fundamental to modeling compiled code.

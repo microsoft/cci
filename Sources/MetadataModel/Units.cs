@@ -435,7 +435,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// A list of aliases for the root namespace of the referenced assembly.
     /// </summary>
-    IEnumerable<IName> Aliases { get; }
+    IEnumerable<IName> Aliases { get; } //TODO: make this go away, it does not exist in metadata.
 
     /// <summary>
     /// The referenced assembly, or Dummy.Assembly if the reference cannot be resolved.

@@ -2222,6 +2222,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return PrimitiveTypeCode.NotPrimitive; }
     }
 
+    ushort INestedTypeDefinition.GenericParameterCount {
+      get { return this.GenericParameterCount; }
+    }
+
     #region ITypeDefinitionMember Members
 
     public ITypeDefinition ContainingTypeDefinition {
@@ -3243,6 +3247,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         }
         return this.genericParamConstraintRowIDEnd - this.genericParamConstraintRowIDStart;
       }
+    }
+
+    ushort INamedTypeDefinition.GenericParameterCount {
+      get { return this.GenericParameterCount; }
     }
 
     public override bool IsReferenceType {

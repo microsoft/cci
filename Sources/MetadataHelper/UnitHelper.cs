@@ -503,7 +503,13 @@ namespace Microsoft.Cci.Immutable {
 
     #endregion
 
-    #region INamespace Members
+    #region INamespaceDefinition Members
+
+    IEnumerable<INamespaceMember> INamespaceDefinition.Members {
+      get {
+        return this.Members;
+      }
+    }
 
     /// <summary>
     /// The name of this namespace definition.

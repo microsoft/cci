@@ -1657,7 +1657,6 @@ namespace Microsoft.Cci {
 
       uint containingTypeReferenceInteredId = this.GetTypeReferenceInternId(containingTypeReference);
       foreach (NestedTypeStore nstTypeStore in this.NestedTypeHashtable.GetValuesFor((uint)typeName.UniqueKey)) {
-        Contract.Assume(nstTypeStore != null);
         if (
           nstTypeStore.ContainingTypeInternedId == containingTypeReferenceInteredId
           && nstTypeStore.GenericParameterCount == genericParameterCount
@@ -1689,7 +1688,6 @@ namespace Microsoft.Cci {
 
       uint elementTypeReferenceInternId = this.GetTypeReferenceInternId(elementTypeReference);
       foreach (MatrixTypeStore matrixTypeStore in this.MatrixTypeHashtable.GetValuesFor(elementTypeReferenceInternId)) {
-        Contract.Assume(matrixTypeStore != null);
         if (matrixTypeStore.Rank == rank && IteratorHelper.EnumerablesAreEqual<ulong>(matrixTypeStore.Sizes, sizes) && IteratorHelper.EnumerablesAreEqual<int>(matrixTypeStore.LowerBounds, lowerBounds))
           return matrixTypeStore.InternedId;
       }
@@ -1815,7 +1813,6 @@ namespace Microsoft.Cci {
       if (parameterTypeInformation.IsModified)
         customModifiersInternId = this.GetCustomModifierListInternId(parameterTypeInformation.CustomModifiers.GetEnumerator());
       foreach (ParameterTypeStore parameterTypeStore in this.ParameterTypeHashtable.GetValuesFor(typeReferenceInternId)) {
-        Contract.Assume(parameterTypeStore != null);
         if (
           parameterTypeStore.IsByReference == parameterTypeInformation.IsByReference
           && parameterTypeStore.CustomModifiersInternId == customModifiersInternId
@@ -1889,7 +1886,6 @@ namespace Microsoft.Cci {
         this.MethodReferenceHashtable.Add(containingTypeReferenceInternedId, methods);
       }
       foreach (SignatureStore signatureStore in methods.GetValuesFor((uint)methodReference.Name.UniqueKey)) {
-        Contract.Assume(signatureStore != null);
         if (
           signatureStore.CallingConvention == methodReference.CallingConvention
           && signatureStore.RequiredParameterListInternedId == requiredParameterTypesInternedId

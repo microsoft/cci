@@ -5625,6 +5625,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public virtual RootUnitNamespace Visit(RootUnitNamespace rootUnitNamespace) {
       if (this.stopTraversal) return rootUnitNamespace;
+      rootUnitNamespace.Unit = this.GetCurrentUnit();
       this.Visit((UnitNamespace)rootUnitNamespace);
       return rootUnitNamespace;
     }
@@ -5738,7 +5739,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       unitNamespace.Attributes = this.Visit(unitNamespace.Attributes);
       unitNamespace.Locations = this.Visit(unitNamespace.Locations);
       unitNamespace.Members = this.Visit(unitNamespace.Members);
-      unitNamespace.Unit = this.GetCurrentUnit();
       this.path.Pop();
       return unitNamespace;
     }
@@ -9096,6 +9096,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <returns></returns>
     public virtual RootUnitNamespace Mutate(RootUnitNamespace rootUnitNamespace) {
       if (this.stopTraversal) return rootUnitNamespace;
+      rootUnitNamespace.Unit = this.GetCurrentUnit();
       this.Mutate((UnitNamespace)rootUnitNamespace);
       return rootUnitNamespace;
     }
@@ -9222,7 +9223,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       unitNamespace.Attributes = this.Mutate(unitNamespace.Attributes);
       unitNamespace.Locations = this.Mutate(unitNamespace.Locations);
       unitNamespace.Members = this.Mutate(unitNamespace.Members);
-      unitNamespace.Unit = this.GetCurrentUnit();
       this.path.Pop();
       return unitNamespace;
     }
