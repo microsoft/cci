@@ -3241,6 +3241,7 @@ namespace Microsoft.Cci {
           this.SerializeNamespaceScopeMetadata(methodBody);
           this.SerializeIteratorLocalScopes(methodBody);
           this.SerializeCustomDebugMetadata();
+          this.SerializeSynchronizationInformation(methodBody);
         }
         this.pdbWriter.CloseMethod(il.Length);
       }
@@ -3339,6 +3340,25 @@ namespace Microsoft.Cci {
       foreach (MemoryStream ms in this.customDebugMetadataForCurrentMethod)
         ms.WriteTo(customMetadata);
       this.pdbWriter.DefineCustomMetadata("MD2", customMetadata.ToArray());
+    }
+
+    private void SerializeSynchronizationInformation(IMethodBody methodBody) {
+      Contract.Requires(methodBody != null);
+
+      var info = this.localScopeProvider.GetSynchronizationInformation(methodBody);
+      if (info == null) return;
+      MemoryStream asyncMethodInfo = new MemoryStream();
+      BinaryWriter cmw = new BinaryWriter(asyncMethodInfo);
+      cmw.WriteUint(this.GetMethodToken(info.Method));
+      cmw.WriteUint(info.GeneratedCatchHandlerOffset);
+      var syncPoints = info.SynchronizationPoints;
+      cmw.WriteUint(IteratorHelper.EnumerableCount(syncPoints));
+      foreach (var syncPoint in syncPoints) {
+        cmw.WriteUint(syncPoint.SynchronizeOffset);
+        cmw.WriteUint(this.GetMethodToken(syncPoint.ContinuationMethod));
+        cmw.WriteUint(syncPoint.ContinuationOffset);
+      }
+      this.pdbWriter.DefineCustomMetadata("asyncMethodInfo", asyncMethodInfo.ToArray());
     }
 
     private void SerializeNamespaceScopeMetadata(IMethodBody methodBody) {

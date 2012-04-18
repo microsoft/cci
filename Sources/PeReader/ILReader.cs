@@ -1157,6 +1157,15 @@ namespace Microsoft.Cci.MetadataReader {
       get { return this.method.PEFileToObjectModel.Module.ModuleIdentity.Name; }
     }
 
+    /// <summary>
+    /// Returns a token decoder for the method associated with this document.
+    /// </summary>
+    public ITokenDecoder TokenDecoder {
+      get {
+        return this.method;
+      }
+    }
+
   }
 
   /// <summary>

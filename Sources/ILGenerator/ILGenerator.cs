@@ -40,18 +40,22 @@ namespace Microsoft.Cci {
     List<ILGeneratorScope> scopes = new List<ILGeneratorScope>();
     Stack<ILGeneratorScope> scopeStack = new Stack<ILGeneratorScope>();
     Stack<TryBody> tryBodyStack = new Stack<TryBody>();
+    List<SynchronizationPoint>/*?*/ synchronizationPoints;
+    IMethodDefinition/*?*/ asyncMethodDefinition;
 
     /// <summary>
     /// Allocates an object that helps with the generation of Microsoft intermediate language (MSIL) instructions corresponding to a method body.
     /// </summary>
     /// <param name="host">Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.</param>
     /// <param name="methodDefinition">The method to generate MSIL for.</param>
-    public ILGenerator(IMetadataHost host, IMethodDefinition methodDefinition) {
+    /// <param name="asyncMethodDefinition">The async method for which this generator will generate the "MoveNext" method of its state class.</param>
+    public ILGenerator(IMetadataHost host, IMethodDefinition methodDefinition, IMethodDefinition/*?*/ asyncMethodDefinition = null) {
       Contract.Requires(host != null);
       Contract.Requires(methodDefinition != null);
 
       this.host = host;
       this.method = methodDefinition;
+      this.asyncMethodDefinition = asyncMethodDefinition;
     }
 
     [ContractInvariantMethod]
@@ -675,6 +679,30 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Marks the offset of the next IL operation as the first of a sequence of instructions that will cause the thread executing the "MoveNext" method
+    /// of the state class of an async method to await the completion of a call to another async method.
+    /// </summary>
+    /// <param name="continuationMethod">The helper method that will execute once the execution of the current async method resumes.
+    /// Usually this will be the same method as the one for which this generator is generating a body, but this is not required.</param>
+    /// <param name="continuationLabel">The label inside the continuation method where execution will resume. It should be marked by the
+    /// time this generator is being used to construct a method body.</param>
+    public void MarkSynchronizationPoint(IMethodDefinition continuationMethod, ILGeneratorLabel continuationLabel) {
+      Contract.Requires(continuationMethod != null);
+      Contract.Requires(continuationLabel != null);
+
+      var syncPoints = this.synchronizationPoints;
+      if (syncPoints == null) this.synchronizationPoints = syncPoints = new List<SynchronizationPoint>();
+      var labelForCurrentOffset = new ILGeneratorLabel();
+      this.MarkLabel(labelForCurrentOffset);
+      syncPoints.Add(
+        new SynchronizationPoint() {
+          startOfSynchronize = labelForCurrentOffset,
+          continuationMethod = continuationMethod,
+          startOfContinuation = continuationLabel
+        });
+    }
+
+    /// <summary>
     /// The method for which this generator helps to produce a method body.
     /// </summary>
     public IMethodDefinition Method {
@@ -824,6 +852,26 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns an object that describes where synchronization points occur in the IL operations of the "MoveNext" method of the state class of
+    /// an asynchronous method. This returns null unless the generator has been supplied with an non null value for asyncMethodDefinition parameter
+    /// during construction.
+    /// </summary>
+    public ISynchronizationInformation/*?*/ GetSynchronizationInformation() {
+      if (this.asyncMethodDefinition == null) return null;
+      if (this.synchronizationPoints != null) this.synchronizationPoints.TrimExcess();
+      uint generatedCatchHandlerOffset = uint.MaxValue;
+      if (this.asyncMethodDefinition.Type.TypeCode == PrimitiveTypeCode.Void && this.handlers.Count > 0) {
+        Contract.Assume(this.handlers[0] != null && this.handlers[0].HandlerStart != null);
+        generatedCatchHandlerOffset = this.handlers[0].HandlerStart.Offset;
+      }
+      return new SynchronizationInformation() {
+        method = this.asyncMethodDefinition,
+        generatedCatchHandlerOffset = generatedCatchHandlerOffset,
+        synchronizationPoints = this.synchronizationPoints == null ? Enumerable<ISynchronizationPoint>.Empty : this.synchronizationPoints.AsReadOnly()
+      };
+    }
+
+    /// <summary>
     /// An object that can provide information about the local scopes of a method.
     /// </summary>
     public class LocalScopeProvider : ILocalScopeProvider {
@@ -854,12 +902,10 @@ namespace Microsoft.Cci {
       /// to the local stored in field &lt;localName&gt;x_i of the class used to store the local values in between
       /// calls to MoveNext.
       /// </summary>
-      /// <param name="methodBody"></param>
-      /// <returns></returns>
       public IEnumerable<ILocalScope> GetIteratorScopes(IMethodBody methodBody) {
         var sourceMethodBody = methodBody as ILGeneratorMethodBody;
         if (sourceMethodBody == null) return this.originalLocalScopeProvider.GetIteratorScopes(methodBody);
-        return Enumerable<ILocalScope>.Empty;
+        return sourceMethodBody.GetIteratorScopes()??Enumerable<ILocalScope>.Empty;
       }
 
       /// <summary>
@@ -879,8 +925,7 @@ namespace Microsoft.Cci {
       /// component in the namespace type name. For istance namespace type x.y.z will have two namespace scopes, the first is for the x and the second
       /// is for the y.
       /// </summary>
-      /// <param name="methodBody"></param>
-      /// <returns></returns>
+      [ContractVerification(false)]
       public IEnumerable<INamespaceScope> GetNamespaceScopes(IMethodBody methodBody) {
         var sourceMethodBody = methodBody as ILGeneratorMethodBody;
         if (sourceMethodBody == null) return this.originalLocalScopeProvider.GetNamespaceScopes(methodBody);
@@ -890,8 +935,6 @@ namespace Microsoft.Cci {
       /// <summary>
       /// Returns zero or more local constant definitions that are local to the given scope.
       /// </summary>
-      /// <param name="scope"></param>
-      /// <returns></returns>
       public IEnumerable<ILocalDefinition> GetConstantsInScope(ILocalScope scope) {
         var generatorScope = scope as ILGeneratorScope;
         if (generatorScope == null) return this.originalLocalScopeProvider.GetConstantsInScope(scope);
@@ -912,14 +955,22 @@ namespace Microsoft.Cci {
       /// <summary>
       /// Returns true if the method body is an iterator.
       /// </summary>
-      /// <param name="methodBody"></param>
-      /// <returns></returns>
       public bool IsIterator(IMethodBody methodBody) {
-        var sourceMethodBody = methodBody as ILGeneratorMethodBody;
-        if (sourceMethodBody == null) return this.originalLocalScopeProvider.IsIterator(methodBody);
-        return false;
+        var generatorMethodBody = methodBody as ILGeneratorMethodBody;
+        if (generatorMethodBody == null) return this.originalLocalScopeProvider.IsIterator(methodBody);
+        return generatorMethodBody.GetIteratorScopes() != null;
       }
 
+      /// <summary>
+      /// If the given method body is the "MoveNext" method of the state class of an asynchronous method, the returned
+      /// object describes where synchronization points occur in the IL operations of the "MoveNext" method. Otherwise
+      /// the result is null.
+      /// </summary>
+      public ISynchronizationInformation/*?*/ GetSynchronizationInformation(IMethodBody methodBody) {
+        var generatorMethodBody = methodBody as ILGeneratorMethodBody;
+        if (generatorMethodBody == null) return this.originalLocalScopeProvider.GetSynchronizationInformation(methodBody);
+        return generatorMethodBody.GetSynchronizationInformation();
+      }
       #endregion
     }
 
@@ -1350,6 +1401,52 @@ namespace Microsoft.Cci.ILGeneratorImplementation {
     }
     internal object/*?*/ value;
 
+  }
+
+  internal class SynchronizationInformation : ISynchronizationInformation {
+
+    internal IMethodDefinition method;
+    internal uint generatedCatchHandlerOffset;
+    internal IEnumerable<ISynchronizationPoint> synchronizationPoints;
+
+    #region ISynchronizationInformation Members
+
+    public IMethodDefinition Method {
+      get { return this.method; }
+    }
+
+    public uint GeneratedCatchHandlerOffset {
+      get { return this.generatedCatchHandlerOffset; }
+    }
+
+    public IEnumerable<ISynchronizationPoint> SynchronizationPoints {
+      get { return this.synchronizationPoints; }
+    }
+
+    #endregion
+  }
+
+  internal class SynchronizationPoint : ISynchronizationPoint {
+
+    internal ILGeneratorLabel startOfSynchronize;
+    internal ILGeneratorLabel startOfContinuation;
+    internal IMethodDefinition continuationMethod;
+
+    #region ISynchronizationPoint Members
+
+    public uint SynchronizeOffset {
+      get { return this.startOfSynchronize.Offset; }
+    }
+
+    public IMethodDefinition ContinuationMethod {
+      get { return this.continuationMethod; }
+    }
+
+    public uint ContinuationOffset {
+      get { return this.startOfContinuation.Offset; }
+    }
+
+    #endregion
   }
 
   /// <summary>

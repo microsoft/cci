@@ -259,6 +259,17 @@ namespace Microsoft.Cci {
       return provider.IsIterator(methodBody);
     }
 
+    /// <summary>
+    /// If the given method body is the "MoveNext" method of the state class of an asynchronous method, the returned
+    /// object describes where synchronization points occur in the IL operations of the "MoveNext" method. Otherwise
+    /// the result is null.
+    /// </summary>
+    public ISynchronizationInformation/*?*/ GetSynchronizationInformation(IMethodBody methodBody) {
+      var provider = this.GetProvider(methodBody.MethodDefinition);
+      if (provider == null) return null;
+      return provider.GetSynchronizationInformation(methodBody);
+    }
+
     #endregion
 
     #region IDisposable Members

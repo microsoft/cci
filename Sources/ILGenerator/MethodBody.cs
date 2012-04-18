@@ -44,11 +44,13 @@ namespace Microsoft.Cci {
       this.operationExceptionInformation = generator.GetOperationExceptionInformation();
       this.operations = generator.GetOperations();
       this.privateHelperTypes = privateHelperTypes;
-      this.generatorScopes = generator.GetLocalScopes();
+      this.generatorIteratorScopes = generator.GetIteratorScopes();
+      this.generatorLocalScopes = generator.GetLocalScopes();
       this.localVariables = localVariables;
       this.maxStack = maxStack;
       this.methodDefinition = methodDefinition;
       this.size = generator.CurrentOffset;
+      this.synchronizationInformation = generator.GetSynchronizationInformation();
     }
 
     /// <summary>
@@ -58,13 +60,25 @@ namespace Microsoft.Cci {
       visitor.Visit(this);
     }
 
-    readonly IEnumerable<ILGeneratorScope> generatorScopes;
+    readonly IEnumerable<ILocalScope>/*?*/ generatorIteratorScopes;
+    readonly IEnumerable<ILGeneratorScope> generatorLocalScopes;
+    readonly ISynchronizationInformation/*?*/ synchronizationInformation;
+
+    /// <summary>
+    /// Returns a block scope associated with each local variable in the iterator for which this is the generator for its MoveNext method.
+    /// May return null.
+    /// </summary>
+    /// <remarks>The PDB file model seems to be that scopes are duplicated if necessary so that there is a separate scope for each
+    /// local variable in the original iterator and the mapping from local to scope is done by position.</remarks>
+    public IEnumerable<ILocalScope>/*?*/ GetIteratorScopes() {
+      return this.generatorIteratorScopes;
+    }
 
     /// <summary>
     /// Returns zero or more local (block) scopes into which the CLR IL operations of this method body is organized.
     /// </summary>
     public IEnumerable<ILocalScope> GetLocalScopes() {
-      foreach (var generatorScope in this.generatorScopes) {
+      foreach (var generatorScope in this.generatorLocalScopes) {
         if (generatorScope.locals.Count > 0)
           yield return generatorScope;
       }
@@ -77,10 +91,18 @@ namespace Microsoft.Cci {
     /// is for the y.
     /// </summary>
     public IEnumerable<INamespaceScope> GetNamespaceScopes() {
-      foreach (var generatorScope in this.generatorScopes) {
+      foreach (var generatorScope in this.generatorLocalScopes) {
         if (generatorScope.usedNamespaces.Count > 0)
           yield return generatorScope;
       }
+    }
+
+    /// <summary>
+    /// Returns an object that describes where synchronization points occur in the IL operations of the "MoveNext" method of
+    /// the state class of an async method. Returns null otherwise.
+    /// </summary>
+    public ISynchronizationInformation/*?*/ GetSynchronizationInformation() {
+      return this.synchronizationInformation;
     }
 
     /// <summary>
@@ -217,6 +239,15 @@ namespace Microsoft.Cci {
     /// </summary>
     public virtual bool IsIterator(IMethodBody methodBody) {
       return false;
+    }
+
+    /// <summary>
+    /// If the given method body is the "MoveNext" method of the state class of an asynchronous method, the returned
+    /// object describes where synchronization points occur in the IL operations of the "MoveNext" method. Otherwise
+    /// the result is null.
+    /// </summary>
+    public ISynchronizationInformation/*?*/ GetSynchronizationInformation(IMethodBody methodBody) {
+      return null;
     }
 
     /// <summary>

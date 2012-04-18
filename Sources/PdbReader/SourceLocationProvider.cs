@@ -281,6 +281,17 @@ namespace Microsoft.Cci {
       return 0;
     }
 
+    private static ITokenDecoder/*?*/ GetTokenDecoderFor(IMethodBody methodBody) {
+      foreach (ILocation location in methodBody.MethodDefinition.Locations) {
+        IILLocation/*?*/ mbLocation = location as IILLocation;
+        if (mbLocation != null) {
+          var doc = mbLocation.Document as MethodBodyDocument;
+          if (doc != null) return doc.TokenDecoder;
+        }
+      }
+      return null;
+    }
+
     private PdbFunction GetPdbFunctionFor(ILocalDefinition localDefinition) {
       PdbFunction/*?*/ result = null;
       foreach (ILocation location in localDefinition.Locations) {
@@ -400,6 +411,27 @@ namespace Microsoft.Cci {
     public bool IsIterator(IMethodBody methodBody) {
       PdbFunction/*?*/ pdbFunction = this.GetPdbFunctionFor(methodBody);
       return pdbFunction != null && pdbFunction.iteratorClass != null;
+    }
+
+    /// <summary>
+    /// If the given method body is the "MoveNext" method of the state class of an asynchronous method, the returned
+    /// object describes where synchronization points occur in the IL operations of the "MoveNext" method. Otherwise
+    /// the result is null.
+    /// </summary>
+    public ISynchronizationInformation/*?*/ GetSynchronizationInformation(IMethodBody methodBody) {
+      PdbFunction/*?*/ pdbFunction = this.GetPdbFunctionFor(methodBody);
+      if (pdbFunction == null) return null;
+      var info = pdbFunction.synchronizationInformation;
+      if (info == null) return null;
+      var decoder = GetTokenDecoderFor(methodBody);
+      if (decoder != null) {
+        info.method = (decoder.GetObjectForToken(info.kickoffMethodToken) as IMethodDefinition)??Dummy.MethodDefinition;
+        if (info.synchronizationPoints != null) {
+          foreach (var synchPoint in info.synchronizationPoints)
+            synchPoint.continuationMethod = (decoder.GetObjectForToken(synchPoint.continuationMethodToken) as IMethodDefinition)??Dummy.MethodDefinition;
+        }
+      }
+      return info;
     }
 
     /// <summary>
