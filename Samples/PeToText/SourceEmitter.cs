@@ -44,13 +44,15 @@ namespace PeToText {
       else
         this.PrintLocals(methodBody.LocalVariables);
 
-      int currentIndex = -1; // a number no index matches
+      int currentLine = -1; // a number no index matches
+      int currentCol = -1;
       foreach (IOperation operation in methodBody.Operations) {
         if (this.pdbReader != null) {
           foreach (IPrimarySourceLocation psloc in this.pdbReader.GetPrimarySourceLocationsFor(operation.Location)) {
-            if (psloc.StartIndex != currentIndex) {
+            if (psloc.StartLine != currentLine || psloc.StartColumn != currentCol) {
               this.PrintSourceLocation(psloc);
-              currentIndex = psloc.StartIndex;
+              currentLine = psloc.StartIndex;
+              currentCol = psloc.StartColumn;
             }
           }
         }
