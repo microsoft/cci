@@ -127,7 +127,7 @@ namespace ILMutator {
     }
 
     Dictionary<uint, ILGeneratorLabel> offset2Label;
-    protected virtual ILGeneratorLabel GetLabelFor(uint offset) {
+    private ILGeneratorLabel GetLabelFor(uint offset) {
 
       ILGeneratorLabel label;
       var result = this.offset2Label.TryGetValue(offset, out label);
@@ -151,7 +151,6 @@ namespace ILMutator {
           foreach (var uns in ns.UsedNamespaces)
             generator.UseNamespace(uns.NamespaceName.Value);
         }
-
       }
 
       this.currentGenerator = generator;
@@ -160,23 +159,14 @@ namespace ILMutator {
 
       var methodName = MemberHelper.GetMemberSignature(methodBody.MethodDefinition, NameFormattingOptions.SmartTypeName);
 
-      #region Record all offsets that appear as part of an exception handler
-      Dictionary<uint, bool> offsetsUsedInExceptionInformation = new Dictionary<uint, bool>();
-      foreach (var exceptionInfo in methodBody.OperationExceptionInformation ?? Enumerable<IOperationExceptionInformation>.Empty) {
-        uint x = exceptionInfo.TryStartOffset;
-        if (!offsetsUsedInExceptionInformation.ContainsKey(x)) offsetsUsedInExceptionInformation.Add(x, true);
-        x = exceptionInfo.TryEndOffset;
-        if (!offsetsUsedInExceptionInformation.ContainsKey(x)) offsetsUsedInExceptionInformation.Add(x, true);
-        x = exceptionInfo.HandlerStartOffset;
-        if (!offsetsUsedInExceptionInformation.ContainsKey(x)) offsetsUsedInExceptionInformation.Add(x, true);
-        x = exceptionInfo.HandlerEndOffset;
-        if (!offsetsUsedInExceptionInformation.ContainsKey(x)) offsetsUsedInExceptionInformation.Add(x, true);
-        if (exceptionInfo.HandlerKind == HandlerKind.Filter) {
-          x = exceptionInfo.FilterDecisionStartOffset;
-          if (!offsetsUsedInExceptionInformation.ContainsKey(x)) offsetsUsedInExceptionInformation.Add(x, true);
-        }
+      #region Record exception handler information
+      foreach (var exceptionInfo in methodBody.OperationExceptionInformation) {
+        generator.AddExceptionHandlerInformation(exceptionInfo.HandlerKind, exceptionInfo.ExceptionType,
+          this.GetLabelFor(exceptionInfo.TryStartOffset), this.GetLabelFor(exceptionInfo.TryEndOffset),
+          this.GetLabelFor(exceptionInfo.HandlerStartOffset), this.GetLabelFor(exceptionInfo.HandlerEndOffset),
+          exceptionInfo.HandlerKind == HandlerKind.Filter ? this.GetLabelFor(exceptionInfo.FilterDecisionStartOffset) : null);
       }
-      #endregion Record all offsets that appear as part of an exception handler
+      #endregion Record exception handler information
 
       #region Pass 1: Make a label for each branch target
       for (int i = 0; i < count; i++) {
@@ -226,13 +216,6 @@ namespace ILMutator {
         }
       }
       #endregion Pass 1: Make a label for each branch target
-
-      foreach (var exceptionInfo in methodBody.OperationExceptionInformation) {
-        generator.AddExceptionHandlerInformation(exceptionInfo.HandlerKind, exceptionInfo.ExceptionType,
-          this.GetLabelFor(exceptionInfo.TryStartOffset), this.GetLabelFor(exceptionInfo.TryEndOffset),
-          this.GetLabelFor(exceptionInfo.HandlerStartOffset), this.GetLabelFor(exceptionInfo.HandlerEndOffset),
-          exceptionInfo.HandlerKind == HandlerKind.Filter ? this.GetLabelFor(exceptionInfo.FilterDecisionStartOffset) : null);
-      }
 
       #region Pass 2: Emit each operation, along with labels
       for (int i = 0; i < count; i++) {
@@ -293,14 +276,17 @@ namespace ILMutator {
           case OperationCode.Stloc_2:
           case OperationCode.Stloc_3:
             generator.Emit(op.OperationCode);
-            EmitStoreLocal(generator, op);
+            var local = (ILocalDefinition)op.Value;
+            string localName;
+            if (TryGetLocalName(local, out localName))
+              this.CallWriteLine(generator, localName);            
             break;
           case OperationCode.Stloc:
           case OperationCode.Stloc_S:
             generator.Emit(op.OperationCode, op.Value);
-            EmitStoreLocal(generator, op);
-
-
+            local = (ILocalDefinition)op.Value;
+            if (TryGetLocalName(local, out localName))
+              this.CallWriteLine(generator, localName);            
             break;
           default:
             if (op.Value == null) {
@@ -420,77 +406,17 @@ namespace ILMutator {
       }
     }
 
-    private void EmitStoreLocal(ILGenerator generator, IOperation op) {
-      #region Emit: call Console.WriteLine("foo");
-      //generator.Emit(OperationCode.Ldstr, "foo");
-      //generator.Emit(OperationCode.Call, this.consoleDotWriteLine);
-      #endregion Emit: call Console.WriteLine("foo");
-
-      string localName;
-      switch (op.OperationCode) {
-        case OperationCode.Stloc:
-        case OperationCode.Stloc_S:
-          ILocalDefinition loc = op.Value as ILocalDefinition;
-          if (loc == null) throw new ILMutatorException("Stloc operation found without a valid operand");
-          if (TryGetLocalName(loc, out localName)) {
-            generator.Emit(OperationCode.Ldstr, localName);
-            generator.Emit(OperationCode.Call, this.consoleDotWriteLine);
-          }
-          break;
-
-        case OperationCode.Stloc_0:
-          if (this.currentLocals.Count < 1)
-            throw new ILMutatorException("stloc.0 operation found but no corresponding local in method body");
-          if (TryGetLocalName(this.currentLocals[0], out localName)) {
-            generator.Emit(OperationCode.Ldstr, localName);
-            generator.Emit(OperationCode.Call, this.consoleDotWriteLine);
-          }
-          break;
-
-        case OperationCode.Stloc_1:
-          if (this.currentLocals.Count < 2)
-            throw new ILMutatorException("stloc.1 operation found but no corresponding local in method body");
-          if (TryGetLocalName(this.currentLocals[1], out localName)) {
-            generator.Emit(OperationCode.Ldstr, localName);
-            generator.Emit(OperationCode.Call, this.consoleDotWriteLine);
-          }
-          break;
-
-        case OperationCode.Stloc_2:
-          if (this.currentLocals.Count < 3)
-            throw new ILMutatorException("stloc.2 operation found but no corresponding local in method body");
-          if (TryGetLocalName(this.currentLocals[2], out localName)) {
-            generator.Emit(OperationCode.Ldstr, localName);
-            generator.Emit(OperationCode.Call, this.consoleDotWriteLine);
-          }
-          break;
-
-        case OperationCode.Stloc_3:
-          if (this.currentLocals.Count < 4)
-            throw new ILMutatorException("stloc.3 operation found but no corresponding local in method body");
-          if (TryGetLocalName(this.currentLocals[3], out localName)) {
-            generator.Emit(OperationCode.Ldstr, localName);
-            generator.Emit(OperationCode.Call, this.consoleDotWriteLine);
-          }
-          break;
-
-        default:
-          throw new ILMutatorException("Should never get here: switch statement was meant to be exhaustive");
-      }
+    private void CallWriteLine(ILGenerator generator, string localName) {
+      generator.Emit(OperationCode.Ldstr, localName);
+      generator.Emit(OperationCode.Call, this.consoleDotWriteLine);
     }
 
     private bool TryGetLocalName(ILocalDefinition local, out string localNameFromPDB) {
-      string localName = local.Name.Value;
+      bool isCompilerGenerated = true;
       localNameFromPDB = null;
-      if (this.pdbReader != null) {
-        foreach (IPrimarySourceLocation psloc in this.pdbReader.GetPrimarySourceLocationsForDefinitionOf(local)) {
-          if (psloc.Source.Length > 0) {
-            localNameFromPDB = psloc.Source;
-            break;
-          }
-        }
-      }
-      return localNameFromPDB != null;
+      if (this.pdbReader != null)
+        localNameFromPDB = this.pdbReader.GetSourceNameFor(local, out isCompilerGenerated);
+      return !isCompilerGenerated && !string.IsNullOrEmpty(localNameFromPDB);
     }
 
     /// <summary>
