@@ -54,6 +54,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="assembly">The root of the Metadata Model to be converted to a Code Model.</param>
     /// <param name="pdbReader">An object that can map offsets in an IL stream to source locations and block scopes. May be null.</param>
     /// <param name="options">Set of options that control decompilation.</param>
+    [ContractVerification(false)]
     public static Assembly GetCodeModelFromMetadataModel(IMetadataHost host, IAssembly assembly, PdbReader/*?*/ pdbReader, DecompilerOptions options = DecompilerOptions.None) {
       Contract.Requires(host != null);
       Contract.Requires(assembly != null);
@@ -72,6 +73,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="module">The root of the Metadata Model to be converted to a Code Model.</param>
     /// <param name="pdbReader">An object that can map offsets in an IL stream to source locations and block scopes. May be null.</param>
     /// <param name="options">Set of options that control decompilation.</param>
+    [ContractVerification(false)]
     public static Module GetCodeModelFromMetadataModel(IMetadataHost host, IModule module, PdbReader/*?*/ pdbReader, DecompilerOptions options = DecompilerOptions.None) {
       Contract.Requires(host != null);
       Contract.Requires(module != null);
@@ -107,6 +109,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="sourceLocationProvider">An object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. May be null.</param>
     /// <param name="localScopeProvider">An object that can provide information about the local scopes of a method. May be null.</param>
     /// <param name="options">Set of options that control decompilation.</param>
+    [ContractVerification(false)]
     private static Module GetCodeModelFromMetadataModelHelper(IMetadataHost host, IModule module,
       ISourceLocationProvider/*?*/ sourceLocationProvider, ILocalScopeProvider/*?*/ localScopeProvider, DecompilerOptions options) {
       Contract.Requires(host != null);
@@ -223,6 +226,17 @@ namespace Microsoft.Cci.ILToCodeModel {
         var sourceMethodBody = methodBody as Microsoft.Cci.MutableCodeModel.SourceMethodBody;
         if (sourceMethodBody == null) return this.originalLocalScopeProvider.IsIterator(methodBody);
         return sourceMethodBody.IsIterator;
+      }
+
+      /// <summary>
+      /// If the given method body is the "MoveNext" method of the state class of an asynchronous method, the returned
+      /// object describes where synchronization points occur in the IL operations of the "MoveNext" method. Otherwise
+      /// the result is null.
+      /// </summary>
+      public ISynchronizationInformation/*?*/ GetSynchronizationInformation(IMethodBody methodBody) {
+        var sourceMethodBody = methodBody as Microsoft.Cci.MutableCodeModel.SourceMethodBody;
+        if (sourceMethodBody == null) return this.originalLocalScopeProvider.GetSynchronizationInformation(methodBody);
+        return null;
       }
 
       #endregion

@@ -3404,6 +3404,14 @@ namespace Microsoft.Cci.Ast {
       return mbody.IsIteratorBody;
     }
 
+    /// <summary>
+    /// If the given method body is the "MoveNext" method of the state class of an asynchronous method, the returned
+    /// object describes where synchronization points occur in the IL operations of the "MoveNext" method. Otherwise
+    /// the result is null.
+    /// </summary>
+    public ISynchronizationInformation/*?*/ GetSynchronizationInformation(IMethodBody methodBody) {
+      return null;
+    }
   }
 
   /// <summary>

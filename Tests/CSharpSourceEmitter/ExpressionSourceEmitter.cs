@@ -100,9 +100,17 @@ namespace CSharpSourceEmitter {
 
     public override void TraverseChildren(IAddressDereference addressDereference) {
       if (addressDereference.Address.Type is IPointerTypeReference || addressDereference.Address.Type.TypeCode == PrimitiveTypeCode.IntPtr ||
-        addressDereference.Address is IDupValue || addressDereference.Address is IPopValue)
+        addressDereference.Address.Type.TypeCode == PrimitiveTypeCode.UIntPtr ||
+        addressDereference.Address is IDupValue || addressDereference.Address is IPopValue) {
         this.sourceEmitterOutput.Write("*");
-      else {
+        var conv = addressDereference.Address as IConversion;
+        if (conv != null && (conv.TypeAfterConversion.TypeCode == PrimitiveTypeCode.IntPtr || conv.TypeAfterConversion.TypeCode == PrimitiveTypeCode.UIntPtr)) {
+          string type = TypeHelper.GetTypeName(addressDereference.Type, NameFormattingOptions.ContractNullable|NameFormattingOptions.UseTypeKeywords);
+          this.sourceEmitterOutput.Write("("+type+"*)");
+          this.Traverse(conv.ValueToConvert);
+          return;
+        }
+      } else {
         var addrOf = addressDereference.Address as IAddressOf;
         if (addrOf != null) {
           this.Traverse(addrOf.Expression);

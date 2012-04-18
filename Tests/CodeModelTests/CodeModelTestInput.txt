@@ -596,6 +596,14 @@ namespace CodeModelTestInput
 
         }
 
+        private void Method34()
+        {
+            System.DateTime dt;
+            dt.System.DateTime(((long)100));
+            return;
+
+        }
+
         public Class1()
         {
             this.c = 0;

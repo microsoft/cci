@@ -1734,14 +1734,25 @@ namespace Microsoft.Cci {
         this.GetLocalIndex(localDeclarationStatement.LocalVariable);
         this.generator.AddVariableToCurrentScope(localDeclarationStatement.LocalVariable);
         if (localDeclarationStatement.InitialValue != null) {
-          if (localDeclarationStatement.InitialValue is IDefaultValue) {
-            //TODO: avoid doing this for reference types and primitive types
-            this.LoadAddressOf(localDeclarationStatement.LocalVariable, null);
-            this.generator.Emit(OperationCode.Initobj, localDeclarationStatement.LocalVariable.Type);
-          } else {
-            this.Traverse(localDeclarationStatement.InitialValue);
-            this.VisitAssignmentTo(localDeclarationStatement.LocalVariable);
+          if (localDeclarationStatement.LocalVariable.Type.IsValueType) {
+            if (localDeclarationStatement.InitialValue is IDefaultValue) {
+              this.LoadAddressOf(localDeclarationStatement.LocalVariable, null);
+              this.generator.Emit(OperationCode.Initobj, localDeclarationStatement.LocalVariable.Type);
+              this.lastStatementWasUnconditionalTransfer = false;
+              return;
+            }
+            var createObj = localDeclarationStatement.InitialValue as ICreateObjectInstance;
+            if (createObj != null) {
+              this.LoadAddressOf(localDeclarationStatement.LocalVariable, null);
+              this.Traverse(createObj.Arguments);
+              this.generator.Emit(OperationCode.Call, createObj.MethodToCall);
+              this.StackSize -= (ushort)(IteratorHelper.EnumerableCount(createObj.Arguments)+1);
+              this.lastStatementWasUnconditionalTransfer = false;
+              return;
+            }
           }
+          this.Traverse(localDeclarationStatement.InitialValue);
+          this.VisitAssignmentTo(localDeclarationStatement.LocalVariable);
         }
       }
       this.lastStatementWasUnconditionalTransfer = false;

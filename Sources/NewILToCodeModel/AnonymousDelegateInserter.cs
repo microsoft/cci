@@ -147,6 +147,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
+    [ContractVerification(false)]
     public override IExpression Rewrite(ICreateDelegateInstance createDelegateInstance) {
       IMethodDefinition delegateMethodDefinition = createDelegateInstance.MethodToCallViaDelegate.ResolvedMethod;
       if (this.closures != null && this.closures.Find(delegateMethodDefinition.ContainingTypeDefinition.InternedKey) != null) {

@@ -119,25 +119,39 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (statement is EmptyStatement || statement is LabeledStatement) continue;
           break;
         }
+        ILocalDefinition local = null;
         var assignment = es.Expression as Assignment;
-        if (assignment == null) continue;
-        var local = assignment.Target.Definition as ILocalDefinition;
-        if (local == null) {
-          var addressDeref = assignment.Target.Definition as IAddressDereference;
-          if (addressDeref == null) continue;
-          var addressOf = addressDeref.Address as IAddressOf;
+        IExpression initialValue = null;
+        if (assignment != null) {
+          initialValue = assignment.Source;
+          local = assignment.Target.Definition as ILocalDefinition;
+          if (local == null) {
+            var addressDeref = assignment.Target.Definition as IAddressDereference;
+            if (addressDeref == null) continue;
+            var addressOf = addressDeref.Address as IAddressOf;
+            if (addressOf == null) continue;
+            var addressableExpression = addressOf.Expression as IAddressableExpression;
+            if (addressableExpression == null) continue;
+            local = addressableExpression.Definition as ILocalDefinition;
+          }
+        } else {
+          var mcall = es.Expression as MethodCall;
+          if (mcall == null || mcall.IsStaticCall || mcall.MethodToCall.Type.TypeCode != PrimitiveTypeCode.Void || mcall.MethodToCall.Name.Value != ".ctor") continue;
+          var addressOf = mcall.ThisArgument as IAddressOf;
           if (addressOf == null) continue;
           var addressableExpression = addressOf.Expression as IAddressableExpression;
           if (addressableExpression == null) continue;
           local = addressableExpression.Definition as ILocalDefinition;
-          if (local == null) continue;
+          if (local != null && this.declarationFor.ContainsKey(local))
+            initialValue = new CreateObjectInstance() { Arguments = mcall.Arguments, Locations = mcall.Locations, MethodToCall = mcall.MethodToCall, Type = mcall.MethodToCall.ContainingType };
         }
+        if (local == null || initialValue == null) continue;
         LocalDeclarationStatement decl;
         if (!this.declarationFor.TryGetValue(local, out decl)) continue;
         Contract.Assume(decl != null);
         this.unifiedDeclarations.Add(decl);
         this.declarationFor.Remove(local);
-        decl.InitialValue = assignment.Source;
+        decl.InitialValue = initialValue;
         block.Statements[i] = decl;
         unifications++;
       }

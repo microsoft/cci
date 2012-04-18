@@ -267,6 +267,10 @@ namespace CodeModelTestInput {
     private void Method33(ICollection c) {
       Console.WriteLine(c == null ? 32 : c.Count);
     }
+
+    private void Method34() {
+      DateTime dt = new DateTime(100);
+    }
   }
 
   struct SomeStruct {
