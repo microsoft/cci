@@ -43,7 +43,6 @@ namespace ILMutator {
         }
         using (pdbReader) {
           var localScopeProvider = pdbReader == null ? null : new ILGenerator.LocalScopeProvider(pdbReader);
-
           ILMutator mutator = new ILMutator(host, pdbReader);
           module = mutator.Rewrite(module);
 
@@ -127,9 +126,23 @@ namespace ILMutator {
       }
     }
 
+    Dictionary<uint, ILGeneratorLabel> offset2Label;
+    protected virtual ILGeneratorLabel GetLabelFor(uint offset) {
+
+      ILGeneratorLabel label;
+      var result = this.offset2Label.TryGetValue(offset, out label);
+      if (!result) {
+        label = new ILGeneratorLabel();
+        this.offset2Label.Add(offset, label);
+      }
+      return label;
+    }    
+
     private void ProcessOperations(IMethodBody methodBody) {
 
-      List<IOperation> operations = ((methodBody.Operations == null) ? new List<IOperation>(): new List<IOperation>(methodBody.Operations));
+      this.offset2Label = new Dictionary<uint, ILGeneratorLabel>();
+
+      List<IOperation> operations = ((methodBody.Operations == null) ? new List<IOperation>() : new List<IOperation>(methodBody.Operations));
       int count = operations.Count;
 
       ILGenerator generator = new ILGenerator(this.host, methodBody.MethodDefinition);
@@ -138,6 +151,7 @@ namespace ILMutator {
           foreach (var uns in ns.UsedNamespaces)
             generator.UseNamespace(uns.NamespaceName.Value);
         }
+
       }
 
       this.currentGenerator = generator;
@@ -148,7 +162,7 @@ namespace ILMutator {
 
       #region Record all offsets that appear as part of an exception handler
       Dictionary<uint, bool> offsetsUsedInExceptionInformation = new Dictionary<uint, bool>();
-      foreach (var exceptionInfo in methodBody.OperationExceptionInformation??Enumerable<IOperationExceptionInformation>.Empty) {
+      foreach (var exceptionInfo in methodBody.OperationExceptionInformation ?? Enumerable<IOperationExceptionInformation>.Empty) {
         uint x = exceptionInfo.TryStartOffset;
         if (!offsetsUsedInExceptionInformation.ContainsKey(x)) offsetsUsedInExceptionInformation.Add(x, true);
         x = exceptionInfo.TryEndOffset;
@@ -164,7 +178,6 @@ namespace ILMutator {
       }
       #endregion Record all offsets that appear as part of an exception handler
 
-      Dictionary<uint, ILGeneratorLabel> offset2Label = new Dictionary<uint, ILGeneratorLabel>();
       #region Pass 1: Make a label for each branch target
       for (int i = 0; i < count; i++) {
         IOperation op = operations[i];
@@ -214,6 +227,13 @@ namespace ILMutator {
       }
       #endregion Pass 1: Make a label for each branch target
 
+      foreach (var exceptionInfo in methodBody.OperationExceptionInformation) {
+        generator.AddExceptionHandlerInformation(exceptionInfo.HandlerKind, exceptionInfo.ExceptionType,
+          this.GetLabelFor(exceptionInfo.TryStartOffset), this.GetLabelFor(exceptionInfo.TryEndOffset),
+          this.GetLabelFor(exceptionInfo.HandlerStartOffset), this.GetLabelFor(exceptionInfo.HandlerEndOffset),
+          exceptionInfo.HandlerKind == HandlerKind.Filter ? this.GetLabelFor(exceptionInfo.FilterDecisionStartOffset) : null);
+      }
+
       #region Pass 2: Emit each operation, along with labels
       for (int i = 0; i < count; i++) {
         IOperation op = operations[i];
@@ -224,43 +244,6 @@ namespace ILMutator {
           generator.MarkLabel(label);
         }
         #endregion Mark operation if it is a label for a branch
-
-        #region Mark operation if it is pointed to by an exception handler
-        bool ignore;
-        uint offset = op.Offset;
-        if (offsetsUsedInExceptionInformation.TryGetValue(offset, out ignore)) {
-          foreach (var exceptionInfo in methodBody.OperationExceptionInformation) {
-            if (offset == exceptionInfo.TryStartOffset)
-              generator.BeginTryBody();
-
-            // Never need to do anthing when offset == exceptionInfo.TryEndOffset because
-            // we pick up an EndTryBody from the HandlerEndOffset below
-            //  generator.EndTryBody();
-
-            if (offset == exceptionInfo.HandlerStartOffset) {
-              switch (exceptionInfo.HandlerKind) {
-                case HandlerKind.Catch:
-                  generator.BeginCatchBlock(exceptionInfo.ExceptionType);
-                  break;
-                case HandlerKind.Fault:
-                  generator.BeginFaultBlock();
-                  break;
-                case HandlerKind.Filter:
-                  generator.BeginFilterBody();
-                  break;
-                case HandlerKind.Finally:
-                  generator.BeginFinallyBlock();
-                  break;
-              }
-            }
-            if (exceptionInfo.HandlerKind == HandlerKind.Filter && offset == exceptionInfo.FilterDecisionStartOffset) {
-              generator.BeginFilterBlock();
-            }
-            if (offset == exceptionInfo.HandlerEndOffset)
-              generator.EndTryBody();
-          }
-        }
-        #endregion Mark operation if it is pointed to by an exception handler
 
         #region Emit operation along with any injection
         switch (op.OperationCode) {
@@ -316,6 +299,8 @@ namespace ILMutator {
           case OperationCode.Stloc_S:
             generator.Emit(op.OperationCode, op.Value);
             EmitStoreLocal(generator, op);
+
+
             break;
           default:
             if (op.Value == null) {
@@ -401,8 +386,6 @@ namespace ILMutator {
         #endregion Emit operation along with any injection
 
       }
-      while (generator.InTryBody)
-        generator.EndTryBody();
       while (this.scopeStack.Count > 0) {
         this.currentGenerator.EndScope();
         this.scopeStack.Pop();
@@ -417,14 +400,14 @@ namespace ILMutator {
       ILocalScope/*?*/ currentScope = null;
       while (this.scopeStack.Count > 0) {
         currentScope = this.scopeStack.Peek();
-        if (operation.Offset < currentScope.Offset+currentScope.Length) break;
+        if (operation.Offset < currentScope.Offset + currentScope.Length) break;
         this.scopeStack.Pop();
         this.currentGenerator.EndScope();
         currentScope = null;
       }
       while (this.scopeEnumeratorIsValid) {
         currentScope = this.scopeEnumerator.Current;
-        if (currentScope.Offset <= operation.Offset && operation.Offset < currentScope.Offset+currentScope.Length) {
+        if (currentScope.Offset <= operation.Offset && operation.Offset < currentScope.Offset + currentScope.Length) {
           this.scopeStack.Push(currentScope);
           this.currentGenerator.BeginScope();
           foreach (var local in this.pdbReader.GetVariablesInScope(currentScope))
@@ -438,7 +421,6 @@ namespace ILMutator {
     }
 
     private void EmitStoreLocal(ILGenerator generator, IOperation op) {
-
       #region Emit: call Console.WriteLine("foo");
       //generator.Emit(OperationCode.Ldstr, "foo");
       //generator.Emit(OperationCode.Call, this.consoleDotWriteLine);
