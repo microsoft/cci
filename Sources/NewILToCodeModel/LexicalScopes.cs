@@ -85,6 +85,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     HashtableForUintValues<object> numberOfReferencesToLocal;
     HashtableForUintValues<object> numberOfAssignmentsToLocal;
     Hashtable<object, LocalDeclarationStatement> declarationFor = new Hashtable<object, LocalDeclarationStatement>();
+    Hashtable<object, object> firstReferenceToLocal = new Hashtable<object, object>();
     SetOfObjects unifiedDeclarations = new SetOfObjects();
     BlockStatement currentBlock;
 
@@ -93,6 +94,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       Contract.Invariant(this.numberOfReferencesToLocal != null);
       Contract.Invariant(this.numberOfAssignmentsToLocal != null);
       Contract.Invariant(this.declarationFor != null);
+      Contract.Invariant(this.firstReferenceToLocal != null);
       Contract.Invariant(this.unifiedDeclarations != null);
     }
 
@@ -133,6 +135,9 @@ namespace Microsoft.Cci.ILToCodeModel {
             var addressableExpression = addressOf.Expression as IAddressableExpression;
             if (addressableExpression == null) continue;
             local = addressableExpression.Definition as ILocalDefinition;
+            if (local == null || this.firstReferenceToLocal[local] != addressableExpression) continue;
+          } else {
+            if (this.firstReferenceToLocal[local] != assignment.Target) continue;
           }
         } else {
           var mcall = es.Expression as MethodCall;
@@ -142,7 +147,8 @@ namespace Microsoft.Cci.ILToCodeModel {
           var addressableExpression = addressOf.Expression as IAddressableExpression;
           if (addressableExpression == null) continue;
           local = addressableExpression.Definition as ILocalDefinition;
-          if (local != null && this.declarationFor.ContainsKey(local))
+          if (local == null || this.firstReferenceToLocal[local] != addressableExpression) continue;
+          if (this.declarationFor.ContainsKey(local))
             initialValue = new CreateObjectInstance() { Arguments = mcall.Arguments, Locations = mcall.Locations, MethodToCall = mcall.MethodToCall, Type = mcall.MethodToCall.ContainingType };
         }
         if (local == null || initialValue == null) continue;
@@ -172,6 +178,28 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       block.Statements = newStatements;
     }
+
+    public override void TraverseChildren(IAddressableExpression addressableExpression) {
+      base.TraverseChildren(addressableExpression);
+      var local = addressableExpression.Definition as ILocalDefinition;
+      if (local != null && this.firstReferenceToLocal[local] == null)
+        this.firstReferenceToLocal[local] = addressableExpression;
+    }
+
+    public override void TraverseChildren(IBoundExpression boundExpression) {
+      base.TraverseChildren(boundExpression);
+      var local = boundExpression.Definition as ILocalDefinition;
+      if (local != null && this.firstReferenceToLocal[local] == null)
+        this.firstReferenceToLocal[local] = boundExpression;
+    }
+
+    public override void TraverseChildren(ITargetExpression targetExpression) {
+      base.TraverseChildren(targetExpression);
+      var local = targetExpression.Definition as ILocalDefinition;
+      if (local != null && this.firstReferenceToLocal[local] == null)
+        this.firstReferenceToLocal[local] = targetExpression;
+    }
+
   }
 
 }

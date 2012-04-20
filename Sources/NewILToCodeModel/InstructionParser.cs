@@ -710,12 +710,15 @@ namespace Microsoft.Cci.ILToCodeModel {
       AddressableExpression addressableExpression = new AddressableExpression();
       if (currentOperation.Value == null) {
         Contract.Assume(currentOperation.OperationCode == OperationCode.Ldarga || currentOperation.OperationCode == OperationCode.Ldarga_S);
-        addressableExpression.Definition = new ThisReference();
+        var thisType = this.cdfg.MethodBody.MethodDefinition.ContainingTypeDefinition;
+        addressableExpression.Definition = new ThisReference() { Type = thisType };
+        addressableExpression.Type = thisType;
       } else {
         var definition = currentOperation.Value;
         Contract.Assume(definition is ILocalDefinition || definition is IParameterDefinition ||
           definition is IFieldReference || definition is IMethodReference || definition is IExpression);
         addressableExpression.Definition = definition;
+        addressableExpression.Type = GetTypeFrom(definition);
       }
       if (currentOperation.OperationCode == OperationCode.Ldflda || currentOperation.OperationCode == OperationCode.Ldvirtftn)
         addressableExpression.Instance = this.PopOperandStack();
@@ -731,6 +734,20 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
       }
       return new AddressOf() { Expression = addressableExpression };
+    }
+
+    private static ITypeReference GetTypeFrom(object definition) {
+      var local = definition as ILocalDefinition;
+      if (local != null) return local.Type;
+      var param = definition as IParameterDefinition;
+      if (param != null) return param.Type;
+      var field = definition as IFieldReference;
+      if (field != null) return field.Type;
+      var method = definition as IMethodReference;
+      if (method != null) return method.Type;
+      var expr = definition as IExpression;
+      if (expr != null) return expr.Type;
+      return Dummy.TypeReference;
     }
 
     private Expression ParseAddressDereference(IOperation currentOperation) {

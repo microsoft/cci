@@ -489,7 +489,7 @@ namespace CSharpSourceEmitter {
     public override void TraverseChildren(ICreateObjectInstance createObjectInstance) {
       this.PrintToken(CSharpToken.New);
       this.PrintTypeReferenceName(createObjectInstance.MethodToCall.ContainingType);
-      this.PrintArgumentList(createObjectInstance.Arguments);
+      this.PrintArgumentList(createObjectInstance.Arguments, createObjectInstance.MethodToCall.Parameters);
     }
 
     public override void TraverseChildren(ICustomAttribute customAttribute) {
@@ -938,13 +938,35 @@ namespace CSharpSourceEmitter {
         }
         this.sourceEmitterOutput.Write(" = ");
         this.Traverse(argList[argList.Count-1]);
-      } else 
-        this.PrintArgumentList(methodCall.Arguments);
+      } else
+        this.PrintArgumentList(methodCall.Arguments, methodCall.MethodToCall.Parameters);
     }
 
-    private void PrintArgumentList(IEnumerable<IExpression> arguments) {
+    private void PrintArgumentList(IEnumerable<IExpression> arguments, IEnumerable<IParameterTypeInformation> parameters) {
       this.sourceEmitterOutput.Write("(");
-      this.Traverse(arguments);
+      var paramEnum = parameters.GetEnumerator();
+      bool paramIsValid = true;
+      bool needComma = false;
+      foreach (IExpression argument in arguments) {
+        paramIsValid = paramIsValid && paramEnum.MoveNext();
+        if (needComma) {
+          this.PrintToken(CSharpToken.Comma);
+          this.PrintToken(CSharpToken.Space);
+        }
+        var addressOf = argument as IAddressOf;
+        if (addressOf != null) {
+          string modifier = "ref ";
+          if (paramIsValid) {
+            var pardef = paramEnum.Current as IParameterDefinition;
+            if (pardef != null && pardef.IsByReference && pardef.IsOut && !pardef.IsIn)
+              modifier = "out ";
+          }
+          this.sourceEmitterOutput.Write(modifier);
+          this.Traverse(addressOf.Expression);
+        } else
+          this.Traverse(argument);
+        needComma = true;
+      }
       this.sourceEmitterOutput.Write(")");
     }
 
