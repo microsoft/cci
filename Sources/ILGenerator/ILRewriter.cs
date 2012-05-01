@@ -27,19 +27,28 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="host"></param>
     /// <param name="localScopeProvider"></param>
-    /// <param name="sourceLocationProvicer"></param>
-    public ILRewriter(IMetadataHost host, ILocalScopeProvider/*?*/ localScopeProvider, ISourceLocationProvider/*?*/ sourceLocationProvicer) {
+    /// <param name="sourceLocationProvider"></param>
+    public ILRewriter(IMetadataHost host, ILocalScopeProvider/*?*/ localScopeProvider, ISourceLocationProvider/*?*/ sourceLocationProvider) {
       Contract.Requires(host != null);
 
       this.host = host;
       this.generator = new ILGenerator(host, Dummy.MethodDefinition);
       this.localScopeProvider = localScopeProvider;
-      this.sourceLocationProvicer = sourceLocationProvicer;
+      this.sourceLocationProvider = sourceLocationProvider;
     }
 
-    readonly IMetadataHost host;
-    readonly ILocalScopeProvider/*?*/ localScopeProvider;
-    readonly ISourceLocationProvider/*?*/ sourceLocationProvicer;
+    /// <summary>
+    /// 
+    /// </summary>
+    protected readonly IMetadataHost host;
+    /// <summary>
+    /// 
+    /// </summary>
+    protected readonly ILocalScopeProvider/*?*/ localScopeProvider;
+    /// <summary>
+    /// 
+    /// </summary>
+    protected readonly ISourceLocationProvider/*?*/ sourceLocationProvider;
 
     ILGenerator generator;
     Hashtable<ILGeneratorLabel> labelFor = new Hashtable<ILGeneratorLabel>();
@@ -48,6 +57,12 @@ namespace Microsoft.Cci {
     readonly Stack<ILocalScope> scopeStack = new Stack<ILocalScope>();
     IEnumerator<ILocalScope>/*?*/ scopeEnumerator;
     bool scopeEnumeratorIsValid;
+    IEnumerator<ILocalScope>/*?*/ iteratorScopeEnumerator;
+    bool iteratorScopeEnumeratorIsValid;
+    ISynchronizationInformation/*?*/ synchronizationInfo;
+    IEnumerator<ISynchronizationPoint>/*?*/ syncPointEnumerator;
+    bool syncPointEnumeratorIsValid;
+
     /// <summary>
     /// 
     /// </summary>
@@ -91,7 +106,12 @@ namespace Microsoft.Cci {
     public virtual IMethodBody Rewrite(IMethodBody methodBody) {
       Contract.Requires(methodBody != null);
 
-      this.generator = new ILGenerator(this.host, methodBody.MethodDefinition);
+      IMethodDefinition asyncMethodDefinition = null;
+      if (this.localScopeProvider != null) {
+        this.synchronizationInfo = this.localScopeProvider.GetSynchronizationInformation(methodBody);
+        if (this.synchronizationInfo != null) asyncMethodDefinition = this.synchronizationInfo.AsyncMethod;
+      }
+      this.generator = new ILGenerator(this.host, methodBody.MethodDefinition, asyncMethodDefinition);
       this.maxStack = methodBody.MaxStack;
       this.labelFor.Clear();
       this.localIndex.Clear();
@@ -137,6 +157,12 @@ namespace Microsoft.Cci {
         }
         this.scopeEnumerator = this.localScopeProvider.GetLocalScopes(methodBody).GetEnumerator();
         this.scopeEnumeratorIsValid = this.scopeEnumerator.MoveNext();
+        this.iteratorScopeEnumerator = this.localScopeProvider.GetIteratorScopes(methodBody).GetEnumerator();
+        this.iteratorScopeEnumeratorIsValid = this.iteratorScopeEnumerator.MoveNext();
+        if (this.synchronizationInfo != null) {
+          this.syncPointEnumerator = this.synchronizationInfo.SynchronizationPoints.GetEnumerator();
+          this.syncPointEnumeratorIsValid = this.syncPointEnumerator.MoveNext();
+        }
       }
 
       foreach (var operation in methodBody.Operations) {
@@ -224,7 +250,20 @@ namespace Microsoft.Cci {
         Contract.Assume(currentScope != null);
         if (currentScope.Offset <= operation.Offset && operation.Offset < currentScope.Offset+currentScope.Length) {
           this.scopeStack.Push(currentScope);
-          this.Generator.BeginScope();
+          uint iteratorLocalsInScope = 0;
+          if (this.iteratorScopeEnumerator != null) {
+            while (this.iteratorScopeEnumeratorIsValid) {
+              var iteratorScope = this.iteratorScopeEnumerator.Current;
+              Contract.Assume(iteratorScope != null);
+              if (iteratorScope.Offset >= currentScope.Offset && iteratorScope.Offset+iteratorScope.Length <= currentScope.Offset+currentScope.Length) {
+                iteratorLocalsInScope++;
+                this.iteratorScopeEnumeratorIsValid = this.iteratorScopeEnumerator.MoveNext();
+              } else {
+                break;
+              }
+            }
+          }
+          this.Generator.BeginScope(iteratorLocalsInScope);
           Contract.Assume(this.localScopeProvider != null);
           foreach (var local in this.localScopeProvider.GetVariablesInScope(currentScope)) {
             Contract.Assume(local != null);
@@ -240,6 +279,19 @@ namespace Microsoft.Cci {
           this.scopeEnumeratorIsValid = this.scopeEnumerator.MoveNext();
         } else
           break;
+      }
+      if (this.syncPointEnumeratorIsValid) {
+        Contract.Assume(this.syncPointEnumerator != null);
+        var syncPoint = this.syncPointEnumerator.Current;
+        Contract.Assume(syncPoint != null);
+        if (syncPoint.SynchronizeOffset == operation.Offset) {
+          if (syncPoint.ContinuationMethod == null)
+            this.generator.MarkSynchronizationPoint(this.generator.Method, this.GetLabelFor(syncPoint.ContinuationOffset));
+          else
+            this.generator.MarkSynchronizationPoint(syncPoint.ContinuationMethod, new ILGeneratorLabel() { Offset = syncPoint.ContinuationOffset });
+          Contract.Assume(this.syncPointEnumerator != null);
+          this.syncPointEnumeratorIsValid = this.syncPointEnumerator.MoveNext();
+        }
       }
     }
 
