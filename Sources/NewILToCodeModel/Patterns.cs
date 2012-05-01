@@ -96,6 +96,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       Contract.Invariant(this.singleUseExpressionChecker != null);
     }
 
+    [ContractVerification(false)]
     public override void TraverseChildren(IBlockStatement block) {
       Contract.Assume(block is BlockStatement);
       var b = (BlockStatement)block;
@@ -136,6 +137,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.ReplaceShortCircuitAnd4(b) ||
       this.ReplaceShortCircuitAnd5(b) ||
       this.ReplaceShortCircuitAnd6(b) ||
+      this.ReplacedCompoundAssignmentViaTempPattern(b) ||
       this.ReplaceSingleUseCompilerGeneratedLocalPattern(b)) {
       }
 
@@ -156,7 +158,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         Contract.Assume(boundExpression != null);
         Contract.Assume(this.returnValueTemp == boundExpression.Definition);
         if (this.numberOfAssignmentsToLocal[this.returnValueTemp] == 0) {
-          Contract.Assume(this.numberOfReferencesToLocal[this.returnValueTemp] == 1);
+          //Contract.Assume(this.numberOfReferencesToLocal[this.returnValueTemp] == 1);
           this.labelOfFinalReturn = labeledStatement.Label;
           for (int i = 0; i < n; i++) {
             var localDeclarationStatement = b.Statements[i] as LocalDeclarationStatement;
@@ -390,8 +392,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         var endLabel = statements[i+6] as LabeledStatement;
         if (endLabel == null || gotoEnd.TargetStatement != endLabel) continue;
         var conditional = new Conditional() { Condition = ifStatement.Condition, ResultIfTrue = pushTrueCase.ValueToPush, ResultIfFalse = pushFalseCase.ValueToPush };
-        TypeInferencer.FixUpType(conditional);
-        pushTrueCase.ValueToPush = conditional;
+        pushTrueCase.ValueToPush = TypeInferencer.FixUpType(conditional);
         pushTrueCase.Locations.AddRange(ifStatement.Locations);
         statements.RemoveAt(i+6);
         statements.RemoveRange(i, 5);
@@ -472,12 +473,13 @@ namespace Microsoft.Cci.ILToCodeModel {
         var propertyNameStr = setterCall.MethodToCall.Name.Value.Substring(4);
         var propertyName = this.host.NameTable.GetNameFor(propertyNameStr);
         var property = new PropertyDefinition() {
-          CallingConvention = CallingConvention.HasThis,
+          CallingConvention = CallingConvention.HasThis, ContainingTypeDefinition = getterCall.MethodToCall.ContainingType.ResolvedType,
           Name = propertyName, Getter = getterCall.MethodToCall, Setter = setterCall.MethodToCall, Type = getterCall.Type
         };
         binaryOp.LeftOperand = new TargetExpression() {
           Definition = property, Instance = setterCall.ThisArgument,
-          GetterIsVirtual = getterCall.IsVirtualCall, SetterIsVirtual = setterCall.IsVirtualCall
+          GetterIsVirtual = getterCall.IsVirtualCall, SetterIsVirtual = setterCall.IsVirtualCall,
+          Type = getterCall.Type
         };
         es1.Expression = binaryOp;
         replacedPattern = true;
@@ -485,6 +487,44 @@ namespace Microsoft.Cci.ILToCodeModel {
       return replacedPattern;
     }
 
+    private bool ReplacedCompoundAssignmentViaTempPattern(BlockStatement b) {
+      Contract.Requires(b != null);
+      bool replacedPattern = false;
+      var statements = b.Statements;
+      for (int i = 0; i < statements.Count-1; i++) {
+        var exprS1 = statements[i] as ExpressionStatement;
+        if (exprS1 == null) continue;
+        var assign1 = exprS1.Expression as Assignment;
+        if (assign1 == null) continue;
+        var assign2 = assign1;
+        Assignment assign3 = null;
+        ILocalDefinition temp = null;
+        while (assign2 != null && assign3 == null) {
+          assign3 = assign2.Source as Assignment;
+          if (assign3 == null) break;
+          temp = assign3.Target.Definition as ILocalDefinition;
+          if (temp == null || assign3.Source is IPopValue) assign2 = null;
+        }
+        if (assign2 == null || assign3 == null) continue;
+        var exprS2 = statements[i+1] as ExpressionStatement;
+        if (exprS2 == null) continue;
+        var assign4 = exprS2.Expression as Assignment;
+        if (assign4 == null) continue;
+        var boundExpr = assign4.Source as BoundExpression;
+        if (boundExpr == null || boundExpr.Definition != temp) continue;
+        if (this.bindingsThatMakeALastUseOfALocalVersion.Contains(boundExpr)) {
+          assign2.Source = assign3.Source;
+          this.numberOfAssignmentsToLocal[temp]--;
+        }
+        this.numberOfReferencesToLocal[temp]--;
+        assign4.Source = assign1;
+        statements.RemoveAt(i);
+        replacedPattern = true;
+      }
+      return replacedPattern;
+    }
+
+    [ContractVerification(false)]
     private bool ReplacePushPushDupPopPopPattern(BlockStatement b) {
       Contract.Requires(b != null);
       bool replacedPattern = false;
@@ -523,7 +563,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             Name = propertyName, Getter = getterCall.MethodToCall, Setter = setterCall.MethodToCall, Type = getterCall.Type
           };
           binaryOp.LeftOperand = new TargetExpression() { Definition = property, Instance = push1.ValueToPush, 
-            GetterIsVirtual = getterCall.IsVirtualCall, SetterIsVirtual = setterCall.IsVirtualCall };          
+            GetterIsVirtual = getterCall.IsVirtualCall, SetterIsVirtual = setterCall.IsVirtualCall, Type = getterCall.Type };          
           assign1.Source = binaryOp;
           exprS1.Expression = assign1;
         } else {
@@ -566,6 +606,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             }
           } else {
             if (!(assign2.Target.Instance is IPopValue)) continue;
+            if (assign2.Target.Definition is IArrayIndexer) continue;
             assign1.Source = assign2;
             assign2.Source = push2.ValueToPush;
             ((TargetExpression)assign2.Target).Instance = push1.ValueToPush;
@@ -669,6 +710,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     }
 
+    [ContractVerification(false)]
     internal static bool ReplacePushPopPattern(BlockStatement b, IMetadataHost host) {
       Contract.Requires(b != null);
       Contract.Requires(host != null);
@@ -693,7 +735,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         for (int j = i + 1; j < i + count; j++) {
           Contract.Assume(j < statements.Count); //because i+count < statements.Count for the initial value of count and count just decreases
           Contract.Assume(j >= 0); //because i >= 0 and j never decreases to less than i
-          Contract.Assume(statements[j] is PushStatement); //because i < j < i+count and i..i+count-1 are all push statemtns
+          Contract.Assume(statements[j] is PushStatement); //because i < j < i+count and i..i+count-1 are all push statements
           PushStatement st = (PushStatement)statements[j];
           PopCounter pcc = new PopCounter();
           pcc.Traverse(st.ValueToPush);
@@ -946,6 +988,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return replacedPattern;
     }
 
+    [ContractVerification(false)]
     private bool ReplaceShortCircuitAnd6(BlockStatement b) {
       Contract.Requires(b != null);
       bool replacedPattern = false;
@@ -1076,7 +1119,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             }
           }
         }
-        if (local == null) continue;
+        if (local == null || local is CapturedLocalDefinition) continue;
         if (this.sourceLocationProvider != null) {
           bool isCompilerGenerated;
           var sourceName = this.sourceLocationProvider.GetSourceNameFor(local, out isCompilerGenerated);
@@ -1304,7 +1347,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   internal class PopReplacer : CodeRewriter {
     List<IStatement> statements;
     int i;
-    internal int numberOfPopsToIgnore;
+    int numberOfPopsToIgnore;
 
     internal PopReplacer(IMetadataHost host, List<IStatement> statements, int i, int numberOfPopsToIgnore)
       : base(host) {
@@ -1312,6 +1355,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       Contract.Requires(statements != null);
       Contract.Requires(i >= 0);
       Contract.Requires(i < statements.Count);
+      Contract.Requires(numberOfPopsToIgnore >= 0);
+
       this.statements = statements;
       this.i = i;
       this.numberOfPopsToIgnore = numberOfPopsToIgnore;
@@ -1333,6 +1378,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         Contract.Assume(this.i+1 < statements.Count);
         PushStatement push = (PushStatement)this.statements[this.i++];
         return TypeInferencer.Convert(push.ValueToPush, pop.Type);
+      }
+      if (expression is IDupValue) {
+        this.numberOfPopsToIgnore = int.MaxValue;
+        return expression;
       }
       return base.Rewrite(expression);
     }

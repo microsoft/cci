@@ -164,9 +164,9 @@ namespace Microsoft.Cci.ILToCodeModel {
       var expressionPushedByFalseBranch = GetPushedExpressionFrom(conditionalStatement.FalseBranch);
       if (expressionPushedByFalseBranch != null && expressionPushedByTrueBranch != null) {
         return new PushStatement() {
-          ValueToPush = new Conditional() {
-            Condition = conditionalStatement.Condition, ResultIfFalse = expressionPushedByFalseBranch, ResultIfTrue = expressionPushedByTrueBranch
-          },
+          ValueToPush = TypeInferencer.FixUpType(new Conditional() {
+            Condition = conditionalStatement.Condition, ResultIfFalse = expressionPushedByFalseBranch,
+            ResultIfTrue = expressionPushedByTrueBranch}),
           Locations = mutableConditionalStatement.Locations
         };
       }

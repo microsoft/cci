@@ -3522,7 +3522,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (this.copyOnlyIfNotAlreadyMutable)
           mutableSourceMethodBody = sourceMethodBody as SourceMethodBody;
         if (mutableSourceMethodBody == null)
-          mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider, null);
+          mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider);
         mutableSourceMethodBody.Block = this.Visit(sourceMethodBody.Block);
         mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;
         mutableSourceMethodBody.MethodDefinition = this.GetCurrentMethod();

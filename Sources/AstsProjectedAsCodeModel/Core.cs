@@ -1652,7 +1652,7 @@ namespace Microsoft.Cci.Ast {
     /// </summary>
     //^ [Pure]
     public virtual string GetMethodSignature(IMethodReference method, NameFormattingOptions formattingOptions) {
-      return MemberHelper.GetMethodSignature(method, formattingOptions);
+      return this.SignatureFormatter.GetMethodSignature(method, formattingOptions);
     }
 
     /// <summary>
@@ -3151,7 +3151,7 @@ namespace Microsoft.Cci.Ast {
     /// <summary>
     /// A language specific object that formats type names according to syntax of the language.
     /// </summary>
-    TypeNameFormatter TypeNameFormatter {
+    public TypeNameFormatter TypeNameFormatter {
       get {
         if (this.typeNameFormatter == null)
           this.typeNameFormatter = this.CreateTypeNameFormatter();

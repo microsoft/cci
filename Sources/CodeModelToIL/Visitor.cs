@@ -45,11 +45,13 @@ namespace Microsoft.Cci {
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="method">The method that contains the block of statements that will be converted.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
+    /// <param name="asyncMethod">May be null.</param>
     /// <param name="iteratorLocalCount">A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods. May be null.</param>
-    public CodeModelToILConverter(IMetadataHost host, IMethodDefinition method, ISourceLocationProvider/*?*/ sourceLocationProvider, IDictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount) {
+    public CodeModelToILConverter(IMetadataHost host, IMethodDefinition method, ISourceLocationProvider/*?*/ sourceLocationProvider, 
+      IMethodDefinition/*?*/ asyncMethod, IDictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount) {
       Contract.Requires(host != null);
       Contract.Requires(method != null);
-      this.generator = new ILGenerator(host, method);
+      this.generator = new ILGenerator(host, method, asyncMethod);
       this.host = host;
       this.method = method;
       this.sourceLocationProvider = sourceLocationProvider;
@@ -4540,6 +4542,25 @@ namespace Microsoft.Cci {
     }
 
     private void EmitSequencePoint(IEnumerable<ILocation> locations) {
+      foreach (var loc in locations) {
+        var syncPointLoc = loc as SynchronizationPointLocation;
+        if (syncPointLoc != null) {
+          var continuationLabel = new ILGeneratorLabel();
+          if (syncPointLoc.SynchronizationPoint.ContinuationMethod == null) {
+            this.generator.MarkSynchronizationPoint(this.method, continuationLabel);
+            this.labelFor[(int)syncPointLoc.SynchronizationPoint.ContinuationOffset] = continuationLabel;
+          } else {
+            this.generator.MarkSynchronizationPoint(syncPointLoc.SynchronizationPoint.ContinuationMethod, continuationLabel);
+            continuationLabel.Offset = syncPointLoc.SynchronizationPoint.ContinuationOffset;
+          }
+        } else {
+          var continuationLoc = loc as ContinuationLocation;
+          if (continuationLoc != null) {
+            ILGeneratorLabel continuationLabel = this.labelFor[(int)continuationLoc.SynchronizationPointLocation.SynchronizationPoint.ContinuationOffset];
+            this.generator.MarkLabel(continuationLabel);
+          }
+        }
+      }
       if (this.sourceLocationProvider == null) return;
       foreach (IPrimarySourceLocation sloc in this.sourceLocationProvider.GetPrimarySourceLocationsFor(locations)) {
         this.generator.MarkSequencePoint(sloc);
@@ -4607,6 +4628,15 @@ namespace Microsoft.Cci {
       return this.generator.GetOperations();
     }
 
+    /// <summary>
+    /// Returns an object that describes where synchronization points occur in the IL operations of the "MoveNext" method of the state class of
+    /// an asynchronous method. This returns null unless the generator has been supplied with an non null value for asyncMethodDefinition parameter
+    /// during construction.
+    /// </summary>
+    public ISynchronizationInformation/*?*/ GetSynchronizationInformation() {
+      return this.generator.GetSynchronizationInformation();
+    }
+    
     /// <summary>
     /// Returns zero or more exception exception information blocks (information about handlers, filters and finally blocks)
     /// that correspond to try-catch-finally constructs that appear in the statements that have been converted to IL by this converter.

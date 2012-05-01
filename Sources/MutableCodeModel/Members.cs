@@ -29,21 +29,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="host">An object representing the application that is hosting this source method body. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
-    public SourceMethodBody(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider) {
-      this.host = host;
-      this.sourceLocationProvider = sourceLocationProvider;
-    }
-
-    /// <summary>
-    /// Allocates an object that provides a metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
-    /// </summary>
-    /// <param name="host">An object representing the application that is hosting this source method body. It is used to obtain access to some global
-    /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
+    /// <param name="localScopeProvider"></param>
     /// <param name="iteratorLocalCount">A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods. May be null.</param>
-    public SourceMethodBody(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider, IDictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount) {
+    public SourceMethodBody(IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider = null, ILocalScopeProvider/*?*/ localScopeProvider = null, IDictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount = null) {
       this.host = host;
       this.sourceLocationProvider = sourceLocationProvider;
+      this.localScopeProvider = localScopeProvider;
       this.iteratorLocalCount = iteratorLocalCount;
     }
 
@@ -77,6 +68,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IMetadataHost host;
     ISourceLocationProvider/*?*/ sourceLocationProvider;
+    ILocalScopeProvider/*?*/ localScopeProvider;
 
     /// <summary>
     /// Calls the visitor.Visit(T) method where T is the most derived object model node interface type implemented by the concrete type
@@ -97,6 +89,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       IEnumerable<IOperation> operations;
       IEnumerable<IOperationExceptionInformation> operationExceptionInformation;
       List<ITypeDefinition>/*?*/ privateHelperTypes = this.privateHelperTypes;
+      ISynchronizationInformation/*?*/ synchronizationInformation;
       uint size;
 
       var isNormalized = this.isNormalized;
@@ -109,7 +102,12 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
 
       if (isNormalized) {
-        var converter = new CodeModelToILConverter(this.host, this.MethodDefinition, this.sourceLocationProvider, this.iteratorLocalCount);
+        IMethodDefinition/*?*/ asyncMethod = null;
+        if (this.localScopeProvider != null) {
+          var asyncInfo = this.localScopeProvider.GetSynchronizationInformation(this);
+          if (asyncInfo != null) asyncMethod = asyncInfo.AsyncMethod;
+        }
+        var converter = new CodeModelToILConverter(this.host, this.MethodDefinition, this.sourceLocationProvider, asyncMethod, this.iteratorLocalCount);
         converter.TrackExpressionSourceLocations = this.trackExpressionSourceLocations;
         converter.ConvertToIL(this.Block);
         iteratorScopes = converter.GetIteratorScopes();
@@ -120,9 +118,10 @@ namespace Microsoft.Cci.MutableCodeModel {
         namespaceScopes = converter.GetNamespaceScopes();
         operations = converter.GetOperations();
         operationExceptionInformation = converter.GetOperationExceptionInformation();
+        synchronizationInformation = converter.GetSynchronizationInformation();
       } else {
         //This object might already be immutable and we are just doing delayed initialization, so make a copy of this.Block.
-        var mutableBlock = new CodeDeepCopier(this.host).Copy(this.Block);
+        var mutableBlock = new CodeDeepCopier(this.host, this.sourceLocationProvider).Copy(this.Block);
         if (checker.foundAnonymousDelegate) {
           var remover = new AnonymousDelegateRemover(this.host, this.sourceLocationProvider);
           remover.RemoveAnonymousDelegates(this.MethodDefinition, mutableBlock);
@@ -139,6 +138,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         namespaceScopes = normalizedBody.NamespaceScopes;
         operations = normalizedBody.Operations;
         operationExceptionInformation = normalizedBody.OperationExceptionInformation;
+        synchronizationInformation = normalizedBody.SynchronizationInformation;
         if (privateHelperTypes == null)
           privateHelperTypes = normalizedBody.PrivateHelperTypes;
         else //this can happen when this source method body has already been partially normalized, for instance by the removal of yield statements.
@@ -155,6 +155,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.namespaceScopes = namespaceScopes;
         this.operations = operations;
         this.operationExceptionInformation = operationExceptionInformation;
+        this.synchronizationInformation = synchronizationInformation;
         this.privateHelperTypes = privateHelperTypes;
         this.size = size;
       }
@@ -329,6 +330,16 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
     uint size;
+
+    /// <summary>
+    /// </summary>
+    public ISynchronizationInformation/*?*/ SynchronizationInformation {
+      get {
+        if (!this.ilWasGenerated) this.GenerateIL();
+        return this.synchronizationInformation;
+      }
+    }
+    ISynchronizationInformation/*?*/ synchronizationInformation;
 
     #region IMethodBody Members
 

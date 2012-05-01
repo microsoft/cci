@@ -82,7 +82,7 @@ namespace Microsoft.Cci.MutableContracts {
         if (typeContract != null) {
           #region Define the method
           List<IStatement> statements = new List<IStatement>();
-          var methodBody = new SourceMethodBody(this.host, null, null) {
+          var methodBody = new SourceMethodBody(this.host) {
             LocalsAreZeroed = true,
             Block = new BlockStatement() { Statements = statements }
           };
@@ -641,10 +641,10 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     /// <summary>
-    /// 
+    /// Returns true iff the method reference or its definition have the [System.Diagnostics.Contracts.Pure] attribute.
     /// </summary>
-    /// <param name="host"></param>
-    /// <param name="methodReference"></param>
+    /// <param name="host">Used to get a reference to the contract assembly in which the attribute is defined.</param>
+    /// <param name="methodReference">The method reference to be checked for the presence of the pure attribute.</param>
     /// <returns></returns>
     public static bool IsPure(IMetadataHost host, IMethodReference methodReference) {
       var contractAssemblyReference = new Immutable.AssemblyReference(host, host.ContractAssemblySymbolicIdentity);
@@ -708,8 +708,10 @@ namespace Microsoft.Cci.MutableContracts {
     /// All parameters in inherited contracts are substituted for by
     /// the method's own parameters.
     /// If there are no contracts, then it returns null.
+    /// Any preconditions that were written as legacy-preconditions or calls to Requires&lt;E&gt; are
+    /// included iff <paramref name="keepLegacyPreconditions"/>.
     /// </summary>
-    public static IMethodContract GetMethodContractForIncludingInheritedContracts(IContractAwareHost host, IMethodDefinition methodDefinition) {
+    public static IMethodContract GetMethodContractForIncludingInheritedContracts(IContractAwareHost host, IMethodDefinition methodDefinition, bool keepLegacyPreconditions = true) {
       MethodContract cumulativeContract = new MethodContract();
       bool atLeastOneContract = false;
       IMethodContract/*?*/ mc = ContractHelper.GetMethodContractFor(host, methodDefinition);
@@ -725,7 +727,7 @@ namespace Microsoft.Cci.MutableContracts {
           if (overriddenContract != null) {
 
             overriddenContract = CopyContractIntoNewContext(host, overriddenContract, methodDefinition, overriddenMethod);
-            overriddenContract = FilterUserMessage(host, overriddenContract, methodDefinition.ContainingTypeDefinition);
+            overriddenContract = FilterUserMessageAndLegacyPreconditions(host, overriddenContract, methodDefinition.ContainingTypeDefinition, keepLegacyPreconditions);
 
             // if the method is generic, then need to specialize the contract to have the same method type parameters as the method
             if (methodDefinition.IsGeneric) {
@@ -747,7 +749,7 @@ namespace Microsoft.Cci.MutableContracts {
         IMethodContract/*?*/ ifaceContract = ContractHelper.GetMethodContractFor(host, ifaceMethod);
         if (ifaceContract == null) continue;
         ifaceContract = CopyContractIntoNewContext(host, ifaceContract, methodDefinition, ifaceMethod);
-        ifaceContract = FilterUserMessage(host, ifaceContract, methodDefinition.ContainingTypeDefinition);
+        ifaceContract = FilterUserMessageAndLegacyPreconditions(host, ifaceContract, methodDefinition.ContainingTypeDefinition, keepLegacyPreconditions);
         Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(cumulativeContract, ifaceContract);
         atLeastOneContract = true;
       }
@@ -759,7 +761,7 @@ namespace Microsoft.Cci.MutableContracts {
         IMethodContract/*?*/ ifaceContract = ContractHelper.GetMethodContractFor(host, ifaceMethod);
         if (ifaceContract == null) continue;
         ifaceContract = CopyContractIntoNewContext(host, ifaceContract, methodDefinition, ifaceMethod);
-        ifaceContract = FilterUserMessage(host, ifaceContract, methodDefinition.ContainingTypeDefinition);
+        ifaceContract = FilterUserMessageAndLegacyPreconditions(host, ifaceContract, methodDefinition.ContainingTypeDefinition, keepLegacyPreconditions);
         Microsoft.Cci.MutableContracts.ContractHelper.AddMethodContract(cumulativeContract, ifaceContract);
         atLeastOneContract = true;
       }
@@ -767,10 +769,10 @@ namespace Microsoft.Cci.MutableContracts {
       return atLeastOneContract ? cumulativeContract : null;
     }
 
-    private static MethodContract FilterUserMessage(IContractAwareHost host, IMethodContract contract, ITypeDefinition typeDefinition) {
+    private static MethodContract FilterUserMessageAndLegacyPreconditions(IContractAwareHost host, IMethodContract contract, ITypeDefinition typeDefinition, bool keepLegacy) {
       var mc = new MethodContract(contract);
       mc.Postconditions = FilterUserMessage(host, contract.Postconditions, typeDefinition);
-      mc.Preconditions = FilterUserMessage(host, contract.Preconditions, typeDefinition);
+      mc.Preconditions = FilterUserMessageAndLegacyPreconditions(host, contract.Preconditions, typeDefinition, keepLegacy);
       mc.ThrownExceptions = FilterUserMessage(host, contract.ThrownExceptions, typeDefinition);
       return mc;
     }
@@ -791,21 +793,19 @@ namespace Microsoft.Cci.MutableContracts {
       }
       return new List<IPostcondition>(filteredPostconditions);
     }
-    private static List<IPrecondition> FilterUserMessage(IContractAwareHost host, IEnumerable<IPrecondition> preconditions, ITypeDefinition typeDefinition) {
-      int n = (int)IteratorHelper.EnumerableCount(preconditions);
-      var filteredPreconditions = new IPrecondition[n];
-      var i = 0;
+    private static List<IPrecondition> FilterUserMessageAndLegacyPreconditions(IContractAwareHost host, IEnumerable<IPrecondition> preconditions, ITypeDefinition typeDefinition, bool keepLegacy) {
+      var filteredPreconditions = new List<IPrecondition>();
       foreach (var p in preconditions) {
+        if (!keepLegacy && p.ExceptionToThrow != null) continue;
         if (CanAccess(p.Description, typeDefinition)) {
-          filteredPreconditions[i] = p;
+          filteredPreconditions.Add(p);
         } else {
           var newP = new Precondition(p);
           newP.Description = null;
-          filteredPreconditions[i] = newP;
+          filteredPreconditions.Add(newP);
         }
-        i++;
       }
-      return new List<IPrecondition>(filteredPreconditions);
+      return filteredPreconditions;
     }
     private static List<IThrownException> FilterUserMessage(IContractAwareHost host, IEnumerable<IThrownException> thrownExceptions, ITypeDefinition typeDefinition) {
       int n = (int)IteratorHelper.EnumerableCount(thrownExceptions);
@@ -2251,6 +2251,90 @@ namespace Microsoft.Cci.MutableContracts {
 
 
   }
+
+  /// <summary>
+  /// Rewrites code so that the first occurrence of "loc := e" gets replaced with "loc' := e" and then
+  /// all further occurrences of loc are replaced by loc'.
+  /// After it is finished rewriting, its list of local declarations for each loc' that was generated
+  /// should be retrieved and added to the block of code to "close" it, i.e., make it self-contained
+  /// with respect to locals used in the block.
+  /// </summary>
+  internal class LocalBinder : CodeRewriter {
+    Dictionary<ILocalDefinition, ILocalDefinition> tableForLocalDefinition = new Dictionary<ILocalDefinition, ILocalDefinition>();
+    public List<IStatement> localDeclarations = new List<IStatement>();
+    private int counter = 0;
+    public LocalBinder(IMetadataHost host) : base(host) { }
+
+    /// <summary>
+    /// If the local binder is used to just close a bunch of statements, then this method can
+    /// be used. It will rewrite the list of statements <paramref name="clump"/> and return a
+    /// new list of statements with the additional local declaration statements at the front
+    /// of the list.
+    /// </summary>
+    public static List<IStatement> CloseClump(IMetadataHost host, List<IStatement> clump) {
+      var cc = new LocalBinder(host);
+      clump = cc.Rewrite(clump);
+      cc.localDeclarations.AddRange(clump);
+      return cc.localDeclarations;
+    }
+
+    private ILocalDefinition PossiblyReplaceLocal(ILocalDefinition localDefinition) {
+      ILocalDefinition localToUse;
+      if (!this.tableForLocalDefinition.TryGetValue(localDefinition, out localToUse)) {
+        localToUse = new LocalDefinition() {
+          MethodDefinition = localDefinition.MethodDefinition,
+          Name = this.host.NameTable.GetNameFor("loc" + counter),
+          Type = localDefinition.Type,
+        };
+        this.counter++;
+        this.tableForLocalDefinition.Add(localDefinition, localToUse);
+        this.tableForLocalDefinition.Add(localToUse, localToUse); // in case it gets encountered again
+        this.localDeclarations.Add(
+          new LocalDeclarationStatement() {
+            InitialValue = null,
+            LocalVariable = localToUse,
+          });
+      }
+      return localToUse ?? localDefinition;
+    }
+
+
+    public override void RewriteChildren(LocalDeclarationStatement localDeclarationStatement) {
+      // then we don't need to replace this local, so put a dummy value in the table
+      // so we don't muck with it.
+      var loc = localDeclarationStatement.LocalVariable;
+      // locals don't get removed (not tracking scopes) so if a local definition is re-used
+      // (say in two for-loops), then we'd be trying to add the same key twice
+      // shouldn't ever happen except for when the remaining body of the method is being
+      // visited.
+      if (!this.tableForLocalDefinition.ContainsKey(loc)) {
+        this.tableForLocalDefinition.Add(loc, null);
+      }
+      if (localDeclarationStatement.InitialValue != null) {
+        localDeclarationStatement.InitialValue = this.Rewrite(localDeclarationStatement.InitialValue);
+      }
+      return;
+    }
+
+    /// <summary>
+    /// Need to have this override because the base class doesn't visit down into local definitions
+    /// (and besides, this is where this visitor is doing its work anyway).
+    /// </summary>
+    public override ILocalDefinition Rewrite(ILocalDefinition localDefinition) {
+      return PossiblyReplaceLocal(localDefinition);
+    }
+
+    /// <summary>
+    /// TODO: This is necessary only because the base rewriter for things like TargetExpression call
+    /// this method and its definition in the base rewriter is to not visit it, but to just return it.
+    /// </summary>
+    public override object RewriteReference(ILocalDefinition localDefinition) {
+      return this.Rewrite(localDefinition);
+    }
+
+  }
+
+
 
 
 }

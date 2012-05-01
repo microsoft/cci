@@ -34,7 +34,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="options">Set of options that control decompilation.</param>
     public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider,
       ILocalScopeProvider/*?*/ localScopeProvider, DecompilerOptions options = DecompilerOptions.None)
-      : base(host, sourceLocationProvider) {
+      : base(host, sourceLocationProvider, localScopeProvider) {
       Contract.Requires(ilMethodBody != null);
       Contract.Requires(host != null);
 
@@ -165,6 +165,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return 0;
     }
 
+    [ContractVerification(false)]
     private DecompiledBlock CreateNestedBlock(DecompiledBlock block, uint startOffset, uint endOffset) {
       Contract.Requires(block != null);
       Contract.Requires(startOffset <= endOffset);
@@ -299,6 +300,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
       for (int i = 0, n = scopes.Count; i < n; ) {
         var scope = scopes[i++];
+        if (scope.Length == 0) continue;
         var nestedBlock = this.CreateNestedBlock(block, scope.Offset, scope.Offset+scope.Length);
         this.AddLocalsAndConstants(nestedBlock, scope);
       }

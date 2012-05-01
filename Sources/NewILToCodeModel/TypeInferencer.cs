@@ -46,6 +46,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private ITypeReference GetBinaryNumericOperationType(IBinaryOperation binaryOperation) {
       Contract.Requires(binaryOperation != null);
+      Contract.Ensures(Contract.Result<ITypeReference>() != null);
 
       var leftOperand = binaryOperation.LeftOperand;
       var rightOperand = binaryOperation.RightOperand;
@@ -303,6 +304,8 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private ITypeReference GetBitwiseOperationType(IBinaryOperation binaryOperation) {
       Contract.Requires(binaryOperation != null);
+      Contract.Ensures(Contract.Result<ITypeReference>() != null);
+
       if (binaryOperation.LeftOperand.Type.TypeCode == PrimitiveTypeCode.Boolean && binaryOperation.RightOperand.Type.TypeCode == PrimitiveTypeCode.Boolean)
         return this.platformType.SystemBoolean;
       return this.GetBinaryNumericOperationType(binaryOperation);
@@ -498,7 +501,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       FixUpType((Conditional)conditional);
     }
 
-    internal static void FixUpType(Conditional conditional) {
+    internal static Conditional FixUpType(Conditional conditional) {
       Contract.Requires(conditional != null);
       conditional.Condition = ConvertToBoolean(conditional.Condition);
       var mergedType = conditional.ResultIfTrue.Type;
@@ -515,6 +518,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
       }
       conditional.Type = mergedType;
+      return conditional;
     }
 
     public override void TraverseChildren(IConditionalStatement conditionalStatement) {

@@ -174,7 +174,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.anonymousDelegatesThatCaptureLocalsOrParameters = finder.anonymousDelegatesThatCaptureLocalsOrParameters;
       this.anonymousDelegatesThatCaptureThis = finder.anonymousDelegatesThatCaptureThis;
       finder = null;
-      var blockFinder = new ScopesWithCapturedLocalsFinder() { captures = this.fieldReferencesForUseInsideAnonymousMethods };
+      var blockFinder = new ScopesWithCapturedLocalsFinder(this.fieldReferencesForUseInsideAnonymousMethods);
       blockFinder.TraverseChildren(body);
       this.scopesWithCapturedLocals = blockFinder.scopesWithCapturedLocals;
       blockFinder = null;
@@ -246,13 +246,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// for the root block and populate it with fields to hold the captured parameter values and the "this" argument (if captured).
     /// </summary>
     private void GenerateTopLevelClosure() {
-      if (this.fieldReferencesForUseInsideThisMethod.Count == 0) {
+      var mutableContainingType = this.method.ContainingTypeDefinition as NamedTypeDefinition;
+      if (mutableContainingType != null) {
+        this.helperMembers = mutableContainingType.PrivateHelperMembers; //methods for anonymous delegates that capture nothing go here
+      } else if (this.fieldReferencesForUseInsideThisMethod.Count == 0) {
         //None of the anonymous delegates have captured anything, except perhaps "this", so they can all become peer methods if method.ContainingType is mutable.
-        var mutableContainingType = this.method.ContainingTypeDefinition as NamedTypeDefinition;
-        if (mutableContainingType != null) { //TODO: introduce an interface that can be implemented by the AST classes as well.
-          this.helperMembers = mutableContainingType.PrivateHelperMembers; //the anonymous delegate method go here
-          return;
-        }
+        //However, we better create a closure class since method.ContainingType is not mutable.
+        //TODO: introduce an interface that can be implemented by the AST classes as well, so that NamedTypeDefinition is not the only way to be mutable.
+        this.CreateClosureClass();
       }
       //Add fields for captured parameters
       foreach (var parameter in this.method.Parameters) {
@@ -700,8 +701,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (outerClosure != null) {
         statements.Insert(1, new ExpressionStatement() {
           Expression = new Assignment() {
-            Target = new TargetExpression() { Instance = new BoundExpression() { Definition = closureLocal }, Definition = outerClosure },
-            Source = new BoundExpression() { Definition = savedCurrentClosureLocal }
+            Target = new TargetExpression() { Instance = new BoundExpression() { Definition = closureLocal, Type = closureLocal.Type }, Definition = outerClosure, Type = closureLocal.Type },
+            Source = new BoundExpression() { Definition = savedCurrentClosureLocal, Type = savedCurrentClosureLocal.Type }, 
+            Type = closureLocal.Type,
           }
         });
       }
@@ -797,7 +799,8 @@ namespace Microsoft.Cci.MutableCodeModel {
             statements.Insert(0, new ExpressionStatement() {
               Expression = new Assignment() {
                 Target = new TargetExpression() { Instance = this.currentClosureObject, Definition = field, Type = field.Type },
-                Source = new BoundExpression() { Definition = local, Type = local.Type }
+                Source = new BoundExpression() { Definition = local, Type = local.Type },
+                Type = local.Type,
               }
             });
             base.RewriteChildren(catchClause);
@@ -824,7 +827,8 @@ namespace Microsoft.Cci.MutableCodeModel {
             statements.Add(new ExpressionStatement() {
               Expression = new Assignment() {
                 Target = new TargetExpression() { Instance = this.currentClosureObject, Definition = field, Type = field.Type },
-                Source = new BoundExpression() { Definition = local, Type = local.Type }
+                Source = new BoundExpression() { Definition = local, Type = local.Type },
+                Type = fieldType,
               }
             });
             statements.Add(this.Rewrite(forEachStatement.Body));
@@ -873,7 +877,8 @@ namespace Microsoft.Cci.MutableCodeModel {
         return new ExpressionStatement() {
           Expression = new Assignment() {
             Target = new TargetExpression() { Instance = this.currentClosureObject, Definition = field, Type = field.Type },
-            Source = this.Rewrite(localDeclarationStatement.InitialValue)
+            Source = this.Rewrite(localDeclarationStatement.InitialValue),
+            Type = fieldType,
           }
         };
       }
@@ -924,11 +929,20 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// A traverser that records all of the blocks that declare locals that have been captured by anonymous delegates.
     /// This runs as a second pass, after all of the captured locals have been found.
     /// </summary>
-    internal ScopesWithCapturedLocalsFinder() { }
+    internal ScopesWithCapturedLocalsFinder(Dictionary<object, IFieldReference> captures) {
+      Contract.Requires(captures != null);
 
-    internal Dictionary<object, IFieldReference> captures = new Dictionary<object, IFieldReference>();
+      this.captures = captures;
+    }
+
     internal Dictionary<object, bool> scopesWithCapturedLocals = new Dictionary<object, bool>();
+    Dictionary<object, IFieldReference> captures;
     IBlockStatement/*?*/ currentBlock;
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.captures != null);
+    }
 
     public override void TraverseChildren(IBlockExpression blockExpression) {
       var saved = this.currentBlock;

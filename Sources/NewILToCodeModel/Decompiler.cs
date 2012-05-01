@@ -236,7 +236,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       public ISynchronizationInformation/*?*/ GetSynchronizationInformation(IMethodBody methodBody) {
         var sourceMethodBody = methodBody as Microsoft.Cci.MutableCodeModel.SourceMethodBody;
         if (sourceMethodBody == null) return this.originalLocalScopeProvider.GetSynchronizationInformation(methodBody);
-        return null;
+        return sourceMethodBody.SynchronizationInformation;
       }
 
       #endregion

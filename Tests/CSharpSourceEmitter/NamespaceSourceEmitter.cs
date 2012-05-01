@@ -30,7 +30,7 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintNamespaceDefinitionAttributes(INamespaceDefinition namespaceDefinition) {
-      foreach (var attribute in namespaceDefinition.Attributes) {
+      foreach (var attribute in SortAttributes(namespaceDefinition.Attributes)) {
         PrintAttribute(namespaceDefinition, attribute, true, "assembly");
       }
     }
@@ -47,22 +47,24 @@ namespace CSharpSourceEmitter {
       PrintToken(CSharpToken.RightCurly);
     }
 
-    public new void Traverse(IEnumerable<INamespaceMember> namespaceMembers) {
+    public new virtual void Traverse(IEnumerable<INamespaceMember> namespaceMembers) {
       // Try to sort in a way that preserves the original compiler order (captured in token value).
-      // Put things with no tokens (eg. nested namespaces) after those with tokens, sorted by name
+      // Put things with no tokens (eg. nested namespaces) before those with tokens, sorted by name
       var members = new List<INamespaceMember>(namespaceMembers);
-      members.Sort(new Comparison<INamespaceMember>((m1, m2) => 
-        {
+      members.Sort(new Comparison<INamespaceMember>((m1, m2) => {
           var t1 = m1 as IMetadataObjectWithToken;
           var t2 = m2 as IMetadataObjectWithToken;
 
-          var tc = (t1 == null).CompareTo(t2 == null);
-          if (tc != 0) 
-            return tc;
-
-          if (t1 != null)
-            return t1.TokenValue.CompareTo(t2.TokenValue);
-
+          if (t1 == null && t2 != null) return -1; //t1 is a namespace and t2 a type, make the namespace come before the type.
+          if (t1 != null && t2 == null) return 1;
+          if (t1 != null && t2 != null) {
+            if (t1.TokenValue == uint.MaxValue) { //t1 does not really have a token
+              if (t2.TokenValue != uint.MaxValue) return -1;
+              return m1.Name.Value.CompareTo(m2.Name.Value);
+            } else if (t2.TokenValue == uint.MaxValue)
+              return 1;
+            return ((int)t1.TokenValue) - (int)t2.TokenValue;
+          }
           return m1.Name.Value.CompareTo(m2.Name.Value);
         }));
 

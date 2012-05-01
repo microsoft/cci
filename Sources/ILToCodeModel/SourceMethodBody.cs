@@ -53,7 +53,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// <param name="options">Set of options that control decompilation.</param>
     public SourceMethodBody(IMethodBody ilMethodBody, IMetadataHost host, ISourceLocationProvider/*?*/ sourceLocationProvider,
       ILocalScopeProvider/*?*/ localScopeProvider, DecompilerOptions options = DecompilerOptions.None)
-      : base(host, sourceLocationProvider) {
+      : base(host, sourceLocationProvider, localScopeProvider) {
       this.ilMethodBody = ilMethodBody;
       this.host = host;
       this.nameTable = host.NameTable;

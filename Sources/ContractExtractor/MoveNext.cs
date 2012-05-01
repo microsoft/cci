@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using Microsoft.Cci.Contracts;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.MutableCodeModel.Contracts;
+using System.Linq;
 
 namespace Microsoft.Cci.MutableContracts {
   /// <summary>
@@ -171,7 +172,7 @@ namespace Microsoft.Cci.MutableContracts {
       if (mc == null) return mc;
 
       // substitute all field references in contract with the captured state
-      var replacer = new Replacer(host, capturedThings);
+      var replacer = new Replacer(host, capturedThings, iteratorMethodBody.MethodDefinition, moveNextBody.MethodDefinition);
       replacer.RewriteChildren(mc);
 
       if (moveNextBody.MethodDefinition.ContainingTypeDefinition.IsGeneric) {
@@ -183,13 +184,24 @@ namespace Microsoft.Cci.MutableContracts {
 
     }
 
+    /// <summary>
+    /// Substitutes all field references with the expressions that are in the captured things table
+    /// passed to the constructor.
+    /// Also replaces locals from the MoveNext method with new locals that belong to the interator method.
+    /// </summary>
     private sealed class Replacer : CodeAndContractRewriter {
 
       Dictionary<uint, IExpression> capturedThings = new Dictionary<uint, IExpression>();
+      private IMethodDefinition moveNext;
+      private IMethodDefinition iterator;
+      private Dictionary<ILocalDefinition, ILocalDefinition> localTable = new Dictionary<ILocalDefinition, ILocalDefinition>();
 
-      public Replacer(IMetadataHost host, Dictionary<uint, IExpression> capturedThings)
+      public Replacer(IMetadataHost host, Dictionary<uint, IExpression> capturedThings, IMethodDefinition iteratorMethod,
+      IMethodDefinition moveNext)
         : base(host, true) {
         this.capturedThings = capturedThings;
+        this.iterator = iteratorMethod;
+        this.moveNext = moveNext; 
       }
 
       /// <summary>
@@ -230,6 +242,46 @@ namespace Microsoft.Cci.MutableContracts {
         base.RewriteChildren(addressableExpression);
       }
 
+      /// <summary>
+      /// TODO: This is necessary only because the base rewriter for things like TargetExpression call
+      /// this method and its definition in the base rewriter is to not visit it, but to just return it.
+      /// </summary>
+      public override object RewriteReference(ILocalDefinition localDefinition) {
+        return this.Rewrite(localDefinition);
+      }
+
+      public override ILocalDefinition Rewrite(ILocalDefinition localDefinition) {
+        if (localDefinition.MethodDefinition != this.moveNext) // might happen to visit an already replaced local
+          return localDefinition;
+        ILocalDefinition loc;
+        if (!this.localTable.TryGetValue(localDefinition, out loc)) {
+          loc = new LocalDefinition() {
+            MethodDefinition = this.iterator,
+            Name = localDefinition.Name,
+            Type = localDefinition.Type,
+          };
+          this.localTable.Add(localDefinition, loc);
+        }
+        return loc;
+      }
+
+      public override void RewriteChildren(ContractElement contractElement) {
+        base.RewriteChildren(contractElement);
+        var be = contractElement.Condition as IBlockExpression;
+        if (be != null) {
+          var lb = new LocalBinder(this.host);
+          contractElement.Condition = lb.Rewrite(contractElement.Condition);
+          if (lb.localDeclarations.Any()) {
+            var be2 = new BlockExpression() {
+              BlockStatement = new BlockStatement() {
+                Statements = lb.localDeclarations,
+              },
+              Expression = contractElement.Condition,
+            };
+            contractElement.Condition = be2;
+          }
+        }
+      }
     }
 
     internal class HermansAlwaysRight : CodeRewriter {
@@ -337,6 +389,15 @@ namespace Microsoft.Cci.MutableContracts {
             this.localsToInitializers.Add(localDeclarationStatement.LocalVariable, be);
           }
         }
+        public override void TraverseChildren(IAssignment assignment) {
+          var loc = assignment.Target.Definition as ILocalDefinition;
+          if (loc != null) {
+            var be = assignment.Source as IBoundExpression;
+            if (be != null)
+              this.localsToInitializers.Add(loc, be);
+          }
+          base.TraverseChildren(assignment);
+        }
       }
 
       private class LocalReplacer : CodeAndContractRewriter {
@@ -433,6 +494,15 @@ namespace Microsoft.Cci.MutableContracts {
         return this.targetMethodGenericParameters[genericTypeParameterReference.Index];
       return genericTypeParameterReference;
     }
+
+    /// <summary>
+    /// This is necessary only because the base rewriter for things like TargetExpression call
+    /// this method and its definition in the base rewriter is to not visit it, but to just return it.
+    /// </summary>
+    public override object RewriteReference(ILocalDefinition localDefinition) {
+      return this.Rewrite(localDefinition);
+    }
+
 
   }
 

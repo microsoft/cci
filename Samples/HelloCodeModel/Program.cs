@@ -58,7 +58,7 @@ namespace HelloCodeModel {
         assembly.EntryPoint = mainMethod;
         testClass.Methods.Add(mainMethod);
 
-        var body = new SourceMethodBody(host, null, null) {
+        var body = new SourceMethodBody(host) {
           MethodDefinition = mainMethod,
           LocalsAreZeroed = true
         };

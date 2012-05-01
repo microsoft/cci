@@ -236,7 +236,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       if (last == n) {
         if (labelOfSubsequentCode != this.labelImmediatelyFollowingCurrentBlock) return null;
-        Contract.Assume(n == statements.Count); //any modification to statements will terminate the while loop before last == n.
+        Contract.Assert(n == statements.Count); //any modification to statements will terminate the while loop before last == n.
       }
       if (first == last) return new EmptyStatement();
       if (first == last-1) {

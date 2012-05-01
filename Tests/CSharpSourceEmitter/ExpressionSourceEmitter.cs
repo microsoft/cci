@@ -14,6 +14,7 @@ using System.Text;
 using Microsoft.Cci;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Linq;
 
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
@@ -175,7 +176,7 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(IAssembly assembly) {
-      foreach (var attr in assembly.Attributes) {
+      foreach (var attr in SortAttributes(assembly.Attributes)) {
         var at = Utils.GetAttributeType(attr);
         if (at == SpecialAttribute.Extension ||
           at == SpecialAttribute.AssemblyDelaySign ||
@@ -302,6 +303,7 @@ namespace CSharpSourceEmitter {
 
     public override void TraverseChildren(IBitwiseOr bitwiseOr) {
       this.sourceEmitterOutput.Write("(");
+      this.Traverse(bitwiseOr.LeftOperand);
       if (bitwiseOr.LeftOperand is ITargetExpression)
         this.sourceEmitterOutput.Write(" |= ");
       else
@@ -366,16 +368,25 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(ICompileTimeConstant constant) {
-      if (constant.Value == null)
+      var val = constant.Value;
+      if (val == null)
         this.PrintToken(CSharpToken.Null);
-      else if (constant.Value is bool)
-        this.sourceEmitterOutput.Write(((bool)constant.Value) ? "true" : "false");
-      else if (constant.Value is string)
-        this.PrintString((string)constant.Value);
-      else if (constant.Value is char)
-        this.sourceEmitterOutput.Write("'"+constant.Value+"'");
+      else if (val is bool)
+        this.sourceEmitterOutput.Write(((bool)val) ? "true" : "false");
+      else if (val is string)
+        this.PrintString((string)val);
+      else if (val is char)
+        this.sourceEmitterOutput.Write("'"+val+"'");
+      else if (val is int)
+        PrintInt((int)val);
+      else if (val is uint)
+        PrintUint((uint)val);
+      else if (val is long)
+        PrintLong((long)val);
+      else if (val is ulong)
+        PrintUlong((ulong)val);
       else
-        this.sourceEmitterOutput.Write(constant.Value.ToString());
+        this.sourceEmitterOutput.Write(val.ToString());
     }
 
     public override void TraverseChildren(IConditional conditional) {
@@ -916,7 +927,27 @@ namespace CSharpSourceEmitter {
           delegateInvocation = methodReference.Name.Value == "Invoke" && methodReference.ContainingType.ResolvedType.IsDelegate;
         }
         if (!delegateInvocation) this.PrintToken(CSharpToken.Dot);
-        options |= NameFormattingOptions.OmitContainingNamespace|NameFormattingOptions.OmitContainingType;
+        options |= NameFormattingOptions.OmitContainingNamespace | NameFormattingOptions.OmitContainingType;
+      } else {
+        // it is a static call, so see if it is an operator
+        var methodDefinition = methodCall.MethodToCall.ResolvedMethod;
+        if (IsOperator(methodDefinition) && !IsConversionOperator(methodDefinition)) {
+          var opName = MapOperatorNameToCSharp(methodDefinition);
+          if (opName.Length >= 9) {
+            opName = opName.Substring(9);
+          }
+          if (methodDefinition.ParameterCount == 1) {
+            this.sourceEmitterOutput.Write(opName);
+            this.Traverse(methodCall.Arguments.ElementAt(0));
+          } else {
+            this.Traverse(methodCall.Arguments.ElementAt(0));
+            this.sourceEmitterOutput.Write(" ");
+            this.sourceEmitterOutput.Write(opName);
+            this.sourceEmitterOutput.Write(" ");
+            this.Traverse(methodCall.Arguments.ElementAt(1));
+          }
+          return;
+        }
       }
       if (!delegateInvocation)
         this.PrintMethodReferenceName(methodCall.MethodToCall, options);
@@ -938,7 +969,7 @@ namespace CSharpSourceEmitter {
         }
         this.sourceEmitterOutput.Write(" = ");
         this.Traverse(argList[argList.Count-1]);
-      } else
+      } else 
         this.PrintArgumentList(methodCall.Arguments, methodCall.MethodToCall.Parameters);
     }
 
@@ -984,7 +1015,7 @@ namespace CSharpSourceEmitter {
 
     public override void TraverseChildren(IModule module) {
       if (!(module is IAssembly)) {
-        foreach (var attr in module.Attributes) {
+        foreach (var attr in SortAttributes(module.Attributes)) {
           PrintAttribute(module, attr, true, "module");
         }
       }
@@ -1043,7 +1074,9 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(IOldValue oldValue) {
-      base.TraverseChildren(oldValue);
+      this.sourceEmitterOutput.Write("Contract.Old(");
+      base.Traverse(oldValue.Expression);
+      this.sourceEmitterOutput.Write(")");
     }
 
     public override void TraverseChildren(IOnesComplement onesComplement) {
@@ -1091,7 +1124,10 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(IReturnValue returnValue) {
-      this.sourceEmitterOutput.Write("result");
+      //this.sourceEmitterOutput.Write("result");
+      this.sourceEmitterOutput.Write("Contract.Result<");
+      this.PrintTypeReference(returnValue.Type);
+      this.sourceEmitterOutput.Write(">()");
     }
 
     public override void TraverseChildren(IRightShift rightShift) {

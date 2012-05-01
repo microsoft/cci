@@ -38,11 +38,11 @@ namespace CSharpSourceEmitter {
       // Cctors should probably be outputted in some cases
       if (methodDefinition.IsStaticConstructor) return;
 
-      foreach (var ma in methodDefinition.Attributes)
+      foreach (var ma in SortAttributes(methodDefinition.Attributes))
         if (Utils.GetAttributeType(ma) != SpecialAttribute.Extension)
           PrintAttribute(methodDefinition, ma, true, null);
 
-      foreach (var ra in methodDefinition.ReturnValueAttributes)
+      foreach (var ra in SortAttributes(methodDefinition.ReturnValueAttributes))
         PrintAttribute(methodDefinition, ra, true, "return");
 
       PrintToken(CSharpToken.Indent);

@@ -935,7 +935,7 @@ namespace Microsoft.Cci.MutableContracts {
       EmptyStatement empty = conditional.FalseBranch as EmptyStatement;
       IBlockStatement blockStatement = conditional.TrueBranch as IBlockStatement;
       List<IStatement> statements = new List<IStatement>(blockStatement.Statements);
-      IStatement statement = statements[statements.Count - 1];
+      IStatement statement = statements.FindLast(s => !(s is IEmptyStatement));
       IExpression failureBehavior;
       IThrowStatement throwStatement = statement as IThrowStatement;
       var locations = new List<ILocation>(conditional.Condition.Locations);
@@ -1197,74 +1197,6 @@ namespace Microsoft.Cci.MutableContracts {
           this.foundModelMember = true;
         base.TraverseChildren(methodCall);
       }
-    }
-
-    private class LocalBinder : CodeRewriter {
-      Dictionary<ILocalDefinition, ILocalDefinition> tableForLocalDefinition = new Dictionary<ILocalDefinition, ILocalDefinition>();
-      List<IStatement> localDeclarations = new List<IStatement>();
-      private int counter = 0;
-      private LocalBinder(IMetadataHost host) : base(host) { }
-
-      public static List<IStatement> CloseClump(IMetadataHost host, List<IStatement> clump) {
-        var cc = new LocalBinder(host);
-        clump = cc.Rewrite(clump);
-        cc.localDeclarations.AddRange(clump);
-        return cc.localDeclarations;
-      }
-
-      private ILocalDefinition PossiblyReplaceLocal(ILocalDefinition localDefinition) {
-        ILocalDefinition localToUse;
-        if (!this.tableForLocalDefinition.TryGetValue(localDefinition, out localToUse)) {
-          localToUse = new LocalDefinition() {
-            MethodDefinition = localDefinition.MethodDefinition,
-            Name = this.host.NameTable.GetNameFor("loc" + counter),
-            Type = localDefinition.Type,
-          };
-          this.counter++;
-          this.tableForLocalDefinition.Add(localDefinition, localToUse);
-          this.localDeclarations.Add(
-            new LocalDeclarationStatement() {
-              InitialValue = null,
-              LocalVariable = localToUse,
-            });
-        }
-        return localToUse == null ? localDefinition : localToUse;
-      }
-
-      public override void RewriteChildren(LocalDeclarationStatement localDeclarationStatement) {
-        // then we don't need to replace this local, so put a dummy value in the table
-        // so we don't muck with it.
-        var loc = localDeclarationStatement.LocalVariable;
-        // locals don't get removed (not tracking scopes) so if a local definition is re-used
-        // (say in two for-loops), then we'd be trying to add the same key twice
-        // shouldn't ever happen except for when the remaining body of the method is being
-        // visited.
-        if (!this.tableForLocalDefinition.ContainsKey(loc)) {
-          this.tableForLocalDefinition.Add(loc, null);
-        }
-        if (localDeclarationStatement.InitialValue != null) {
-          localDeclarationStatement.InitialValue = this.Rewrite(localDeclarationStatement.InitialValue);
-        }
-        return;
-      }
-
-      /// <summary>
-      /// Need to have this override because the base class doesn't visit down into local definitions
-      /// (and besides, this is where this visitor is doing its work anyway).
-      /// </summary>
-      public override ILocalDefinition Rewrite(ILocalDefinition localDefinition) {
-        return PossiblyReplaceLocal(localDefinition);
-      }
-
-      /// <summary>
-      /// TODO: This is necessary only because the base rewriter for things like TargetExpression call
-      /// this method and its definition in the base rewriter is to not visit it, but to just return it.
-      /// </summary>
-      public override object RewriteReference(ILocalDefinition localDefinition) {
-        return this.Rewrite(localDefinition);
-      }
-
-
     }
 
   }

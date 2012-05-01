@@ -24,9 +24,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
     /// <param name="sourceLocationProvider"></param>
-    public CodeShallowCopier(IMetadataHost targetHost, ISourceLocationProvider sourceLocationProvider = null)
+    /// <param name="localScopeProvider"></param>
+    public CodeShallowCopier(IMetadataHost targetHost, ISourceLocationProvider sourceLocationProvider = null, ILocalScopeProvider localScopeProvider = null)
       : base(targetHost) {
       this.sourceLocationProvider = sourceLocationProvider;
+      this.localScopeProvider = localScopeProvider;
     }
 
     /// <summary>
@@ -41,6 +43,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     ISourceLocationProvider/*?*/ sourceLocationProvider;
+    ILocalScopeProvider/*?*/ localScopeProvider = null;
 
     CodeDispatcher Dispatcher {
       get {
@@ -1250,7 +1253,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Requires(sourceMethodBody != null);
       Contract.Ensures(Contract.Result<SourceMethodBody>() != null);
 
-      var copy = new SourceMethodBody(this.targetHost, this.sourceLocationProvider);
+      var copy = new SourceMethodBody(this.targetHost, this.sourceLocationProvider, this.localScopeProvider);
       copy.Block = sourceMethodBody.Block;
       copy.LocalsAreZeroed = sourceMethodBody.LocalsAreZeroed;
       copy.MethodDefinition = sourceMethodBody.MethodDefinition;
@@ -1461,8 +1464,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="targetHost">An object representing the application that will host the copies made by this copier.</param>
     /// <param name="sourceLocationProvider"></param>
-    public CodeDeepCopier(IMetadataHost targetHost, ISourceLocationProvider sourceLocationProvider = null)
-      : this(targetHost, new CodeShallowCopier(targetHost, sourceLocationProvider)) {
+    /// <param name="localScopeProvider"></param>
+    public CodeDeepCopier(IMetadataHost targetHost, ISourceLocationProvider sourceLocationProvider = null, ILocalScopeProvider localScopeProvider = null)
+      : this(targetHost, new CodeShallowCopier(targetHost, sourceLocationProvider, localScopeProvider)) {
       Contract.Requires(targetHost != null);
     }
 
@@ -3361,7 +3365,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// Provides copy of a method body, a statement, or an expression, in which the references to the nodes
   /// inside a cone is replaced. The cone is defined using the parent class. 
   /// </summary>
-  [Obsolete("Please use CodeDeepCopier of CodeShallowCopier")]
+  [Obsolete("Please use CodeDeepCopier or CodeShallowCopier")]
   public class CodeCopier : MetadataCopier {
     /// <summary>
     /// Provides copy of a method body, a statement, or an expression, in which the references to the nodes
@@ -3426,7 +3430,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       //^ requires (methodBody is ISourceMethodBody ==> this.cache.ContainsKeymethodBody.MethodDefinition));
       ISourceMethodBody sourceMethodBody = methodBody as ISourceMethodBody;
       if (sourceMethodBody != null) {
-        SourceMethodBody mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider, null);
+        SourceMethodBody mutableSourceMethodBody = new SourceMethodBody(this.host, this.sourceLocationProvider);
         mutableSourceMethodBody.Block = (IBlockStatement)this.Substitute(sourceMethodBody.Block);
         mutableSourceMethodBody.MethodDefinition = (IMethodDefinition)this.cache[methodBody.MethodDefinition];
         mutableSourceMethodBody.LocalsAreZeroed = methodBody.LocalsAreZeroed;

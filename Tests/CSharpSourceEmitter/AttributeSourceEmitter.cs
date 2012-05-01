@@ -17,9 +17,20 @@ namespace CSharpSourceEmitter {
   public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
 
     public virtual void PrintAttributes(IReference target) {
-      foreach (var attribute in target.Attributes) {
+      foreach (var attribute in SortAttributes(target.Attributes)) {
         this.PrintAttribute(target, attribute, true, null);
       }
+    }
+
+    public static IEnumerable<ICustomAttribute> SortAttributes(IEnumerable<ICustomAttribute> attributes) {
+      List<ICustomAttribute> attrs = new List<ICustomAttribute>(attributes);
+      //Attribute tokens are not stable under repeated compilation of the same source, so we'll sort by attribute type name.
+      //This is not stable when multiple attributes of the same type are present, but it should be good enough for repeatable tests.
+      attrs.Sort(new Comparison<ICustomAttribute>((a1, a2) => {
+        return string.CompareOrdinal(TypeHelper.GetTypeName(a1.Type), TypeHelper.GetTypeName(a2.Type));
+      }));
+
+      return attrs;
     }
 
     public virtual void PrintAttribute(IReference target, ICustomAttribute attribute, bool newLine, string targetType) {

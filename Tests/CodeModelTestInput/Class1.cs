@@ -271,6 +271,22 @@ namespace CodeModelTestInput {
     private void Method34() {
       DateTime dt = new DateTime(100);
     }
+
+    private Action Method35() {
+      object foo;
+      try {
+        foo = "fi";
+      } catch {
+        return null;
+      }
+      return () => Console.WriteLine(foo);
+    }
+
+    public void Method36() {
+      object[] a = null;
+      int i = 1;
+      a[i-1] = a[i] = "foo";
+    }
   }
 
   struct SomeStruct {

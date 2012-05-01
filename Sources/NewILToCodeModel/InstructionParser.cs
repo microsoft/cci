@@ -34,10 +34,13 @@ namespace Microsoft.Cci.ILToCodeModel {
     HashtableForUintValues<object> numberOfAssignmentsToLocal = new HashtableForUintValues<object>();
     HashtableForUintValues<object> numberOfReferencesToLocal = new HashtableForUintValues<object>();
     Hashtable<List<IGotoStatement>> gotosThatTarget;
-    Dictionary<uint, LabeledStatement> targetStatementFor = new Dictionary<uint, LabeledStatement>();
+    Hashtable<LabeledStatement> targetStatementFor = new Hashtable<LabeledStatement>();
     Stack<Expression> operandStack = new Stack<Expression>();
     ISourceLocation/*?*/ lastSourceLocation;
     ILocation/*?*/ lastLocation;
+    SynchronizationPointLocation/*?*/ lastSynchronizationLocation;
+    ContinuationLocation/*?*/ lastContinuationLocation;
+    Hashtable<SynchronizationPointLocation>/*?*/ synchronizatonPointLocationFor;
     bool sawReadonly;
     bool sawTailCall;
     bool sawVolatile;
@@ -60,6 +63,22 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.gotosThatTarget = sourceMethodBody.gotosThatTarget; Contract.Assume(this.gotosThatTarget != null);
       this.cdfg = sourceMethodBody.cdfg; Contract.Assume(this.cdfg != null);
       this.bindingsThatMakeALastUseOfALocalVersion = sourceMethodBody.bindingsThatMakeALastUseOfALocalVersion; Contract.Assume(this.bindingsThatMakeALastUseOfALocalVersion != null);
+
+      if (this.localScopeProvider != null) {
+        var syncInfo = this.localScopeProvider.GetSynchronizationInformation(sourceMethodBody);
+        if (syncInfo != null) {
+          var syncPointFor = this.synchronizatonPointLocationFor = new Hashtable<SynchronizationPointLocation>();
+          IDocument doc = Dummy.Document;
+          foreach (var loc in this.MethodDefinition.Locations) { doc = loc.Document; break; }
+          foreach (var syncPoint in syncInfo.SynchronizationPoints) {
+            Contract.Assume(syncPoint != null);
+            var syncLoc = new SynchronizationPointLocation(doc, syncPoint);
+            syncPointFor[syncPoint.SynchronizeOffset] = syncLoc;
+            if (syncPoint.ContinuationMethod == null)
+              syncPointFor[syncPoint.ContinuationOffset] = syncLoc;
+          }
+        }
+      }
     }
 
     [ContractInvariantMethod]
@@ -201,8 +220,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (this.host.PreserveILLocations) {
         if (this.lastLocation == null)
           this.lastLocation = currentOperation.Location;
-      } else {
-        if (this.sourceLocationProvider != null && this.lastSourceLocation == null) {
+      } else if (this.sourceLocationProvider != null) {
+        if (this.lastSourceLocation == null) {
           foreach (var sourceLocation in this.sourceLocationProvider.GetPrimarySourceLocationsFor(currentOperation.Location)) {
             Contract.Assume(sourceLocation != null);
             if (sourceLocation.StartLine != 0x00feefee) {
@@ -210,6 +229,16 @@ namespace Microsoft.Cci.ILToCodeModel {
               break;
             }
           }
+        }
+      }
+      if (this.synchronizatonPointLocationFor != null) {
+        uint currentOffset = currentOperation.Offset;
+        var syncPointLocation = this.synchronizatonPointLocationFor[currentOffset];
+        if (syncPointLocation != null) {
+          if (syncPointLocation.SynchronizationPoint.ContinuationOffset == currentOffset)
+            this.lastContinuationLocation = new ContinuationLocation(syncPointLocation);
+          else
+            this.lastSynchronizationLocation = syncPointLocation;
         }
       }
       switch (currentOpcode) {
@@ -251,7 +280,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
         case OperationCode.Ldelema:
           elementType = (ITypeReference)currentOperation.Value;
-          expression = this.ParseArrayElementAddres(currentOperation, elementType, treatArrayAsSingleDimensioned:true);
+          expression = this.ParseArrayElementAddres(currentOperation, elementType, treatArrayAsSingleDimensioned: true);
           break;
 
         case OperationCode.Array_Create:
@@ -299,7 +328,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           elementType = this.platformType.SystemUInt32;
           goto case OperationCode.Ldelem_Ref;
         case OperationCode.Ldelem_Ref:
-          expression = this.ParseArrayIndexer(currentOperation, elementType??this.platformType.SystemObject, treatArrayAsSingleDimensioned:true);
+          expression = this.ParseArrayIndexer(currentOperation, elementType??this.platformType.SystemObject, treatArrayAsSingleDimensioned: true);
           break;
 
         case OperationCode.Array_Set:
@@ -412,8 +441,8 @@ namespace Microsoft.Cci.ILToCodeModel {
             CallingConvention = Cci.CallingConvention.FastCall,
             ContainingType = host.PlatformType.SystemFloat64,
             Name = this.host.NameTable.GetNameFor("__ckfinite__"),
-            Type = host.PlatformType.SystemFloat64, 
-            InternFactory = host.InternFactory,               
+            Type = host.PlatformType.SystemFloat64,
+            InternFactory = host.InternFactory,
           };
           expression = new MethodCall() { Arguments = new List<IExpression>(1) { operand }, IsStaticCall = true, Type = operand.Type, MethodToCall = chkfinite };
           break;
@@ -463,7 +492,8 @@ namespace Microsoft.Cci.ILToCodeModel {
           break;
 
         case OperationCode.Jmp:
-          expression = new MethodCall() { IsJumpCall = true, MethodToCall = (IMethodReference)currentOperation.Value };
+          var methodToCall = (IMethodReference)currentOperation.Value;
+          expression = new MethodCall() { IsJumpCall = true, MethodToCall = methodToCall, Type = methodToCall.Type };
           break;
 
         case OperationCode.Ldarg:
@@ -671,6 +701,13 @@ namespace Microsoft.Cci.ILToCodeModel {
           statement.Locations.Add(this.lastSourceLocation);
           this.lastSourceLocation = null;
         }
+        if (this.lastSynchronizationLocation != null) {
+          statement.Locations.Add(this.lastSynchronizationLocation);
+          this.lastSynchronizationLocation = null;
+        } else if (this.lastContinuationLocation != null) {
+          statement.Locations.Add(this.lastContinuationLocation);
+          this.lastContinuationLocation = null;
+        }
       }
     }
 
@@ -789,6 +826,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       ArrayIndexer indexer = this.ParseArrayIndexer(currentOperation, elementType, treatArrayAsSingleDimensioned);
       addressableExpression.Definition = indexer;
       addressableExpression.Instance = indexer.IndexedObject;
+      addressableExpression.Type = elementType;
       this.sawReadonly = false;
       return result;
     }
@@ -806,7 +844,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       result.Indices.Reverse();
       result.IndexedObject = this.PopOperandStack();
       result.Type = elementType; //obtained from the instruction, but could be a lossy abstraction, or null
-      if (arrayType == null) 
+      if (arrayType == null)
         arrayType = result.IndexedObject.Type as IArrayTypeReference;
       if (arrayType != null) //rather use its element type than the caller's element type (which is derived from the operation code).
         result.Type = arrayType.ElementType;
@@ -899,7 +937,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           elementType = this.platformType.SystemFloat64;
           goto case OperationCode.Stelem_Ref;
         case OperationCode.Stelem_Ref:
-          ArrayIndexer indexer = this.ParseArrayIndexer(currentOperation, elementType??this.platformType.SystemObject, treatArrayAsSingleDimensioned:true);
+          ArrayIndexer indexer = this.ParseArrayIndexer(currentOperation, elementType??this.platformType.SystemObject, treatArrayAsSingleDimensioned: true);
           target.Definition = indexer;
           target.Instance = indexer.IndexedObject;
           target.Type = indexer.Type;
@@ -1058,9 +1096,9 @@ namespace Microsoft.Cci.ILToCodeModel {
       var rightOperand = this.PopOperandStack();
       var leftOperand = this.PopOperandStack();
       if (leftOperand.Type.TypeCode == PrimitiveTypeCode.Boolean && ExpressionHelper.IsIntegralZero(rightOperand))
-        return new LogicalNot() { Operand = leftOperand };
+        return new LogicalNot() { Operand = leftOperand, Type = leftOperand.Type };
       else
-        return new Equality() { LeftOperand = leftOperand, RightOperand = rightOperand };
+        return new Equality() { LeftOperand = leftOperand, RightOperand = rightOperand, Type = this.host.PlatformType.SystemBoolean };
     }
 
     private Statement ParseBinaryConditionalBranch(IOperation currentOperation) {
@@ -1131,9 +1169,24 @@ namespace Microsoft.Cci.ILToCodeModel {
       result.Definition = currentOperation.Value;
       result.IsVolatile = this.sawVolatile;
       switch (currentOperation.OperationCode) {
+        case OperationCode.Ldarg:
+        case OperationCode.Ldarg_0:
+        case OperationCode.Ldarg_1:
+        case OperationCode.Ldarg_2:
+        case OperationCode.Ldarg_3:
+        case OperationCode.Ldarg_S:
+          var par = result.Definition as IParameterDefinition;
+          Contract.Assume(par != null);
+          result.Type = par.IsByReference ? new ManagedPointerTypeReference() { TargetType = par.Type, InternFactory = this.host.InternFactory } :  par.Type;
+          break;
+        case OperationCode.Ldsfld:
+          var field = result.Definition as IFieldReference;
+          Contract.Assume(field != null);
+          result.Type = field.Type;
+          break;
         case OperationCode.Ldfld:
           result.Instance = this.PopOperandStack();
-          break;
+          goto case OperationCode.Ldsfld;
         case OperationCode.Ldloc:
         case OperationCode.Ldloc_0:
         case OperationCode.Ldloc_1:
@@ -1145,11 +1198,13 @@ namespace Microsoft.Cci.ILToCodeModel {
             this.bindingsThatMakeALastUseOfALocalVersion.Add(result);
           }
           Contract.Assume(result.Definition is ILocalDefinition);
-          var local = result.Definition = this.GetLocalWithSourceName((ILocalDefinition)result.Definition);
+          var locDef = (ILocalDefinition)result.Definition;
+          var local = result.Definition = this.GetLocalWithSourceName(locDef);
           this.numberOfReferencesToLocal[local] =
             this.numberOfReferencesToLocal.ContainsKey(local) ?
             this.numberOfReferencesToLocal[local] + 1 :
             1;
+          result.Type = locDef.IsReference ? new ManagedPointerTypeReference() { TargetType = locDef.Type, InternFactory = this.host.InternFactory } :  locDef.Type;
           break;
       }
       this.alignment = 0;
@@ -1257,7 +1312,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           Contract.Assume(currentOperation.Value is ITypeReference);
           var type = (ITypeReference)currentOperation.Value;
           var innerConversion = result.ValueToConvert as Conversion;
-          if (innerConversion != null) 
+          if (innerConversion != null)
             innerConversion.TypeAfterConversion = type;
           else
             ((Expression)result.ValueToConvert).Type = type;
@@ -1345,6 +1400,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       Assignment result = new Assignment();
       result.Source = source;
       result.Target = target;
+      result.Type = source.Type;
       return result;
     }
 
@@ -1353,6 +1409,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       CreateObjectInstance result = new CreateObjectInstance();
       Contract.Assume(currentOperation.Value is IMethodReference);
       result.MethodToCall = (IMethodReference)currentOperation.Value;
+      result.Type = result.MethodToCall.ContainingType;
       foreach (var par in result.MethodToCall.Parameters)
         result.Arguments.Add(this.PopOperandStack());
       result.Arguments.Reverse();
@@ -1619,8 +1676,8 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private ILabeledStatement GetTargetStatement(uint offset) {
-      LabeledStatement result;
-      if (this.targetStatementFor.TryGetValue(offset, out result)) return result;
+      LabeledStatement result = this.targetStatementFor[offset];
+      if (result != null) return result;
       var labeledStatement = new LabeledStatement();
       labeledStatement.Label = this.nameTable.GetNameFor("IL_" + offset.ToString("x4"));
       labeledStatement.Statement = new EmptyStatement();

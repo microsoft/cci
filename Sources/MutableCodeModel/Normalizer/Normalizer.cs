@@ -267,7 +267,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// and creates a new body for the iterator method. 
     /// </summary>
     internal BlockStatement CompileIterator(IBlockStatement block) {
-      var copier = new CodeDeepCopier(this.host);
+      var copier = new CodeDeepCopier(this.host, this.sourceLocationProvider);
       var copiedBlock = copier.Copy(block);
       var localCollector = new LocalCollector();
       new CodeTraverser() { PreorderVisitor = localCollector }.Traverse(copiedBlock);
@@ -690,7 +690,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       };
       iteratorClosure.ClosureDefinition.ExplicitImplementationOverrides.Add(moveNextImp);
 
-      SourceMethodBody body = new SourceMethodBody(this.host, this.sourceLocationProvider, this.iteratorLocalCount);
+      SourceMethodBody body = new SourceMethodBody(this.host, this.sourceLocationProvider, null, this.iteratorLocalCount);
       IBlockStatement block = TranslateIteratorMethodBodyToMoveNextBody(iteratorClosure, blockStatement);
       moveNext.Body = body;
       body.IsNormalized = true;
@@ -1457,7 +1457,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       ExpressionStatement thisDotStateEqMinus2 = new ExpressionStatement() {
         Expression = new Assignment() {
           Source = new CompileTimeConstant() { Value = -2, Type = this.host.PlatformType.SystemInt32 },
-          Target = new TargetExpression() { Definition = iteratorClosure.StateFieldReference, Type = this.host.PlatformType.SystemInt32, Instance = new ThisReference() }
+          Target = new TargetExpression() { Definition = iteratorClosure.StateFieldReference, Type = this.host.PlatformType.SystemInt32, Instance = new ThisReference() },
+          Type = this.host.PlatformType.SystemInt32,
         }
       };
       blockStatement.Statements.Add(thisDotStateEqMinus2);

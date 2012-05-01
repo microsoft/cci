@@ -39,7 +39,6 @@ namespace Microsoft.Cci.ILToCodeModel {
     Hashtable<IAnonymousDelegate>/*?*/ delegatesCachedInFields;
     Hashtable<LocalDefinition, AnonymousDelegate>/*?*/ delegatesCachedInLocals;
     Hashtable<object>/*?*/ closures;
-    Hashtable<Expression>/*?*/ closureFieldToLocalOrParameterMap;
     HashtableForUintValues<object> numberOfAssignmentsToLocal;
     HashtableForUintValues<object> numberOfReferencesToLocal;
 
@@ -55,6 +54,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       Contract.Requires(block != null);
       Contract.Ensures(Contract.Result<IBlockStatement>() != null);
 
+      Hashtable<Expression>/*?*/ closureFieldToLocalOrParameterMap = null;
       didNothing = true;
       var closureFinder = new ClosureFinder(this.host);
       closureFinder.Traverse(block);
@@ -79,6 +79,10 @@ namespace Microsoft.Cci.ILToCodeModel {
           Contract.Assume(closure != null);
           this.sourceMethodBody.privateHelperTypesToRemove.Add(TypeHelper.UninstantiateAndUnspecialize(closure).ResolvedType);
         }
+        var declBlockFinder = new ClosureFieldDeclaringBlockFinder(closureFieldToLocalOrParameterMap);
+        declBlockFinder.Traverse(result);
+        Contract.Assume(declBlockFinder.declaringBlockMap != null);
+        new CapturedLocalDeclarationInserter(closureFieldToLocalOrParameterMap, declBlockFinder.declaringBlockMap).Traverse(result);
         result = new ClosureRemover(this.sourceMethodBody, closures, closureFieldToLocalOrParameterMap).Rewrite(result);
       }
       if (this.delegatesCachedInFields != null || this.delegatesCachedInLocals != null || closures != null) {
@@ -205,6 +209,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         anonDel.ReturnValueCustomModifiers = new List<ICustomModifier>(closureMethod.ReturnValueCustomModifiers);
       anonDel.ReturnType = closureMethod.Type;
       anonDel.Type = delegateType;
+      new LocalReadAndWriteCounter(this.numberOfAssignmentsToLocal, this.numberOfReferencesToLocal).Traverse(anonDel.Body);
       return new ReparentAnonymousDelegateParametersAndLocals(this.host, this.containingMethod, closureMethod, anonDel).Rewrite(anonDel);
     }
 
@@ -228,8 +233,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         //We want avoid compiling specialized methods to IL and then decompiling those, just to get a specialized copy of the 
         //Hence we first get a copy of the compiled block of the unspecialized method.
         var block = this.GetCopyOfBody(specializedMethod.UnspecializedVersion);
-        block = new MapGenericTypeParameters(this.host, specializedMethod.ContainingTypeDefinition).Rewrite(block);
-        return block;
+        return new MapGenericTypeParameters(this.host, specializedMethod.ContainingTypeDefinition).Rewrite(block);
       }
 
       Contract.Assume(!delegateMethod.IsAbstract && !delegateMethod.IsExternal);
@@ -240,9 +244,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (alreadyDecompiledBody2 == null) {
           //Getting here is a bit of a surprise, but only if we decompile an entire module.
           //If we are decompiling a single method at a time, the anonymous delegate method might not have a source body.
-          var smb = new SourceMethodBody(methodBody, this.host,
-            this.sourceMethodBody.sourceLocationProvider, this.sourceMethodBody.localScopeProvider, this.sourceMethodBody.options);
-          return smb.Block;
+          return new SourceMethodBody(methodBody, this.host,
+            this.sourceMethodBody.sourceLocationProvider, this.sourceMethodBody.localScopeProvider, this.sourceMethodBody.options).Block;
         } else {
           //On the whole, we don't expect to get here, but it could happen if the decompiler's client is decompiling code that been
           //decompiled and then copied.
@@ -260,7 +263,6 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.sourceMethodBody.privateHelperMethodsToRemove = new Dictionary<uint, IMethodDefinition>();
       this.sourceMethodBody.privateHelperMethodsToRemove[methodToRemove.InternedKey] = methodToRemove;
     }
-
 
   }
 
@@ -389,4 +391,51 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
   }
 
+  internal class LocalReadAndWriteCounter : CodeTraverser {
+
+    internal LocalReadAndWriteCounter(HashtableForUintValues<object> numberOfAssignmentsToLocal, HashtableForUintValues<object> numberOfReferencesToLocal) {
+      Contract.Requires(numberOfAssignmentsToLocal != null);
+      Contract.Requires(numberOfReferencesToLocal != null);
+
+      this.numberOfAssignmentsToLocal = numberOfAssignmentsToLocal;
+      this.numberOfReferencesToLocal = numberOfReferencesToLocal;
+    }
+
+    HashtableForUintValues<object> numberOfAssignmentsToLocal;
+    HashtableForUintValues<object> numberOfReferencesToLocal;
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.numberOfAssignmentsToLocal != null);
+      Contract.Invariant(this.numberOfAssignmentsToLocal != null);
+    }
+
+    public override void TraverseChildren(IAddressableExpression addressableExpression) {
+      base.TraverseChildren(addressableExpression);
+      var local = addressableExpression.Definition as ILocalDefinition;
+      if (local == null) return;
+      this.numberOfAssignmentsToLocal[local]++;
+    }
+
+    public override void TraverseChildren(ILocalDeclarationStatement localDeclarationStatement) {
+      base.TraverseChildren(localDeclarationStatement);
+      if (localDeclarationStatement.InitialValue == null) return;
+      this.numberOfAssignmentsToLocal[localDeclarationStatement.LocalVariable]++;
+    }
+
+    public override void TraverseChildren(IBoundExpression boundExpression) {
+      base.TraverseChildren(boundExpression);
+      var local = boundExpression.Definition as ILocalDefinition;
+      if (local == null) return;
+      this.numberOfReferencesToLocal[local]++;
+    }
+
+    public override void TraverseChildren(ITargetExpression targetExpression) {
+      base.TraverseChildren(targetExpression);
+      var local = targetExpression.Definition as ILocalDefinition;
+      if (local == null) return;
+      this.numberOfAssignmentsToLocal[local]++;
+    }
+
+  }
 }

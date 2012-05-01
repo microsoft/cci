@@ -370,6 +370,8 @@ namespace Microsoft.Cci.ILToCodeModel {
     private static List<IStatement> CopyStatements(List<IStatement> statements, int n) {
       Contract.Requires(statements != null);
       Contract.Requires(0 <= n && n < statements.Count);
+      Contract.Ensures(Contract.Result<List<IStatement>>() != null);
+
  	    var result = new List<IStatement>(statements.Count);
       for (int i = 0; i < n; i++) {
         Contract.Assume(i < statements.Count);

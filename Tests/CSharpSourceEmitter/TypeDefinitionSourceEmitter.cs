@@ -79,8 +79,8 @@ namespace CSharpSourceEmitter {
 
     public virtual void PrintTypeDefinitionAttributes(ITypeDefinition typeDefinition) {
 
-      foreach (var attribute in typeDefinition.Attributes) {
-        // Skip DefaultMemeberAttribute on a class that has an indexer
+      foreach (var attribute in SortAttributes(typeDefinition.Attributes)) {
+        // Skip DefaultMemberAttribute on a class that has an indexer
         var at = Utils.GetAttributeType(attribute);
         if (at == SpecialAttribute.DefaultMemberAttribute &&
           IteratorHelper.Any(typeDefinition.Properties, p => IteratorHelper.EnumerableIsNotEmpty(p.Parameters)))

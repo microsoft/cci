@@ -34,7 +34,7 @@ namespace CSharpSourceEmitter {
         }
       }
 
-      foreach (var attribute in parameterDefinition.Attributes) {
+      foreach (var attribute in SortAttributes(parameterDefinition.Attributes)) {
         if (Utils.GetAttributeType(attribute) == SpecialAttribute.ParamArray)
           sourceEmitterOutput.Write("params");
         else
