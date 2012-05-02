@@ -28,6 +28,13 @@ namespace PeToText {
     IMetadataHost host;
     PdbReader/*?*/ pdbReader;
 
+    public override void TraverseChildren(INamespaceDefinition namespaceDefinition) {
+      var members = new List<INamespaceMember>(namespaceDefinition.Members);
+      members.Sort((x, y) => string.CompareOrdinal(x.Name.Value, y.Name.Value));
+      foreach (var member in members)
+        this.Traverse(member);
+    }
+
     public override void TraverseChildren(IMethodDefinition method) {
       this.writer.WriteLine(MemberHelper.GetMethodSignature(method, NameFormattingOptions.Signature));
       this.writer.WriteLine();
