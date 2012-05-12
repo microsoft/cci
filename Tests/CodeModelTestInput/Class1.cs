@@ -287,6 +287,49 @@ namespace CodeModelTestInput {
       int i = 1;
       a[i-1] = a[i] = "foo";
     }
+
+    static void Method37(out Action foo) {
+      string bar;
+      foo = () => { bar = "one"; Console.WriteLine(bar); };
+    }
+
+    static void Method38(out Action foo) {
+      string bar;
+      foo = () => bar = "one";
+      foo = () => { bar = "two"; Console.WriteLine(bar); };
+    }
+
+    private void Method39(Action foo) {
+      int bar;
+      foo = () => { Method40(out bar); Console.WriteLine(bar); };
+    }
+
+    private void Method40(out int bar) {
+      bar = 1;
+    }
+
+    private void Method41(Class1 c, Action foo) {
+      string someString = c != null ? c.Method42(part => part) : "";
+      foo = () => someString = null;
+    }
+
+    private string Method42(Func<object,object> something) {
+      return "something";
+    }
+
+    private int Method43() {
+      int foo = 0;
+
+      Action one = delegate() {
+        Action two = delegate() {
+          int bar = 0;
+          if (foo != 0)
+            foo = bar;
+        };
+      };
+      return foo;
+    }
+
   }
 
   struct SomeStruct {
@@ -406,6 +449,12 @@ namespace CodeModelTestInput {
           return tfield;
         }
       }
+      T Test1h(out Action foo) {
+        var ret = default(T);
+        foo = () => ret = default(T);
+        return ret;
+      }
+
     }
   }
 

@@ -1506,7 +1506,7 @@ namespace Microsoft.Cci {
 
     public IExpression ThisArgument {
       get {
-        Contract.Requires(!this.IsStaticCall);
+        Contract.Requires(!this.IsStaticCall && !this.IsJumpCall);
         Contract.Ensures(Contract.Result<IExpression>() != null);
         throw new NotImplementedException(); 
       }
@@ -1770,7 +1770,6 @@ namespace Microsoft.Cci {
     /// </summary>
     IExpression Pointer {
       get;
-      //^ ensures result.Type is IFunctionPointer;
     }
 
   }

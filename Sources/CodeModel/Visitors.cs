@@ -4046,7 +4046,7 @@ namespace Microsoft.Cci {
       Contract.Requires(methodCall != null);
       this.TraverseChildren((IExpression)methodCall);
       if (this.StopTraversal) return;
-      if (!methodCall.IsStaticCall) {
+      if (!methodCall.IsStaticCall && !methodCall.IsJumpCall) {
         this.Traverse(methodCall.ThisArgument);
         if (this.StopTraversal) return;
       }
@@ -5482,7 +5482,7 @@ namespace Microsoft.Cci {
       //^ int oldCount = this.path.Count;
       this.path.Push(methodCall);
       this.Visit(methodCall.MethodToCall);
-      if (!methodCall.IsStaticCall)
+      if (!methodCall.IsStaticCall && !methodCall.IsJumpCall)
         this.Visit(methodCall.ThisArgument);
       this.Visit(methodCall.Arguments);
       //^ assume this.path.Count == oldCount+1; //True because all of the virtual methods of this class promise not decrease this.path.Count.

@@ -141,7 +141,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           }
         } else {
           var mcall = es.Expression as MethodCall;
-          if (mcall == null || mcall.IsStaticCall || mcall.MethodToCall.Type.TypeCode != PrimitiveTypeCode.Void || mcall.MethodToCall.Name.Value != ".ctor") continue;
+          if (mcall == null || mcall.IsStaticCall || mcall.IsJumpCall || mcall.MethodToCall.Type.TypeCode != PrimitiveTypeCode.Void || mcall.MethodToCall.Name.Value != ".ctor") continue;
           var addressOf = mcall.ThisArgument as IAddressOf;
           if (addressOf == null) continue;
           var addressableExpression = addressOf.Expression as IAddressableExpression;

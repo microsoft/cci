@@ -73,6 +73,16 @@ namespace Microsoft.Cci.ILToCodeModel {
       return base.Rewrite(conditionalStatement);
     }
 
+    public override IStatement Rewrite(IExpressionStatement expressionStatement) {
+      var assignment = expressionStatement.Expression as Assignment;
+      if (assignment != null) {
+        var local = assignment.Target.Definition as LocalDefinition;
+        if (local != null && this.delegatesCachedInLocals != null && this.delegatesCachedInLocals.ContainsKey(local))
+          return CodeDummy.Block;
+      }
+      return base.Rewrite(expressionStatement);
+    }
+
     public override IStatement Rewrite(ILocalDeclarationStatement localDeclarationStatement) {
       var local = localDeclarationStatement.LocalVariable as LocalDefinition;
       if (local != null && this.delegatesCachedInLocals != null && this.delegatesCachedInLocals.ContainsKey(local))

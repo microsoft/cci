@@ -644,6 +644,110 @@ namespace CodeModelTestInput
 
         }
 
+        private static void Method37(out System.Action foo)
+        {
+            string bar;
+            foo = delegate () {
+                bar = "one";
+                System.Console.WriteLine(bar);
+                return;
+
+            };
+            return;
+
+        }
+
+        private static void Method38(out System.Action foo)
+        {
+            string bar;
+            foo = delegate () {
+                bar = "one";
+                return;
+
+            };
+            foo = delegate () {
+                bar = "two";
+                System.Console.WriteLine(bar);
+                return;
+
+            };
+            return;
+
+        }
+
+        private void Method39(System.Action foo)
+        {
+            int bar;
+            foo = delegate () {
+                this.Method40(out bar);
+                System.Console.WriteLine(bar);
+                return;
+
+            };
+            return;
+
+        }
+
+        private void Method40(out int bar)
+        {
+            bar = 1;
+            return;
+
+        }
+
+        private void Method41(CodeModelTestInput.Class1 c, System.Action foo)
+        {
+            string __temp_2;
+            CodeModelTestInput.Class1 __temp_3;
+            string someString;
+            if ((c == default(CodeModelTestInput.Class1)))
+            {
+                __temp_2 = "";
+            }
+            else
+            {
+                __temp_3 = c;
+                {
+                    string __temp_4 = __temp_3.Method42((object part) => part);
+                    __temp_2 = __temp_4;
+                }
+            }
+            someString = __temp_2;
+            foo = delegate () {
+                someString = null;
+                return;
+
+            };
+            return;
+
+        }
+
+        private string Method42(System.Func<object, object> something)
+        {
+            return "something";
+
+        }
+
+        private int Method43()
+        {
+            int foo = 0;
+            System.Action one = delegate () {
+                System.Action two = delegate () {
+                    int bar = 0;
+                    if ((foo != 0))
+                    {
+                        foo = bar;
+                    }
+                    return;
+
+                };
+                return;
+
+            };
+            return foo;
+
+        }
+
         public Class1()
         {
             this.c = 0;
@@ -902,6 +1006,19 @@ namespace CodeModelTestInput
             private bool foo<S>(CodeModelTestInput.Class2.IIncrementable<S> y, T x)
             {
                 return (y.Value() == x.Value());
+
+            }
+
+            private T Test1h(out System.Action foo)
+            {
+                T ret;
+                ret = default(T);
+                foo = delegate () {
+                    ret = default(T);
+                    return;
+
+                };
+                return ret;
 
             }
 

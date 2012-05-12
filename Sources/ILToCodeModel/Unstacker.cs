@@ -287,7 +287,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override IExpression Visit(MethodCall methodCall) {
       methodCall.Arguments = this.Visit(methodCall.Arguments);
-      if (!methodCall.IsStaticCall)
+      if (!methodCall.IsStaticCall && !methodCall.IsJumpCall)
         methodCall.ThisArgument = this.Visit(methodCall.ThisArgument);
       methodCall.MethodToCall = this.Visit(methodCall.MethodToCall);
       methodCall.Type = this.Visit(methodCall.Type);

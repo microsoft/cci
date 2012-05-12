@@ -842,12 +842,19 @@ namespace Microsoft.Cci.ILToCodeModel {
       for (uint i = 0; i < rank; i++)
         result.Indices.Add(this.PopOperandStack());
       result.Indices.Reverse();
-      result.IndexedObject = this.PopOperandStack();
+      var indexedObject = this.PopOperandStack();
+      Contract.Assume(indexedObject != null);
       result.Type = elementType; //obtained from the instruction, but could be a lossy abstraction, or null
       if (arrayType == null)
-        arrayType = result.IndexedObject.Type as IArrayTypeReference;
+        arrayType = indexedObject.Type as IArrayTypeReference;
       if (arrayType != null) //rather use its element type than the caller's element type (which is derived from the operation code).
         result.Type = arrayType.ElementType;
+      else
+        arrayType = Immutable.Vector.GetVector(elementType, this.host.InternFactory);
+      if (!TypeHelper.TypesAreEquivalent(indexedObject.Type, arrayType))
+        indexedObject = new Conversion() { ValueToConvert = indexedObject, TypeAfterConversion = arrayType };
+      Contract.Assume(indexedObject.Type is IArrayTypeReference);
+      result.IndexedObject = indexedObject;
       Contract.Assume(!(result.Type is Dummy));
       return result;
     }
@@ -1012,10 +1019,18 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       assignment.Source = TypeInferencer.Convert(assignment.Source, target.Type); //mainly to convert (u)ints to bools, chars and pointers.
       assignment.Type = target.Type;
-      Contract.Assume(assignment.Target.Type.TypeCode != PrimitiveTypeCode.Boolean || assignment.Source.Type.TypeCode == PrimitiveTypeCode.Boolean);
+      Contract.Assume(assignment.Target.Type.TypeCode != PrimitiveTypeCode.Boolean || assignment.Source.Type.TypeCode == PrimitiveTypeCode.Boolean || IsByRef(assignment.Target.Definition));
       this.alignment = 0;
       this.sawVolatile = false;
       return result;
+    }
+
+    private static bool IsByRef(object definition) {
+      var local = definition as ILocalDefinition;
+      if (local != null) return local.IsReference;
+      var parameter = definition as IParameterDefinition;
+      if (parameter != null) return parameter.IsByReference;
+      return false;
     }
 
     private ITypeReference TypeFor(OperationCode operationCode) {
@@ -1230,6 +1245,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         Contract.Assume(i < result.Arguments.Count);
         Contract.Assume(result.Arguments[i] != null);
         result.Arguments[i] = TypeInferencer.Convert(result.Arguments[i++], par.Type);
+        //TODO: special case out arguments and ref arguments
       }
       foreach (var par in methodRef.ExtraParameters) {
         Contract.Assume(par != null);
@@ -1470,9 +1486,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       Expression operand = this.PopOperandStack();
       Contract.Assume(currentOperation.Value is ITypeReference);
       var type = (ITypeReference)currentOperation.Value;
-      if (type.IsValueType)
-        type = Immutable.ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory);
-      operand.Type = type;
+      operand.Type = Immutable.ManagedPointerType.GetManagedPointerType(type, this.host.InternFactory); ;
       result.Operand = operand;
       return result;
     }
@@ -1636,7 +1650,6 @@ namespace Microsoft.Cci.ILToCodeModel {
     private Expression PopOperandStack() {
       Contract.Ensures(Contract.Result<Expression>() != null);
       if (this.operandStack.Count == 0) {
-        Contract.Assume(this.cdfg.AllBlocks.Count == 1 && this.cdfg.AllBlocks[0] != null && this.cdfg.AllBlocks[0].Instructions.Count <= 1);
         return new PopValue();
       } else {
         var result = this.operandStack.Pop();

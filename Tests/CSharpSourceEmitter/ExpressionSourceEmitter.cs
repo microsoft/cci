@@ -917,7 +917,7 @@ namespace CSharpSourceEmitter {
     public override void TraverseChildren(IMethodCall methodCall) {
       NameFormattingOptions options = NameFormattingOptions.None;
       bool delegateInvocation = false;
-      if (!methodCall.IsStaticCall) {
+      if (!methodCall.IsStaticCall && !methodCall.IsJumpCall) {
         IAddressOf/*?*/ addressOf = methodCall.ThisArgument as IAddressOf;
         if (addressOf != null) {
           this.Traverse(addressOf.Expression);

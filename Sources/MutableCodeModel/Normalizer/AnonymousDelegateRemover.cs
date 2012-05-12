@@ -1003,8 +1003,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     public override void TraverseChildren(IAnonymousDelegate anonymousDelegate) {
       var saved = this.currentAnonymousDelegate;
       this.currentAnonymousDelegate = anonymousDelegate;
+      foreach (var parameter in anonymousDelegate.Parameters)
+        this.definitionsToIgnore[parameter] = true;
       base.TraverseChildren(anonymousDelegate);
       this.currentAnonymousDelegate = saved;
+      if (saved != null) {
+        if (this.anonymousDelegatesThatCaptureThis.ContainsKey(anonymousDelegate))
+          this.anonymousDelegatesThatCaptureThis[saved] = true;
+        if (this.anonymousDelegatesThatCaptureLocalsOrParameters.ContainsKey(anonymousDelegate))
+          this.anonymousDelegatesThatCaptureLocalsOrParameters[saved] = true;
+      }
     }
 
     public override void TraverseChildren(IAddressableExpression addressableExpression) {
@@ -1033,12 +1041,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.currentAnonymousDelegate != null)
         this.definitionsToIgnore[localDeclarationStatement.LocalVariable] = true;
       base.TraverseChildren(localDeclarationStatement);
-    }
-
-    public override void TraverseChildren(IParameterDefinition parameterDefinition) {
-      if (this.currentAnonymousDelegate != null)
-        this.definitionsToIgnore[parameterDefinition] = true;
-      base.TraverseChildren(parameterDefinition);
     }
 
     public override void TraverseChildren(ITargetExpression targetExpression) {

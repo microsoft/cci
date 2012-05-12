@@ -315,6 +315,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             if (local != null) return local; //if not, this is not a recognized code pattern.
           }
         }
+        Contract.Assume(false);
       } else {
         //Valid IL should always have at least one instruction to consume the exception value as well as a branch out of the handler block.
         Contract.Assume(false);

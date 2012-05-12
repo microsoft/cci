@@ -23,6 +23,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     IMetadataHost host;
     internal Hashtable<object>/*?*/ closures;
+    internal Hashtable<object>/*?*/ closuresThatCannotBeDeleted;
     internal bool sawAnonymousDelegate;
 
     [ContractInvariantMethod]
@@ -46,6 +47,32 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
+    public override void TraverseChildren(ITokenOf tokenOf) {
+      base.TraverseChildren(tokenOf);
+      var typeRef = tokenOf.Definition as ITypeReference;
+      if (typeRef == null) {
+        var typeMemberRef = tokenOf.Definition as ITypeMemberReference;
+        if (typeMemberRef != null)
+          typeRef = typeMemberRef.ContainingType;
+      }
+      if (typeRef != null) {
+        var typeDef = typeRef.ResolvedType;
+        if (TypeHelper.IsCompilerGenerated(typeDef)) {
+          if (this.closuresThatCannotBeDeleted == null)
+            this.closuresThatCannotBeDeleted = new Hashtable<object>();
+          while (typeDef != null) {
+            this.closuresThatCannotBeDeleted[typeDef.InternedKey] = typeDef;
+            ITypeDefinition baseType = null;
+            foreach (var baseTypeRef in typeDef.BaseClasses) {
+              baseType = baseTypeRef as ITypeDefinition;
+              if (baseType != null) break;
+            }
+            typeDef = baseType;
+          }         
+        }         
+      }
+    }
+
     private void AddOuterClosures(ITypeDefinition typeDefinition) {
       Contract.Requires(typeDefinition != null);
       Contract.Requires(this.closures != null);
@@ -62,23 +89,35 @@ namespace Microsoft.Cci.ILToCodeModel {
 
   }
 
+  /// <summary>
+  /// The purpose of this traverser is to discover the mapping between fields in a closure state class and the original locals and parameters that were
+  /// captured into the closure state class, so that we can substitute field accesses with local and parameter accesses during decompilation of anonymous
+  /// delegates. Things are complicated by having to deal with a variety of compilers that potentially use different name mangling schemes
+  /// and moreover we might not have a PDB file available and so might not know the name of a local or parameter. The bottom line is that we
+  /// cannot rely on naming conventions. Generally, we rely on the source operand of the first assignment to a state field as providing the local
+  /// or parameter that is being captured. However, if an anonymous delegate uses a local that is not used outside of it (or other anonymous delegates)
+  /// then a compiler (such as, alas, the C# compiler) might provide a state field for the local while not actually defining a real local of inserting
+  /// an assignment to capture the value of the local in the state class before constructing a closure. We therefore recurse into anonymous delegate 
+  /// bodies to find assignments to state fields, assume those are captured locals, and then dummy up locals for use in the decompiled method.
+  /// </summary>
   internal class ClosureFieldMapper : CodeTraverser {
 
-    internal ClosureFieldMapper(IMetadataHost host, IMethodDefinition method, Hashtable<object> closures) {
+    internal ClosureFieldMapper(IMetadataHost host, IMethodDefinition method, Hashtable<object> closures, Hashtable<Expression> closureFieldToLocalOrParameterMap) {
       Contract.Requires(host != null);
       Contract.Requires(method != null);
       Contract.Requires(closures != null);
+      Contract.Requires(closureFieldToLocalOrParameterMap != null);
 
       this.host = host;
       this.method = method;
       this.closures = closures;
-      this.closureFieldToLocalOrParameterMap = new Hashtable<Expression>();
+      this.closureFieldToLocalOrParameterMap = closureFieldToLocalOrParameterMap;
     }
 
     IMetadataHost host;
     IMethodDefinition method;
     Hashtable<object> closures;
-    internal Hashtable<Expression> closureFieldToLocalOrParameterMap;
+    Hashtable<Expression> closureFieldToLocalOrParameterMap;
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
@@ -90,9 +129,20 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     public override void TraverseChildren(IAssignment assignment) {
       base.TraverseChildren(assignment);
+      var definition = assignment.Target.Definition;
       var instance = assignment.Target.Instance;
+      if (instance == null) {
+        var addressDeref = assignment.Target.Definition as IAddressDereference;
+        if (addressDeref != null) {
+          var addressOf = addressDeref.Address as IAddressOf;
+          if (addressOf != null) {
+            instance = addressOf.Expression.Instance;
+            definition = addressOf.Expression.Definition;
+          }
+        }
+      }
       if (instance == null) return;
-      var field = assignment.Target.Definition as IFieldReference;
+      var field = definition as IFieldReference;
       if (field == null) return;
       if (this.closures.Find(instance.Type.InternedKey) == null) return;
       if (this.closureFieldToLocalOrParameterMap[field.InternedKey] != null) return;
@@ -109,14 +159,30 @@ namespace Microsoft.Cci.ILToCodeModel {
           return;
         }
       }
-      var local = new CapturedLocalDefinition() { MethodDefinition = this.method, Name = field.Name, Type = field.Type };
+      var local = new CapturedLocalDefinition() { capturingField = field, MethodDefinition = this.method, Name = field.Name, Type = field.Type };
       this.closureFieldToLocalOrParameterMap.Add(field.InternedKey, new BoundExpression() { Definition = local, Type = field.Type });
     }
 
-    public override void TraverseChildren(IBlockStatement block) {
-      Contract.Assume(block is BlockStatement);
-      var mutableBlock = (BlockStatement)block;
-      this.Traverse(mutableBlock.Statements);
+    public override void TraverseChildren(IAddressableExpression addressableExpression) {
+      var definition = addressableExpression.Definition;
+      var instance = addressableExpression.Instance;
+      if (instance == null) {
+        var addressDeref = definition as IAddressDereference;
+        if (addressDeref != null) {
+          var addressOf = addressDeref.Address as IAddressOf;
+          if (addressOf != null) {
+            instance = addressOf.Expression.Instance;
+            definition = addressOf.Expression.Definition;
+          }
+        }
+      }
+      if (instance == null) return;
+      var field = definition as IFieldReference;
+      if (field == null) return;
+      if (this.closures.Find(instance.Type.InternedKey) == null) return;
+      if (this.closureFieldToLocalOrParameterMap[field.InternedKey] != null) return;
+      var local = new CapturedLocalDefinition() { capturingField = field, MethodDefinition = this.method, Name = field.Name, Type = field.Type };
+      this.closureFieldToLocalOrParameterMap.Add(field.InternedKey, new BoundExpression() { Definition = local, Type = field.Type });
     }
 
   }
@@ -234,5 +300,13 @@ namespace Microsoft.Cci.ILToCodeModel {
   }
 
   internal class CapturedLocalDefinition : LocalDefinition {
+    internal IFieldReference capturingField;
+
+    public override LocalDefinition Clone() {
+      var clone = new CapturedLocalDefinition();
+      clone.Copy(this, Dummy.InternFactory);
+      clone.capturingField = this.capturingField;
+      return clone;
+    }
   }
 }

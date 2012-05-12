@@ -41,6 +41,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     Hashtable<object>/*?*/ closures;
     HashtableForUintValues<object> numberOfAssignmentsToLocal;
     HashtableForUintValues<object> numberOfReferencesToLocal;
+    ClosureFieldMapper/*?*/ closureFieldMapper;
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
@@ -61,18 +62,25 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (!closureFinder.sawAnonymousDelegate) return block;
       didNothing = false;
       var closures = this.closures = closureFinder.closures;
+      var closuresThatCannotBeDeleted = closureFinder.closuresThatCannotBeDeleted;
       closureFinder = null;
       if (closures != null) {
-        var mapper = new ClosureFieldMapper(this.host, this.containingMethod, closures);
-        mapper.Traverse(block);
-        closureFieldToLocalOrParameterMap = mapper.closureFieldToLocalOrParameterMap;
-        mapper = null;
+        if (closuresThatCannotBeDeleted != null) {
+          foreach (var keptClosure in closuresThatCannotBeDeleted.Values) {
+            var td = keptClosure as ITypeDefinition;
+            if (td == null) continue;
+            closures[td.InternedKey] = null;
+          }
+        }
+        closureFieldToLocalOrParameterMap = new Hashtable<Expression>();
+        this.closureFieldMapper = new ClosureFieldMapper(this.host, this.containingMethod, closures, closureFieldToLocalOrParameterMap);
+        this.closureFieldMapper.Traverse(block);
       }
       var result = this.Rewrite(block);
       if (this.delegatesCachedInFields != null || this.delegatesCachedInLocals != null)
         result = new AnonymousDelegateCachingRemover(this.host, this.delegatesCachedInFields, this.delegatesCachedInLocals).Rewrite(result);
       if (closures != null) {
-        Contract.Assume(closureFieldToLocalOrParameterMap != null);
+        Contract.Assert(closureFieldToLocalOrParameterMap != null);
         if (this.sourceMethodBody.privateHelperTypesToRemove == null) 
           this.sourceMethodBody.privateHelperTypesToRemove = new List<ITypeDefinition>();
         foreach (ITypeDefinition closure in closures.Values) {
@@ -203,7 +211,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       AnonymousDelegate anonDel = new AnonymousDelegate();
       anonDel.CallingConvention = closureMethod.CallingConvention;
       anonDel.Parameters = new List<IParameterDefinition>(closureMethod.Parameters);
-      anonDel.Body = this.Rewrite(this.GetCopyOfBody(closureMethod));
+      var body = this.GetCopyOfBody(closureMethod);
+      if (this.closureFieldMapper != null)
+        this.closureFieldMapper.Traverse(body);
+      anonDel.Body = this.Rewrite(body);
       anonDel.ReturnValueIsByRef = closureMethod.ReturnValueIsByRef;
       if (closureMethod.ReturnValueIsModified)
         anonDel.ReturnValueCustomModifiers = new List<ICustomModifier>(closureMethod.ReturnValueCustomModifiers);
@@ -336,6 +347,15 @@ namespace Microsoft.Cci.ILToCodeModel {
       Contract.Invariant(this.genericArguments != null);
     }
 
+    public override ILocalDefinition Rewrite(ILocalDefinition localDefinition) {
+      var capturedDef = localDefinition as CapturedLocalDefinition;
+      if (capturedDef != null) {
+        Contract.Assume(capturedDef.capturingField != null);
+        capturedDef.capturingField = this.Rewrite(capturedDef.capturingField);
+      }
+      return base.Rewrite(localDefinition);
+    }
+
     public override ITypeReference Rewrite(IGenericMethodParameterReference genericMethodParameterReference) {
       Contract.Assume(genericMethodParameterReference.Index < this.genericArguments.Length);
       var genArg = this.genericArguments[genericMethodParameterReference.Index];
@@ -389,6 +409,16 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override ITypeReference Rewrite(IGenericTypeParameterReference genericTypeParameterReference) {
       return this.genericArgumentsMap.Find(genericTypeParameterReference.InternedKey)??genericTypeParameterReference;
     }
+
+    public override ILocalDefinition Rewrite(ILocalDefinition localDefinition) {
+      var capturedDef = localDefinition as CapturedLocalDefinition;
+      if (capturedDef != null) {
+        Contract.Assume(capturedDef.capturingField != null);
+        capturedDef.capturingField = this.Rewrite(capturedDef.capturingField);
+      }
+      return base.Rewrite(localDefinition);
+    }
+
   }
 
   internal class LocalReadAndWriteCounter : CodeTraverser {
@@ -407,7 +437,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     [ContractInvariantMethod]
     private void ObjectInvariant() {
       Contract.Invariant(this.numberOfAssignmentsToLocal != null);
-      Contract.Invariant(this.numberOfAssignmentsToLocal != null);
+      Contract.Invariant(this.numberOfReferencesToLocal != null);
     }
 
     public override void TraverseChildren(IAddressableExpression addressableExpression) {

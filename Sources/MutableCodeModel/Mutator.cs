@@ -2390,7 +2390,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual void RewriteChildren(MethodCall methodCall) {
       Contract.Requires(methodCall != null);
 
-      if (!methodCall.IsStaticCall)
+      if (!methodCall.IsStaticCall && !methodCall.IsJumpCall)
         methodCall.ThisArgument = this.Rewrite(methodCall.ThisArgument);
       this.RewriteChildren((ConstructorOrMethodCall)methodCall);
     }
@@ -3537,7 +3537,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="methodCall">The method call.</param>
     /// <returns></returns>
     public virtual IExpression Visit(MethodCall methodCall) {
-      if (!methodCall.IsStaticCall)
+      if (!methodCall.IsStaticCall && !methodCall.IsJumpCall)
         methodCall.ThisArgument = this.Visit(methodCall.ThisArgument);
       methodCall.Arguments = this.Visit(methodCall.Arguments);
       methodCall.MethodToCall = this.Visit(methodCall.MethodToCall);
@@ -5813,7 +5813,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="methodCall">The method call.</param>
     /// <returns></returns>
     public virtual IExpression Visit(MethodCall methodCall) {
-      if (!methodCall.IsStaticCall)
+      if (!methodCall.IsStaticCall && !methodCall.IsJumpCall)
         methodCall.ThisArgument = this.Visit(methodCall.ThisArgument);
       methodCall.Arguments = this.Visit(methodCall.Arguments);
       methodCall.MethodToCall = this.Visit(methodCall.MethodToCall);

@@ -459,11 +459,11 @@ namespace Microsoft.Cci.ILToCodeModel {
         var es1 = statements[i] as ExpressionStatement;
         if (es1 == null) continue;
         var setterCall = es1.Expression as MethodCall;
-        if (setterCall == null || setterCall.IsStaticCall || setterCall.Arguments.Count != 1) continue;
+        if (setterCall == null || setterCall.IsStaticCall || setterCall.IsJumpCall || setterCall.Arguments.Count != 1) continue;
         var binaryOp = setterCall.Arguments[0] as BinaryOperation;
         if (binaryOp == null) continue;
         var getterCall = binaryOp.LeftOperand as MethodCall;
-        if (getterCall == null || getterCall.IsStaticCall || getterCall.Arguments.Count != 0) continue;
+        if (getterCall == null || getterCall.IsStaticCall || getterCall.IsJumpCall || getterCall.Arguments.Count != 0) continue;
         if (!(getterCall.ThisArgument is IDupValue)) continue;
         var setterName = setterCall.MethodToCall.Name.Value;
         var getterName = getterCall.MethodToCall.Name.Value;
@@ -544,12 +544,12 @@ namespace Microsoft.Cci.ILToCodeModel {
         var assign2 = exprS2.Expression as Assignment;
         if (assign2 == null) {
           var setterCall = exprS2.Expression as MethodCall;
-          if (setterCall == null || setterCall.IsStaticCall || setterCall.Arguments.Count != 1) continue;
+          if (setterCall == null || setterCall.IsStaticCall || setterCall.IsJumpCall || setterCall.Arguments.Count != 1) continue;
           if (!(setterCall.ThisArgument is IPopValue) || !(setterCall.Arguments[0] is IPopValue)) continue;
           var binaryOp = push2.ValueToPush as BinaryOperation;
           if (binaryOp == null) continue;
           var getterCall = binaryOp.LeftOperand as MethodCall;
-          if (getterCall == null || getterCall.IsStaticCall || getterCall.Arguments.Count != 0) continue;
+          if (getterCall == null || getterCall.IsStaticCall || getterCall.IsJumpCall || getterCall.Arguments.Count != 0) continue;
           if (!(getterCall.ThisArgument is IDupValue)) continue;
           var setterName = setterCall.MethodToCall.Name.Value;
           var getterName = getterCall.MethodToCall.Name.Value;
@@ -759,6 +759,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         Contract.Assume(i+count < statements.Count);
         var nextStatement = statements[i + count];
         Contract.Assume(nextStatement != null);
+        if (!(nextStatement is IExpressionStatement || nextStatement is IPushStatement || nextStatement is IReturnStatement || nextStatement is IThrowStatement)) continue;
         PopCounter pc = new PopCounter();
         pc.Traverse(nextStatement);
         if (pc.count == 0) continue;

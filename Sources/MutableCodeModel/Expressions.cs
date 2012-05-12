@@ -418,7 +418,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IExpression IndexedObject {
       get { return this.indexedObject; }
-      set { this.indexedObject = value; }
+      set {
+        //Contract.Requires(value.Type is IArrayTypeReference);
+        this.indexedObject = value; 
+      }
     }
     IExpression indexedObject;
 
@@ -2053,7 +2056,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.isVirtualCall = methodCall.IsVirtualCall;
       this.isTailCall = methodCall.IsTailCall;
       this.isStaticCall = methodCall.IsStaticCall;
-      if (!methodCall.IsStaticCall) {
+      if (!methodCall.IsStaticCall && !methodCall.IsJumpCall) {
         this.thisArgument = methodCall.ThisArgument;
       } else
         this.thisArgument = CodeDummy.Expression;
@@ -2507,7 +2510,12 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public IExpression Pointer {
       get { return this.pointer; }
-      set { this.pointer = value; }
+      set {
+        Contract.Requires(value != null);
+        Contract.Requires(value.Type is IFunctionPointerTypeReference);
+
+        this.pointer = value; 
+      }
     }
     IExpression pointer;
 

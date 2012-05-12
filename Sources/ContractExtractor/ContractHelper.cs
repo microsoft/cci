@@ -1097,7 +1097,7 @@ namespace Microsoft.Cci.MutableContracts {
       /// </summary>
       public override void RewriteChildren(MethodCall methodCall) {
         base.RewriteChildren(methodCall);
-        if (!methodCall.IsStaticCall && methodCall.ThisArgument is IThisReference && methodCall.ThisArgument.Type.IsValueType) {
+        if (!methodCall.IsStaticCall && !methodCall.IsJumpCall && methodCall.ThisArgument is IThisReference && methodCall.ThisArgument.Type.IsValueType) {
           methodCall.ThisArgument =
               new ThisReference() {
                 Type = MutableModelHelper.GetManagedPointerTypeReference(methodCall.ThisArgument.Type, this.host.InternFactory, methodCall.ThisArgument.Type)
@@ -1599,7 +1599,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// <param name="methodCall"></param>
     public override void RewriteChildren(MethodCall methodCall) {
       base.RewriteChildren(methodCall);
-      if (!methodCall.IsStaticCall && methodCall.ThisArgument is IThisReference && this.targetType.IsValueType && !this.sourceType.IsValueType) {
+      if (!methodCall.IsStaticCall && !methodCall.IsJumpCall && methodCall.ThisArgument is IThisReference && this.targetType.IsValueType && !this.sourceType.IsValueType) {
         methodCall.ThisArgument =
             new ThisReference() {
               Type = MutableModelHelper.GetManagedPointerTypeReference(methodCall.ThisArgument.Type, this.host.InternFactory, methodCall.ThisArgument.Type)

@@ -490,7 +490,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       ExpressionStatement/*?*/ expressionStatement = statements[i+2] as ExpressionStatement;
       if (expressionStatement == null) return;
       MethodCall/*?*/ methodCall = expressionStatement.Expression as MethodCall;
-      if (methodCall == null || !methodCall.IsStaticCall || methodCall.Arguments.Count != 2) return;
+      if (methodCall == null || !methodCall.IsStaticCall || methodCall.IsJumpCall || methodCall.Arguments.Count != 2) return;
       var pop = methodCall.Arguments[0] as Pop;
       if (pop == null) return;
       TokenOf/*?*/ tokenOf = methodCall.Arguments[1] as TokenOf;

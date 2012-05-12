@@ -531,18 +531,21 @@ namespace Microsoft.Cci.ILToCodeModel {
       Contract.Requires(expression != null);
       Contract.Requires(targetType != null);
       Contract.Ensures(Contract.Result<IExpression>() != null);
-      
+
+      var expressionType = expression.Type;
+      if (TypeHelper.TypesAreEquivalent(expressionType, targetType)) return expression;
       Contract.Assume(!(targetType is Dummy)); //Nice check, but too onerous for client to prove statically.
-      if (targetType.TypeCode == PrimitiveTypeCode.Boolean && TypeHelper.IsPrimitiveInteger(expression.Type))
+      if (targetType.TypeCode == PrimitiveTypeCode.Boolean && TypeHelper.IsPrimitiveInteger(expressionType))
         return ConvertToBoolean(expression);
-      if (targetType.TypeCode == PrimitiveTypeCode.Char && expression.Type.TypeCode == PrimitiveTypeCode.Int32)
+      if (targetType.TypeCode == PrimitiveTypeCode.Char && expressionType.TypeCode == PrimitiveTypeCode.Int32)
         return ConvertToCharacter(expression);
-      if (targetType.TypeCode == PrimitiveTypeCode.UInt32 && expression.Type.TypeCode == PrimitiveTypeCode.Int32)
+      if (targetType.TypeCode == PrimitiveTypeCode.UInt32 && expressionType.TypeCode == PrimitiveTypeCode.Int32)
         return new Conversion() { ValueToConvert = expression, TypeAfterConversion = targetType, Type = targetType };
-      if (targetType.TypeCode == PrimitiveTypeCode.UInt64 && expression.Type.TypeCode == PrimitiveTypeCode.Int64)
+      if (targetType.TypeCode == PrimitiveTypeCode.UInt64 && expressionType.TypeCode == PrimitiveTypeCode.Int64)
         return new Conversion() { ValueToConvert = expression, TypeAfterConversion = targetType, Type = targetType };
-      if (targetType is IPointerTypeReference || targetType is IManagedPointerTypeReference) {
-        if (expression.Type.TypeCode == PrimitiveTypeCode.UIntPtr || expression.Type.TypeCode == PrimitiveTypeCode.IntPtr)
+      if (targetType is IPointerTypeReference || targetType is IManagedPointerTypeReference || targetType is IFunctionPointerTypeReference) {
+        if (expressionType.TypeCode == PrimitiveTypeCode.UIntPtr || expressionType.TypeCode == PrimitiveTypeCode.IntPtr || TypeHelper.IsPrimitiveInteger(expressionType) || 
+        expressionType is IPointerTypeReference || expressionType is IManagedPointerTypeReference || expressionType is IFunctionPointerTypeReference)
           return new Conversion() { ValueToConvert = expression, TypeAfterConversion = targetType, Type = targetType };
       }
       if (expression is IPopValue) return new PopValue() { Type = targetType };

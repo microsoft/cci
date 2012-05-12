@@ -2714,7 +2714,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       var mutableCopy = this.shallowCopier.Copy(methodCall);
       this.CopyChildren((Expression)mutableCopy);
-      if (!mutableCopy.IsStaticCall)
+      if (!mutableCopy.IsStaticCall && !mutableCopy.IsJumpCall)
         mutableCopy.ThisArgument = this.Copy(mutableCopy.ThisArgument);
       mutableCopy.MethodToCall = this.Copy(mutableCopy.MethodToCall);
       mutableCopy.Arguments = this.Copy(mutableCopy.Arguments);
@@ -4165,7 +4165,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="methodCall">The method call.</param>
     /// <returns></returns>
     protected virtual IExpression DeepCopy(MethodCall methodCall) {
-      if (!methodCall.IsStaticCall)
+      if (!methodCall.IsStaticCall && !methodCall.IsJumpCall)
         methodCall.ThisArgument = this.Substitute(methodCall.ThisArgument);
       methodCall.Arguments = this.DeepCopy(methodCall.Arguments);
       methodCall.MethodToCall = this.Substitute(methodCall.MethodToCall);

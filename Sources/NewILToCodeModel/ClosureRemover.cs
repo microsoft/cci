@@ -45,6 +45,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override IAddressableExpression Rewrite(IAddressableExpression addressableExpression) {
       var result = base.Rewrite(addressableExpression);
       var field = addressableExpression.Definition as IFieldReference;
+      if (field == null) {
+        var capturedLocal = addressableExpression.Definition as CapturedLocalDefinition;
+        if (capturedLocal != null) field = capturedLocal.capturingField;
+      }
       if (field != null) {
         var locOrPar = this.closureFieldToLocalOrParameterMap.Find(field.InternedKey);
         if (locOrPar != null) {
@@ -66,6 +70,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override IExpression Rewrite(IBoundExpression boundExpression) {
       var result = base.Rewrite(boundExpression);
       var field = boundExpression.Definition as IFieldReference;
+      if (field == null) {
+        var capturedLocal = boundExpression.Definition as CapturedLocalDefinition;
+        if (capturedLocal != null) field = capturedLocal.capturingField;
+      }
       if (field != null) {
         var locOrPar = this.closureFieldToLocalOrParameterMap.Find(field.InternedKey);
         if (locOrPar != null) {
@@ -104,12 +112,24 @@ namespace Microsoft.Cci.ILToCodeModel {
           }
           //If we get here, we just have a normal assignment to a closure field. We need to replace the field with the local or parameter.
           //The base call will do that by calling Rewrite(ITargetExpression).
+        } else {
+          var local = assignment.Target.Definition as ILocalDefinition;
+          if (local != null && this.closures.Find(local.Type.InternedKey) != null) {
+            Contract.Assume(assignment.Source is ICreateObjectInstance);
+            return CodeDummy.Block;
+          }
         }
       }
       return base.Rewrite(expressionStatement);
     }
 
     public override IStatement Rewrite(ILocalDeclarationStatement localDeclarationStatement) {
+      var capturedLocal = localDeclarationStatement.LocalVariable as CapturedLocalDefinition;
+      if (capturedLocal != null) {
+        Contract.Assume(capturedLocal.capturingField != null);
+        var binding = this.closureFieldToLocalOrParameterMap[capturedLocal.capturingField.InternedKey] as BoundExpression;
+        if (binding != null && binding.Definition != capturedLocal) return CodeDummy.Block;
+      }
       if (this.closures.Find(localDeclarationStatement.LocalVariable.Type.InternedKey) != null) {
         return CodeDummy.Block;
       }
@@ -129,6 +149,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override ITargetExpression Rewrite(ITargetExpression targetExpression) {
       var result = base.Rewrite(targetExpression);
       var field = targetExpression.Definition as IFieldReference;
+      if (field == null) {
+        var capturedLocal = targetExpression.Definition as CapturedLocalDefinition;
+        if (capturedLocal != null) field = capturedLocal.capturingField;
+      }
       if (field != null) {
         var locOrPar = this.closureFieldToLocalOrParameterMap.Find(field.InternedKey);
         if (locOrPar != null) {
