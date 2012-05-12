@@ -994,10 +994,7 @@ namespace Microsoft.Cci {
     }
 
     public IAssembly ContainingAssembly {
-      get {
-        Contract.Ensures(Contract.Result<IAssembly>() != null);
-        throw new NotImplementedException();
-      }
+      get { throw new NotImplementedException(); }
     }
 
     public string DebugInformationLocation {

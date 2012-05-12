@@ -158,6 +158,29 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Computes the string representing the strong name of the given assembly reference.
+    /// </summary>
+    public static string StrongName(AssemblyIdentity assemblyIdentity) {
+      Contract.Requires(assemblyIdentity != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
+      StringBuilder sb = new StringBuilder();
+      sb.Append(assemblyIdentity.Name.Value);
+      sb.AppendFormat(CultureInfo.InvariantCulture, ", Version={0}.{1}.{2}.{3}", assemblyIdentity.Version.Major, assemblyIdentity.Version.Minor, assemblyIdentity.Version.Build, assemblyIdentity.Version.Revision);
+      if (assemblyIdentity.Culture.Length > 0)
+        sb.AppendFormat(CultureInfo.InvariantCulture, ", Culture={0}", assemblyIdentity.Culture);
+      else
+        sb.Append(", Culture=neutral");
+      sb.AppendFormat(CultureInfo.InvariantCulture, ", PublicKeyToken=");
+      if (IteratorHelper.EnumerableIsNotEmpty(assemblyIdentity.PublicKeyToken)) {
+        foreach (byte b in assemblyIdentity.PublicKeyToken) sb.Append(b.ToString("x2", CultureInfo.InvariantCulture));
+      } else {
+        sb.Append("null");
+      }
+      return sb.ToString();
+    }
+
+    /// <summary>
     /// Finds a type in the given module using the given type name, expressed in C# notation with dots separating both namespaces and types.
     /// If no such type can be found Dummy.NamespaceTypeDefinition is returned.
     /// </summary>

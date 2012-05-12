@@ -298,8 +298,7 @@ namespace Microsoft.Cci.Pdb {
             }
 
           case SYM.S_MANSLOT:
-            uint typind;
-            slots[slot++] = new PdbSlot(bits, out typind);
+            slots[slot++] = new PdbSlot(bits);
             bits.Position = stop;
             break;
 

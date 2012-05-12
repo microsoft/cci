@@ -803,16 +803,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.subsystemMinorVersion = module.SubsystemMinorVersion;
       this.targetRuntimeVersion = module.TargetRuntimeVersion;
       this.trackDebugData = module.TrackDebugData;
-      var memberRefs = module.GetTypeMemberReferences();
-      if (IteratorHelper.EnumerableIsNotEmpty(memberRefs))
-        this.typeMemberReferences = new List<ITypeMemberReference>(memberRefs);
-      else
-        this.typeMemberReferences = null;
-      var typeRefs = module.GetTypeReferences();
-      if (IteratorHelper.EnumerableIsNotEmpty(typeRefs))
-        this.typeReferences = new List<ITypeReference>(typeRefs);
-      else
-        this.typeReferences = null;
+      this.typeMemberReferences = null;
+      this.typeReferences = null;
       this.usePublicKeyTokensForAssemblyReferences = module.UsePublicKeyTokensForAssemblyReferences;
       if (IteratorHelper.EnumerableIsNotEmpty(module.Win32Resources))
         this.win32Resources = new List<IWin32Resource>(module.Win32Resources);

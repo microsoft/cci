@@ -149,7 +149,7 @@ namespace Microsoft.Cci {
     bool IsBitField { get; }
 
     /// <summary>
-    /// This field is a compile-time constant. The field has no runtime location and cannot be directly addressed from IL.
+    /// This (static) field is a compile-time constant. The field has no runtime location and cannot be directly addressed from IL.
     /// </summary>
     bool IsCompileTimeConstant { get; }
 
@@ -243,8 +243,9 @@ namespace Microsoft.Cci {
     }
 
     public bool IsCompileTimeConstant {
-      get { 
-        throw new NotImplementedException(); 
+      get {
+        Contract.Ensures(!Contract.Result<bool>() || this.IsStatic);
+        throw new NotImplementedException();
       }
     }
 

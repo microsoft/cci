@@ -1056,6 +1056,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Returns a shallow copy of this LocalDeclarationStatement.
+    /// </summary>
+    public virtual LocalDefinition Clone() {
+      var newLocal = new LocalDefinition();
+      newLocal.Copy(this, Dummy.InternFactory);
+      return newLocal;
+    }
+
+    /// <summary>
     /// The compile time value of the definition, if it is a local constant.
     /// </summary>
     /// <value></value>

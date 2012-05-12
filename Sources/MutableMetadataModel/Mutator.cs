@@ -454,7 +454,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       object result;
       if (this.referenceRewrites.TryGetValue(functionPointerTypeReference, out result)) return (IFunctionPointerTypeReference)result;
       var mutableFunctionPointerTypeReference = functionPointerTypeReference as FunctionPointerTypeReference;
-      if (mutableFunctionPointerTypeReference == null) {
+      if (mutableFunctionPointerTypeReference == null || mutableFunctionPointerTypeReference.IsFrozen) {
         if (this.shallowCopier == null) return functionPointerTypeReference;
         mutableFunctionPointerTypeReference = this.shallowCopier.Copy(functionPointerTypeReference);
       }

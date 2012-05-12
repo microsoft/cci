@@ -39,6 +39,7 @@ namespace Microsoft.Cci.Analysis {
     Queue<BasicBlock> blocksToVisit;
     SetOfObjects blocksAlreadyVisited;
     IInternFactory internFactory;
+    bool codeIsUnreachable;
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
@@ -76,6 +77,7 @@ namespace Microsoft.Cci.Analysis {
           this.DequeueBlockAndSetupDataFlow();
       }
       //At this point, all reachable code blocks have had their data flow inferred. Now look for unreachable blocks.
+      this.codeIsUnreachable = true; //unreachable code might not satisfy invariants.
       foreach (var block in this.cdfg.AllBlocks) {
         if (this.blocksAlreadyVisited.Contains(block)) continue;
         blocksToVisit.Enqueue(block);
@@ -458,6 +460,7 @@ namespace Microsoft.Cci.Analysis {
           break;
 
         case OperationCode.Ret:
+          if (this.codeIsUnreachable && this.stack.Top < 0) break;
           if (this.cdfg.MethodBody.MethodDefinition.Type.TypeCode != PrimitiveTypeCode.Void)
             instruction.Operand1 = this.stack.Pop();
           break;
@@ -469,7 +472,9 @@ namespace Microsoft.Cci.Analysis {
       Contract.Requires(stack != null);
       Contract.Requires(signature != null);
 
-      var numArguments = IteratorHelper.EnumerableCount(signature.Parameters);
+      var methodRef = signature as IMethodReference;
+      uint numArguments = IteratorHelper.EnumerableCount(signature.Parameters);
+      if (methodRef != null && methodRef.AcceptsExtraArguments) numArguments += IteratorHelper.EnumerableCount(methodRef.ExtraParameters);
       if (!signature.IsStatic) numArguments++;
       if (numArguments > 0) {
         numArguments--;

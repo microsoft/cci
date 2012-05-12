@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Cci;
+using System.Diagnostics.Contracts;
 
 //^ using Microsoft.Contracts;
 
@@ -149,6 +150,9 @@ namespace Microsoft.Cci {
     }
 
     private ISymUnmanagedDocumentWriter GetDocumentWriterFor(IPrimarySourceDocument document) {
+      Contract.Requires(document != null);
+      Contract.Requires(document != SourceDummy.PrimarySourceDocument);
+      
       ISymUnmanagedDocumentWriter writer;
       if (!this.documentMap.TryGetValue(document, out writer)) {
         Guid language = document.Language;

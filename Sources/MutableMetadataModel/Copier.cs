@@ -489,6 +489,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Requires(localDefinition != null);
       Contract.Ensures(Contract.Result<LocalDefinition>() != null);
 
+      var mutable = localDefinition as LocalDefinition;
+      if (mutable != null)
+        return mutable.Clone();
       var copy = new LocalDefinition();
       copy.Copy(localDefinition, this.internFactory);
       return copy;
@@ -659,7 +662,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// Returns a shallow copy of the given module.
     /// </summary>
-    public Module Copy(Module module) {
+    public Module Copy(IModule module) {
       Contract.Requires(module != null);
       Contract.Ensures(Contract.Result<Module>() != null);
 
@@ -1893,6 +1896,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
 
       internal IAssemblyReference Substitute(IAssemblyReference assemblyReference, bool keepAsDefinition = true) {
+        Contract.Requires(assemblyReference != null);
+
         if (assemblyReference is Dummy) return assemblyReference;
         object copy;
         if (keepAsDefinition && this.DefinitionCache.TryGetValue(assemblyReference, out copy)) return (IAssemblyReference)copy;
@@ -2200,7 +2205,8 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (this.ReferenceCache.TryGetValue(moduleReference, out copy)) return (ModuleReference)copy;
         var mutableCopy = this.shallowCopier.Copy(moduleReference);
         this.ReferenceCache.Add(moduleReference, mutableCopy);
-        mutableCopy.ContainingAssembly = this.Substitute(mutableCopy.ContainingAssembly);
+        if (mutableCopy.ContainingAssembly != null)
+          mutableCopy.ContainingAssembly = this.Substitute(mutableCopy.ContainingAssembly);
         return mutableCopy;
       }
 
@@ -3012,9 +3018,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Requires(!(assembly is Dummy));
       Contract.Ensures(Contract.Result<Assembly>() != null);
 
-      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(assembly);
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(assembly); //Does not traverse the types
       foreach (var type in assembly.GetAllTypes())
         this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(type);
+      foreach (var module in assembly.MemberModules) {
+        foreach (var mtype in module.GetAllTypes())
+          this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(mtype);
+      }
       return (Assembly)this.SubstituteCopiesForOriginals.Substitute(assembly);
     }
 
@@ -3384,6 +3394,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       var assembly = module as IAssembly;
       if (assembly != null) return this.Copy(assembly);
       this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(module);
+      foreach (var type in module.GetAllTypes())
+        this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(type);
       return (Module)this.SubstituteCopiesForOriginals.Substitute(module);
     }
 

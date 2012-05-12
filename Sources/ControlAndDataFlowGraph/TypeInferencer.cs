@@ -42,6 +42,7 @@ namespace Microsoft.Cci.Analysis {
     Queue<BasicBlock> blocksToVisit;
     SetOfObjects blocksAlreadyVisited;
     IInternFactory internFactory;
+    bool codeIsUnreachable;
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
@@ -74,7 +75,9 @@ namespace Microsoft.Cci.Analysis {
         while (blocksToVisit.Count != 0)
           inferencer.DequeueBlockAndFillInItsTypes();
       }
+
       //At this point, all reachable code blocks have had their types inferred. Now look for unreachable blocks.
+      inferencer.codeIsUnreachable = true;
       foreach (var block in cfg.AllBlocks) {
         if (blocksAlreadyVisited.Contains(block)) continue;
         blocksToVisit.Enqueue(block);
@@ -274,7 +277,9 @@ namespace Microsoft.Cci.Analysis {
         case OperationCode.Callvirt:
           var signature = instruction.Operation.Value as ISignature;
           Contract.Assume(signature != null); //This is an informally specified property of the Metadata model.
-          var numArguments = IteratorHelper.EnumerableCount(signature.Parameters);
+          var methodRef = signature as IMethodReference;
+          uint numArguments = IteratorHelper.EnumerableCount(signature.Parameters);
+          if (methodRef != null && methodRef.AcceptsExtraArguments) numArguments += IteratorHelper.EnumerableCount(methodRef.ExtraParameters);
           for (var i = numArguments; i > 0; i--)
             this.stack.Pop();
           if (!signature.IsStatic)
@@ -715,6 +720,7 @@ namespace Microsoft.Cci.Analysis {
           this.stack.Push(instruction);
           break;
         case OperationCode.Ret:
+          if (this.codeIsUnreachable && this.stack.Top < 0) break;
           if (this.cfg.MethodBody.MethodDefinition.Type.TypeCode != PrimitiveTypeCode.Void)
             instruction.Operand1 = this.stack.Pop();
           instruction.Type = this.platformType.SystemVoid;
@@ -985,6 +991,8 @@ namespace Microsoft.Cci.Analysis {
             case PrimitiveTypeCode.IntPtr:
             case PrimitiveTypeCode.UIntPtr:
               return leftOperand.Type;
+            case PrimitiveTypeCode.NotPrimitive:
+              return leftOperand.Type; //assume rh type is an enum.
             default:
               Contract.Assume(false);
               return Dummy.TypeReference;

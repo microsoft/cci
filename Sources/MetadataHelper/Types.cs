@@ -360,7 +360,7 @@ namespace Microsoft.Cci.Immutable {
     #region ISignature Members
 
     bool ISignature.IsStatic {
-      get { return this.IsStatic; }
+      get { return (this.CallingConvention & Cci.CallingConvention.HasThis) == 0; }
     }
 
     ITypeReference ISignature.Type {

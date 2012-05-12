@@ -438,7 +438,6 @@ namespace Microsoft.Cci {
       this.CreateInitialFileRefIndex();
       this.CreateInitialExportedTypeIndex();
       this.CreateInitialTypeRefIndex();
-      this.CreateInitialMemberRefIndex();
       if (this.pdbWriter != null) this.pdbWriter.OpenTokenSourceLocationsScope();
       foreach (INamedTypeDefinition typeDef in this.module.GetAllTypes())
         this.CreateIndicesFor(typeDef);
@@ -648,13 +647,6 @@ namespace Microsoft.Cci {
       Debug.Assert(!this.tableIndicesAreComplete);
       foreach (var typeRef in this.module.GetTypeReferences()) {
         this.GetTypeRefIndex(typeRef);
-      }
-    }
-
-    private void CreateInitialMemberRefIndex() {
-      Debug.Assert(!this.tableIndicesAreComplete);
-      foreach (var memberRef in this.module.GetTypeMemberReferences()) {
-        this.GetMemberRefIndex(memberRef);
       }
     }
 
@@ -1668,7 +1660,7 @@ namespace Microsoft.Cci {
       uint result;
       if (this.typeRefIndex.TryGetValue(typeReference.InternedKey, out result)) return result;
       result = (uint)this.typeRefList.Count+1;
-      Debug.Assert(!this.tableIndicesAreComplete);
+      Contract.Assume(!this.tableIndicesAreComplete);
       this.typeRefIndex.Add(typeReference.InternedKey, result);
       this.typeRefList.Add(typeReference);
       return result;
@@ -1682,7 +1674,7 @@ namespace Microsoft.Cci {
         this.typeSpecInstanceIndex.Add(typeReference, typeSpecIndex);
         return typeSpecIndex;
       }
-      Debug.Assert(!this.tableIndicesAreComplete);
+      Contract.Assume(!this.tableIndicesAreComplete);
       this.typeSpecList.Add(typeReference);
       typeSpecIndex = (uint)this.typeSpecList.Count;
       this.typeSpecInstanceIndex.Add(typeReference, typeSpecIndex);

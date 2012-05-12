@@ -140,6 +140,7 @@ namespace Microsoft.Cci.Analysis {
             break;
           case OperationCode.Ret:
           case OperationCode.Throw:
+          case OperationCode.Jmp:
             //The code following these instructions will be dead unless its a branch target, but we may as well end the basic block with the transfer.
             lastInstructionWasBranch = true;
             break;
