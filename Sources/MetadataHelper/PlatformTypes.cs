@@ -195,8 +195,13 @@ namespace Microsoft.Cci.Immutable {
     /// Returns the identity of the assembly reference to which this assembly reference has been unified.
     /// </summary>
     public AssemblyIdentity UnifiedAssemblyIdentity {
-      get { return this.host.UnifyAssembly(this); }
+      get { 
+        if (this.unifiedAssemblyIdentity == null)
+          this.unifiedAssemblyIdentity = this.host.UnifyAssembly(this);
+        return this.unifiedAssemblyIdentity;
+      }
     }
+    AssemblyIdentity/*?*/ unifiedAssemblyIdentity;
 
     /// <summary>
     /// The identity of the unit reference.

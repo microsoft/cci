@@ -64,7 +64,7 @@ namespace Microsoft.Cci.Analysis {
       //If this is a dummy body, do nothing.
       if (cfg.AllBlocks.Count == 1 && cfg.AllBlocks[0] != null && cfg.AllBlocks[0].Instructions.Count <= 1) return;
 
-      var stack = new Stack<Instruction>(cfg.MethodBody.MaxStack, new List<Instruction>(0));
+      var stack = new Stack<Instruction>(cfg.MethodBody.MaxStack);
       var numberOfBlocks = cfg.BlockFor.Count;
       var blocksToVisit = new Queue<BasicBlock>((int)numberOfBlocks);
       var blocksAlreadyVisited = new SetOfObjects(numberOfBlocks);
@@ -306,6 +306,8 @@ namespace Microsoft.Cci.Analysis {
           this.stack.Pop();
           Contract.Assume(instruction.Operation.Value is ITypeReference); //This is an informally specified property of the Metadata model.
           instruction.Type = (ITypeReference)instruction.Operation.Value;
+          if (instruction.Type.ResolvedType.IsValueType)
+            instruction.Type = this.platformType.SystemObject;
           this.stack.Push(instruction);
           break;
         case OperationCode.Ceq:

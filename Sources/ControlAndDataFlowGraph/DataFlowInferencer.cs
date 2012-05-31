@@ -26,7 +26,7 @@ namespace Microsoft.Cci.Analysis {
       this.platformType = host.PlatformType;
       this.cdfg = cdfg;
       this.operandStackSetupInstructions = new List<Instruction>(cdfg.MethodBody.MaxStack);
-      this.stack = new Stack<Instruction>(cdfg.MethodBody.MaxStack, this.operandStackSetupInstructions);
+      this.stack = new Stack<Instruction>(cdfg.MethodBody.MaxStack);
       this.blocksToVisit = new Queue<BasicBlock>((int)numberOfBlocks);
       this.blocksAlreadyVisited = new SetOfObjects(numberOfBlocks); ;
       this.internFactory = host.InternFactory;

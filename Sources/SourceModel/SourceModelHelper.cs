@@ -13,6 +13,7 @@ using Microsoft.Cci;
 using System.Collections.Generic;
 using System.Text;
 using System.Globalization;
+using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci {
   /// <summary>
@@ -124,6 +125,7 @@ namespace Microsoft.Cci {
     private IMethodDefinition lastUsedMethod = Dummy.MethodDefinition;
     private ISourceLocationProvider lastUsedProvider = default(ISourceLocationProvider);
     private ISourceLocationProvider/*?*/ GetProvider(IMethodDefinition methodDefinition) {
+      Contract.Requires(methodDefinition != null);
       if (methodDefinition == lastUsedMethod) return lastUsedProvider;
       ISourceLocationProvider provider = null;
       var definingUnit = TypeHelper.GetDefiningUnit(methodDefinition.ResolvedMethod.ContainingTypeDefinition);
@@ -162,12 +164,14 @@ namespace Microsoft.Cci {
   /// </summary>
   public sealed class AggregatingLocalScopeProvider : ILocalScopeProvider, IDisposable {
 
-    Dictionary<IUnit, ILocalScopeProvider> unit2Provider = new Dictionary<IUnit, ILocalScopeProvider>();
+    readonly Dictionary<IUnit, ILocalScopeProvider> unit2Provider = new Dictionary<IUnit, ILocalScopeProvider>();
 
     /// <summary>
     /// Copies the contents of the table
     /// </summary>
     public AggregatingLocalScopeProvider(IDictionary<IUnit, ILocalScopeProvider> unit2ProviderMap) {
+      Contract.Requires(unit2ProviderMap != null);
+
       foreach (var keyValuePair in unit2ProviderMap) {
         this.unit2Provider.Add(keyValuePair.Key, keyValuePair.Value);
       }
@@ -178,6 +182,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="unit2ProviderMap"></param>
     public AggregatingLocalScopeProvider(Dictionary<IUnit, ILocalScopeProvider> unit2ProviderMap) {
+      Contract.Requires(unit2ProviderMap != null);
+
       this.unit2Provider = unit2ProviderMap;
     }
 
@@ -304,7 +310,10 @@ namespace Microsoft.Cci {
 
     private IMethodDefinition lastUsedMethod = Dummy.MethodDefinition;
     private ILocalScopeProvider lastUsedProvider = null;
+
     private ILocalScopeProvider/*?*/ GetProvider(IMethodDefinition methodDefinition) {
+      Contract.Requires(methodDefinition != null);
+
       if (methodDefinition == lastUsedMethod) return lastUsedProvider;
       ILocalScopeProvider provider = null;
       var definingUnit = TypeHelper.GetDefiningUnit(methodDefinition.ResolvedMethod.ContainingTypeDefinition);
@@ -322,6 +331,8 @@ namespace Microsoft.Cci {
     }
 
     private ILocalScopeProvider/*?*/ GetProvider(ILocalDefinition localDefinition) {
+      Contract.Requires(localDefinition != null);
+
       return this.GetProvider(localDefinition.MethodDefinition);
     }
 

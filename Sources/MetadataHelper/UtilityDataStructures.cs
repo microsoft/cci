@@ -2430,6 +2430,21 @@ namespace Microsoft.Cci.UtilityDataStructures {
       }
     }
 
+    /// <summary>
+    /// Removes all entries from the table.
+    /// </summary>
+    public void Clear() {
+      if (this.count == 0) return;
+      var table = this.keysValueTable;
+      int len = table.Length;
+      for (int i = 0; i < len; ++i) {
+        table[i].Key1 = 0;
+        table[i].Key2 = 0;
+        table[i].Value = null;
+      }
+      this.count = 0;
+    }
+
     void Expand() {
       Key1Key2ValueTriple[] oldKeysValueTable = this.keysValueTable;
       this.keysValueTable = new Key1Key2ValueTriple[this.size*2];
@@ -3060,9 +3075,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
       this.count = count;
     }
 
-    List<T>/*?*/ masterList;
-    int offset;
-    int count;
+    readonly List<T>/*?*/ masterList;
+    readonly int offset;
+    readonly int count;
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
@@ -3087,7 +3102,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
       }
 
       [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-      public T[] elements;
+      readonly public T[] elements;
 
     }
 
@@ -3185,9 +3200,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
         this.last = last;
       }
 
-      List<T>/*?*/ masterList;
+      readonly List<T>/*?*/ masterList;
       int first;
-      int last;
+      readonly int last;
 
       [ContractInvariantMethod]
       private void ObjectInvariant() {

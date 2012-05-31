@@ -739,7 +739,7 @@ namespace Microsoft.Cci {
     void Dispatch(IMetadataVisitor visitor);
 
     /// <summary>
-    /// A list exception data within the method body IL.
+    /// A list of exception data within the method body IL.
     /// </summary>
     IEnumerable<IOperationExceptionInformation> OperationExceptionInformation { get; }
 

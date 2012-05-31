@@ -775,6 +775,7 @@ namespace Microsoft.Cci.Pdb {
 
     public string Source {
       get {
+        if (this.Length == 0) return string.Empty;
         return this.primarySourceDocument.GetSourceLocation(this.StartIndex, this.Length).Source;
       }
     }

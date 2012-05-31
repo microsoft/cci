@@ -1953,6 +1953,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="units">An enumeration of identifiers of the units making up the identified set of units.</param>
     public UnitSetIdentity(IEnumerable<UnitIdentity> units) {
+      Contract.Requires(units != null);
+
       this.units = units;
     }
 
@@ -1960,7 +1962,10 @@ namespace Microsoft.Cci {
     /// Enumerates the identifiers of the units making up the identified set of units.
     /// </summary>
     public IEnumerable<UnitIdentity> Units {
-      get { return this.units; }
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<UnitIdentity>>() != null);
+        return this.units; 
+      }
     }
     readonly IEnumerable<UnitIdentity> units;
 

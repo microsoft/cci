@@ -875,9 +875,6 @@ namespace Microsoft.Cci.Immutable {
       Contract.Requires(genericArguments != null);
       Contract.Requires(internFactory != null);
 
-      foreach (var genarg in genericArguments) {
-        Contract.Assume(!(genarg is Dummy));
-      }
       this.genericType = genericType;
       this.genericArguments = genericArguments;
       this.internFactory = internFactory;

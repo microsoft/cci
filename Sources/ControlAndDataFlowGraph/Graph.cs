@@ -312,23 +312,17 @@ namespace Microsoft.Cci.Analysis {
 
   internal class Stack<Instruction> where Instruction : class {
 
-    internal Stack(int maxStack, List<Instruction> operandStackSetup) {
-      Contract.Requires(operandStackSetup != null);
-      Contract.Assume(Contract.ForAll(operandStackSetup, x => x != null)); //Making this an explicit requirement creates too many proof obligations.
-
+    internal Stack(int maxStack) {
       if (maxStack <= 0) maxStack = 8;
-      this.operandStackSetup = operandStackSetup;
       this.elements = new Instruction[maxStack];
       this.top = -1;
     }
 
-    List<Instruction> operandStackSetup;
     Instruction[] elements;
     private int top;
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
-      Contract.Invariant(this.operandStackSetup != null);
       Contract.Invariant(this.elements != null);
       Contract.Invariant(this.elements.Length > 0);
       Contract.Invariant(this.top < this.elements.Length);

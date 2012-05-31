@@ -1612,6 +1612,25 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// If the given type is a unsigned integer type, return the equivalent signed integer type.
+    /// Otherwise return the given type.
+    /// </summary>
+    /// <param name="typeReference">A reference to a type.</param>
+    public static ITypeReference SignedEquivalent(ITypeReference typeReference) {
+      Contract.Requires(typeReference != null);
+      Contract.Ensures(Contract.Result<ITypeReference>() != null);
+
+      switch (typeReference.TypeCode) {
+        case PrimitiveTypeCode.UInt8: return typeReference.PlatformType.SystemInt8;
+        case PrimitiveTypeCode.UInt16: return typeReference.PlatformType.SystemInt16;
+        case PrimitiveTypeCode.UInt32: return typeReference.PlatformType.SystemInt32;
+        case PrimitiveTypeCode.UInt64: return typeReference.PlatformType.SystemInt64;
+        case PrimitiveTypeCode.UIntPtr: return typeReference.PlatformType.SystemIntPtr;
+        default: return typeReference;
+      }
+    }
+
+    /// <summary>
     /// Returns the computed size (number of bytes) of a type. May call the SizeOf property of the type.
     /// Use SizeOfType(ITypeReference, bool) to suppress the use of the SizeOf property.
     /// </summary>
@@ -2818,6 +2837,24 @@ namespace Microsoft.Cci {
       }
       //If type arguments are not wanted, then type parameters are not going to be welcome either.
       return this.GetTypeName(genericType, formattingOptions&~NameFormattingOptions.TypeParameters);
+    }
+
+    /// <summary>
+    /// If the given type reference is to a signed integer type, return the corresponding unsigned integer type. 
+    /// Otherwise just return the given type reference.
+    /// </summary>
+    public static ITypeReference GetUnsignedEquivalent(ITypeReference type) {
+      Contract.Requires(type != null);
+      Contract.Ensures(Contract.Result<ITypeReference>() != null);
+
+      switch (type.TypeCode) {
+        case PrimitiveTypeCode.Int16: return type.PlatformType.SystemUInt16;
+        case PrimitiveTypeCode.Int32: return type.PlatformType.SystemUInt32;
+        case PrimitiveTypeCode.Int64: return type.PlatformType.SystemUInt64;
+        case PrimitiveTypeCode.Int8: return type.PlatformType.SystemUInt8;
+        case PrimitiveTypeCode.IntPtr: return type.PlatformType.SystemUIntPtr;
+      }
+      return type;
     }
   }
 }
