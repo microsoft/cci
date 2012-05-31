@@ -730,7 +730,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.operandStack.Push(correspondingPops[i]);
     }
 
-    private Expression ParseAddition(OperationCode currentOpcode) {
+    private BinaryOperation ParseAddition(OperationCode currentOpcode) {
       Addition addition = new Addition();
       addition.CheckOverflow = currentOpcode != OperationCode.Add;
       if (currentOpcode == OperationCode.Add_Ovf_Un) {
@@ -1068,13 +1068,13 @@ namespace Microsoft.Cci.ILToCodeModel {
         case OperationCode.Ceq:
           return this.ParseEquality();
         case OperationCode.Cgt:
-          return this.ParseBinaryOperation(new GreaterThan());
+          return this.HarmonizeOperands(this.ParseBinaryOperation(new GreaterThan()));
         case OperationCode.Cgt_Un:
-          return this.ParseBinaryOperation(new GreaterThan() { IsUnsignedOrUnordered = true });
+          return this.HarmonizeOperands(this.ParseBinaryOperation(new GreaterThan() { IsUnsignedOrUnordered = true }));
         case OperationCode.Clt:
-          return this.ParseBinaryOperation(new LessThan());
+          return this.HarmonizeOperands(this.ParseBinaryOperation(new LessThan()));
         case OperationCode.Clt_Un:
-          return this.ParseBinaryOperation(new LessThan() { IsUnsignedOrUnordered = true });
+          return this.HarmonizeOperands(this.ParseBinaryOperation(new LessThan() { IsUnsignedOrUnordered = true }));
         case OperationCode.Div:
           return this.ParseBinaryOperation(new Division());
         case OperationCode.Div_Un:
@@ -1107,13 +1107,47 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
+    private BinaryOperation HarmonizeOperands(BinaryOperation binaryOperation) {
+      Contract.Requires(binaryOperation != null);
+      Contract.Ensures(Contract.Result<BinaryOperation>() != null);
+
+      var leftType = binaryOperation.LeftOperand.Type;
+      var rightType = binaryOperation.RightOperand.Type;
+      if (TypeHelper.TypesAreEquivalent(leftType, rightType)) return binaryOperation;
+      switch (leftType.TypeCode) {
+        case PrimitiveTypeCode.Boolean:
+        case PrimitiveTypeCode.Char:
+          binaryOperation.RightOperand = TypeInferencer.Convert(binaryOperation.RightOperand, leftType);
+          return binaryOperation;
+        case PrimitiveTypeCode.NotPrimitive:
+          if (leftType.IsEnum || leftType.ResolvedType.IsEnum) {
+            binaryOperation.RightOperand = new Conversion() { ValueToConvert = binaryOperation.RightOperand, TypeAfterConversion = leftType };
+            return binaryOperation;
+          }
+          break;
+      }
+      switch (rightType.TypeCode) {
+        case PrimitiveTypeCode.Boolean:
+        case PrimitiveTypeCode.Char:
+          binaryOperation.LeftOperand = TypeInferencer.Convert(binaryOperation.LeftOperand, rightType);
+          return binaryOperation;
+        case PrimitiveTypeCode.NotPrimitive:
+          if (rightType.IsEnum || rightType.ResolvedType.IsEnum) {
+            binaryOperation.LeftOperand = new Conversion() { ValueToConvert = binaryOperation.LeftOperand, TypeAfterConversion = rightType };
+            return binaryOperation;
+          }
+          break;
+      }
+      return binaryOperation;
+    }
+
     private Expression ParseEquality() {
       var rightOperand = this.PopOperandStack();
       var leftOperand = this.PopOperandStack();
       if (leftOperand.Type.TypeCode == PrimitiveTypeCode.Boolean && ExpressionHelper.IsIntegralZero(rightOperand))
         return new LogicalNot() { Operand = leftOperand, Type = leftOperand.Type };
       else
-        return new Equality() { LeftOperand = leftOperand, RightOperand = rightOperand, Type = this.host.PlatformType.SystemBoolean };
+        return this.HarmonizeOperands(new Equality() { LeftOperand = leftOperand, RightOperand = rightOperand, Type = this.host.PlatformType.SystemBoolean });
     }
 
     private Statement ParseBinaryConditionalBranch(IOperation currentOperation) {
@@ -1491,7 +1525,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return result;
     }
 
-    private Expression ParseMultiplication(OperationCode currentOpcode) {
+    private BinaryOperation ParseMultiplication(OperationCode currentOpcode) {
       Multiplication multiplication = new Multiplication();
       multiplication.CheckOverflow = currentOpcode != OperationCode.Mul;
       if (currentOpcode == OperationCode.Mul_Ovf_Un) {
@@ -1547,7 +1581,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       return result;
     }
 
-    private Expression ParseSubtraction(OperationCode currentOpcode) {
+    private BinaryOperation ParseSubtraction(OperationCode currentOpcode) {
       Subtraction subtraction = new Subtraction();
       subtraction.CheckOverflow = currentOpcode != OperationCode.Sub;
       if (currentOpcode == OperationCode.Sub_Ovf_Un) {

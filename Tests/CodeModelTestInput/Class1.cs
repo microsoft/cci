@@ -330,6 +330,11 @@ namespace CodeModelTestInput {
       return foo;
     }
 
+    private void M(char ch) {
+      if (ch == '+')
+        Console.WriteLine("foo");
+    }
+
   }
 
   struct SomeStruct {

@@ -748,6 +748,16 @@ namespace CodeModelTestInput
 
         }
 
+        private void M(char ch)
+        {
+            if (ch == '+')
+            {
+                System.Console.WriteLine("foo");
+            }
+            return;
+
+        }
+
         public Class1()
         {
             this.c = 0;
