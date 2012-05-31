@@ -47,7 +47,7 @@ namespace Microsoft.Cci {
     /// <param name="sourceLocationProvider">An object that can map the ILocation objects found in the block of statements to IPrimarySourceLocation objects.  May be null.</param>
     /// <param name="asyncMethod">May be null.</param>
     /// <param name="iteratorLocalCount">A map that indicates how many iterator locals are present in a given block. Only useful for generated MoveNext methods. May be null.</param>
-    public CodeModelToILConverter(IMetadataHost host, IMethodDefinition method, ISourceLocationProvider/*?*/ sourceLocationProvider, 
+    public CodeModelToILConverter(IMetadataHost host, IMethodDefinition method, ISourceLocationProvider/*?*/ sourceLocationProvider,
       IMethodDefinition/*?*/ asyncMethod, IDictionary<IBlockStatement, uint>/*?*/ iteratorLocalCount) {
       Contract.Requires(host != null);
       Contract.Requires(method != null);
@@ -363,7 +363,7 @@ namespace Microsoft.Cci {
       if (targetExpression != null) {
         bool statement = this.currentExpressionIsStatement;
         this.currentExpressionIsStatement = false;
-        this.VisitAssignment(targetExpression, addition, (IExpression e) => this.TraverseAdditionRightOperandAndDoOperation(e), 
+        this.VisitAssignment(targetExpression, addition, (IExpression e) => this.TraverseAdditionRightOperandAndDoOperation(e),
           treatAsStatement: statement, pushTargetRValue: true, resultIsInitialTargetRValue: addition.ResultIsUnmodifiedLeftOperand);
       } else {
         this.Traverse(addition.LeftOperand);
@@ -550,7 +550,7 @@ namespace Microsoft.Cci {
 
     internal delegate void SourceTraverser(IExpression source);
 
-    private void VisitAssignment(ITargetExpression target, IExpression source, SourceTraverser sourceTraverser, 
+    private void VisitAssignment(ITargetExpression target, IExpression source, SourceTraverser sourceTraverser,
       bool treatAsStatement, bool pushTargetRValue, bool resultIsInitialTargetRValue) {
       Contract.Requires(target != null);
       Contract.Requires(source != null);
@@ -1160,8 +1160,9 @@ namespace Microsoft.Cci {
       this.Traverse(conversion.ValueToConvert);
       //TODO: change IConversion to make it illegal to convert to or from enum types.
       ITypeReference sourceType = conversion.ValueToConvert.Type;
-      if (sourceType.ResolvedType.IsEnum) sourceType = sourceType.ResolvedType.UnderlyingType;
       ITypeReference targetType = conversion.Type;
+      if (sourceType.ResolvedType.IsEnum && !TypeHelper.TypesAreEquivalent(targetType, this.host.PlatformType.SystemObject))
+        sourceType = sourceType.ResolvedType.UnderlyingType;
       if (targetType.ResolvedType.IsEnum) targetType = targetType.ResolvedType.UnderlyingType;
       if (sourceType is Dummy) sourceType = targetType;
       if (targetType is Dummy) targetType = sourceType;
@@ -4630,7 +4631,7 @@ namespace Microsoft.Cci {
     public ISynchronizationInformation/*?*/ GetSynchronizationInformation() {
       return this.generator.GetSynchronizationInformation();
     }
-    
+
     /// <summary>
     /// Returns zero or more exception exception information blocks (information about handlers, filters and finally blocks)
     /// that correspond to try-catch-finally constructs that appear in the statements that have been converted to IL by this converter.
@@ -4680,7 +4681,7 @@ namespace Microsoft.Cci {
         this.generator.Emit(OperationCode.Ret);
       } else if (returnType.TypeCode == PrimitiveTypeCode.Void && !this.lastStatementWasUnconditionalTransfer)
         this.generator.Emit(OperationCode.Ret);
-      this.generator.AdjustBranchSizesToBestFit(eliminateBranchesToNext:true);
+      this.generator.AdjustBranchSizesToBestFit(eliminateBranchesToNext: true);
     }
   }
 
