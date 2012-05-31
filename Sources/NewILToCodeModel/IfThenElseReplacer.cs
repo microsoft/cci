@@ -159,11 +159,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       Contract.Ensures(Contract.Result<IExpression>() != null);
 
       var result = new Conditional() { Type = conditional.Type };
-      result.Condition = InvertCondition(conditional.Condition);
       if (ExpressionHelper.IsIntegralZero(conditional.ResultIfTrue)) {
-        result.ResultIfTrue = conditional.ResultIfFalse;
-        result.ResultIfFalse = conditional.ResultIfTrue;
+        result.Condition = conditional.Condition;
+        result.ResultIfTrue = InvertCondition(conditional.ResultIfTrue);
+        result.ResultIfFalse = InvertCondition(conditional.ResultIfFalse);
       } else {
+        result.Condition = InvertCondition(conditional.Condition);
         result.ResultIfTrue = InvertCondition(conditional.ResultIfFalse);
         result.ResultIfFalse = InvertCondition(conditional.ResultIfTrue);
       }

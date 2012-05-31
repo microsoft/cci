@@ -1975,7 +1975,7 @@ namespace Microsoft.Cci.MutableContracts {
           this.unit2DependentUnits[key].Add(result);
         }
 
-        this.unit2ContractExtractor.Add(result.UnitIdentity, null); // a marker to communicate with GetContractExtractor
+        this.unit2ContractExtractor[result.UnitIdentity] = null; // a marker to communicate with GetContractExtractor
         this.location2Unit[result.Location] = result;
       }
       return result;

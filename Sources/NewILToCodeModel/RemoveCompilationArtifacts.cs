@@ -201,6 +201,15 @@ namespace Microsoft.Cci.ILToCodeModel {
       return base.Rewrite(createObjectInstance);
     }
 
+    public override IExpression Rewrite(IEquality equality) {
+      base.Rewrite(equality);
+      var cc2 = equality.RightOperand as CompileTimeConstant;
+      if (cc2 != null && ExpressionHelper.IsNumericZero(cc2) && equality.LeftOperand.Type.TypeCode == PrimitiveTypeCode.Boolean) {
+        return IfThenElseReplacer.InvertCondition(equality.LeftOperand);
+      }
+      return equality;
+    }
+
     public override IExpression Rewrite(IExpression expression) {
       var result = base.Rewrite(expression);
       this.expressionToSubstituteForSingleUseSingleReferenceLocal = null;
@@ -246,7 +255,6 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       return base.Rewrite(greaterThan);
     }
-
 
     public override IExpression Rewrite(ILogicalNot logicalNot) {
       if (logicalNot.Type is Dummy)
