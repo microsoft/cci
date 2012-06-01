@@ -4942,7 +4942,7 @@ namespace Microsoft.Cci {
     /// the object containing the type reference, or would introduce a new kind of type reference such as INamespaceEnumTypeReference and INestedEnumTypeReference.
     /// However, for historical/usability reasons this object model oversimplifies the situation by pretending that all type references can tell if they refer to enum types
     /// or not. When consuming metadata, a type reference starts off with the value being false, but may change it to true as soon as its token is encountered
-    /// in a signature that indicates that is an enum type. In practice this means that a type reference encountered in a part of the object model where it is
+    /// in a signature that indicates that it is an enum type. In practice this means that a type reference encountered in a part of the object model where it is
     /// important to know if the referenced type is an enum type, will get the right value from this property. However, if the value of this property is cached
     /// as soon as it is encountered for the first time, the wrong value may get cached.
     /// </remarks>
@@ -4964,7 +4964,7 @@ namespace Microsoft.Cci {
     /// the object containing the type reference, or would introduce a new kind of type reference such as INamespaceValueTypeReference and INestedValueTypeReference.
     /// However, for historical/usability reasons this object model oversimplifies the situation by pretending that all type references can tell if they refer to value types
     /// or not. When consuming metadata, a type reference starts off with the value being false, but may change it to true as soon as its token is encountered
-    /// in a signature that indicates that is a value type. In practice this means that a type reference encountered in a part of the object model where it is
+    /// in a signature that indicates that it is a value type. In practice this means that a type reference encountered in a part of the object model where it is
     /// important to know if the referenced type is a value type, will get the right value from this property. However, if the value of this property is cached
     /// as soon as it is encountered for the first time, the wrong value may get cached.
     /// </remarks>
