@@ -1156,44 +1156,44 @@ namespace Microsoft.Cci.ILToCodeModel {
       switch (currentOperation.OperationCode) {
         case OperationCode.Beq:
         case OperationCode.Beq_S:
-          condition = this.ParseBinaryOperation(new Equality());
+          condition = this.HarmonizeOperands(this.ParseBinaryOperation(new Equality()));
           break;
         case OperationCode.Bge:
         case OperationCode.Bge_S:
-          condition = this.ParseBinaryOperation(new GreaterThanOrEqual());
+          condition = this.HarmonizeOperands(this.ParseBinaryOperation(new GreaterThanOrEqual()));
           break;
         case OperationCode.Bge_Un:
         case OperationCode.Bge_Un_S:
-          condition = this.ParseUnsignedBinaryOperation(new GreaterThanOrEqual());
+          condition = this.HarmonizeOperands(this.ParseUnsignedBinaryOperation(new GreaterThanOrEqual()));
           break;
         case OperationCode.Bgt:
         case OperationCode.Bgt_S:
-          condition = this.ParseBinaryOperation(new GreaterThan());
+          condition = this.HarmonizeOperands(this.ParseBinaryOperation(new GreaterThan()));
           break;
         case OperationCode.Bgt_Un:
         case OperationCode.Bgt_Un_S:
-          condition = this.ParseUnsignedBinaryOperation(new GreaterThan());
+          condition = this.HarmonizeOperands(this.ParseUnsignedBinaryOperation(new GreaterThan()));
           break;
         case OperationCode.Ble:
         case OperationCode.Ble_S:
-          condition = this.ParseBinaryOperation(new LessThanOrEqual());
+          condition = this.HarmonizeOperands(this.ParseBinaryOperation(new LessThanOrEqual()));
           break;
         case OperationCode.Ble_Un:
         case OperationCode.Ble_Un_S:
-          condition = this.ParseUnsignedBinaryOperation(new LessThanOrEqual());
+          condition = this.HarmonizeOperands(this.ParseUnsignedBinaryOperation(new LessThanOrEqual()));
           break;
         case OperationCode.Blt:
         case OperationCode.Blt_S:
-          condition = this.ParseBinaryOperation(new LessThan());
+          condition = this.HarmonizeOperands(this.ParseBinaryOperation(new LessThan()));
           break;
         case OperationCode.Blt_Un:
         case OperationCode.Blt_Un_S:
-          condition = this.ParseUnsignedBinaryOperation(new LessThan());
+          condition = this.HarmonizeOperands(this.ParseUnsignedBinaryOperation(new LessThan()));
           break;
         case OperationCode.Bne_Un:
         case OperationCode.Bne_Un_S:
         default:
-          condition = this.ParseBinaryOperation(new NotEquality());
+          condition = this.HarmonizeOperands(this.ParseBinaryOperation(new NotEquality()));
           break;
       }
       condition.Type = this.platformType.SystemBoolean;

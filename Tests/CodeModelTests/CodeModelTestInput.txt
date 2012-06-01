@@ -748,9 +748,39 @@ namespace CodeModelTestInput
 
         }
 
-        private void M(char ch)
+        private void Method44(char ch)
         {
             if (ch == '+')
+            {
+                System.Console.WriteLine("foo");
+            }
+            return;
+
+        }
+
+        private void Method45(char ch)
+        {
+            bool __temp_1;
+            bool CS$4$0000;
+            if (!char.IsNumber(ch))
+            {
+                if (ch == '.')
+                {
+                    goto IL_001d;
+                }
+                if (ch == '-')
+                {
+                    goto IL_001d;
+                }
+                __temp_1 = ch != '+';
+            }
+            else
+            {
+            IL_001d:
+                __temp_1 = false;
+            }
+            CS$4$0000 = __temp_1;
+            if (!CS$4$0000)
             {
                 System.Console.WriteLine("foo");
             }

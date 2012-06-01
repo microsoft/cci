@@ -330,8 +330,13 @@ namespace CodeModelTestInput {
       return foo;
     }
 
-    private void M(char ch) {
+    private void Method44(char ch) {
       if (ch == '+')
+        Console.WriteLine("foo");
+    }
+
+    private void Method45(char ch) {
+      if (char.IsNumber(ch) || ch == '.' || ch == '-' || ch == '+')
         Console.WriteLine("foo");
     }
 
