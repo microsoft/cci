@@ -107,6 +107,24 @@ namespace Microsoft.Cci.ILToCodeModel {
                 }
               }
             }
+          } else {
+            // Turn "o.x := dup.x" into "o.x += 0".
+            // C# source expressions o.x += 0, o,x -= 0, and o.x *= 1, all end up with IL that loads o on the stack, dups it,
+            // then loads the field x and immediately stores it again. That ends up here looking like "o.x := dup.x".
+            // Arbitrarily turn it back into "o.x += 0".
+            // (For some reason, the C# compiler does not do the same thing for "o.x /= 1".)
+            var boundExpression = assignment.Source as IBoundExpression;
+            if (boundExpression != null) {
+              var dupValue = boundExpression.Instance as IDupValue;
+              if (dupValue != null) {
+                return new Addition() {
+                  LeftOperand = assignment.Target,
+                  RightOperand = new CompileTimeConstant() { Value = 0, Type = assignment.Type, },
+                  ResultIsUnmodifiedLeftOperand = false,
+                  Type = assignment.Type,
+                };
+              }
+            }
           }
         }
       }

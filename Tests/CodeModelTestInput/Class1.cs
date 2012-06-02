@@ -340,6 +340,17 @@ namespace CodeModelTestInput {
         Console.WriteLine("foo");
     }
 
+    private void Method46() {
+      this.c += 0;
+    }
+
+    private void Method47() {
+      this.c -= 0;
+    }
+
+    private void Method48() {
+      this.c *= 1;
+    }
   }
 
   struct SomeStruct {

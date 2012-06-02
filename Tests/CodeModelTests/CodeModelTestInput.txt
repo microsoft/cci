@@ -788,6 +788,27 @@ namespace CodeModelTestInput
 
         }
 
+        private void Method46()
+        {
+            this.c = this.c;
+            return;
+
+        }
+
+        private void Method47()
+        {
+            this.c = this.c;
+            return;
+
+        }
+
+        private void Method48()
+        {
+            this.c = this.c;
+            return;
+
+        }
+
         public Class1()
         {
             this.c = 0;
