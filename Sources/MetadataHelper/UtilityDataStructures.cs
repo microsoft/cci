@@ -2157,6 +2157,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
           return 0;
         }
       }
+      set {
+        this.Add(key, value);
+      }
     }
 
     /// <summary>

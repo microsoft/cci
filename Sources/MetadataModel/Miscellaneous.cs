@@ -285,6 +285,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <returns></returns>
     public static IEnumerable<T> GetSingletonEnumerable<T>(T t) {
+      Contract.Ensures(Contract.Result<IEnumerable<T>>() != null);
+
       yield return t;
     }
 
@@ -307,14 +309,14 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Given an enumerable <paramref name="sourceEnumeration"/> the elements of which is of type <typeparamref name="SourceType"/> and a convertion 
     /// method <paramref name="convert"/> that computes a value of type <typeparamref name="TargetType"/> from a value of type <typeparamref name="SourceType"/>,
-    /// return an enumerable of <typeparamref name="TargetType"/> elements. Basically, map over enuemrables. 
+    /// return an enumerable of <typeparamref name="TargetType"/> elements. Basically, map over enumerables. 
     /// </summary>
     /// <typeparam name="SourceType"></typeparam>
     /// <typeparam name="TargetType"></typeparam>
     /// <param name="sourceEnumeration"></param>
     /// <param name="convert"></param>
     /// <returns></returns>
-    public static IEnumerable<TargetType> GetConversionEnumerable<SourceType, TargetType>(IEnumerable<SourceType> sourceEnumeration, Converter<SourceType, TargetType> convert) {
+    public static IEnumerable<TargetType> GetConversionEnumerable<SourceType, TargetType>(IEnumerable<SourceType> sourceEnumeration, Func<SourceType, TargetType> convert) {
       foreach (SourceType s in sourceEnumeration) {
         yield return convert(s);
       }
@@ -1064,9 +1066,6 @@ namespace Microsoft.Cci {
     /// The method is only available to fully trusted code since it allows the caller to cause new objects to be added to the cache.
     /// </summary>
     [Pure]
-#if !COMPACTFX
-    [System.Security.Permissions.SecurityPermission(global::System.Security.Permissions.SecurityAction.LinkDemand)]
-#endif
     IName GetNameFor(string name);
     //^ ensures result.Value == name;
 

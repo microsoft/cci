@@ -46,7 +46,7 @@ namespace Microsoft.Cci {
       get {
         Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
         if (Dummy.assemblyIdentity == null)
-          Interlocked.CompareExchange(ref Dummy.assemblyIdentity, new AssemblyIdentity(Dummy.name, "", new Version(), Enumerable<byte>.Empty, ""), null);
+          Interlocked.CompareExchange(ref Dummy.assemblyIdentity, new AssemblyIdentity(Dummy.name, "", new Version(0, 0), Enumerable<byte>.Empty, ""), null);
         return Dummy.assemblyIdentity;
       }
     }

@@ -132,8 +132,6 @@ namespace Microsoft.Cci {
     /// Such units can then be discovered by clients via GetUnit. 
     /// </summary>
     public void RegisterAsLatest(ICompilation compilation) {
-      Contract.Requires(compilation != null);
-
       this.RegisterAsLatest(compilation.Result);
     }
 
@@ -142,8 +140,6 @@ namespace Microsoft.Cci {
     /// The events are raised on different thread.
     /// </summary>
     public void ReportEdits(EditEventArgs editEventArguments) {
-      Contract.Requires(editEventArguments != null);
-
       if (this.Edits != null)
         ThreadPool.QueueUserWorkItem(this.ReportEditsUsingDifferentThread, editEventArguments);
     }
@@ -165,8 +161,6 @@ namespace Microsoft.Cci {
     /// The events are raised on different thread.
     /// </summary>
     public void ReportSymbolTableEdits(EditEventArgs editEventArguments) {
-      Contract.Requires(editEventArguments != null);
-
       if (this.SymbolTableEdits != null)
         ThreadPool.QueueUserWorkItem(this.ReportSymbolTableEditsUsingDifferentThread, editEventArguments);
     }

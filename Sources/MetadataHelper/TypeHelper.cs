@@ -1117,6 +1117,7 @@ namespace Microsoft.Cci {
     public static IFieldDefinition GetField(ITypeDefinition declaringType, IName fieldName) {
       Contract.Requires(declaringType != null);
       Contract.Requires(fieldName != null);
+      Contract.Ensures(Contract.Result<IFieldDefinition>() != null);
 
       foreach (ITypeDefinitionMember member in declaringType.GetMembersNamed(fieldName, false)) {
         IFieldDefinition/*?*/ field = member as IFieldDefinition;
@@ -1389,6 +1390,42 @@ namespace Microsoft.Cci {
       Contract.Requires(alias != null);
 
       return new TypeNameFormatter().GetAliasName(alias);
+    }
+
+    /// <summary>
+    /// Returns the value of System.TypeCode that corresponds to the given type.
+    /// </summary>
+    public static TypeCode GetSytemTypeCodeFor(ITypeDefinition type) {
+      Contract.Requires(type != null);
+
+      switch (type.TypeCode) {
+        case PrimitiveTypeCode.Boolean: return TypeCode.Boolean;
+        case PrimitiveTypeCode.Char: return TypeCode.Char;
+        case PrimitiveTypeCode.Float32: return TypeCode.Single;
+        case PrimitiveTypeCode.Float64: return TypeCode.Double;
+        case PrimitiveTypeCode.Int16: return TypeCode.Int16;
+        case PrimitiveTypeCode.Int32: return TypeCode.Int32;
+        case PrimitiveTypeCode.Int64: return TypeCode.Int64;
+        case PrimitiveTypeCode.Int8: return TypeCode.SByte;
+        case PrimitiveTypeCode.IntPtr: return TypeCode.Object;
+        case PrimitiveTypeCode.Pointer: return TypeCode.Object;
+        case PrimitiveTypeCode.Reference: return TypeCode.Object;
+        case PrimitiveTypeCode.String: return TypeCode.String;
+        case PrimitiveTypeCode.UInt16: return TypeCode.UInt16;
+        case PrimitiveTypeCode.UInt32: return TypeCode.UInt32;
+        case PrimitiveTypeCode.UInt64: return TypeCode.UInt64;
+        case PrimitiveTypeCode.UInt8: return TypeCode.Byte;
+        case PrimitiveTypeCode.UIntPtr: return TypeCode.Object;
+        case PrimitiveTypeCode.Void: return TypeCode.Object;
+        default:
+          if (TypeHelper.TypesAreEquivalent(type, type.PlatformType.SystemDateTime))
+            return TypeCode.DateTime;
+          if (TypeHelper.TypesAreEquivalent(type, type.PlatformType.SystemDBNull))
+            return TypeCode.DBNull;
+          if (TypeHelper.TypesAreEquivalent(type, type.PlatformType.SystemDecimal))
+            return TypeCode.Decimal;
+          return TypeCode.Object;
+      }
     }
 
     /// <summary>
@@ -2030,7 +2067,10 @@ namespace Microsoft.Cci {
       return TypeHelper.TypesAreEquivalent(nstType1, nstType2);
     }
 
-    internal static ITypeReference SpecializeTypeReference(ITypeReference typeReference, ITypeReference context, IInternFactory internFactory) {
+    /// <summary>
+    /// Specialize a given type reference to a given context
+    /// </summary>
+    public static ITypeReference SpecializeTypeReference(ITypeReference typeReference, ITypeReference context, IInternFactory internFactory) {
       var arrayType = typeReference as IArrayTypeReference;
       if (arrayType != null) {
         if (arrayType.IsVector) return Vector.SpecializeTypeReference(arrayType, context, internFactory);
