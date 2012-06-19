@@ -788,23 +788,48 @@ namespace CodeModelTestInput
 
         }
 
-        private void Method46()
+        private void Method46(CodeModelTestInput.Class1 o)
         {
-            this.c = this.c;
-            return;
-
-        }
-
-        private void Method47()
-        {
-            this.c = this.c;
-            return;
-
-        }
-
-        private void Method48()
-        {
-            this.c = this.c;
+            CodeModelTestInput.Class1 __temp_0 = o;
+            CodeModelTestInput.Class1 __temp_1 = __temp_0;
+            __temp_0.c = __temp_1.c;
+            CodeModelTestInput.Class1 __temp_2 = o;
+            CodeModelTestInput.Class1 __temp_3 = __temp_2;
+            __temp_2.c = __temp_3.c;
+            CodeModelTestInput.Class1 __temp_4 = o;
+            CodeModelTestInput.Class1 __temp_5 = __temp_4;
+            __temp_4.c = __temp_5.c;
+            CodeModelTestInput.Class1 __temp_6 = o;
+            CodeModelTestInput.Class1 __temp_7 = __temp_6;
+            __temp_6.c = __temp_7.c / 1;
+            CodeModelTestInput.Class1 __temp_8 = o;
+            CodeModelTestInput.Class1 __temp_9 = __temp_8;
+            __temp_8.boolField = __temp_9.boolField;
+            CodeModelTestInput.Class1 __temp_10 = o;
+            CodeModelTestInput.Class1 __temp_11 = __temp_10;
+            __temp_10.boolField = __temp_11.boolField;
+            CodeModelTestInput.Class1 __temp_12 = o;
+            CodeModelTestInput.Class1 __temp_13 = __temp_12;
+            __temp_12.charField = (ushort)__temp_13.charField;
+            CodeModelTestInput.Class1 __temp_14 = o;
+            CodeModelTestInput.Class1 __temp_15 = __temp_14;
+            __temp_14.charField = (ushort)__temp_15.charField;
+            CodeModelTestInput.Class1 __temp_16 = o;
+            CodeModelTestInput.Class1 __temp_17 = __temp_16;
+            __temp_16.charField = (ushort)__temp_17.charField;
+            CodeModelTestInput.Class1 __temp_18 = o;
+            CodeModelTestInput.Class1 __temp_19 = __temp_18;
+            __temp_18.charField = (ushort)(__temp_19.charField / (char)1);
+            CodeModelTestInput.Class1 __temp_20 = o;
+            CodeModelTestInput.Class1 __temp_21 = __temp_20;
+            string __temp_22 = __temp_21.stringField;
+            string __temp_23 = __temp_22;
+            if (__temp_23 == default(string))
+            {
+                __temp_22;
+                __temp_22 = "";
+            }
+            __temp_20.stringField = __temp_22;
             return;
 
         }
@@ -818,6 +843,12 @@ namespace CodeModelTestInput
         }
 
         private int c;
+
+        private bool boolField;
+
+        private char charField;
+
+        private string stringField;
     }
 
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]

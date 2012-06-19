@@ -125,6 +125,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.ReplaceConditionalExpressionPattern(b) ||
       this.ReplacePushPushDupPopPopPattern(b) ||
       this.ReplacePushDupPopPattern(b) ||
+      this.ReplacePushDupPushPopPattern(b) ||
       ReplacePushPopPattern(b, this.host) ||
       this.ReplaceDupPopPattern(b) ||
       this.ReplacePostBinopPattern(b) ||
@@ -138,7 +139,9 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.ReplaceShortCircuitAnd5(b) ||
       this.ReplaceShortCircuitAnd6(b) ||
       this.ReplacedCompoundAssignmentViaTempPattern(b) ||
-      this.ReplaceSingleUseCompilerGeneratedLocalPattern(b)) {
+      this.ReplaceSingleUseCompilerGeneratedLocalPattern(b) ||
+      this.ReplacePlusAssignForStringPattern(b)
+      ) {
       }
 
       //Look for a final return that returns a temp that is never assigned to.
@@ -681,7 +684,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         popCounter.Traverse(statement);
         if (popCounter.count != 1) continue;
         binop1.LeftOperand = assign1.Target;
-        var popReplacer = new PrefixPopReplacer(this.host, binop1);
+        var popReplacer = new SinglePopReplacer(this.host, binop1);
         popReplacer.Rewrite(statement);
         statements.RemoveRange(i, 2);
         replacedPattern = true;
@@ -689,23 +692,50 @@ namespace Microsoft.Cci.ILToCodeModel {
       return replacedPattern;
     }
 
-    class PrefixPopReplacer : CodeRewriter {
+    private bool ReplacePushDupPushPopPattern(BlockStatement b) {
+      Contract.Requires(b != null);
+      bool replacedPattern = false;
+      var statements = b.Statements;
+      for (int i = 0; i < statements.Count-4; i++) {
+        var push1 = statements[i] as PushStatement;
+        if (push1 == null) continue;
+        var exprS1 = statements[i+1] as ExpressionStatement;
+        if (exprS1 == null) continue;
+        var assign1 = exprS1.Expression as Assignment;
+        if (assign1 == null) continue;
+        if (!(assign1.Source is DupValue) || assign1.Target.Instance != null) continue;
+        var push2 = statements[i+2] as PushStatement;
+        if (push2 == null) continue;
+        var popCounter = new PopCounter();
+        popCounter.Traverse(push2);
+        if (popCounter.count != 1) continue;
+        if (!this.singleUseExpressionChecker.ExpressionCanBeMovedAndDoesNotReference(push1.ValueToPush, assign1.Target.Definition)) continue;
+        assign1.Source = push1.ValueToPush;
+        var popReplacer = new SinglePopReplacer(this.host, assign1);
+        popReplacer.Rewrite(push2.ValueToPush);
+        statements.RemoveRange(i, 2);
+        replacedPattern = true;
+      }
+      return replacedPattern;
+    }
 
-      internal PrefixPopReplacer(IMetadataHost host, BinaryOperation prefixOp)
+    class SinglePopReplacer : CodeRewriter {
+
+      internal SinglePopReplacer(IMetadataHost host, Expression previouslyPushedExpression)
         : base(host) {
-        Contract.Requires(prefixOp != null);
-        this.prefixOp = prefixOp;
+        Contract.Requires(previouslyPushedExpression != null);
+        this.previouslyPushedExpression = previouslyPushedExpression;
       }
 
-      BinaryOperation prefixOp;
+      Expression previouslyPushedExpression;
 
       [ContractInvariantMethod]
       private void ObjectInvariant() {
-        Contract.Invariant(this.prefixOp != null);
+        Contract.Invariant(this.previouslyPushedExpression != null);
       }
 
       public override IExpression Rewrite(IPopValue popValue) {
-        return this.prefixOp;
+        return this.previouslyPushedExpression;
       }
 
     }
@@ -1145,6 +1175,85 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       return replacedPattern;
     }
+
+    /// <summary>
+    /// For a string field, s, the source expression e.s += ""
+    /// turns into a specific pattern.
+    /// That pattern here looks like:
+    /// i:   push e
+    /// i+1: push dup.s
+    /// i+2: (!= dup (default_value string)) ? goto L2 : empty
+    /// i+3: L1
+    /// i+4: pop
+    /// i+5: push ""
+    /// i+6: L2
+    /// i+7: pop.s = pop
+    /// </summary>
+    private bool ReplacePlusAssignForStringPattern(BlockStatement b) {
+      Contract.Requires(b != null);
+      bool replacedPattern = false;
+      var statements = b.Statements;
+      for (int i = 0; i < statements.Count - 7; i++) {
+        var push1 = statements[i] as PushStatement;
+        if (push1 == null) continue;
+        var push2 = statements[i + 1] as PushStatement;
+        if (push2 == null) continue;
+        var boundExpression = push2.ValueToPush as IBoundExpression;
+        if (boundExpression == null) continue;
+        var dupValue = boundExpression.Instance as IDupValue;
+        if (dupValue == null) continue;
+        var field = boundExpression.Definition as IFieldReference;
+        if (field == null) continue;
+        var conditionalStatement = statements[i + 2] as IConditionalStatement;
+        if (conditionalStatement == null) continue;
+        var notEquality = conditionalStatement.Condition as INotEquality;
+        if (notEquality == null) continue;
+        var gotoStatement = conditionalStatement.TrueBranch as IGotoStatement;
+        if (gotoStatement == null) continue;
+        var branchTarget = gotoStatement.TargetStatement;
+        var emptyStatement = conditionalStatement.FalseBranch as IEmptyStatement;
+        if (emptyStatement == null) continue;
+        var labeledStatement = statements[i + 3] as ILabeledStatement;
+        if (labeledStatement == null) continue;
+        var popStatement = statements[i + 4] as IExpressionStatement;
+        if (popStatement == null) continue;
+        if (!(popStatement.Expression is IPopValue)) continue;
+        var pushEmptyString = statements[i + 5] as IPushStatement;
+        if (pushEmptyString == null) continue;
+        var emptyString = pushEmptyString.ValueToPush as ICompileTimeConstant;
+        if (emptyString == null) continue;
+        if (emptyString.Type.TypeCode != PrimitiveTypeCode.String) continue;
+        if ((string)emptyString.Value != "") continue;
+        labeledStatement = statements[i + 6] as ILabeledStatement;
+        if (labeledStatement == null) continue;
+        if (labeledStatement.Label != branchTarget.Label) continue;
+        var assignStatement = statements[i + 7] as IExpressionStatement;
+        if (assignStatement == null) continue;
+        var assignment = assignStatement.Expression as IAssignment;
+        if (assignment == null) continue;
+        if (!(assignment.Source is IPopValue)) continue;
+        if (!(assignment.Target.Instance is IPopValue)) continue;
+        // REVIEW: should the definition of the target be checked to be the same as "field"? If so, how?
+
+        var plusEqual = new Addition() {
+          LeftOperand = new TargetExpression() {
+            Definition = assignment.Target.Definition,
+            Instance = push1.ValueToPush,
+          },
+          RightOperand = emptyString,
+          ResultIsUnmodifiedLeftOperand = false,
+          Type = assignment.Type,
+        };
+
+        statements[i] = new ExpressionStatement() {
+          Expression = plusEqual,
+          Locations = new List<ILocation>(push1.Locations),
+        };
+        statements.RemoveRange(i + 1, 7);
+        replacedPattern = true;
+      }
+      return replacedPattern;
+    }
   }
 
   internal class SingleAssignmentSingleReferenceFinder : CodeTraverser {
@@ -1287,13 +1396,13 @@ namespace Microsoft.Cci.ILToCodeModel {
   internal class SingleUseExpressionChecker : CodeTraverser {
 
     bool foundProblem;
-    ILocalDefinition local = Dummy.LocalVariable;
+    object definition = Dummy.LocalVariable;
 
-    internal bool ExpressionCanBeMovedAndDoesNotReference(IExpression expression, ILocalDefinition local) {
+    internal bool ExpressionCanBeMovedAndDoesNotReference(IExpression expression, object definition) {
       Contract.Requires(expression != null);
-      Contract.Requires(local != null);
+      Contract.Requires(definition != null);
       this.foundProblem = false;
-      this.local = local;
+      this.definition = definition;
       this.StopTraversal = false;
       Contract.Assume(this.objectsThatHaveAlreadyBeenTraversed != null);
       this.objectsThatHaveAlreadyBeenTraversed.Clear();
@@ -1312,7 +1421,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     public override void TraverseChildren(ILocalDefinition localDefinition) {
-      if (localDefinition == this.local) {
+      if (localDefinition == this.definition) {
         this.foundProblem = true;
         this.StopTraversal = true;
       }
@@ -1322,6 +1431,13 @@ namespace Microsoft.Cci.ILToCodeModel {
     //  this.foundProblem = true;
     //  this.StopTraversal = true;
     //}
+
+    public override void TraverseChildren(IParameterDefinition parameterDefinition) {
+      if (parameterDefinition == this.definition) {
+        this.foundProblem = true;
+        this.StopTraversal = true;
+      }
+    }
 
     public override void TraverseChildren(IPopValue popValue) {
       this.foundProblem = true;

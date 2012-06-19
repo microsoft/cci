@@ -340,16 +340,26 @@ namespace CodeModelTestInput {
         Console.WriteLine("foo");
     }
 
-    private void Method46() {
-      this.c += 0;
-    }
-
-    private void Method47() {
-      this.c -= 0;
-    }
-
-    private void Method48() {
-      this.c *= 1;
+    bool boolField;
+    char charField;
+    string stringField;
+    /// <summary>
+    /// Code that produces "load o; dup; ldfld f; stfld f".
+    /// Can't tell what the operation really was, so decompile
+    /// it back into "o.c += 0" or "o.c |= false".
+    /// </summary>
+    private void Method46(Class1 o) {
+      o.c += 0;
+      o.c -= 0;
+      o.c *= 1;
+      o.c /= 1; // doesn't produce the IL pattern the others do, so it already decompiled back into this
+      o.boolField &= true;
+      o.boolField |= false;
+      o.charField += (char)0;
+      o.charField -= (char)0;
+      o.charField *= (char)1;
+      o.charField /= (char)1;
+      o.stringField += "";
     }
   }
 

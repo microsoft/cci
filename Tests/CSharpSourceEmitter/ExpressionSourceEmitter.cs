@@ -20,14 +20,16 @@ namespace CSharpSourceEmitter {
   public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
 
 
-    private IExpression currentExpression;
+    private uint currentPrecedence;
 
-    private bool LowerPriorityThanParentExpression(IExpression expression) {
-      var currentPriority = Precedence(this.currentExpression);
+    private bool LowerPrecedenceThanParentExpression(IExpression expression) {
       var newPriority = Precedence(expression);
-      return newPriority < currentPriority;
+      return newPriority < this.currentPrecedence;
     }
 
+    /// <summary>
+    /// Higher precedence means more tightly binding.
+    /// </summary>
     private uint Precedence(IExpression/*?*/ expression) {
       if (expression == null) return 0;
 
@@ -108,7 +110,11 @@ namespace CSharpSourceEmitter {
       return conditional.Type.TypeCode == PrimitiveTypeCode.Boolean && ExpressionHelper.IsIntegralOne(conditional.ResultIfTrue);
     }
     private bool IsLogicalAnd(IConditional conditional) {
-      return conditional.Type.TypeCode == PrimitiveTypeCode.Boolean && ExpressionHelper.IsIntegralZero(conditional.ResultIfFalse);
+      if (conditional.Type.TypeCode == PrimitiveTypeCode.Boolean) {
+        if (ExpressionHelper.IsIntegralZero(conditional.ResultIfFalse)) return true; // A ? B : false is code-model for conjunction
+        if (ExpressionHelper.IsIntegralZero(conditional.ResultIfTrue)) return true; // A ? false : B is handled as !(A) && B in the traverser for conditionals
+      }
+      return false;
     }
     private bool IsPrefix(IBinaryOperation binaryOperation) {
       return binaryOperation.LeftOperand is ITargetExpression && ExpressionHelper.IsIntegralOne(binaryOperation.RightOperand) && !binaryOperation.ResultIsUnmodifiedLeftOperand;
@@ -119,9 +125,9 @@ namespace CSharpSourceEmitter {
 
     public override void TraverseChildren(IAddition addition) {
 
-      var needsParen = LowerPriorityThanParentExpression(addition);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = addition;
+      var needsParen = LowerPrecedenceThanParentExpression(addition);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(addition);
 
       if (needsParen)
         this.sourceEmitterOutput.Write("(");
@@ -148,7 +154,7 @@ namespace CSharpSourceEmitter {
       if (needsParen)
         this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(IAddressableExpression addressableExpression) {
@@ -314,6 +320,12 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(IAssignment assignment) {
+      var needsParen = LowerPrecedenceThanParentExpression(assignment);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(assignment);
+
+      if (needsParen) this.sourceEmitterOutput.Write("(");
+
       var binOp = assignment.Source as IBinaryOperation;
       if (binOp != null && assignment.Target.Instance == null) {
         var leftBinding = binOp.LeftOperand as IBoundExpression;
@@ -332,7 +344,7 @@ namespace CSharpSourceEmitter {
               this.sourceEmitterOutput.Write(" += ");
               this.Traverse(binOp.RightOperand);
             }
-            return;
+            goto Ret;
           }
           if (binOp is ISubtraction) {
             if (ExpressionHelper.IsIntegralOne(binOp.RightOperand)) { //TODO: pointer incr can have size == target type size.
@@ -348,48 +360,48 @@ namespace CSharpSourceEmitter {
               this.sourceEmitterOutput.Write(" -= ");
               this.Traverse(binOp.RightOperand);
             }
-            return;
+            goto Ret;
           }
           this.Traverse(assignment.Target);
           if (binOp is IBitwiseAnd) {
             this.sourceEmitterOutput.Write(" &= ");
             this.Traverse(binOp.RightOperand);
-            return;
+            goto Ret;
           }
           if (binOp is IBitwiseOr) {
             this.sourceEmitterOutput.Write(" |= ");
             this.Traverse(binOp.RightOperand);
-            return;
+            goto Ret;
           }
           if (binOp is IDivision) {
             this.sourceEmitterOutput.Write(" /= ");
             this.Traverse(binOp.RightOperand);
-            return;
+            goto Ret;
           }
           if (binOp is IExclusiveOr) {
             this.sourceEmitterOutput.Write(" ^= ");
             this.Traverse(binOp.RightOperand);
-            return;
+            goto Ret;
           }
           if (binOp is ILeftShift) {
             this.sourceEmitterOutput.Write(" <<= ");
             this.Traverse(binOp.RightOperand);
-            return;
+            goto Ret;
           }
           if (binOp is IModulus) {
             this.sourceEmitterOutput.Write(" %= ");
             this.Traverse(binOp.RightOperand);
-            return;
+            goto Ret;
           }
           if (binOp is IMultiplication) {
             this.sourceEmitterOutput.Write(" *= ");
             this.Traverse(binOp.RightOperand);
-            return;
+            goto Ret;
           }
           if (binOp is IRightShift) {
             this.sourceEmitterOutput.Write(" >>= ");
             this.Traverse(binOp.RightOperand);
-            return;
+            goto Ret;
           }
         }
       }
@@ -399,13 +411,18 @@ namespace CSharpSourceEmitter {
       this.PrintToken(CSharpToken.Assign);
       this.PrintToken(CSharpToken.Space);
       this.Traverse(assignment.Source);
+
+    Ret:
+      if (needsParen) this.sourceEmitterOutput.Write(")");
+      this.currentPrecedence = savedCurrentPrecedence;
+
     }
 
     public override void TraverseChildren(IBitwiseAnd bitwiseAnd) {
 
-      var needsParen = LowerPriorityThanParentExpression(bitwiseAnd);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = bitwiseAnd;
+      var needsParen = LowerPrecedenceThanParentExpression(bitwiseAnd);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(bitwiseAnd);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       this.Traverse(bitwiseAnd.LeftOperand);
@@ -416,14 +433,14 @@ namespace CSharpSourceEmitter {
       this.Traverse(bitwiseAnd.RightOperand);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(IBitwiseOr bitwiseOr) {
 
-      var needsParen = LowerPriorityThanParentExpression(bitwiseOr);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = bitwiseOr;
+      var needsParen = LowerPrecedenceThanParentExpression(bitwiseOr);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(bitwiseOr);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       this.Traverse(bitwiseOr.LeftOperand);
@@ -434,7 +451,7 @@ namespace CSharpSourceEmitter {
       this.Traverse(bitwiseOr.RightOperand);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(IBlockExpression blockExpression) {
@@ -478,9 +495,9 @@ namespace CSharpSourceEmitter {
 
     public override void TraverseChildren(ICastIfPossible castIfPossible) {
 
-      var needsParen = LowerPriorityThanParentExpression(castIfPossible);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = castIfPossible;
+      var needsParen = LowerPrecedenceThanParentExpression(castIfPossible);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(castIfPossible);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       this.Traverse(castIfPossible.ValueToCast);
@@ -488,14 +505,14 @@ namespace CSharpSourceEmitter {
       this.PrintTypeReference(castIfPossible.TargetType);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(ICheckIfInstance checkIfInstance) {
 
-      var needsParen = LowerPriorityThanParentExpression(checkIfInstance);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = checkIfInstance;
+      var needsParen = LowerPrecedenceThanParentExpression(checkIfInstance);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(checkIfInstance);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       this.Traverse(checkIfInstance.Operand);
@@ -503,7 +520,7 @@ namespace CSharpSourceEmitter {
       this.PrintTypeReference(checkIfInstance.TypeToCheck);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(ICompileTimeConstant constant) {
@@ -515,7 +532,7 @@ namespace CSharpSourceEmitter {
       else if (val is string)
         this.PrintString((string)val);
       else if (val is char)
-        this.sourceEmitterOutput.Write("'"+val+"'");
+        PrintCharacter((char)val);
       else if (val is int)
         PrintInt((int)val);
       else if (val is uint)
@@ -530,29 +547,26 @@ namespace CSharpSourceEmitter {
 
     public override void TraverseChildren(IConditional conditional) {
 
-      var needsParen = LowerPriorityThanParentExpression(conditional);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = conditional;
+      var needsParen = LowerPrecedenceThanParentExpression(conditional);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(conditional);
+
+      if (needsParen) this.sourceEmitterOutput.Write("(");
 
       if (conditional.Type.TypeCode == PrimitiveTypeCode.Boolean) {
         if (ExpressionHelper.IsIntegralOne(conditional.ResultIfTrue)) {
-          if (needsParen) this.sourceEmitterOutput.Write("(");
           this.Traverse(conditional.Condition);
           this.sourceEmitterOutput.Write(" || ");
           this.Traverse(conditional.ResultIfFalse);
-          if (needsParen) this.sourceEmitterOutput.Write(")");
           goto Ret;
         }
         if (ExpressionHelper.IsIntegralZero(conditional.ResultIfFalse)) {
-          if (needsParen) this.sourceEmitterOutput.Write("(");
           this.Traverse(conditional.Condition);
           this.sourceEmitterOutput.Write(" && ");
           this.Traverse(conditional.ResultIfTrue);
-          if (needsParen) this.sourceEmitterOutput.Write(")");
           goto Ret;
         }
         if (ExpressionHelper.IsIntegralOne(conditional.ResultIfFalse)) {
-          if (needsParen) this.sourceEmitterOutput.Write("(");
           this.Traverse(conditional.Condition);
           this.sourceEmitterOutput.Write(" && ");
           var ln = conditional.ResultIfTrue as ILogicalNot;
@@ -560,36 +574,38 @@ namespace CSharpSourceEmitter {
             this.Traverse(ln.Operand);
           else {
             this.sourceEmitterOutput.Write("!");
+            var x = this.currentPrecedence;
+            this.currentPrecedence = 13; // precedence of unary negation
             this.Traverse(conditional.ResultIfTrue);
+            this.currentPrecedence = x;
           }
-          if (needsParen) this.sourceEmitterOutput.Write(")");
           goto Ret;
         }
         if (ExpressionHelper.IsIntegralZero(conditional.ResultIfTrue)) {
-          this.sourceEmitterOutput.Write("!(");
-          this.Traverse(conditional.Condition);
-          this.sourceEmitterOutput.Write(" || ");
-          var ln = conditional.ResultIfFalse as ILogicalNot;
-          if (ln != null)
+          var ln = conditional.Condition as ILogicalNot;
+          if (ln != null) {
             this.Traverse(ln.Operand);
-          else {
+          } else {
             this.sourceEmitterOutput.Write("!");
-            this.Traverse(conditional.ResultIfFalse);
+            var x = this.currentPrecedence;
+            this.currentPrecedence = 13; // precedence of unary negation
+            this.Traverse(conditional.Condition);
+            this.currentPrecedence = x;
           }
-          if (needsParen) this.sourceEmitterOutput.Write(")");
+          this.sourceEmitterOutput.Write(" && ");
+          this.Traverse(conditional.ResultIfFalse);
           goto Ret;
         }
       }
-      if (needsParen) this.sourceEmitterOutput.Write("(");
       this.Traverse(conditional.Condition);
       this.sourceEmitterOutput.Write(" ? ");
       this.Traverse(conditional.ResultIfTrue);
       this.sourceEmitterOutput.Write(" : ");
       this.Traverse(conditional.ResultIfFalse);
-      if (needsParen) this.sourceEmitterOutput.Write(")");
 
       Ret:
-      this.currentExpression = savedCurrentExpression;
+      if (needsParen) this.sourceEmitterOutput.Write(")");
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(IConversion conversion) {
@@ -602,9 +618,9 @@ namespace CSharpSourceEmitter {
         return;
       }
 
-      var needsParen = LowerPriorityThanParentExpression(conversion);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = conversion;
+      var needsParen = LowerPrecedenceThanParentExpression(conversion);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(conversion);
 
       if (conversion.CheckNumericRange)
         this.sourceEmitterOutput.Write("checked");
@@ -617,7 +633,7 @@ namespace CSharpSourceEmitter {
       if (needsParen)
         this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(ICreateArray createArray) {
@@ -677,9 +693,9 @@ namespace CSharpSourceEmitter {
 
     public override void TraverseChildren(IDivision division) {
 
-      var needsParen = LowerPriorityThanParentExpression(division);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = division;
+      var needsParen = LowerPrecedenceThanParentExpression(division);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(division);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       this.Traverse(division.LeftOperand);
@@ -690,7 +706,7 @@ namespace CSharpSourceEmitter {
       this.Traverse(division.RightOperand);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(IDupValue dupValue) {
@@ -699,9 +715,9 @@ namespace CSharpSourceEmitter {
 
     public override void TraverseChildren(IEquality equality) {
 
-      var needsParen = LowerPriorityThanParentExpression(equality);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = equality;
+      var needsParen = LowerPrecedenceThanParentExpression(equality);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(equality);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       this.Traverse(equality.LeftOperand);
@@ -709,14 +725,14 @@ namespace CSharpSourceEmitter {
       this.Traverse(equality.RightOperand);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(IExclusiveOr exclusiveOr) {
 
-      var needsParen = LowerPriorityThanParentExpression(exclusiveOr);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = exclusiveOr;
+      var needsParen = LowerPrecedenceThanParentExpression(exclusiveOr);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(exclusiveOr);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       this.Traverse(exclusiveOr.LeftOperand);
@@ -727,7 +743,7 @@ namespace CSharpSourceEmitter {
       this.Traverse(exclusiveOr.RightOperand);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public new void Traverse(IEnumerable<IExpression> arguments) {
@@ -771,9 +787,9 @@ namespace CSharpSourceEmitter {
         return;
       }
 
-      var needsParen = LowerPriorityThanParentExpression(greaterThan);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = greaterThan;
+      var needsParen = LowerPrecedenceThanParentExpression(greaterThan);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(greaterThan);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       if (greaterThan.IsUnsignedOrUnordered && TypeHelper.IsPrimitiveInteger(greaterThan.LeftOperand.Type) && 
@@ -793,7 +809,7 @@ namespace CSharpSourceEmitter {
       this.Traverse(greaterThan.RightOperand);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(IGreaterThanOrEqual greaterThanOrEqual) {
@@ -807,9 +823,9 @@ namespace CSharpSourceEmitter {
         return;
       }
 
-      var needsParen = LowerPriorityThanParentExpression(greaterThanOrEqual);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = greaterThanOrEqual;
+      var needsParen = LowerPrecedenceThanParentExpression(greaterThanOrEqual);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(greaterThanOrEqual);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       if (greaterThanOrEqual.IsUnsignedOrUnordered && TypeHelper.IsPrimitiveInteger(greaterThanOrEqual.LeftOperand.Type) && 
@@ -829,14 +845,14 @@ namespace CSharpSourceEmitter {
       this.Traverse(greaterThanOrEqual.RightOperand);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(ILeftShift leftShift) {
 
-      var needsParen = LowerPriorityThanParentExpression(leftShift);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = leftShift;
+      var needsParen = LowerPrecedenceThanParentExpression(leftShift);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(leftShift);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       this.Traverse(leftShift.LeftOperand);
@@ -847,7 +863,7 @@ namespace CSharpSourceEmitter {
       this.Traverse(leftShift.RightOperand);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(ILessThan lessThan) {
@@ -861,9 +877,9 @@ namespace CSharpSourceEmitter {
         return;
       }
 
-      var needsParen = LowerPriorityThanParentExpression(lessThan);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = lessThan;
+      var needsParen = LowerPrecedenceThanParentExpression(lessThan);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(lessThan);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       if (lessThan.IsUnsignedOrUnordered && TypeHelper.IsPrimitiveInteger(lessThan.LeftOperand.Type) && 
@@ -883,7 +899,7 @@ namespace CSharpSourceEmitter {
       this.Traverse(lessThan.RightOperand);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(ILessThanOrEqual lessThanOrEqual) {
@@ -896,9 +912,9 @@ namespace CSharpSourceEmitter {
         return;
       }
 
-      var needsParen = LowerPriorityThanParentExpression(lessThanOrEqual);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = lessThanOrEqual;
+      var needsParen = LowerPrecedenceThanParentExpression(lessThanOrEqual);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(lessThanOrEqual);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       if (lessThanOrEqual.IsUnsignedOrUnordered && TypeHelper.IsPrimitiveInteger(lessThanOrEqual.LeftOperand.Type) && 
@@ -918,20 +934,20 @@ namespace CSharpSourceEmitter {
       this.Traverse(lessThanOrEqual.RightOperand);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(ILogicalNot logicalNot) {
-      var needsParen = LowerPriorityThanParentExpression(logicalNot);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = logicalNot;
+      var needsParen = LowerPrecedenceThanParentExpression(logicalNot);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(logicalNot);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       this.sourceEmitterOutput.Write("!");
       this.Traverse(logicalNot.Operand);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(IMakeTypedReference makeTypedReference) {
@@ -1042,6 +1058,13 @@ namespace CSharpSourceEmitter {
         sourceEmitterOutput.Write("uint.MaxValue");
       else
         sourceEmitterOutput.Write(value.ToString());
+    }
+
+    public virtual void PrintCharacter(char c) {
+      if (char.IsControl(c))
+        this.sourceEmitterOutput.Write("(char)" + (int)c);
+      else
+        this.sourceEmitterOutput.Write("'" + c + "'");
     }
 
     public virtual void PrintEnumValue(ITypeDefinition enumType, object valObj) {
@@ -1253,9 +1276,9 @@ namespace CSharpSourceEmitter {
 
     public override void TraverseChildren(IModulus modulus) {
 
-      var needsParen = LowerPriorityThanParentExpression(modulus);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = modulus;
+      var needsParen = LowerPrecedenceThanParentExpression(modulus);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(modulus);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       this.Traverse(modulus.LeftOperand);
@@ -1266,14 +1289,14 @@ namespace CSharpSourceEmitter {
       this.Traverse(modulus.RightOperand);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(IMultiplication multiplication) {
 
-      var needsParen = LowerPriorityThanParentExpression(multiplication);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = multiplication;
+      var needsParen = LowerPrecedenceThanParentExpression(multiplication);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(multiplication);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       this.Traverse(multiplication.LeftOperand);
@@ -1284,7 +1307,7 @@ namespace CSharpSourceEmitter {
       this.Traverse(multiplication.RightOperand);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(INamedArgument namedArgument) {
@@ -1305,9 +1328,9 @@ namespace CSharpSourceEmitter {
 
     public override void TraverseChildren(INotEquality notEquality) {
 
-      var needsParen = LowerPriorityThanParentExpression(notEquality);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = notEquality;
+      var needsParen = LowerPrecedenceThanParentExpression(notEquality);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(notEquality);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       this.Traverse(notEquality.LeftOperand);
@@ -1315,7 +1338,7 @@ namespace CSharpSourceEmitter {
       this.Traverse(notEquality.RightOperand);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(IOldValue oldValue) {
@@ -1377,9 +1400,9 @@ namespace CSharpSourceEmitter {
 
     public override void TraverseChildren(IRightShift rightShift) {
 
-      var needsParen = LowerPriorityThanParentExpression(rightShift);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = rightShift;
+      var needsParen = LowerPrecedenceThanParentExpression(rightShift);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(rightShift);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       this.Traverse(rightShift.LeftOperand);
@@ -1390,7 +1413,7 @@ namespace CSharpSourceEmitter {
       this.Traverse(rightShift.RightOperand);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(IRuntimeArgumentHandleExpression runtimeArgumentHandleExpression) {
@@ -1427,9 +1450,9 @@ namespace CSharpSourceEmitter {
         return;
       }
 
-      var needsParen = LowerPriorityThanParentExpression(subtraction);
-      var savedCurrentExpression = this.currentExpression;
-      this.currentExpression = subtraction;
+      var needsParen = LowerPrecedenceThanParentExpression(subtraction);
+      var savedCurrentPrecedence = this.currentPrecedence;
+      this.currentPrecedence = this.Precedence(subtraction);
 
       if (needsParen) this.sourceEmitterOutput.Write("(");
       this.Traverse(subtraction.LeftOperand);
@@ -1440,7 +1463,7 @@ namespace CSharpSourceEmitter {
       this.Traverse(subtraction.RightOperand);
       if (needsParen) this.sourceEmitterOutput.Write(")");
 
-      this.currentExpression = savedCurrentExpression;
+      this.currentPrecedence = savedCurrentPrecedence;
     }
 
     public override void TraverseChildren(ITargetExpression targetExpression) {

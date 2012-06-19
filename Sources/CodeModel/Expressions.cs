@@ -2003,6 +2003,7 @@ namespace Microsoft.Cci {
 
     public object Definition {
       get {
+        Contract.Ensures(Contract.Result<object>() != null);
         Contract.Ensures(Contract.Result<object>() is ILocalDefinition || Contract.Result<object>() is IParameterDefinition || 
           Contract.Result<object>() is IFieldReference || Contract.Result<object>() is IArrayIndexer || 
           Contract.Result<object>() is IAddressDereference || Contract.Result<object>() is IPropertyDefinition || Contract.Result<object>() is IThisReference);

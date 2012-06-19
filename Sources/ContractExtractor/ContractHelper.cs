@@ -1479,7 +1479,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// </summary>
     /// <param name="addressableExpression">The addressable expression.</param>
     public override void RewriteChildren(AddressableExpression addressableExpression) {
-      ParameterDefinition/*?*/ par = addressableExpression.Definition as ParameterDefinition;
+      var/*?*/ par = addressableExpression.Definition as IParameterDefinition;
       if (par != null && par.ContainingSignature == this.targetMethod) {
         addressableExpression.Definition = this.parameters[par.Index];
         if (addressableExpression.Instance != null) {
@@ -1498,7 +1498,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// </summary>
     /// <param name="boundExpression">The bound expression.</param>
     public override void RewriteChildren(BoundExpression boundExpression) {
-      ParameterDefinition/*?*/ par = boundExpression.Definition as ParameterDefinition;
+      var/*?*/ par = boundExpression.Definition as IParameterDefinition;
       if (par != null && par.ContainingSignature == this.targetMethod) {
         boundExpression.Definition = this.parameters[par.Index];
         if (boundExpression.Instance != null) {

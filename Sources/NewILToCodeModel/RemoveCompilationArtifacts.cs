@@ -11,6 +11,7 @@
 using System.Diagnostics.Contracts;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.UtilityDataStructures;
+using System.Collections.Generic;
 
 namespace Microsoft.Cci.ILToCodeModel {
 
@@ -102,24 +103,51 @@ namespace Microsoft.Cci.ILToCodeModel {
                   if (binOp is IAddition || binOp is IBitwiseAnd || binOp is IBitwiseOr || binOp is IDivision || binOp is IExclusiveOr ||
                   binOp is ILeftShift || binOp is IModulus || binOp is IMultiplication || binOp is IRightShift || binOp is ISubtraction) {
                     binOp.LeftOperand = assignment.Target;
+                    binOp.RightOperand = TypeInferencer.Convert(binOp.RightOperand, assignment.Target.Type);
                     return binOp;
                   }
                 }
               }
+            } else {
+              // For a character-typed field, c, the C# source expressions:
+              //   o.c += (char)0, o.c -= (char)0, and o.c *= (char)1
+              // produce the IL: "load o; dup; ldfld c; stfld c;".
+              // (For some reason, the C# compiler does not do the same thing for "o.c /= (char)1".)
+              // Such IL shows up here as "o.c = convert(ushort, dup.c)".
+              // Arbitrarily turn it back into "o.c += (char)0".
+              if (IsBoundExpressionWithDupInstance(conversion.ValueToConvert)) {
+                var t = conversion.ValueToConvert.Type;
+                if (t.TypeCode == PrimitiveTypeCode.Char) {
+                  return new Addition() {
+                    LeftOperand = assignment.Target,
+                    RightOperand = new Conversion() {
+                      TypeAfterConversion = t,
+                      ValueToConvert = new CompileTimeConstant() { Value = 0, Type = assignment.Type, },
+                    },
+                    ResultIsUnmodifiedLeftOperand = false,
+                    Type = assignment.Type,
+                  };
+                }
+              }
             }
           } else {
-            // Turn "o.x := dup.x" into "o.x += 0".
-            // C# source expressions o.x += 0, o,x -= 0, and o.x *= 1, all end up with IL that loads o on the stack, dups it,
-            // then loads the field x and immediately stores it again. That ends up here looking like "o.x := dup.x".
-            // Arbitrarily turn it back into "o.x += 0".
-            // (For some reason, the C# compiler does not do the same thing for "o.x /= 1".)
-            var boundExpression = assignment.Source as IBoundExpression;
-            if (boundExpression != null) {
-              var dupValue = boundExpression.Instance as IDupValue;
-              if (dupValue != null) {
+            // There are several C# source expressions that produce the IL: "load o; dup; ldfld f; stfld f;".
+            // Examples are: o.f += 0, o.f -= 0, o.f *= 1, o.f &= true, o.f |= false.
+            // (For some reason, the C# compiler does not do the same thing for "o.f /= 1".)
+            // Such IL shows up here as "o.f = dup.f".
+            // Arbitrarily turn it back into "o.f += 0" for arithmetic types and "o.f |= false" for boolean.
+            if (IsBoundExpressionWithDupInstance(assignment.Source)) {
+              if (TypeHelper.IsPrimitiveInteger(assignment.Type) && assignment.Type.TypeCode != PrimitiveTypeCode.Char) {
                 return new Addition() {
                   LeftOperand = assignment.Target,
                   RightOperand = new CompileTimeConstant() { Value = 0, Type = assignment.Type, },
+                  ResultIsUnmodifiedLeftOperand = false,
+                  Type = assignment.Type,
+                };
+              } else if (assignment.Type.TypeCode == PrimitiveTypeCode.Boolean) {
+                return new BitwiseOr() {
+                  LeftOperand = assignment.Target,
+                  RightOperand = new CompileTimeConstant() { Value = false, Type = assignment.Type, },
                   ResultIsUnmodifiedLeftOperand = false,
                   Type = assignment.Type,
                 };
@@ -129,6 +157,13 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
       }
       return base.Rewrite(assignment);
+    }
+
+    private bool IsBoundExpressionWithDupInstance(IExpression expression) {
+      var boundExpression = expression as IBoundExpression;
+      if (boundExpression == null) return false;
+      var dupValue = boundExpression.Instance as IDupValue;
+      return dupValue != null;
     }
 
     public override IExpression Rewrite(IBlockExpression blockExpression) {
@@ -339,6 +374,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// </summary>
     IMethodReference GetTypeFromHandle {
       get {
+        Contract.Ensures(Contract.Result<IMethodReference>() != null);
         if (this.getTypeFromHandle == null) {
           this.getTypeFromHandle = new MethodReference(this.host, this.host.PlatformType.SystemType, CallingConvention.Default, this.host.PlatformType.SystemType,
           this.host.NameTable.GetNameFor("GetTypeFromHandle"), 0, this.host.PlatformType.SystemRuntimeTypeHandle);

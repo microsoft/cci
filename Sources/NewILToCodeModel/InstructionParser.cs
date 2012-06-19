@@ -843,7 +843,6 @@ namespace Microsoft.Cci.ILToCodeModel {
         result.Indices.Add(this.PopOperandStack());
       result.Indices.Reverse();
       var indexedObject = this.PopOperandStack();
-      Contract.Assume(indexedObject != null);
       result.Type = elementType; //obtained from the instruction, but could be a lossy abstraction, or null
       if (arrayType == null)
         arrayType = indexedObject.Type as IArrayTypeReference;

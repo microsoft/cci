@@ -114,6 +114,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       new InstructionParser(this).Traverse(block);
       new SwitchReplacer(this).Traverse(block);
+      DeleteNops(block);
       new PatternReplacer(this, block).Traverse(block);
       new TryCatchReplacer(this, block).Traverse(block);
       new RemoveNonLexicalBlocks().Traverse(block);
@@ -374,6 +375,32 @@ namespace Microsoft.Cci.ILToCodeModel {
           }
         }
         block.Statements.RemoveAt(n-1);
+      }
+    }
+
+    private static void DeleteNops(BlockStatement block) {
+      var statements = block.Statements;
+      var n = statements.Count;
+      var numberOfStatementsToDelete = 0;
+      for (int i = 0; i < n; i++) {
+        var s = statements[i];
+        if (s is IEmptyStatement) {
+          numberOfStatementsToDelete++;
+        } else {
+          var bs = s as BlockStatement;
+          if (bs != null)
+            DeleteNops(bs);
+        }
+      }
+      if (0 < numberOfStatementsToDelete){
+        var newBlock = new BlockStatement();
+        var newStmts = new List<IStatement>(n - numberOfStatementsToDelete);
+        for (int i = 0; i < n; i++) {
+          var s = statements[i];
+          if (!(s is IEmptyStatement))
+            newStmts.Add(s);
+        }
+        block.Statements = newStmts;
       }
     }
 
