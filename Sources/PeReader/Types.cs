@@ -582,7 +582,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (retModuleType != null) return retModuleType;
         return null;
       }
-      return this.NamespaceTypeName.ResolveNominalTypeName(this.PEFileToObjectModel);
+      return this.NamespaceTypeName.ResolveNominalTypeName(this.Module);
     }
 
     public override PrimitiveTypeCode TypeCode {
@@ -721,7 +721,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     INamedTypeDefinition Resolve() {
-      return this.NestedTypeName.ResolveNominalTypeName(this.PEFileToObjectModel);
+      return this.NestedTypeName.ResolveNominalTypeName(this.Module);
     }
 
     #region INestedTypeReference Members
