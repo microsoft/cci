@@ -92,7 +92,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             } else {
               switch (handlerInfo.HandlerKind) {
                 case HandlerKind.Catch:
-                  ILocalDefinition exceptionContainer = this.ExtractExceptionContainer(nestedBlock);
+                  ILocalDefinition exceptionContainer = this.ExtractExceptionContainer(nestedBlock, handlerInfo.ExceptionType);
                   if (!(exceptionContainer is Dummy))
                     this.RemoveLocalDeclarationOf(exceptionContainer, nestedBlock);
                   trycf.CatchClauses.Add(new CatchClause() { Body = nestedBlock, ExceptionType = handlerInfo.ExceptionType, ExceptionContainer = exceptionContainer });
@@ -285,7 +285,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
     }
 
-    private ILocalDefinition ExtractExceptionContainer(DecompiledBlock nestedBlock) {
+    private ILocalDefinition ExtractExceptionContainer(DecompiledBlock nestedBlock, ITypeReference exceptionType) {
       Contract.Requires(nestedBlock != null);
       Contract.Ensures(Contract.Result<ILocalDefinition>() != null);
 
@@ -315,12 +315,23 @@ namespace Microsoft.Cci.ILToCodeModel {
             if (local != null) return local; //if not, this is not a recognized code pattern.
           }
         }
-        Contract.Assume(false);
+        // can't find the local, so just introduce one and leave its value on the stack
+        var ld = new LocalDefinition() {
+          Type = exceptionType,
+        };
+        var pushStatement = new PushStatement() {
+          ValueToPush = new BoundExpression() {
+            Definition = ld,
+            Type = exceptionType,
+          },
+        };
+        nestedBlock.Statements.Insert(0, pushStatement);
+        return ld;
       } else {
         //Valid IL should always have at least one instruction to consume the exception value as well as a branch out of the handler block.
         Contract.Assume(false);
+        return Dummy.LocalVariable;
       }
-      return Dummy.LocalVariable;
     }
 
     private IExpression/*?*/ GetFilterCondition(DecompiledBlock block) {

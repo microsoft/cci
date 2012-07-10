@@ -361,6 +361,14 @@ namespace CodeModelTestInput {
       o.charField /= (char)1;
       o.stringField += "";
     }
+
+    public int Method47(object o) {
+      var x = 3;
+      if (!(o is Class3))
+        x = 27;
+      return x;
+    }
+
   }
 
   struct SomeStruct {

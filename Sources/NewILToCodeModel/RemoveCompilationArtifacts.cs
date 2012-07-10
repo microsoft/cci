@@ -295,18 +295,28 @@ namespace Microsoft.Cci.ILToCodeModel {
           });
         }
       }
-      castIfPossible = greaterThan.RightOperand as ICastIfPossible;
+      return base.Rewrite(greaterThan);
+    }
+
+    public override IExpression Rewrite(ILessThanOrEqual lessThanOrEqual) {
+      var castIfPossible = lessThanOrEqual.LeftOperand as ICastIfPossible;
       if (castIfPossible != null) {
-        var compileTimeConstant = greaterThan.LeftOperand as ICompileTimeConstant;
+        var compileTimeConstant = lessThanOrEqual.RightOperand as ICompileTimeConstant;
         if (compileTimeConstant != null && compileTimeConstant.Value == null) {
-          return this.Rewrite(new CheckIfInstance() {
-            Operand = castIfPossible.ValueToCast,
-            TypeToCheck = castIfPossible.TargetType,
-            Type = greaterThan.Type,
-          });
+          var locations = lessThanOrEqual.Locations;
+          return this.Rewrite(
+            new LogicalNot() {
+              Locations = locations as List<ILocation> ?? new List<ILocation>(locations),
+              Operand = new CheckIfInstance() {
+                Operand = castIfPossible.ValueToCast,
+                TypeToCheck = castIfPossible.TargetType,
+                Type = lessThanOrEqual.Type,
+              },
+              Type = this.host.PlatformType.SystemBoolean,
+            });
         }
       }
-      return base.Rewrite(greaterThan);
+      return base.Rewrite(lessThanOrEqual);
     }
 
     public override IExpression Rewrite(ILogicalNot logicalNot) {

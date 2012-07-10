@@ -115,6 +115,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       new InstructionParser(this).Traverse(block);
       new SwitchReplacer(this).Traverse(block);
       DeleteNops(block);
+      DeleteLocalAssignedLocal(block);
       new PatternReplacer(this, block).Traverse(block);
       new TryCatchReplacer(this, block).Traverse(block);
       new RemoveNonLexicalBlocks().Traverse(block);
@@ -402,6 +403,45 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
         block.Statements = newStmts;
       }
+    }
+    private void DeleteLocalAssignedLocal(BlockStatement block) {
+      var statements = block.Statements;
+      List<IStatement> newStatements = null;
+      var n = statements.Count;
+      for (int i = 0; i < n; i++) {
+        var s = statements[i];
+        ILocalDefinition local;
+        if (IsAssignmentOfLocalToLocal(s, out local)) {
+          if (newStatements == null) {
+            newStatements = new List<IStatement>(n - 1);
+            for (int j = 0; j < i; j++) newStatements.Add(statements[j]);
+          }
+          this.numberOfAssignmentsToLocal[local]--;
+          this.numberOfReferencesToLocal[local]--;
+        } else {
+          var bs = s as BlockStatement;
+          if (bs != null)
+            DeleteLocalAssignedLocal(bs);
+          if (newStatements != null)
+            newStatements.Add(s);
+        }
+      }
+      if (newStatements != null)
+        block.Statements = newStatements;
+    }
+    private static bool IsAssignmentOfLocalToLocal(IStatement s, out ILocalDefinition local) {
+      var es = s as IExpressionStatement;
+      if (es != null) {
+        var assign = es.Expression as IAssignment;
+        if (assign != null) {
+          var be = assign.Source as IBoundExpression;
+          if (be != null && (local = be.Definition as ILocalDefinition) != null) {
+            return be.Definition == assign.Target.Definition;
+          }
+        }
+      }
+      local = null;
+      return false;
     }
 
   }

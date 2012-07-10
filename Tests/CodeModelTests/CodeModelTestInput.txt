@@ -834,6 +834,19 @@ namespace CodeModelTestInput
 
         }
 
+        public int Method47(object o)
+        {
+            int CS$1$0000;
+            int x = 3;
+            if (!(o is CodeModelTestInput.Class3))
+            {
+                x = 27;
+            }
+            CS$1$0000 = x;
+            return CS$1$0000;
+
+        }
+
         public Class1()
         {
             this.c = 0;

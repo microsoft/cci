@@ -14,16 +14,15 @@ using Microsoft.Cci.Contracts;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.MutableCodeModel.Contracts;
 using Microsoft.Cci.ILToCodeModel;
+using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci.MutableContracts {
 
   /// <summary>
-  /// Contract extraction assumes that method bodies are in a special form where
-  /// the only place block statements appear are as the last statement in the
-  /// list of statements within a block statement, i.e., that they form a linear
-  /// linked list.
+  /// Extracts the contracts into a contract provider, but also mutates the method
+  /// bodies (if they are mutable) to delete the code that represented the contracts.
   /// </summary>
-  public class ContractExtractor : CodeRewriter {
+  public class ContractExtractor {
 
     #region Public API
     /// <summary>
@@ -33,10 +32,6 @@ namespace Microsoft.Cci.MutableContracts {
     /// body. If the <paramref name="sourceMethodBody"/> is mutable, then it
     /// has the side-effect of updating the body so that it contains only the
     /// residual code in addition to returning it.
-    /// Contract extraction assumes that method bodies are in a special form where
-    /// the only place block statements appear are as the last statement in the
-    /// list of statements within a block statement, i.e., that they form a linear
-    /// linked list.
     /// </summary>
     public static MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(IContractAwareHost host, ISourceMethodBody sourceMethodBody, PdbReader/*?*/ pdbReader) {
       var e = new ContractExtractor(sourceMethodBody, host, pdbReader);
@@ -53,17 +48,11 @@ namespace Microsoft.Cci.MutableContracts {
     /// <summary>
     /// Extracts calls to Contract.Invariant contained in invariant methods within
     /// <paramref name="typeDefinition"/> and returns the resulting type contract.
-    /// If <paramref name="typeDefinition"/> is mutable, then all invariant methods
-    /// are removed as members of <paramref name="typeDefinition"/>.
-    /// Contract extraction assumes that method bodies are in a special form where
-    /// the only place block statements appear are as the last statement in the
-    /// list of statements within a block statement, i.e., that they form a linear
-    /// linked list.
     /// </summary>
     public static ITypeContract/*?*/ GetTypeContract(IContractAwareHost host, ITypeDefinition typeDefinition, PdbReader/*?*/ pdbReader, ILocalScopeProvider/*?*/ localScopeProvider) {
       var cumulativeContract = new TypeContract();
       var mutableTypeDefinition = typeDefinition as NamedTypeDefinition;
-      var invariantMethods = new List<IMethodDefinition>(ContractHelper.GetInvariantMethods(typeDefinition));
+      var invariantMethods = ContractHelper.GetInvariantMethods(typeDefinition);
       var validContract = false;
       foreach (var invariantMethod in invariantMethods) {
         IMethodBody methodBody = invariantMethod.Body;
@@ -132,17 +121,17 @@ namespace Microsoft.Cci.MutableContracts {
       }
     }
 
-    private ISourceMethodBody sourceMethodBody;
     private PdbReader/*?*/ pdbReader;
-    private IContractAwareHost contractAwarehost;
+    private IContractAwareHost host;
     private OldAndResultExtractor oldAndResultExtractor;
-    private bool extractingFromACtorInAClass;
     /// <summary>
     /// When not null, this is the abstract type for which the contract class
     /// is holding the contracts for.
     /// </summary>
 
     private bool methodIsInReferenceAssembly;
+    private IMethodDefinition currentMethod;
+    private bool inCtor;
 
     internal bool IsContractMethod(IMethodReference/*?*/ method) {
       if (method == null) return false;
@@ -153,16 +142,13 @@ namespace Microsoft.Cci.MutableContracts {
       return (TypeHelper.GetTypeName(t).Equals("System.Diagnostics.Contracts.Contract"));
     }
 
-    internal ContractExtractor(
-      ISourceMethodBody sourceMethodBody,
-      IContractAwareHost host,
-      PdbReader/*?*/ pdbReader)
-      : base(host) {
-      this.sourceMethodBody = sourceMethodBody;
-      this.contractAwarehost = host;
+    private ContractExtractor(ISourceMethodBody sourceMethodBody, IContractAwareHost host, PdbReader/*?*/ pdbReader) {
+
+      this.host = host;
       this.pdbReader = pdbReader;
 
       this.currentMethod = sourceMethodBody.MethodDefinition;
+      this.inCtor = this.currentMethod.IsConstructor;
  
       // TODO: these fields make sense only if extracting a method contract and not a type contract.
 
@@ -178,61 +164,28 @@ namespace Microsoft.Cci.MutableContracts {
 
       this.oldAndResultExtractor = new OldAndResultExtractor(this.host, sourceMethodBody, this.IsContractMethod);
 
-      this.extractingFromACtorInAClass =
-        this.currentMethod.IsConstructor
-        &&
-        !this.currentMethod.ContainingType.IsValueType;
-
     }
 
     private MethodContractAndMethodBody SplitMethodBodyIntoContractAndCode(IBlockStatement blockStatement) {
       // Don't start with an empty contract because the ctor may have set some things in it
-      var bs = this.Rewrite(blockStatement);
+      var bs = this.ExtractContractsAndPossiblyMutateBody(blockStatement);
       if (this.currentMethodContract != null) {
         this.currentMethodContract = ReplacePrivateFieldsThatHavePublicProperties(this.host, this.currentMethod.ContainingTypeDefinition, this.currentMethodContract);
       }
       return new MethodContractAndMethodBody(this.currentMethodContract, bs);
     }
 
-    private ITypeContract/*?*/ ExtractObjectInvariants(BlockStatement blockStatement) {
-      var stmts = new List<IStatement>(blockStatement.Statements);
-
-      if (stmts.Count == 0) return null;
-
-      var linearBlockIndex = LinearizeBlocks(blockStatement);
-
-      int lastBlockIndex;
-      int lastStatementIndex;
-      if (!LastIndexOf(s => IsInvariant(s), linearBlockIndex, out lastBlockIndex, out lastStatementIndex)) return null;
-
-      var currentBlockIndex = 0;
-      var currentStatementIndex = 0;
-
-      int blockIndexOfNextInvariantCall;
-      int stmtIndexOfNextInvariantCall;
-      var found = IndexOf(s => IsInvariant(s), linearBlockIndex, 0, 0, out blockIndexOfNextInvariantCall, out stmtIndexOfNextInvariantCall);
-
+    private ITypeContract/*?*/ ExtractObjectInvariants(IBlockStatement blockStatement) {
       List<ITypeInvariant> invariants = new List<ITypeInvariant>();
-
-      while (found && (blockIndexOfNextInvariantCall <= lastBlockIndex && stmtIndexOfNextInvariantCall <= lastStatementIndex)) {
-        var currentClump = ExtractClump(linearBlockIndex, currentBlockIndex, currentStatementIndex, blockIndexOfNextInvariantCall, stmtIndexOfNextInvariantCall);
-
-        // Add current clump to current contract
-        TypeInvariant invariant = ExtractObjectInvariant(currentClump);
-        invariants.Add(invariant);
-
-        // Move pair to point to next statement
-        currentBlockIndex = blockIndexOfNextInvariantCall;
-        currentStatementIndex = stmtIndexOfNextInvariantCall;
-        currentStatementIndex++;
-        if (currentStatementIndex >= linearBlockIndex[currentBlockIndex].Statements.Count) {
-          currentBlockIndex++;
-          currentStatementIndex = 0;
+      List<IStatement> currentClump = new List<IStatement>();
+      foreach (var s in blockStatement.Statements) {
+        currentClump.Add(s);
+        if (IsInvariant(s)) {
+          var inv = ExtractObjectInvariant(currentClump);
+          invariants.Add(inv);
+          currentClump = new List<IStatement>();
         }
-        // Find next contract (if any)
-        found = IndexOf(s => IsInvariant(s), linearBlockIndex, currentBlockIndex, currentStatementIndex, out blockIndexOfNextInvariantCall, out stmtIndexOfNextInvariantCall);
       }
-
       if (0 < invariants.Count)
         return new TypeContract() {
           Invariants = invariants,
@@ -283,7 +236,7 @@ namespace Microsoft.Cci.MutableContracts {
       }
 
       TypeInvariant invariant = new TypeInvariant() {
-        Condition = this.Rewrite(contractExpression),
+        Condition = contractExpression,
         Description = numArgs >= 2 ? arguments[1] : null,
         OriginalSource = origSource,
         Locations = locations,
@@ -292,155 +245,141 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     /// <summary>
-    /// Rewrites the children.
+    /// If the decompiler were perfect, the contracts would all be either method calls (to the contract
+    /// class) or conditional statements (for legacy requires). But it is not yet perfect... so partially
+    /// decompiled contracts can also contain push statements, gotos, labels, and conditional statements.
     /// </summary>
-    /// <param name="blockStatement">The block statement.</param>
-    public override void RewriteChildren(BlockStatement blockStatement) {
-      if (blockStatement == null) return;
-      var stmts = blockStatement.Statements;
-      if (stmts.Count == 0) return;
+    public IBlockStatement/*?*/ ExtractContractsAndPossiblyMutateBody(IBlockStatement block) {
 
-      var linearBlockIndex = LinearizeBlocks(blockStatement);
+      var contractBlock = ContainsContract(block);
+      if (contractBlock == null) return block;
 
-      int lastBlockIndex;
-      int lastStatementIndex;
-      if (!LastIndexOf(s => IsPrePostEndOrLegacy(s, false), linearBlockIndex, out lastBlockIndex, out lastStatementIndex)) return;
+      List<IStatement> stmts;
+      var mutableBlock = contractBlock as BlockStatement;
+      if (mutableBlock != null)
+        stmts = mutableBlock.Statements;
+      else
+        stmts = new List<IStatement>(contractBlock.Statements);
 
-      List<IStatement> newStmts = new List<IStatement>();
-
-      int blockIndexOfNextContractCall;
-      int stmtIndexOfNextContractCall;
-
-      var found = IndexOf(s => IsPrePostEndOrLegacy(s, true), linearBlockIndex, 0, 0, out blockIndexOfNextContractCall, out stmtIndexOfNextContractCall);
-      if (!found || !BlockStatementIndicesLessThanOrEqual(blockIndexOfNextContractCall, stmtIndexOfNextContractCall, lastBlockIndex, lastStatementIndex)) return;
-
-      var localDeclarationStatements = new List<IStatement>();
-      var firstStatementIndex = 0;
-      while (firstStatementIndex < blockStatement.Statements.Count) {
-        var s = blockStatement.Statements[firstStatementIndex];
-        ILocalDeclarationStatement lds = s as ILocalDeclarationStatement;
-        var empty = s as IEmptyStatement;
-        if (empty == null && (lds == null || lds.InitialValue != null)) break;
-        firstStatementIndex++;
-        localDeclarationStatements.Add(s);
+      List<IStatement> newStmts = null;
+      
+      var i = 0;
+      var n = stmts.Count;
+      // skip prefix of nops, locals.
+      // Also skip calls to ctors (i.e., "base" or "this" calls within ctors)
+      // Also skip calls that assign to fields of a class. these are present in constructors.
+      while (i < n) {
+        var s = stmts[i++];
+        if (s is IEmptyStatement)
+          continue;
+        else if (s is ILocalDeclarationStatement)
+          continue;
+        else if (this.inCtor && IsCallToCtor(s))
+          continue;
+        else if (this.inCtor && IsFieldInitializer(s))
+          continue;
+        else {
+          i--;
+          break;
+        }
       }
 
-      var currentBlockIndex = 0;
-      var currentStatementIndex = firstStatementIndex;
+      // consequence of the decompiler not being perfect: need to find the last call to a contract method and use that to stop the search
+      var j = i;
+      IStatement lastContract = null;
+      while (j < n) {
+        var s = stmts[j++];
 
-      if (this.extractingFromACtorInAClass) {
-        // Find the expression statement that is a call to a ctor. It must be the
-        // result of a "this" or "base" call because any other object construction
-        // would result in a newobj, not a call.
-        int blockIndex; int stmtIndex;
-        var foundCtorCall = IndexOf(s => {
-          var mc = IsMethodCall(s);
-          return mc != null && mc.MethodToCall.ResolvedMethod.IsConstructor;
-        }, linearBlockIndex, 0, // start at first block
-          firstStatementIndex, // start at first statement after any local declaration statements
-          out blockIndex, out stmtIndex);
-        // TODO: Signal error if not foundCtorCall?
-        System.Diagnostics.Debug.Assert(foundCtorCall);
-        // Need to also keep any nops with source contexts in the method body and not in the contract
-        //int eb;
-        //int es;
-        //var foundNops = IndexOf(s => s is IEmptyStatement && IteratorHelper.EnumerableIsNotEmpty(s.Locations),
-        //  linearBlockIndex, blockIndex, stmtIndex, out eb, out es);
-        //if (foundNops) {
-        //  blockIndex = eb;
-        //  stmtIndex = es;
-        //}
-        newStmts.AddRange(ExtractClump(linearBlockIndex, 0, firstStatementIndex, blockIndex, stmtIndex));
-        currentStatementIndex = stmtIndex + 1;
-        var lastIndexInBlock = linearBlockIndex[blockIndex].Statements.Count-1;
-        if (currentStatementIndex <= lastIndexInBlock) {
-          // if there is a closure in the ctor that captures a field, then just after the base ctor call
-          // there will be a statement "local := this"
-          var possibleAssignmentOfThis = linearBlockIndex[blockIndex].Statements[currentStatementIndex] as ExpressionStatement;
-          if (possibleAssignmentOfThis != null) {
-            IAssignment assign = possibleAssignmentOfThis.Expression as IAssignment;
-            if (assign != null && assign.Source is IThisReference) {
-              newStmts.Add(possibleAssignmentOfThis);
-              currentStatementIndex++;
-            }
+        if (!(IsPotentialPartOfContract(s) || IsPreconditionOrPostcondition(s)))
+          break;
+
+        // legacy contracts can never be the last (since EndContractBlock is counted)
+        // but they match "IsPotentialPartOfContract" since they are conditional statements.
+        if (IsPrePostEndOrLegacy(s, false))
+          lastContract = s;
+      }
+      if (lastContract == null)
+        return block;
+      Contract.Assert(lastContract != null);
+
+      if (mutableBlock != null) {
+        newStmts = new List<IStatement>();
+        newStmts.AddRange(stmts.GetRange(0,i));
+      }
+
+      var foundNonLegacyContract = false; // extract legacy requires only until a non-legacy is found
+      var currentClump = new List<IStatement>();
+      while (i < n) {
+        var s = stmts[i++];
+        currentClump.Add(s);
+        if (IsPrePostEndOrLegacy(s, !foundNonLegacyContract)) {
+          if (IsPreconditionOrPostcondition(s)) foundNonLegacyContract = true;
+          ExtractContract(currentClump);
+          if (s == lastContract)
+            break;
+          currentClump = new List<IStatement>();
+        } 
+      }
+
+      if (mutableBlock != null) {
+        newStmts.AddRange(stmts.GetRange(i, n - i));
+        mutableBlock.Statements = newStmts;
+      }
+
+      return block;
+    }
+
+    private IBlockStatement ContainsContract(IBlockStatement block) {
+      foreach (var s in block.Statements) {
+        if (IsPrePostEndOrLegacy(s, false)) {
+          return block;
+        } else {
+          var bs = s as IBlockStatement;
+          if (bs != null) {
+            var found = ContainsContract(bs);
+            if (found != null) return found;
           }
         }
-        if (currentStatementIndex >= lastIndexInBlock && (linearBlockIndex[blockIndex].Statements[lastIndexInBlock] is IBlockStatement)) {
-          currentBlockIndex++;
-          currentStatementIndex = 0;
-        } else {
-          currentBlockIndex = blockIndex;
+      }
+      return null;
+    }
+
+    private bool IsCallToCtor(IStatement s) {
+      var mc = IsMethodCall(s);
+      return mc != null && mc.MethodToCall.ResolvedMethod.IsConstructor;
+    }
+    private bool IsFieldInitializer(IStatement s) {
+      var es = s as IExpressionStatement;
+      if (es == null) return false;
+      var assign = es.Expression as IAssignment;
+      if (assign == null) return false;
+      var te = assign.Target;
+      var f = te.Definition as IFieldReference;
+      if (f != null) return true;
+      // fields of struct type have an initializer that looks like *(&(addressableExpr(null,f)))
+      var addrDeref = te.Definition as IAddressDereference;
+      if (addrDeref != null) {
+        var addrOf = addrDeref.Address as IAddressOf;
+        if (addrOf != null) {
+          f = addrOf.Expression.Definition as IFieldReference;
+          return f != null;
         }
       }
-
-      var remaining = ExtractContractsAndReturnRemainingStatements(linearBlockIndex, currentBlockIndex, currentStatementIndex, lastBlockIndex, lastStatementIndex);
-      if (0 < localDeclarationStatements.Count)
-        remaining.InsertRange(0, localDeclarationStatements);
-      newStmts.AddRange(remaining);
-      blockStatement.Statements = newStmts;
-      return;
+      return false;
     }
-
-    internal List<IStatement> ExtractContractsAndReturnRemainingStatements(
-      List<BlockStatement> linearBlockIndex,
-      int startBlock,
-      int startStatement,
-      int lastBlockIndex,
-      int lastStatementIndex
-      ) {
-
-      int currentBlockIndex = startBlock;
-      int currentStatementIndex = startStatement;
-      int blockIndexOfNextContractCall;
-      int stmtIndexOfNextContractCall;
-
-      var found = IndexOf(s => IsPrePostEndOrLegacy(s, true), linearBlockIndex, startBlock, startStatement, out blockIndexOfNextContractCall, out stmtIndexOfNextContractCall);
-
-      while (found && BlockStatementIndicesLessThanOrEqual(blockIndexOfNextContractCall, stmtIndexOfNextContractCall, lastBlockIndex, lastStatementIndex)) {
-        var currentClump = ExtractClump(linearBlockIndex, currentBlockIndex, currentStatementIndex, blockIndexOfNextContractCall, stmtIndexOfNextContractCall);
-        currentClump = LocalBinder.CloseClump(this.host, currentClump);
-        // Add current clump to current contract
-        ExtractContract(currentClump);
-        // Move pair to point to next statement
-        currentBlockIndex = blockIndexOfNextContractCall;
-        currentStatementIndex = stmtIndexOfNextContractCall;
-        currentStatementIndex++;
-        if (currentStatementIndex >= linearBlockIndex[currentBlockIndex].Statements.Count) {
-          currentBlockIndex++;
-          currentStatementIndex = 0;
-        }
-        // Find next contract (if any)
-        found = IndexOf(s => IsPrePostEndOrLegacy(s, true), linearBlockIndex, currentBlockIndex, currentStatementIndex, out blockIndexOfNextContractCall, out stmtIndexOfNextContractCall);
-      }
-
-      if (!(currentBlockIndex < linearBlockIndex.Count)) {
-        // then the body contained nothing but contracts!
-        return new List<IStatement>();
-      }
-      var lastBlock = linearBlockIndex[linearBlockIndex.Count - 1];
-      var currentClump2 = ExtractClump(linearBlockIndex, currentBlockIndex, currentStatementIndex, linearBlockIndex.Count - 1, lastBlock.Statements.Count - 1);
-      currentClump2 = LocalBinder.CloseClump(this.host, currentClump2);
-      return currentClump2;
-    }
-
-    internal static MethodContractAndMethodBody MoveNextExtractor(
-      IContractAwareHost host,
-      PdbReader pdbReader,
-      ISourceMethodBody moveNextBody,
-      BlockStatement blockStatement,
-      int startBlock,
-      int startStatement,
-      int lastBlockIndex,
-      int lastStatementIndex
-      ) {
-      var e = new ContractExtractor(moveNextBody, host, pdbReader);
-      var linearBlockIndex = e.LinearizeBlocks(blockStatement);
-      var result = e.ExtractContractsAndReturnRemainingStatements(linearBlockIndex, startBlock, startStatement, lastBlockIndex, lastStatementIndex);
-      return new MethodContractAndMethodBody(e.currentMethodContract, new BlockStatement() { Statements = result, });
-    }
-
-    private static bool BlockStatementIndicesLessThanOrEqual(int b1, int s1, int b2, int s2) {
-      return ((b1 < b2) || (b1 == b2 && s1 <= s2));
+    private bool IsPotentialPartOfContract(IStatement s) {
+      if (s is IConditionalStatement)
+        return true;
+      else if (s is IPushStatement)
+        return true;
+      else if (s is ILabeledStatement)
+        return true;
+      else if (s is IGotoStatement)
+        return true;
+      var es = s as IExpressionStatement;
+      if (es != null && es.Expression is IMethodCall)
+        return true;
+      return false;
     }
 
     internal void ExtractContract(List<IStatement> currentClump) {
@@ -563,7 +502,7 @@ namespace Microsoft.Cci.MutableContracts {
             }
           } else if (IsValidatorOrAbbreviator(expressionStatement)) {
             var abbreviatorDef = methodToCall.ResolvedMethod;
-            var mc = ContractHelper.GetMethodContractFor(this.contractAwarehost, abbreviatorDef);
+            var mc = ContractHelper.GetMethodContractFor(this.host, abbreviatorDef);
             if (mc != null) {
 
               var copier = new CodeAndContractDeepCopier(this.host);
@@ -601,96 +540,7 @@ namespace Microsoft.Cci.MutableContracts {
       }
     }
 
-    /// <summary>
-    /// Creates an index to the blocks within the <paramref name="blockStatement"/>.
-    /// Assumes that nested blocks are found *only* as the last statement in the
-    /// list of statements in a BlockStatement.
-    /// </summary>
-    /// <returns>A list of the blocks. Each block is unchanged.</returns>
-    internal List<BlockStatement> LinearizeBlocks(IBlockStatement blockStatement) {
-      var result = new List<BlockStatement>();
-      if (IteratorHelper.EnumerableIsEmpty(blockStatement.Statements)) return result;
-      BlockStatement bs = blockStatement as BlockStatement;
-      if (bs == null) return result;
-      do {
-        result.Add(bs);
-        bs = bs.Statements[bs.Statements.Count - 1] as BlockStatement;
-      } while (bs != null);
-      return result;
-    }
-
-    private List<IStatement> ExtractClump(
-      List<BlockStatement> blockList,
-      int startBlockIndex,
-      int startStmtIndex,
-      int endBlockIndex,
-      int endStmtIndex) {
-
-      //Contract.Requires(startBlockIndex <= endBlockIndex);
-
-      List<IStatement> clump = new List<IStatement>();
-      var currentBlockIndex = startBlockIndex;
-      var currentStartIndex = startStmtIndex;
-      var stmts = blockList[currentBlockIndex].Statements;
-      var currentEndIndex = startBlockIndex == endBlockIndex ? endStmtIndex : stmts.Count - 2;
-      do {
-        // Take all of the statements in the current block
-        // (starting with the start statement) except for
-        // the last statement which *must* be (a pointer to) the
-        // block which is next in the blockList.
-        for (int i = currentStartIndex; i <= currentEndIndex; i++) {
-          clump.Add(stmts[i]);
-        }
-        if (currentBlockIndex == endBlockIndex) {
-          break;
-        }
-
-        BlockStatement nextBlock = stmts[stmts.Count - 1] as BlockStatement;
-
-        // Clump should span multiple blocks iff parameters said to
-        System.Diagnostics.Debug.Assert((nextBlock != null) == (startBlockIndex < endBlockIndex));
-
-        currentBlockIndex++;
-        currentStartIndex = 0;
-        stmts = blockList[currentBlockIndex].Statements;
-        currentEndIndex = currentBlockIndex == endBlockIndex ? endStmtIndex : stmts.Count - 2;
-
-      } while (currentBlockIndex <= endBlockIndex);
-      return clump;
-    }
-
-    internal bool IndexOf(Predicate<IStatement> test, List<BlockStatement> blockList, int startBlock, int startStmt, out int endBlock, out int endStmt) {
-
-      endBlock = -1;
-      endStmt = -1;
-      for (int i = startBlock; i < blockList.Count; i++) {
-        BlockStatement currentBlock = blockList[i];
-        for (int j = i == startBlock ? startStmt : 0; j < currentBlock.Statements.Count; j++) {
-          if (test(currentBlock.Statements[j])) {
-            endBlock = i;
-            endStmt = j;
-            return true;
-          }
-
-        }
-      }
-      return false;
-    }
-    private bool LastIndexOf(Predicate<IStatement> predicate, List<BlockStatement> blocks, out int blockIndex, out int stmtIndex) {
-      for (int bIndex = blocks.Count - 1; 0 <= bIndex; bIndex--) {
-        List<IStatement> statements = blocks[bIndex].Statements;
-        // search from the end, stop at first statement which satisfies predicate
-        for (int i = statements.Count - 1; 0 <= i; i--) {
-          if (predicate(statements[i])) {
-            blockIndex = bIndex; stmtIndex = i;
-            return true;
-          }
-        }
-      }
-      blockIndex = -1; stmtIndex = -1;
-      return false;
-    }
-    internal bool IsPrePostEndOrLegacy(IStatement statement, bool countLegacy) {
+    private bool IsPrePostEndOrLegacy(IStatement statement, bool countLegacy) {
       if (statement is IBlockStatement) return false; // each block is searched separately, don't descend down into nested blocks
       if (countLegacy && IsLegacyRequires(statement)) return true;
       IExpressionStatement expressionStatement = statement as IExpressionStatement;
@@ -704,28 +554,6 @@ namespace Microsoft.Cci.MutableContracts {
       if (mname == "EndContractBlock") return true;
       if (IsPreconditionOrPostcondition(expressionStatement)) return true;
       return false;
-    }
-    private int OffsetOfLastContractCallOrNegativeOne() {
-      List<IOperation> instrs = new List<IOperation>(this.sourceMethodBody.Operations);
-      for (int i = instrs.Count - 1; 0 <= i; i--) {
-        IOperation op = instrs[i];
-        if (op.OperationCode != OperationCode.Call) continue;
-        IMethodReference method = op.Value as IMethodReference;
-        if (method == null) continue;
-        var methodName = method.Name.Value;
-        if (
-          (this.IsContractMethod(method) && !(methodName.Equals("Assert") || methodName.Equals("Assume")))
-          || ContractHelper.IsValidatorOrAbbreviator(method)
-          ) return (int)op.Offset;
-      }
-      return -1; // not found
-    }
-
-
-    private static bool IsLocalDeclarationWithoutInitializer(IStatement statement) {
-      ILocalDeclarationStatement localDeclarationStatement = statement as ILocalDeclarationStatement;
-      if (localDeclarationStatement == null) return false;
-      return localDeclarationStatement.InitialValue == null;
     }
 
     private IMethodCall/*?*/ IsMethodCall(IStatement statement) {
@@ -749,7 +577,7 @@ namespace Microsoft.Cci.MutableContracts {
       }
       return mname == "Requires" || mname == "Ensures";
     }
-    internal static bool IsValidatorOrAbbreviator(IStatement statement) {
+    private static bool IsValidatorOrAbbreviator(IStatement statement) {
       IExpressionStatement expressionStatement = statement as IExpressionStatement;
       if (expressionStatement == null) return false;
       IMethodCall methodCall = expressionStatement.Expression as IMethodCall;
@@ -757,7 +585,7 @@ namespace Microsoft.Cci.MutableContracts {
       IMethodReference methodToCall = methodCall.MethodToCall;
       return ContractHelper.IsValidatorOrAbbreviator(methodToCall);
     }
-    internal static bool IsLegacyRequires(IStatement statement) {
+    private static bool IsLegacyRequires(IStatement statement) {
       ConditionalStatement conditional = statement as ConditionalStatement;
       if (conditional == null) return false;
       EmptyStatement empty = conditional.FalseBranch as EmptyStatement;
@@ -815,14 +643,7 @@ namespace Microsoft.Cci.MutableContracts {
       return (be.Definition is ILocalDefinition && be.Instance == null);
     }
 
-    private static bool IsDefinitionOfLocalWithInitializer(IStatement statement) {
-      ILocalDeclarationStatement stmt = statement as ILocalDeclarationStatement;
-      return stmt != null && stmt.InitialValue != null;
-    }
-
-    private static List<T> MkList<T>(T t) { var xs = new List<T>(); xs.Add(t); return xs; }
-
-    internal static bool TryGetConditionText(PdbReader pdbReader, IEnumerable<ILocation> locations, int numArgs, out string sourceText) {
+    private static bool TryGetConditionText(PdbReader pdbReader, IEnumerable<ILocation> locations, int numArgs, out string sourceText) {
       int startColumn;
       if (!TryGetSourceText(pdbReader, locations, out sourceText, out startColumn)) return false;
       int firstSourceTextIndex = sourceText.IndexOf('(');
@@ -848,7 +669,7 @@ namespace Microsoft.Cci.MutableContracts {
       //sourceText = AdjustIndentationOfMultilineSourceText(sourceText, indentSize);
       return true;
     }
-    internal static bool TryGetSourceText(PdbReader pdbReader, IEnumerable<ILocation> locations, out string/*?*/ sourceText, out int startColumn) {
+    private static bool TryGetSourceText(PdbReader pdbReader, IEnumerable<ILocation> locations, out string/*?*/ sourceText, out int startColumn) {
       sourceText = null;
       startColumn = 0; // columns begin at 1, so this can work as a null value
       foreach (var loc in locations) {
@@ -863,7 +684,7 @@ namespace Microsoft.Cci.MutableContracts {
       }
       return sourceText != null;
     }
-    internal static int IndexOfWhileSkippingBalancedThings(string source, int endIndex, char targetChar) {
+    private static int IndexOfWhileSkippingBalancedThings(string source, int endIndex, char targetChar) {
       int i = endIndex;
       while (0 <= i) {
         if (source[i] == targetChar) break;
@@ -881,9 +702,8 @@ namespace Microsoft.Cci.MutableContracts {
       }
       return i;
     }
-    internal static char[] WhiteSpace = { ' ', '\t' };
-    private IMethodDefinition currentMethod;
-    internal static string AdjustIndentationOfMultilineSourceText(string sourceText, int trimLength) {
+    private static char[] WhiteSpace = { ' ', '\t' };
+    private static string AdjustIndentationOfMultilineSourceText(string sourceText, int trimLength) {
       if (!sourceText.Contains("\n")) return sourceText;
       var lines = sourceText.Split('\n');
       if (lines.Length == 1) return sourceText;
@@ -928,7 +748,7 @@ namespace Microsoft.Cci.MutableContracts {
     // For the first form, the ExceptionToThrow is E, for the second form
     // it is the call.
     //
-    internal void ExtractLegacyRequires(List<IStatement> currentClump) {
+    private void ExtractLegacyRequires(List<IStatement> currentClump) {
       var lastIndex = currentClump.Count - 1;
       ConditionalStatement conditional = currentClump[lastIndex] as ConditionalStatement;
       //^ requires IsLegacyRequires(conditional);
@@ -1016,9 +836,7 @@ namespace Microsoft.Cci.MutableContracts {
       IMethodReference methodToCall = methodCall.MethodToCall;
       IMethodDefinition methodDefinition = methodToCall.ResolvedMethod;
       IMethodContract/*?*/ validatorContract = null;
-      IContractAwareHost caw = this.host as IContractAwareHost;
-      if (caw != null)
-        validatorContract = ContractHelper.GetMethodContractFor(caw, methodDefinition);
+      validatorContract = ContractHelper.GetMethodContractFor(this.host, methodDefinition);
       if (validatorContract != null) {
         validatorContract = new CodeAndContractDeepCopier(host).Copy(validatorContract);
         var bpta = new ReplaceParametersWithArguments(this.host, methodDefinition, methodCall);

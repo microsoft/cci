@@ -51,32 +51,55 @@ namespace Microsoft.Cci.MutableContracts {
       var nameTable = host.NameTable;
       var possibleIteratorBody = possibleIterator.Block;
       foreach (var statement in possibleIteratorBody.Statements) {
-        ICreateObjectInstance createObjectInstance = GetICreateObjectInstance(statement);
-        if (createObjectInstance == null) {
-          // If the first statement in the method body is not the creation of iterator closure, return a dummy.
-          // Possible corner case not handled: a local is used to hold the constant value for the initial state of the closure.
-          return null;
+        var expressionStatement = statement as IExpressionStatement;
+        if (expressionStatement != null)
+          return FirstStatementIsIteratorCreation(host, possibleIterator, nameTable, statement);
+        break;
+      }
+      foreach (var statement in possibleIteratorBody.Statements){
+        //var lds = statement as ILocalDeclarationStatement;
+        //if (lds != null) {
+        //  if (lds.InitialValue != null)
+        //    return null;
+        //  else
+        //    continue;
+        //}
+        var returnStatement = statement as IReturnStatement;
+        if (returnStatement == null) return null;
+        var blockExpression = returnStatement.Expression as IBlockExpression;
+        if (blockExpression == null) return null;
+        foreach (var s in blockExpression.BlockStatement.Statements) {
+          return FirstStatementIsIteratorCreation(host, possibleIterator, nameTable, s);
         }
-        ITypeReference closureType/*?*/ = createObjectInstance.MethodToCall.ContainingType;
-        ITypeReference unspecializedClosureType = ContractHelper.Unspecialized(closureType);
-        if (!AttributeHelper.Contains(unspecializedClosureType.Attributes, host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
-          return null;
-        INestedTypeReference closureTypeAsNestedTypeReference = unspecializedClosureType as INestedTypeReference;
-        if (closureTypeAsNestedTypeReference == null) return null;
-        ITypeReference unspecializedClosureContainingType = ContractHelper.Unspecialized(closureTypeAsNestedTypeReference.ContainingType);
-        if (closureType != null && TypeHelper.TypesAreEquivalent(possibleIterator.MethodDefinition.ContainingTypeDefinition, unspecializedClosureContainingType)) {
-          IName MoveNextName = nameTable.GetNameFor("MoveNext");
-          foreach (ITypeDefinitionMember member in closureType.ResolvedType.GetMembersNamed(MoveNextName, false)) {
-            IMethodDefinition moveNext = member as IMethodDefinition;
-            if (moveNext != null) {
-              ISpecializedMethodDefinition moveNextGeneric = moveNext as ISpecializedMethodDefinition;
-              if (moveNextGeneric != null)
-                moveNext = moveNextGeneric.UnspecializedVersion.ResolvedMethod;
-              return moveNext.Body as ISourceMethodBody;
-            }
+      }
+      return null;
+    }
+
+    private static ISourceMethodBody/*?*/ FirstStatementIsIteratorCreation(IMetadataHost host, ISourceMethodBody possibleIterator, INameTable nameTable, IStatement statement) {
+      ICreateObjectInstance createObjectInstance = GetICreateObjectInstance(statement);
+      if (createObjectInstance == null) {
+        // If the first statement in the method body is not the creation of iterator closure, return a dummy.
+        // Possible corner case not handled: a local is used to hold the constant value for the initial state of the closure.
+        return null;
+      }
+      ITypeReference closureType/*?*/ = createObjectInstance.MethodToCall.ContainingType;
+      ITypeReference unspecializedClosureType = ContractHelper.Unspecialized(closureType);
+      if (!AttributeHelper.Contains(unspecializedClosureType.Attributes, host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute))
+        return null;
+      INestedTypeReference closureTypeAsNestedTypeReference = unspecializedClosureType as INestedTypeReference;
+      if (closureTypeAsNestedTypeReference == null) return null;
+      ITypeReference unspecializedClosureContainingType = ContractHelper.Unspecialized(closureTypeAsNestedTypeReference.ContainingType);
+      if (closureType != null && TypeHelper.TypesAreEquivalent(possibleIterator.MethodDefinition.ContainingTypeDefinition, unspecializedClosureContainingType)) {
+        IName MoveNextName = nameTable.GetNameFor("MoveNext");
+        foreach (ITypeDefinitionMember member in closureType.ResolvedType.GetMembersNamed(MoveNextName, false)) {
+          IMethodDefinition moveNext = member as IMethodDefinition;
+          if (moveNext != null) {
+            ISpecializedMethodDefinition moveNextGeneric = moveNext as ISpecializedMethodDefinition;
+            if (moveNextGeneric != null)
+              moveNext = moveNextGeneric.UnspecializedVersion.ResolvedMethod;
+            return moveNext.Body as ISourceMethodBody;
           }
         }
-        return null;
       }
       return null;
     }
@@ -110,23 +133,46 @@ namespace Microsoft.Cci.MutableContracts {
       // Walk the iterator method and collect all of the state that is assigned to fields in the iterator class
       // That state needs to replace any occurrences of the fields in the contracts (if they exist...)
       var iteratorStmts = new List<IStatement>(iteratorMethodBody.Block.Statements);
-      // First statement should be the creation of the iterator class
-      int j = 1;
       Dictionary<uint, IExpression> capturedThings = new Dictionary<uint, IExpression>();
       // Find all of the state captured for the IEnumerable
       // REVIEW: Is this state ever used in the contracts? Since they're all sitting in the MoveNext
       // method, maybe they always use the IEnumerator state?
-      while (j < iteratorStmts.Count) {
-        var es = iteratorStmts[j++] as IExpressionStatement;
-        if (es == null) break;
-        var assign = es.Expression as IAssignment;
-        if (assign == null) break;
-        var field = assign.Target.Definition as IFieldReference;
-        var capturedThing = assign.Source;
-        var k = field.InternedKey;
-        var spec = field as ISpecializedFieldReference;
-        if (spec != null) k = spec.UnspecializedVersion.InternedKey;
-        capturedThings.Add(k, capturedThing);
+      if (1 < iteratorStmts.Count) {
+        // First statement should be the creation of the iterator class
+        int j = 1;
+        while (j < iteratorStmts.Count) {
+          var es = iteratorStmts[j++] as IExpressionStatement;
+          if (es == null) break;
+          var assign = es.Expression as IAssignment;
+          if (assign == null) break;
+          var field = assign.Target.Definition as IFieldReference;
+          var capturedThing = assign.Source;
+          var k = field.InternedKey;
+          var spec = field as ISpecializedFieldReference;
+          if (spec != null) k = spec.UnspecializedVersion.InternedKey;
+          capturedThings.Add(k, capturedThing);
+        }
+      } else {
+        var ret = iteratorStmts[0] as IReturnStatement;
+        if (ret != null) {
+          var be = ret.Expression as IBlockExpression;
+          if (be != null) {
+            var beStmts = new List<IStatement>(be.BlockStatement.Statements);
+            var j = 1;
+            while (j < beStmts.Count) {
+              var es = beStmts[j++] as IExpressionStatement;
+              if (es == null) break;
+              var assign = es.Expression as IAssignment;
+              if (assign == null) break;
+              var field = assign.Target.Definition as IFieldReference;
+              var capturedThing = assign.Source;
+              var k = field.InternedKey;
+              var spec = field as ISpecializedFieldReference;
+              if (spec != null) k = spec.UnspecializedVersion.InternedKey;
+              capturedThings.Add(k, capturedThing);
+            }
+          }
+        }
       }
       // Find all of the state captured for the IEnumerator
       // That state is captured at the beginning of the IEnumerable<T>.GetEnumerator method

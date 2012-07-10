@@ -140,6 +140,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.ReplaceShortCircuitAnd6(b) ||
       this.ReplacedCompoundAssignmentViaTempPattern(b) ||
       this.ReplaceSingleUseCompilerGeneratedLocalPattern(b) ||
+      this.ReplaceCompilerGeneratedLocalUsedForInitializersPattern(b) ||
       this.ReplacePlusAssignForStringPattern(b)
       ) {
       }
@@ -1174,6 +1175,105 @@ namespace Microsoft.Cci.ILToCodeModel {
         }
       }
       return replacedPattern;
+    }
+
+    /// <summary>
+    /// The source expression "new C(){ f1 = e1, f2 = e2, ... }" (where the f's can be fields
+    /// or properties) turns into "cgl = new C(); cgl.f1 = e1; cg1.f2 = e2; ...".
+    /// ("cgl" means "compiler-generated local".)
+    /// Turn it into a block expression whose Statements are the statements above (but where
+    /// the first one becomes a local declaration statement), and with an Expression that is
+    /// just the local, cgl', where cgl' is a freshly created local.
+    /// </summary>
+    private bool ReplaceCompilerGeneratedLocalUsedForInitializersPattern(BlockStatement b) {
+      Contract.Requires(b != null);
+      bool replacedPattern = false;
+      var statements = b.Statements;
+      for (int i = 0; i < statements.Count - 1; i++) {
+        var expressionStatement = statements[i] as ExpressionStatement;
+        if (expressionStatement == null) continue;
+        var assignment = expressionStatement.Expression as Assignment;
+        if (assignment == null) continue;
+        var local = assignment.Target.Definition as ILocalDefinition;
+        if (local == null || local is CapturedLocalDefinition) continue;
+        if (this.numberOfAssignmentsToLocal[local] != 1) continue;
+        if (this.sourceLocationProvider != null) {
+          bool isCompilerGenerated;
+          var sourceName = this.sourceLocationProvider.GetSourceNameFor(local, out isCompilerGenerated);
+          if (!isCompilerGenerated) continue;
+        }
+        var createObject = assignment.Source as ICreateObjectInstance;
+        if (createObject == null) continue;
+        if (!this.singleUseExpressionChecker.ExpressionCanBeMovedAndDoesNotReference(assignment.Source, local)) continue;
+        var j = 1;
+        while (i + j < statements.Count - 1 && IsAssignmentToFieldOrProperty(local, statements[i + j])) j++;
+        if (j == 1) continue;
+        if (this.numberOfReferencesToLocal[local] != (uint)j) continue;
+        Contract.Assume(i + j < statements.Count); //i < statements.Count-1 and (j == 1 or the loop above established i+j < statements.Count-1)
+        Contract.Assume(statements[i + j] != null);
+        if (this.singleAssignmentReferenceFinder.LocalCanBeReplacedIn(statements[i + j], local)) {
+          var newLocal = new LocalDefinition() {
+            Name = this.host.NameTable.GetNameFor(local.Name.Value + "_prime"),
+            MethodDefinition = local.MethodDefinition,
+            Type = local.Type,
+          };
+          var lds = new LocalDeclarationStatement() {
+            InitialValue = assignment.Source,
+            LocalVariable = newLocal,
+          };
+          var stmts = new List<IStatement>(j) { lds, };
+          var boundExpression = new BoundExpression() { Definition = newLocal, Instance = null, Type = newLocal.Type, };
+          foreach (var s in statements.GetRange(i + 1, j - 1)) {
+            Contract.Assume(s != null);
+            this.singleAssignmentLocalReplacer.Replace(boundExpression, local, s);
+            stmts.Add(s);
+          }
+          var blockExpression = new BlockExpression() {
+            BlockStatement = new BlockStatement() {
+              Statements = stmts,
+            },
+            Expression = new BoundExpression() { Definition = newLocal, Instance = null, Type = newLocal.Type, },
+            Type = newLocal.Type,
+          };
+          if (this.singleAssignmentLocalReplacer.Replace(blockExpression, local, statements[i + j])) {
+            this.numberOfAssignmentsToLocal[newLocal] = 1;
+            this.numberOfReferencesToLocal[newLocal] = (uint)j;
+            this.numberOfAssignmentsToLocal[local]--;
+            this.numberOfReferencesToLocal[local] = 0;
+            statements.RemoveRange(i, j);
+            replacedPattern = true;
+          } else
+            Contract.Assume(false); // replacement should succeed since LocalCanBeReplacedIn returned true
+        }
+      }
+      return replacedPattern;
+    }
+
+    private bool IsAssignmentToFieldOrProperty(ILocalDefinition local, IStatement statement) {
+      var expressionStatement = statement as ExpressionStatement;
+      if (expressionStatement == null) return false;
+      IBoundExpression boundExpression = null;
+      var assignment = expressionStatement.Expression as Assignment;
+      if (assignment != null)
+        boundExpression = assignment.Target.Instance as IBoundExpression;
+      else {
+        var methodCall = expressionStatement.Expression as IMethodCall;
+        if (methodCall == null) return false;
+        if (!IsSetter(methodCall.MethodToCall)) return false;
+        if (methodCall.IsStaticCall) return false;
+        if (methodCall.IsJumpCall) return false;
+        boundExpression = methodCall.ThisArgument as IBoundExpression;
+      }
+      if (boundExpression == null) return false;
+      if (boundExpression.Instance != null) return false;
+      return boundExpression.Definition == local;
+
+    }
+
+    private static bool IsSetter(IMethodReference methodReference) {
+      // can't check IsSpecialName unless we resolve, which we don't want to do
+      return methodReference.Name.Value.StartsWith("set_")
+        && methodReference.Type.TypeCode == PrimitiveTypeCode.Void;
     }
 
     /// <summary>

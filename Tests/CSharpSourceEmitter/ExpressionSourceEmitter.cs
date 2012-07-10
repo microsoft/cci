@@ -15,6 +15,7 @@ using Microsoft.Cci;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Linq;
+using System.Diagnostics.Contracts;
 
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
@@ -200,7 +201,7 @@ namespace CSharpSourceEmitter {
         this.sourceEmitterOutput.Write(MemberHelper.GetMethodSignature(method, NameFormattingOptions.Signature));
         return;
       }
-      Debug.Assert(addressableExpression.Definition is IExpression);
+      Contract.Assume(addressableExpression.Definition is IExpression);
       this.Traverse((IExpression)addressableExpression.Definition);
     }
 
@@ -454,7 +455,39 @@ namespace CSharpSourceEmitter {
       this.currentPrecedence = savedCurrentPrecedence;
     }
 
+    /// <summary>
+    /// Special case for the source expression "new C(){ f1 = e1, f2 = e2, ... }" (where the f's can be fields
+    /// or properties). See comment in the decompiler.
+    /// </summary>
     public override void TraverseChildren(IBlockExpression blockExpression) {
+      var boundExpression = blockExpression.Expression as IBoundExpression;
+      if (boundExpression != null) {
+        var localDefinition = boundExpression.Definition as ILocalDefinition;
+        if (localDefinition != null) {
+          var specialCase = true;
+          var i = 0;
+          foreach (var s in blockExpression.BlockStatement.Statements) {
+            if (i == 0) {
+              if (!(s is ILocalDeclarationStatement)) {
+                specialCase = false;
+                break;
+              }
+            } else {
+              var expressionStatement = s as IExpressionStatement;
+              var expr = expressionStatement.Expression;
+              if (!((expr is IAssignment || expr is IMethodCall))) {
+                specialCase = false;
+                break;
+              }
+            }
+            i++;
+          }
+          if (specialCase) {
+            PrintNewExpressionWithInitializers(blockExpression);
+            return;
+          }
+        }
+      }
       this.sourceEmitterOutput.WriteLine("(() => {");
       this.sourceEmitterOutput.IncreaseIndent();
       this.Traverse(blockExpression.BlockStatement);
@@ -462,6 +495,47 @@ namespace CSharpSourceEmitter {
       this.Traverse(blockExpression.Expression);
       this.sourceEmitterOutput.Write("; })()");
       this.sourceEmitterOutput.DecreaseIndent();
+    }
+
+    private void PrintNewExpressionWithInitializers(IBlockExpression blockExpression) {
+
+      var i = 0;
+      foreach (var s in blockExpression.BlockStatement.Statements) {
+        if (i++ == 0) {
+          var lds = s as ILocalDeclarationStatement;
+          this.Traverse(lds.InitialValue);
+          this.sourceEmitterOutput.WriteLine("{");
+          this.sourceEmitterOutput.IncreaseIndent();
+          continue;
+        }
+        var expressionStatement = (IExpressionStatement)s;
+        this.sourceEmitterOutput.Write("", true);
+        var assign = expressionStatement.Expression as IAssignment;
+        if (assign != null) {
+          var def = assign.Target.Definition;
+          PrintBoundExpressionDefinition(null, def, false);
+          this.sourceEmitterOutput.Write(" = ");
+          this.Traverse(assign.Source);
+          this.sourceEmitterOutput.WriteLine(", ");
+          continue;
+        }
+
+        var methodCall = expressionStatement.Expression as IMethodCall;
+        if (methodCall != null) {
+          this.PrintMethodReferenceName(methodCall.MethodToCall, NameFormattingOptions.OmitContainingNamespace | NameFormattingOptions.OmitContainingType);
+          this.sourceEmitterOutput.Write(" = ");
+          foreach (var a in methodCall.Arguments) {
+            this.Traverse(a);
+            break;
+          }
+          this.sourceEmitterOutput.WriteLine(", ");
+          continue;
+        }
+
+        Contract.Assume(false);
+      }
+      this.sourceEmitterOutput.DecreaseIndent();
+      this.sourceEmitterOutput.Write("}", true);
     }
 
     public override void TraverseChildren(IBoundExpression boundExpression) {
@@ -474,19 +548,23 @@ namespace CSharpSourceEmitter {
         }
         this.PrintToken(CSharpToken.Dot);
       }
-      ILocalDefinition/*?*/ local = boundExpression.Definition as ILocalDefinition;
+      PrintBoundExpressionDefinition(boundExpression.Instance, boundExpression.Definition);
+    }
+
+    private void PrintBoundExpressionDefinition(IExpression/*?*/ instance, object definition, bool printStaticFieldType = true) {
+      ILocalDefinition/*?*/ local = definition as ILocalDefinition;
       if (local != null)
         this.PrintLocalName(local);
       else {
-        IFieldReference/*?*/ fr = boundExpression.Definition as IFieldReference;
+        IFieldReference/*?*/ fr = definition as IFieldReference;
         if (fr != null) {
-          if (boundExpression.Instance == null) {
+          if (printStaticFieldType && instance == null) {
             this.PrintTypeReferenceName(fr.ContainingType);
             this.sourceEmitterOutput.Write(".");
           }
           this.sourceEmitterOutput.Write(fr.Name.Value);
         } else {
-          INamedEntity/*?*/ ne = boundExpression.Definition as INamedEntity;
+          INamedEntity/*?*/ ne = definition as INamedEntity;
           if (ne != null)
             this.sourceEmitterOutput.Write(ne.Name.Value);
         }

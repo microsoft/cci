@@ -613,11 +613,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       };
       field.Attributes.Add(this.compilerGenerated);
       this.helperMembers.Add(field);
-      if (!field.ContainingTypeDefinition.IsGeneric) return field;
-      return new FieldReference() {
-        ContainingType = field.ContainingTypeDefinition.InstanceType,
+      var containingType = field.ContainingTypeDefinition;
+      if (!TypeHelper.HasOwnOrInheritedTypeParameters(containingType)) return field;
+      ITypeReference tr = containingType;
+      if (containingType.IsGeneric)
+        tr = containingType.InstanceType;
+      else {
+        Contract.Assume(containingType is INestedTypeDefinition);
+        tr = NestedTypeDefinition.SelfInstance((INestedTypeDefinition)containingType, this.host.InternFactory);
+      }
+      return new SpecializedFieldReference() {
+        ContainingType = tr,
         InternFactory = this.host.InternFactory,
         Name = field.Name,
+        UnspecializedVersion = field,
         Type = field.Type,
       };
     }
