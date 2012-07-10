@@ -355,7 +355,8 @@ namespace CciSharp.Mutators
                     IsVirtualCall = false
                 };
                 setValueCall.Arguments.Add(new BoundExpression { Definition = propertyField });
-                setValueCall.Arguments.Add(new BoundExpression { Definition = setter.Parameters[0] });
+                var param = setter.Parameters[0];
+                setValueCall.Arguments.Add(new Conversion() { Type = propertyField.Type, TypeAfterConversion = this.objectType, ValueToConvert = new BoundExpression { Definition = param, Type = param.Type, }, });
                 setterBlock.Statements.Add(
                     new ExpressionStatement
                     {
@@ -608,6 +609,7 @@ namespace CciSharp.Mutators
                         body.MethodDefinition = cctor;
                     }
                     body = (SourceMethodBody)cctor.Body;
+                    body.LocalsAreZeroed = true;
                     var block = body.Block as BlockStatement;
                     if (block == null)
                         body.Block = block = new BlockStatement();
@@ -637,7 +639,8 @@ namespace CciSharp.Mutators
                     IsRuntimeSpecial = true,
                     Name = this.Host.NameTable.Cctor,
                     Body = body,
-                    ContainingTypeDefinition = typeDefinition
+                    ContainingTypeDefinition = typeDefinition,
+                    Type = this.Host.PlatformType.SystemVoid,
                 };
                 body.MethodDefinition = cctor;
                 typeDefinition.Methods.Add(cctor);

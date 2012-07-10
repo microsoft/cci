@@ -189,13 +189,13 @@ namespace CciSharp.Mutators
                             Source = new MethodCall
                             {
                                 MethodToCall = uncachedGetter,
-                                ThisArgument = new ThisReference(),
+                                ThisArgument = new ThisReference(){ Type = declaringType, },
                                 Type = propertyDefinition.Type
                             },
                             Target = new TargetExpression
                             {
                                 Type = resultFieldDefinition.Type,
-                                Instance = new ThisReference(),
+                                Instance = new ThisReference(){ Type = declaringType, },
                                 Definition = resultFieldDefinition
                             }
                         }
@@ -212,7 +212,7 @@ namespace CciSharp.Mutators
                             Target = new TargetExpression
                             {
                                 Type = booleanType,
-                                Instance = new ThisReference(),
+                                Instance = new ThisReference(){ Type = declaringType, },
                                 Definition = resultInitializedFieldDefinition
                             }
                         }
@@ -227,7 +227,7 @@ namespace CciSharp.Mutators
                         Operand = new BoundExpression
                         {
                             Type = booleanType,
-                            Instance = new ThisReference(),
+                            Instance = new ThisReference(){ Type = declaringType, },
                             Definition = resultInitializedFieldDefinition
                         }
                     },
@@ -243,7 +243,7 @@ namespace CciSharp.Mutators
                         Expression = new BoundExpression
                         {
                             Type = resultFieldDefinition.Type,
-                            Instance = new ThisReference(),
+                            Instance = new ThisReference(){ Type = declaringType, },
                             Definition = resultFieldDefinition
                         }
                     });
@@ -273,7 +273,8 @@ namespace CciSharp.Mutators
                 };
                 resultFieldDefinition.Attributes.Add(this.CompilerGeneratedAttribute);
                 resultFieldDefinition.Attributes.Add(this.NonSerializedAttribute);
-                declaringType.Fields = new List<IFieldDefinition>(1);
+                if (declaringType.Fields == null)
+                    declaringType.Fields = new List<IFieldDefinition>(1);
                 declaringType.Fields.Add(resultFieldDefinition);
                 resultInitializedFieldDefinition = new FieldDefinition {
                   Attributes = new List<ICustomAttribute>(2),
