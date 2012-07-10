@@ -249,7 +249,12 @@ namespace Microsoft.Cci.Analysis {
           break;
         case OperationCode.Box:
           this.stack.Pop();
-          instruction.Type = this.platformType.SystemObject;
+          var typeInBox = instruction.Operation.Value as ITypeReference;
+          Contract.Assume(typeInBox != null);
+          if (typeInBox.ResolvedType.IsReferenceType)
+            instruction.Type = typeInBox.ResolvedType; //This typically happens when typeInBox is a type parameter.
+          else
+            instruction.Type = this.platformType.SystemObject;
           this.stack.Push(instruction);
           break;
         case OperationCode.Brfalse:
@@ -306,7 +311,7 @@ namespace Microsoft.Cci.Analysis {
           this.stack.Pop();
           Contract.Assume(instruction.Operation.Value is ITypeReference); //This is an informally specified property of the Metadata model.
           instruction.Type = (ITypeReference)instruction.Operation.Value;
-          if (instruction.Type.ResolvedType.IsValueType)
+          if (instruction.Type.ResolvedType.IsValueType || instruction.Type is IGenericParameterReference)
             instruction.Type = this.platformType.SystemObject;
           this.stack.Push(instruction);
           break;
@@ -458,7 +463,12 @@ namespace Microsoft.Cci.Analysis {
         case OperationCode.Ldarg_S:
           var parameter = instruction.Operation.Value as IParameterDefinition;
           if (parameter == null) { //this arg
-            instruction.Type = this.cfg.MethodBody.MethodDefinition.ContainingType;
+            var containingType = this.cfg.MethodBody.MethodDefinition.ContainingTypeDefinition;
+            var namedType = containingType as INamedTypeDefinition;
+            if (namedType != null && namedType.IsGeneric)
+              instruction.Type = namedType.InstanceType;
+            else
+              instruction.Type = containingType;
             if (instruction.Type.IsValueType)
               instruction.Type = ManagedPointerType.GetManagedPointerType(instruction.Type, this.internFactory);
           } else {

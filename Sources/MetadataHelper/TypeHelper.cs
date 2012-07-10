@@ -680,6 +680,35 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns true if the given type is a generic parameter or if it is a structural type that contains a reference to a generic parameter.
+    /// </summary>
+    public static bool IsOpen(ITypeReference typeReference) {
+      Contract.Requires(typeReference != null);
+
+      var genericTypeParameter = typeReference as IGenericTypeParameterReference;
+      if (genericTypeParameter != null) return true;
+      var arrayType = typeReference as IArrayTypeReference;
+      if (arrayType != null) return IsOpen(arrayType.ElementType);
+      var managedPointerType = typeReference as IManagedPointerTypeReference;
+      if (managedPointerType != null) return IsOpen(managedPointerType.TargetType);
+      var modifiedPointer = typeReference as ModifiedPointerType;
+      if (modifiedPointer != null) return IsOpen(modifiedPointer.TargetType);
+      var modifiedType = typeReference as IModifiedTypeReference;
+      if (modifiedType != null) return IsOpen(modifiedType.UnmodifiedType);
+      var pointerType = typeReference as IPointerTypeReference;
+      if (pointerType != null) return IsOpen(pointerType.TargetType);
+      var nestedType = typeReference as ISpecializedNestedTypeReference;
+      if (nestedType != null) return IsOpen(nestedType.ContainingType);
+      var genericTypeInstance = typeReference as IGenericTypeInstanceReference;
+      if (genericTypeInstance != null) {
+        foreach (var genArg in genericTypeInstance.GenericArguments) {
+          if (IsOpen(genArg)) return true;
+        }
+      }
+      return false;
+    }
+
+    /// <summary>
     /// Returns true if the CLR allows integer operators to be applied to values of the given type.
     /// </summary>
     public static bool IsPrimitiveInteger(ITypeReference type) {
@@ -1168,7 +1197,7 @@ namespace Microsoft.Cci {
       Contract.Requires(declaringType != null);
       Contract.Requires(methodName != null);
       Contract.Requires(parameterTypes != null);
-      Contract.Requires(Contract.ForAll(parameterTypes, x => x != null));
+      //Contract.Requires(Contract.ForAll(parameterTypes, x => x != null));
       Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
 
       return TypeHelper.GetMethod(declaringType.GetMembersNamed(methodName, false), methodName, parameterTypes);
@@ -1187,7 +1216,7 @@ namespace Microsoft.Cci {
       Contract.Requires(Contract.ForAll(members, x => x != null));
       Contract.Requires(methodName != null);
       Contract.Requires(parameterTypes != null);
-      Contract.Requires(Contract.ForAll(parameterTypes, x => x != null));
+      //Contract.Requires(Contract.ForAll(parameterTypes, x => x != null));
       Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
 
       foreach (ITypeDefinitionMember member in members) {
@@ -1958,6 +1987,39 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// If the type is generic, the result is its instance type. If the type is nested in generic type, this result is the
+    /// corresponding specialized nested type of its containing nested generic type. And so on for type that are transitively
+    /// nested in generic types.
+    /// </summary>
+    public static ITypeDefinition GetInstanceOrSpecializedNestedType(ITypeDefinition type) {
+      Contract.Requires(type != null);
+      Contract.Ensures(Contract.Result<ITypeDefinition>() != null);
+      if (type.IsGeneric) return type.InstanceType.ResolvedType;
+      var nestedType = type as INestedTypeDefinition;
+      if (nestedType != null) {
+        var containerInstance = GetInstanceOrSpecializedNestedType(nestedType.ContainingTypeDefinition);
+        if (containerInstance == nestedType.ContainingTypeDefinition) return nestedType;
+        return TypeHelper.GetNestedType(containerInstance, nestedType.Name, nestedType.GenericParameterCount);
+      }
+      return type;
+    }
+
+    /// <summary>
+    /// True if the type is generic or it has an outer type that is generic.
+    /// </summary>
+    public static bool HasOwnOrInheritedTypeParameters(ITypeDefinition type) {
+      Contract.Requires(type != null);
+      if (type.IsGeneric) return true;
+      var nestedType = type as INestedTypeDefinition;
+      while (nestedType != null) {
+        type = nestedType.ContainingTypeDefinition;
+        if (type.IsGeneric) return true;
+        nestedType = type as INestedTypeDefinition;
+      }
+      return false;
+    }
+
+    /// <summary>
     /// Returns true if the given type extends System.Attribute.
     /// </summary>
     public static bool IsAttributeType(ITypeDefinition type) {
@@ -2071,6 +2133,11 @@ namespace Microsoft.Cci {
     /// Specialize a given type reference to a given context
     /// </summary>
     public static ITypeReference SpecializeTypeReference(ITypeReference typeReference, ITypeReference context, IInternFactory internFactory) {
+      Contract.Requires(typeReference != null);
+      Contract.Requires(context != null);
+      Contract.Requires(internFactory != null);
+      Contract.Ensures(Contract.Result<ITypeReference>() != null);
+
       var arrayType = typeReference as IArrayTypeReference;
       if (arrayType != null) {
         if (arrayType.IsVector) return Vector.SpecializeTypeReference(arrayType, context, internFactory);
@@ -2093,7 +2160,15 @@ namespace Microsoft.Cci {
       return typeReference;
     }
 
-    internal static ITypeReference SpecializeTypeReference(ITypeReference typeReference, IMethodReference context, IInternFactory internFactory) {
+    /// <summary>
+    /// Specialize a given type reference to a given context
+    /// </summary>
+    public static ITypeReference SpecializeTypeReference(ITypeReference typeReference, IMethodReference context, IInternFactory internFactory) {
+      Contract.Requires(typeReference != null);
+      Contract.Requires(context != null);
+      Contract.Requires(internFactory != null);
+      Contract.Ensures(Contract.Result<ITypeReference>() != null);
+
       var arrayType = typeReference as IArrayTypeReference;
       if (arrayType != null) {
         if (arrayType.IsVector) return Vector.SpecializeTypeReference(arrayType, context, internFactory);
@@ -2339,6 +2414,7 @@ namespace Microsoft.Cci {
         default: return typeReference;
       }
     }
+
   }
 
   /// <summary>

@@ -3567,6 +3567,13 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return TokenTypeIds.ExportedType | this.ExportedTypeRowId; }
     }
 
+    internal INamedTypeDefinition/*?*/ Resolve(PEFileToObjectModel startingPeFileToObjectModel) {
+      if (startingPeFileToObjectModel == this.PEFileToObjectModel) return null;
+      var tr = this.aliasTypeReference = this.PEFileToObjectModel.GetReferenceToAliasedType(this, startingPeFileToObjectModel);
+      if (tr == null) return null;
+      return tr.ResolvedType;
+    }
+
     #region IAliasForType Members
 
     public INamedTypeReference AliasedType {

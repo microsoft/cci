@@ -341,6 +341,7 @@ namespace Microsoft.Cci {
         case OperationCode.Ldc_I4_5:
         case OperationCode.Ldc_I4_6:
         case OperationCode.Ldc_I4_7:
+        case OperationCode.Ldc_I4_8:
         case OperationCode.Ldc_I4_M1:
           this.Emit(opcode);
           return;

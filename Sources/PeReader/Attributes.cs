@@ -538,7 +538,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (nsAlias == null || nsAlias.Name != this.UnmangledTypeName) continue;
         var aliasedType = nsAlias.AliasedType.ResolvedType;
         if (aliasedType.GenericParameterCount == this.GenericParameterCount) return aliasedType;
-      }
+      }      
       return null;
     }
 

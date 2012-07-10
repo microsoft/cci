@@ -1065,7 +1065,9 @@ namespace Microsoft.Cci.Immutable {
     /// was used to create the method instance.
     /// </summary>
     public static ITypeReference SpecializeIfConstructedFromApplicableTypeParameter(IGenericMethodParameterReference genericMethodParameter, IGenericMethodInstanceReference containingMethodInstance) {
-      if (genericMethodParameter.DefiningMethod.InternedKey == containingMethodInstance.GenericMethod.InternedKey) {
+      var methodReference = containingMethodInstance.GenericMethod;
+      var specializedMethod = methodReference as ISpecializedMethodReference;
+      if (genericMethodParameter.DefiningMethod.InternedKey == methodReference.InternedKey || (specializedMethod != null && genericMethodParameter.DefiningMethod.InternedKey == specializedMethod.UnspecializedVersion.InternedKey)) {
         ushort i = 0;
         ushort n = genericMethodParameter.Index;
         IEnumerator<ITypeReference> genericArguments = containingMethodInstance.GenericArguments.GetEnumerator();

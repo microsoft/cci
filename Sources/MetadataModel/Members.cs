@@ -1876,6 +1876,7 @@ namespace Microsoft.Cci {
     public IFieldReference UnspecializedVersion {
       get {
         Contract.Ensures(Contract.Result<IFieldReference>() != null);
+        Contract.Ensures(!(Contract.Result<IFieldReference>() is ISpecializedFieldReference));
         throw new NotImplementedException(); 
       }
     }
@@ -2303,6 +2304,7 @@ namespace Microsoft.Cci {
     public IMethodReference UnspecializedVersion {
       get {
         Contract.Ensures(Contract.Result<IMethodReference>() != null);
+        Contract.Ensures(!(Contract.Result<IMethodReference>() is ISpecializedMethodReference));
         throw new NotImplementedException(); 
       }
     }

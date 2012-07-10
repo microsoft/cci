@@ -4179,12 +4179,7 @@ namespace Microsoft.Cci.Immutable {
     /// </summary>
     /// <value></value>
     public TypeMemberVisibility Visibility {
-      get {
-        ITypeDefinitionMember unspecializedVersion = this.UnspecializedVersion;
-        //^ assume unspecializedVersion != null; //The type system guarantees this
-        return TypeHelper.VisibilityIntersection(unspecializedVersion.Visibility,
-          TypeHelper.TypeVisibilityAsTypeMemberVisibility(this.ContainingGenericTypeInstance));
-      }
+      get { return this.UnspecializedVersion.Visibility; }
     }
 
     /// <summary>

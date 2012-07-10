@@ -3184,6 +3184,9 @@ namespace Microsoft.Cci {
     public INestedTypeReference UnspecializedVersion {
       get {
         Contract.Ensures(Contract.Result<INestedTypeReference>() != null);
+        Contract.Ensures(!(Contract.Result<INestedTypeReference>() is ISpecializedNestedTypeReference));
+        Contract.Ensures(!(Contract.Result<INestedTypeReference>().ContainingType is ISpecializedNestedTypeReference));
+        Contract.Ensures(!(Contract.Result<INestedTypeReference>().ContainingType is IGenericTypeInstanceReference));
         throw new NotImplementedException();
       }
     }
@@ -4505,7 +4508,9 @@ namespace Microsoft.Cci {
     bool IsAbstract { get; }
 
     /// <summary>
-    /// Is type initialized anytime before first access to static field
+    /// If true, the type need not be initialized as soon as any method defined by the type starts executing.
+    /// In either case, the type initializer (if provided) will run before the first access to a static field
+    /// of the type.
     /// </summary>
     bool IsBeforeFieldInit { get; }
 

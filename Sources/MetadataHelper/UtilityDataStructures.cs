@@ -2072,7 +2072,6 @@ namespace Microsoft.Cci.UtilityDataStructures {
         uint tableIndex = hash1 & mask;
         while (keyValueTable[tableIndex].Value != 0) {
           if (keyValueTable[tableIndex].Key == key) {
-            Debug.Assert(keyValueTable[tableIndex].Value == value);
             return;
           }
           tableIndex = (tableIndex + hash2) & mask;

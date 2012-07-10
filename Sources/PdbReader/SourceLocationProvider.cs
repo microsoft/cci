@@ -214,6 +214,8 @@ namespace Microsoft.Cci {
         PdbSlot/*?*/ slot = this.GetSlotFor(pdbFunction.scopes, index);
         if (slot != null) {
           isCompilerGenerated = (slot.flags & 0x4) != 0;
+          if (!isCompilerGenerated)
+            isCompilerGenerated = slot.name.StartsWith("<");
           return slot.name;
         }
       }
