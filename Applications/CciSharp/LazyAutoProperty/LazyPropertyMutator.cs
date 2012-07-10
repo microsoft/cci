@@ -56,7 +56,7 @@ namespace CciSharp.Mutators
             var contracts = this.Host.MutatedContracts;
 
             var mutator = new Mutator(this, _pdbReader, contracts);
-            mutator.Visit(assembly);
+            mutator.RewriteChildren(assembly);
             return mutator.MutationCount > 0;
         }
 
@@ -80,38 +80,38 @@ namespace CciSharp.Mutators
 
             public int MutationCount { get; private set; }
 
-            public override PropertyDefinition Mutate(PropertyDefinition propertyDefinition)
+            public override void RewriteChildren(PropertyDefinition propertyDefinition)
             {
                 var getter = propertyDefinition.Getter as MethodDefinition;
                 var setter = propertyDefinition.Setter as MethodDefinition;
                 ICustomAttribute lazyAttribute;
                 if (!CcsHelper.TryGetAttributeByName(propertyDefinition.Attributes, "LazyAttribute", out lazyAttribute)) // [ReadOnly]
-                    return propertyDefinition;
+                    return;
 
                 if (setter != null)
                 {
                     this.Owner.Error(propertyDefinition, "cannot have a setter to be lazy");
-                    return propertyDefinition;
+                    return;
                 }
                 if (getter == null)
                 {
                     //this.Owner.Error(propertyDefinition, "must have a getter to be lazy");
-                    return propertyDefinition;
+                    return;
                 }
                 if (getter.IsStatic)
                 {
                     this.Owner.Error(propertyDefinition, "must be an instance property to be lazy");
-                    return propertyDefinition;
+                    return;
                 }
                 if (getter.IsVirtual)
                 {
                     this.Owner.Error(propertyDefinition, "cannot be virtual to be lazy");
-                    return propertyDefinition;
+                    return;
                 }
                 if (getter.ParameterCount > 0)
                 {
                     this.Owner.Error(propertyDefinition, "must not be an indexer to be lazy");
-                    return propertyDefinition;
+                    return;
                 }
 
                 // ok we're good,
@@ -130,7 +130,7 @@ namespace CciSharp.Mutators
 
                 this.Owner.Host.Event(CcsEventLevel.Message,"lazy: {0}", propertyDefinition);
                 this.MutationCount++;
-                return propertyDefinition;
+                return;
             }
 
             private void DefineUncachedGetter(

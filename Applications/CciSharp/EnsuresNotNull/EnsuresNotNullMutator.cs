@@ -30,14 +30,14 @@ namespace CciSharp.Mutators
                 _pdbReader = null;
             var contracts = this.Host.MutatedContracts;
 
-            new NonNullInjector(this.Host,contracts).Visit(this.Host.MutatedAssembly);
+            new NonNullInjector(this.Host,contracts).Traverse(this.Host.MutatedAssembly);
             ContractHelper.InjectContractCalls(this.Host,this.Host.MutatedAssembly,contracts,_pdbReader);
 
             return true;
         }
 
         sealed class NonNullInjector
-          : BaseCodeTraverser
+          : CodeTraverser
         {
             readonly ICcsHost host;
             readonly ContractProvider contractProvider;
@@ -50,7 +50,7 @@ namespace CciSharp.Mutators
                 this.contractProvider = contractProvider;
             }
 
-            public override void Visit(IMethodDefinition method)
+            public override void TraverseChildren(IMethodDefinition method)
             {
                 // inject only in visible method
                 if(!MemberHelper.IsVisibleOutsideAssembly(method))

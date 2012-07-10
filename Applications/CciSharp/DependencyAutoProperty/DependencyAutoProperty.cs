@@ -59,7 +59,7 @@ namespace CciSharp.Mutators
                 _pdbReader = null;
             var contracts = this.Host.MutatedContracts;
             var mutator = new Mutator(this, _pdbReader, contracts, windowsBaseReference);
-            mutator.Visit(assembly);
+            mutator.RewriteChildren(assembly);
             return mutator.MutationCount > 0;
         }
 
@@ -198,64 +198,63 @@ namespace CciSharp.Mutators
             public int MutationCount { get; private set; }
 
             BlockStatement _cctorBody;
-            public override INamespaceTypeDefinition Visit(INamespaceTypeDefinition namespaceTypeDefinition) 
+            public override void RewriteChildren(NamespaceTypeDefinition namespaceTypeDefinition) 
             {
-                this.CollectCandidates(namespaceTypeDefinition);
-                return namespaceTypeDefinition;
-            }
-            public override INestedTypeDefinition Visit(INestedTypeDefinition nestedTypeDefinition)
-            {
-                this.CollectCandidates(nestedTypeDefinition);
-                return nestedTypeDefinition;
-            }
-            void CollectCandidates(ITypeDefinition typeDefinition)
-            {
-                // collect candidates
                 this._cctorBody = null;
-                base.Visit(typeDefinition);
+                base.RewriteChildren(namespaceTypeDefinition);
                 if (this._cctorBody != null)
-                    this._cctorBody = null;
+                  this._cctorBody = null;
+                return;
+            }
+            public override void RewriteChildren(NestedTypeDefinition nestedTypeDefinition)
+            {
+                this._cctorBody = null;
+                base.RewriteChildren(nestedTypeDefinition);
+                if (this._cctorBody != null)
+                  this._cctorBody = null;
+                return;
             }
 
-            public override PropertyDefinition Mutate(PropertyDefinition propertyDefinition)
+
+            public override void RewriteChildren(PropertyDefinition propertyDefinition)
             {
                 var getter = propertyDefinition.Getter as MethodDefinition;
                 var setter = propertyDefinition.Setter as MethodDefinition;
                 ICustomAttribute attribute;
                 if (!CcsHelper.TryGetAttributeByName(propertyDefinition.Attributes, "DependencyAutoPropertyAttribute", out attribute))
-                    return propertyDefinition;
+                    return;
 
                 if (setter == null)
                 {
                     this.Owner.Error(propertyDefinition, "must have a setter to implement DependencyProperty");
-                    return propertyDefinition;
+                    return;
                 }
                 if (getter == null)
                 {
                     this.Owner.Error(propertyDefinition, "must have a getter to implement DependencyProperty");
-                    return propertyDefinition;
+                    return;
                 }
                 if (!AttributeHelper.Contains(getter.Attributes, this.compilerGeneratedAttribute) ||
                     !AttributeHelper.Contains(setter.Attributes, this.compilerGeneratedAttribute))
                 // compiler generated
                 {
                     this.Owner.Error(propertyDefinition, "must be an auto-property to be readonly");
-                    return propertyDefinition;
+                    return;
                 }
                 if (getter.IsStatic || setter.IsStatic)
                 {
                     this.Owner.Error(propertyDefinition, "must be an instance to implement DependencyProperty");
-                    return propertyDefinition;
+                    return;
                 }
                 if (getter.IsVirtual || setter.IsVirtual)
                 {
                     this.Owner.Error(propertyDefinition, "cannot be virtual to implement DependencyProperty");
-                    return propertyDefinition;
+                    return;
                 }
                 if (getter.ParameterCount > 0)
                 {
                     this.Owner.Error(propertyDefinition, "must not be an indexer to implement DependencyProperty");
-                    return propertyDefinition;
+                    return;
                 }
 
                 // we're good, we can start implement the property
@@ -263,7 +262,7 @@ namespace CciSharp.Mutators
                 if (!TypeHelper.Type1DerivesFromType2(declaringType, this.dependencyObjectType))
                 {
                     this.Owner.Error(propertyDefinition, "must be declared in a type inheriting from System.Windows.DependencyObject");
-                    return propertyDefinition;
+                    return;
                 }
 
                 // create the new field
@@ -280,7 +279,7 @@ namespace CciSharp.Mutators
                 declaringType.Fields.Add(propertyField);
 
                 if (!this.TryRegisterProperty(declaringType, propertyDefinition, propertyField, attribute))
-                    return propertyDefinition;
+                    return;
 
                 // replace method bodies with SetValue, GetValue
                 this.ReplaceGetter(declaringType, getter, propertyField);
@@ -290,7 +289,7 @@ namespace CciSharp.Mutators
                 propertyDefinition.Attributes.Remove(attribute);
 
                 this.MutationCount++;
-                return propertyDefinition;
+                return;
             }
 
             private void ReplaceGetter(NamedTypeDefinition declaringType, MethodDefinition getter, FieldDefinition propertyField)
@@ -302,7 +301,7 @@ namespace CciSharp.Mutators
                 var getterBody = (SourceMethodBody)getter.Body;
                 IFieldReference backingField;
                 if (CcsHelper.TryGetFirstFieldReference(getterBody, out backingField))
-                    declaringType.Fields.Remove((IFieldDefinition)backingField);
+                    declaringType.Fields.Remove(backingField.ResolvedField);
 
                 getterBody = new SourceMethodBody(this.host, this.sourceLocationProvider)
                 {
@@ -458,13 +457,18 @@ namespace CciSharp.Mutators
                         CallingConvention = CallingConvention.Default,
                         ContainingTypeDefinition = declaringType
                     };
-                    validator.Parameters.Add(new ParameterDefinition
-                    {
-                        Index = 0,
-                        Type = this.objectType, 
-                        Name = this.Host.NameTable.value,
-                    });
-                    validator.Attributes.Add(new CustomAttribute { Constructor = this.compilerGeneratedAttributeCtor });
+                    validator.Parameters = new List<IParameterDefinition>(){
+                      new ParameterDefinition
+                      {
+                          Index = 0,
+                          Type = this.objectType, 
+                          Name = this.Host.NameTable.value,
+                      }
+                    };
+
+                    validator.Attributes = new List<ICustomAttribute>(){
+                      new CustomAttribute { Constructor = this.compilerGeneratedAttributeCtor }
+                    };
                     declaringType.Methods.Add(validator);
                     var block = new BlockStatement();
                     SourceMethodBody body;

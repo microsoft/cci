@@ -21,9 +21,17 @@ namespace CciSharp.Framework
     /// Abstract base class for mutator that will be run as a post build step
     /// </summary>
     public abstract class CcsCodeMutatorBase<TMutator>
-        : CodeAndContractMutatingVisitor
+        : CodeAndContractRewriter
         where TMutator : CcsMutatorBase
     {
+
+      /// <summary>
+      /// The old, obsolete, base class (CodeAndContractMutatingVisitor) needed
+      /// this, but the current base class does not. Adding it here temporarily
+      /// until it is clear that it isn't needed.
+      /// </summary>
+        protected ISourceLocationProvider sourceLocationProvider;
+
         /// <summary>
         /// Initializes a new instance of the mutator
         /// </summary>
@@ -34,11 +42,12 @@ namespace CciSharp.Framework
             TMutator owner, 
             ISourceLocationProvider sourceLocationProvider,
             ContractProvider contractProvider)
-            : base(owner.Host, sourceLocationProvider, contractProvider)
+            : base(owner.Host, contractProvider)
         {
             Contract.Requires(owner != null);
             Contract.Requires(contractProvider != null);
             this.Owner = owner;
+            this.sourceLocationProvider = sourceLocationProvider;
         }
 
         [ContractInvariantMethod]
@@ -46,6 +55,7 @@ namespace CciSharp.Framework
         {
             Contract.Invariant(this.Owner != null);
             Contract.Invariant(this.Host != null);
+            Contract.Invariant(this.sourceLocationProvider != null);
         }
 
         /// <summary>

@@ -36,7 +36,7 @@ namespace CciSharp.Mutators
             var contracts = this.Host.MutatedContracts;
 
             var mutator = new Mutator(this, _pdbReader, contracts);
-            mutator.Visit(assembly);
+            mutator.RewriteChildren(assembly);
             return mutator.MutationCount > 0;
         }
 
@@ -80,16 +80,16 @@ namespace CciSharp.Mutators
 
             public int MutationCount { get; private set; }
 
-            public override NamespaceTypeDefinition Mutate(NamespaceTypeDefinition namespaceTypeDefinition)
+            public override void RewriteChildren(NamespaceTypeDefinition namespaceTypeDefinition)
             {
                 this.AddCodeToSetDefaultValues(namespaceTypeDefinition);
-                return base.Mutate(namespaceTypeDefinition);
+                base.RewriteChildren(namespaceTypeDefinition);
             }
 
-            public override NestedTypeDefinition Mutate(NestedTypeDefinition nestedTypeDefinition)
+            public override void RewriteChildren(NestedTypeDefinition nestedTypeDefinition)
             {
                 this.AddCodeToSetDefaultValues(nestedTypeDefinition);
-                return base.Mutate(nestedTypeDefinition);
+                base.RewriteChildren(nestedTypeDefinition);
             }
 
             private void AddCodeToSetDefaultValues(NamedTypeDefinition typeDefinition)

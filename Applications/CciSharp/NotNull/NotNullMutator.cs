@@ -32,7 +32,7 @@ namespace CciSharp.Mutators {
       var contracts = this.Host.MutatedContracts;
 
       var mutator = new Mutator(this, _pdbReader, contracts);
-      mutator.Visit(assembly);
+      mutator.RewriteChildren(assembly);
       ContractHelper.InjectContractCalls(this.Host, this.Host.MutatedAssembly, contracts, _pdbReader);
       return mutator.MutationCount > 0;
     }
@@ -57,50 +57,50 @@ namespace CciSharp.Mutators {
       public int MutationCount { get; private set; }
 
 
-      public override Assembly Mutate(Assembly assembly) {
+      public override void RewriteChildren(Assembly assembly) {
         ICustomAttribute attribute;
         bool hasAttribute = CcsHelper.TryGetAttributeByName(assembly.Attributes, "NotNullAttribute", out attribute);
         bool hasMaybeNullAttribute = CcsHelper.TryGetAttributeByName(assembly.Attributes, "MaybeNullAttribute", out attribute);
         this.notNullsContext.Push(hasAttribute || (this.notNullsContext.Peek() && !hasMaybeNullAttribute));
-        var result = base.Mutate(assembly);
+        base.RewriteChildren(assembly);
         this.notNullsContext.Pop();
-        return result;
+        return;
       }
 
-      public override Module Mutate(Module module) {
+      public override void RewriteChildren(Module module) {
         ICustomAttribute attribute;
         bool hasAttribute = CcsHelper.TryGetAttributeByName(module.Attributes, "NotNullAttribute", out attribute);
         bool hasMaybeNullAttribute = CcsHelper.TryGetAttributeByName(module.Attributes, "MaybeNullAttribute", out attribute);
         this.notNullsContext.Push(hasAttribute || (this.notNullsContext.Peek() && !hasMaybeNullAttribute));
-        var result = base.Mutate(module);
+        base.RewriteChildren(module);
         this.notNullsContext.Pop();
-        return result;
+        return;
       }
 
-      public override NamespaceTypeDefinition Mutate(NamespaceTypeDefinition namespaceTypeDefinition) {
+      public override void RewriteChildren(NamespaceTypeDefinition namespaceTypeDefinition) {
         ICustomAttribute attribute;
         bool hasAttribute = CcsHelper.TryGetAttributeByName(namespaceTypeDefinition.Attributes, "NotNullAttribute", out attribute);
         bool hasMaybeNullAttribute = CcsHelper.TryGetAttributeByName(namespaceTypeDefinition.Attributes, "MaybeNullAttribute", out attribute);
         this.notNullsContext.Push(hasAttribute || (this.notNullsContext.Peek() && !hasMaybeNullAttribute));
-        var result = base.Mutate(namespaceTypeDefinition);
+        base.RewriteChildren(namespaceTypeDefinition);
         this.notNullsContext.Pop();
-        return result;
+        return;
       }
 
-      public override NestedTypeDefinition Mutate(NestedTypeDefinition nestedTypeDefinition) {
+      public override void RewriteChildren(NestedTypeDefinition nestedTypeDefinition) {
         ICustomAttribute attribute;
         bool hasAttribute = CcsHelper.TryGetAttributeByName(nestedTypeDefinition.Attributes, "NotNullAttribute", out attribute);
         bool hasMaybeNullAttribute = CcsHelper.TryGetAttributeByName(nestedTypeDefinition.Attributes, "MaybeNullAttribute", out attribute);
         this.notNullsContext.Push(hasAttribute || (this.notNullsContext.Peek() && !hasMaybeNullAttribute));
-        var result = base.Mutate(nestedTypeDefinition);
+        base.RewriteChildren(nestedTypeDefinition);
         this.notNullsContext.Pop();
-        return result;
+        return;
       }
 
-      public override MethodDefinition Mutate(MethodDefinition methodDefinition) {
+      public override void RewriteChildren(MethodDefinition methodDefinition) {
         if (methodDefinition.IsAbstract) {
           // not supported yet
-          return methodDefinition;
+          return;
         }
 
         var initialMutationCount = this.MutationCount;
@@ -189,13 +189,13 @@ namespace CciSharp.Mutators {
         }
 
         // Visit the parameters so any attributes are removed
-        methodDefinition.Parameters = this.Mutate(methodDefinition.Parameters);
+        methodDefinition.Parameters = this.Rewrite(methodDefinition.Parameters);
 
-        return methodDefinition;
+        return;
       }
 
-      public override List<ICustomAttribute> Mutate(List<ICustomAttribute> customAttributes) {
-        if (customAttributes == null) return null;
+      public override List<ICustomAttribute> Rewrite(List<ICustomAttribute> customAttributes) {
+        if (customAttributes == null) return customAttributes;
         customAttributes.RemoveAll(a => 
           CcsHelper.AttributeMatchesByName(a, "NotNullAttribute")
           ||

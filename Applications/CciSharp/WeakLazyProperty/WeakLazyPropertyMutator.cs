@@ -68,7 +68,7 @@ namespace CciSharp.Mutators
             var contracts = this.Host.MutatedContracts;
 
             var mutator = new Mutator(this, _pdbReader, contracts);
-            mutator.Visit(assembly);
+            mutator.RewriteChildren(assembly);
             return mutator.MutationCount > 0;
         }
 
@@ -92,43 +92,43 @@ namespace CciSharp.Mutators
 
             public int MutationCount { get; private set; }
 
-            public override PropertyDefinition Mutate(PropertyDefinition propertyDefinition)
+            public override void RewriteChildren(PropertyDefinition propertyDefinition)
             {
                 var getter = propertyDefinition.Getter as MethodDefinition;
                 var setter = propertyDefinition.Setter as MethodDefinition;
                 ICustomAttribute lazyAttribute;
                 if (!CcsHelper.TryGetAttributeByName(propertyDefinition.Attributes, "WeakLazyAttribute", out lazyAttribute)) // [WeakLazy]
-                    return propertyDefinition;
+                    return;
 
                 if (setter != null)
                 {
                     this.Owner.Error(propertyDefinition, "cannot have a setter to be weak lazy");
-                    return propertyDefinition;
+                    return;
                 }
                 if (getter == null)
                 {
                     this.Owner.Error(propertyDefinition, "must have a getter to be weak lazy");
-                    return propertyDefinition;
+                    return;
                 }
                 if (getter.IsStatic)
                 {
                     this.Owner.Error(propertyDefinition, "must be an instance property to be weak lazy");
-                    return propertyDefinition;
+                    return;
                 }
                 if (getter.IsVirtual)
                 {
                     this.Owner.Error(propertyDefinition, "cannot be virtual to be weak lazy");
-                    return propertyDefinition;
+                    return;
                 }
                 if (getter.ParameterCount > 0)
                 {
                     this.Owner.Error(propertyDefinition, "must not be an indexer to be weak lazy");
-                    return propertyDefinition;
+                    return;
                 }
                 if (propertyDefinition.Type.IsValueType)
                 {
                     this.Owner.Error(propertyDefinition, "must a reference type to be weak lazy");
-                    return propertyDefinition;
+                    return;
                 }
 
                 // ok we're good,
@@ -146,7 +146,7 @@ namespace CciSharp.Mutators
                 propertyDefinition.Attributes.Remove(lazyAttribute);
 
                 this.MutationCount++;
-                return propertyDefinition;
+                return;
             }
 
             private void DefineUncachedGetter(
@@ -304,7 +304,7 @@ namespace CciSharp.Mutators
 
             private FieldDefinition DefineField(
                 NamedTypeDefinition declaringType,
-                PropertyDefinition propertyDefinition)
+                IPropertyDefinition propertyDefinition)
             {
                 Contract.Requires(declaringType != null);
                 Contract.Requires(propertyDefinition != null);

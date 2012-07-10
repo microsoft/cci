@@ -50,7 +50,7 @@ namespace CciSharp.Mutators
                 return false; // nothing todo here.
 
             var mutator = new Mutator(this, pdbReader, contracts);
-            mutator.Visit(assembly);
+            mutator.RewriteChildren(assembly);
             return mutator.MutationCount > 0;
         }
 
@@ -78,7 +78,7 @@ namespace CciSharp.Mutators
 
             public int MutationCount = 0;
 
-            public override IExpression Visit(MethodCall methodCall)
+            public override void RewriteChildren(MethodCall methodCall)
             {
                 AssertMethods assertMethods;
                 if (this.Owner.assertMethods.TryGetValue(methodCall.MethodToCall.InternedKey, out assertMethods))
@@ -87,7 +87,7 @@ namespace CciSharp.Mutators
                     var condition = methodCall.Arguments[0];
                     string message;
                     if (!TryExtractSourceFromPdb(condition, out message))
-                        return methodCall; // no sources avaiable
+                        return; // no sources avaiable
 
                     IMethodReference assertMethod;
                     bool hasFormatMethod = assertMethods.TryGetStringFormatMethod(out assertMethod);
@@ -179,7 +179,7 @@ namespace CciSharp.Mutators
                     this.MutationCount++;
                 }
 
-                return methodCall;
+                return;
             }
 
             private void AppendVariable(StringBuilder sb, int i, string name)
@@ -212,7 +212,7 @@ namespace CciSharp.Mutators
                 Contract.Requires(condition != null);
 
                 var vis = new SubExpressionTraverser();
-                vis.Visit(condition);
+                vis.Traverse(condition);
                 return vis.Temps;
             }
 
@@ -263,15 +263,15 @@ namespace CciSharp.Mutators
         }
 
         class SubExpressionTraverser
-            : BaseCodeTraverser
+            : CodeTraverser
         {
             public readonly List<IBoundExpression> Temps =
                 new List<IBoundExpression>();
 
-            public override void Visit(IBoundExpression boundExpression)
+            public override void TraverseChildren(IBoundExpression boundExpression)
             {
                 this.Temps.Add(boundExpression);
-                base.Visit(boundExpression);
+                base.Traverse(boundExpression);
             }
         }
 

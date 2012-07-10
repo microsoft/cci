@@ -41,7 +41,7 @@ namespace CciSharp.Mutators
 
             // pass1: collect properties to mutate and field references,
             var collector = new PropertyCollector(this, _pdbReader, contracts);
-            collector.Visit(assembly);
+            collector.RewriteChildren(assembly);
             var properties = collector.Properties;
             // nothing to do...
             if (properties.Count == 0)
@@ -49,7 +49,7 @@ namespace CciSharp.Mutators
 
             // pass2: mutate properties and update field references
             var mutator = new SetterReplacer(this, _pdbReader, contracts, properties);
-            mutator.Visit(assembly);
+            mutator.RewriteChildren(assembly);
             return true;
         }
 
@@ -74,7 +74,7 @@ namespace CciSharp.Mutators
             public readonly Dictionary<uint, Setter> Properties 
                 = new Dictionary<uint, Setter>();
 
-            public override PropertyDefinition Mutate(PropertyDefinition propertyDefinition)
+            public override void RewriteChildren(PropertyDefinition propertyDefinition)
             {
                 var getter = propertyDefinition.Getter as IMethodDefinition;
                 var setter = propertyDefinition.Setter as IMethodDefinition;
@@ -83,39 +83,39 @@ namespace CciSharp.Mutators
                     if (getter == null)
                     {
                         this.Owner.Error(propertyDefinition, "must have a getter to be readonly");
-                        return propertyDefinition;
+                        return;
                     }
                     if (setter == null)
                     {
                         this.Owner.Error(propertyDefinition, "must have a setter to be readonly");
-                        return propertyDefinition;
+                        return;
                     }
                     if (!AttributeHelper.Contains(getter.Attributes, this.compilerGeneratedAttribute) ||
                         !AttributeHelper.Contains(setter.Attributes, this.compilerGeneratedAttribute)) // compiler generated
                     {
                         this.Owner.Error(propertyDefinition, "must be an auto-property to be readonly");
-                        return propertyDefinition;
+                        return;
                     }
                     if (getter.IsStatic || setter.IsStatic)
                     {
                         this.Owner.Error(propertyDefinition, "must be an instance property to be readonly");
-                        return propertyDefinition;
+                        return;
                     }
 
                     if (getter.IsVirtual || setter.IsVirtual)
                     {
                         this.Owner.Error(propertyDefinition, "cannot be virtual to be readonly");
-                        return propertyDefinition;
+                        return;
                     }
                     if (setter.Visibility != TypeMemberVisibility.Private) // setter is private
                     {
                         this.Owner.Error(propertyDefinition, "must have a private setter to be readonly");
-                        return propertyDefinition;
+                        return;
                     }
                     if (getter.ParameterCount > 0)
                     {
                         this.Owner.Error(propertyDefinition, "must not be an indexer");
-                        return propertyDefinition;
+                        return;
                     }
 
                     // decompile setter body and get the backing field.
@@ -123,7 +123,7 @@ namespace CciSharp.Mutators
                     if (!CcsHelper.TryGetFirstFieldReference(setter.Body, out field))
                     {
                         this.Owner.Error(propertyDefinition, "has no backing field");
-                        return propertyDefinition;
+                        return;
                     }
 
                     // remove setter, make field readonly
@@ -137,7 +137,7 @@ namespace CciSharp.Mutators
                     this.Host.Event(CcsEventLevel.Message, "readonly property: {0}, field {1}", propertyDefinition, field);
                 }
 
-                return propertyDefinition;
+                return;
             }
 
             private static bool ContainsReadOnly(IEnumerable<ICustomAttribute> attributes)
@@ -183,15 +183,15 @@ namespace CciSharp.Mutators
             }
 
             MethodDefinition currentMethod = null;
-            public override MethodDefinition Mutate(MethodDefinition methodDefinition)
+            public override void RewriteChildren(MethodDefinition methodDefinition)
             {
                 currentMethod = methodDefinition;
-                var result = base.Mutate(methodDefinition);
+                base.RewriteChildren(methodDefinition);
                 currentMethod = null;
-                return result;
+                return;
             }
 
-            public override IExpression Visit(MethodCall methodCall)
+            public override IExpression Rewrite(IMethodCall methodCall)
             {
                 Setter setter;
                 var methodToCall = methodCall.MethodToCall;
@@ -206,31 +206,36 @@ namespace CciSharp.Mutators
                         return methodCall;
                     }
 
+                    var args = methodCall.Arguments;
+                    Contract.Assume(IteratorHelper.EnumerableIsNotEmpty(args));
+                    var arg = IteratorHelper.First(args);
                     var storeField = new Assignment
                     {
-                        Source = methodCall.Arguments[0],
+                        Source = arg,
                         Target = new TargetExpression
                         {
                              Instance = methodCall.ThisArgument,
                              Definition = field,
-                             Locations = methodCall.Locations
+                             Locations = new List<ILocation>(methodCall.Locations),
                         },
-                        Locations = methodCall.Locations
+                        Locations = new List<ILocation>(methodCall.Locations),
                     };
                     return storeField;
                 }
                 return methodCall;
             }
 
-            public override NamespaceTypeDefinition Mutate(NamespaceTypeDefinition namespaceTypeDefinition)
+            public override void RewriteChildren(NamespaceTypeDefinition namespaceTypeDefinition)
             {
               this.DeleteMethods(namespaceTypeDefinition);
-              return base.Mutate(namespaceTypeDefinition);
+              base.RewriteChildren(namespaceTypeDefinition);
+              return;
             }
-            public override NestedTypeDefinition Mutate(NestedTypeDefinition nestedTypeDefinition)
+            public override void RewriteChildren(NestedTypeDefinition nestedTypeDefinition)
             {
               this.DeleteMethods(nestedTypeDefinition);
-              return base.Mutate(nestedTypeDefinition);
+              base.RewriteChildren(nestedTypeDefinition);
+              return;
             }
             protected void DeleteMethods(NamedTypeDefinition typeDefinition)
             {
