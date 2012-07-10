@@ -77,6 +77,14 @@ namespace CciSharp.Mutators
             }
 
             public int MutationCount = 0;
+            private IExpressionStatement currentStatement;
+
+            public override void RewriteChildren(ExpressionStatement expressionStatement) {
+              var savedCurrentStatement = this.currentStatement;
+              this.currentStatement = expressionStatement;
+              base.RewriteChildren(expressionStatement);
+              this.currentStatement = savedCurrentStatement;
+            }
 
             public override void RewriteChildren(MethodCall methodCall)
             {
@@ -86,7 +94,7 @@ namespace CciSharp.Mutators
                     // we've got a winner here.
                     var condition = methodCall.Arguments[0];
                     string message;
-                    if (!TryExtractSourceFromPdb(condition, out message))
+                    if (!TryExtractSourceFromPdb(out message))
                         return; // no sources avaiable
 
                     IMethodReference assertMethod;
@@ -233,15 +241,16 @@ namespace CciSharp.Mutators
                 return message;
             }
 
-            private bool TryExtractSourceFromPdb(IExpression condition, out string message)
+            private bool TryExtractSourceFromPdb(out string message)
             {
-                Contract.Requires(condition != null);
                 Contract.Ensures(
                     !Contract.Result<bool>() ||
                     !String.IsNullOrEmpty(Contract.ValueAtReturn<string>(out message)));
 
+                message = null;
+                if (this.currentStatement == null) return false;
                 var sb = new StringBuilder();
-                foreach (var location in condition.Locations)
+                foreach (var location in this.currentStatement.Locations)
                     foreach (var primarySourceLocation in this.sourceLocationProvider.GetPrimarySourceLocationsFor(location))
                     {
                         var source = primarySourceLocation.Source;
@@ -271,7 +280,7 @@ namespace CciSharp.Mutators
             public override void TraverseChildren(IBoundExpression boundExpression)
             {
                 this.Temps.Add(boundExpression);
-                base.Traverse(boundExpression);
+                base.TraverseChildren(boundExpression);
             }
         }
 
@@ -309,6 +318,7 @@ namespace CciSharp.Mutators
                 {
                     switch (assembly.Name.Value)
                     {
+                        case "mscorlib":
                         case "System":
                             this.AddAssertMethod(assembly, "System.Diagnostics.Debug", "Assert", false);
                             break;

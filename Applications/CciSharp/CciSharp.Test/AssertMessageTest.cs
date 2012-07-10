@@ -101,7 +101,7 @@ namespace CciSharp.Test
             }
             catch (Exception ex)
             {
-                Assert.Equal("1 == null", ex.Message);
+                Assert.Equal("1 == 0", ex.Message);
             }
         }
 
