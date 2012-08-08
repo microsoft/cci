@@ -914,7 +914,7 @@ namespace Microsoft.Cci.MetadataReader {
 
     internal IMethodReference GetEntryPointMethod() {
       //  TODO: Do we ever want to take care of Native methods?
-      if ((this.PEFileReader.COR20Header.COR20Flags & COR20Flags.NativeEntryPoint) != 0)
+      if ((this.PEFileReader.COR20Header.COR20Flags & COR20Flags.Prefers32bits) != 0)
         return Dummy.MethodReference;
       uint tokenType = this.PEFileReader.COR20Header.EntryPointTokenOrRVA & TokenTypeIds.TokenTypeMask;
       if (tokenType == TokenTypeIds.File) {
@@ -1366,15 +1366,15 @@ namespace Microsoft.Cci.MetadataReader {
     /// <summary>
     /// Given a namespace full name and type's mangled name this method resolves it to a TypeBase.
     /// </summary>
-    internal INamedTypeDefinition/*?*/ ResolveNamespaceTypeDefinition(IName namespaceName, IName mangledTypeName, PEFileToObjectModel startingPeFileToObjectModel = null) {
-      if (startingPeFileToObjectModel == this) return null;
+    internal INamedTypeDefinition/*?*/ ResolveNamespaceTypeDefinition(IName namespaceName, IName mangledTypeName) {
       uint typeToken = this.NamespaceTypeTokenTable.Find((uint)namespaceName.UniqueKey, (uint)mangledTypeName.UniqueKey);
+      //if (typeToken == 0 || ((typeToken & TokenTypeIds.TokenTypeMask) != TokenTypeIds.TypeDef)) return null;
       var tokenType = typeToken & TokenTypeIds.TokenTypeMask;
       if (tokenType == TokenTypeIds.TypeDef)
         return this.GetTypeDefinitionAtRow(typeToken & TokenTypeIds.RIDMask) as INamedTypeDefinition;
       if (tokenType == TokenTypeIds.ExportedType) {
         var alias = this.GetExportedTypeAtRowWorker(typeToken & 0xFFFFFF);
-        if (alias != null) return alias.Resolve(startingPeFileToObjectModel);
+        if (alias != null) return alias.AliasedType.ResolvedType;
       }
       return null;
     }
@@ -1884,7 +1884,7 @@ namespace Microsoft.Cci.MetadataReader {
             var internalAssembly = assemRef.ResolvedAssembly as Assembly;
             if (internalAssembly != null) {
               PEFileToObjectModel assemblyPEFileToObjectModel = internalAssembly.PEFileToObjectModel;
-              retModuleType = assemblyPEFileToObjectModel.ResolveNamespaceTypeDefinition(namespaceName, typeName, this);
+              retModuleType = assemblyPEFileToObjectModel.ResolveNamespaceTypeDefinition(namespaceName, typeName);
               if (retModuleType != null) return retModuleType;
             }
             break;
@@ -1943,8 +1943,7 @@ namespace Microsoft.Cci.MetadataReader {
     /// <summary>
     /// Returns a reference to the type that the given alias stands for. For example, if alias is a type forwarder, return a reference to the forwarded type (in another assembly).
     /// </summary>
-    internal INamedTypeReference/*?*/ GetReferenceToAliasedType(ExportedTypeAliasBase alias, PEFileToObjectModel startingPeFileToObjectModel = null) {
-      if (startingPeFileToObjectModel == this) return null; //break out of circular reference loop
+    internal INamedTypeReference/*?*/ GetReferenceToAliasedType(ExportedTypeAliasBase alias) {
       Assembly/*?*/ thisAssembly = this.Module as Assembly;
       if (thisAssembly == null) return null;
       uint exportedTypeRowId = alias.ExportedTypeRowId;
@@ -1968,7 +1967,7 @@ namespace Microsoft.Cci.MetadataReader {
         case TokenTypeIds.ExportedType: {
             ExportedTypeAliasBase/*?*/ parentExportedType = this.GetExportedTypeAtRowWorker(rowId);
             if (parentExportedType == null) return null;
-            var parentModuleType = this.GetReferenceToAliasedType(parentExportedType, startingPeFileToObjectModel);
+            var parentModuleType = this.GetReferenceToAliasedType(parentExportedType);
             if (parentModuleType == null) return null;
             ITypeDefinition parentType = parentModuleType.ResolvedType;
             if (!(parentType is Dummy)) {
@@ -1998,12 +1997,12 @@ namespace Microsoft.Cci.MetadataReader {
             if (internalAssembly != null) {
               //Since we have already loaded the assembly that is supposed to hold this type, we may as well try and resolve it.
               PEFileToObjectModel assemblyPEFileToObjectModel = internalAssembly.PEFileToObjectModel;
-              var type = assemblyPEFileToObjectModel.ResolveNamespaceTypeDefinition(namespaceName, mangledTypeName, startingPeFileToObjectModel??this);
+              var type = assemblyPEFileToObjectModel.ResolveNamespaceTypeDefinition(namespaceName, mangledTypeName);
               if (type != null) return type;
               //The other assembly (internalAssembly) does not have a namespace type def for this reference.
               //Perhaps it has an alias that forwards to somewhere else... Not very likely happen in practice, I would hope.
               ExportedTypeAliasBase/*?*/ aliasType = assemblyPEFileToObjectModel.TryToResolveAsNamespaceTypeAlias(namespaceName, mangledTypeName);
-              if (aliasType != null && aliasType != alias) return assemblyPEFileToObjectModel.GetReferenceToAliasedType(aliasType, startingPeFileToObjectModel??this);
+              if (aliasType != null && aliasType != alias) return assemblyPEFileToObjectModel.GetReferenceToAliasedType(aliasType);
               //Although we can resolve the target assembly, we can neither resolve the aliased type, nor find a secondary alias.
               //This is mighty strange. Probably the host has fluffed assembly resolution and internalAssembly isn't really the
               //assembly we are looking for. We now have to give up and simply return an unresolved reference.

@@ -484,6 +484,8 @@ namespace Microsoft.Cci {
     public static IMethodReference UninstantiateAndUnspecialize(IMethodReference potentiallySpecializedMethodReference) {
       Contract.Requires(potentiallySpecializedMethodReference != null);
       Contract.Ensures(Contract.Result<IMethodReference>() != null);
+      Contract.Ensures(!(Contract.Result<IMethodReference>() is IGenericMethodInstanceReference));
+      Contract.Ensures(!(Contract.Result<IMethodReference>() is ISpecializedMethodReference));
 
       var genericMethodInstanceReference = potentiallySpecializedMethodReference as IGenericMethodInstanceReference;
       if (genericMethodInstanceReference != null)
@@ -501,6 +503,10 @@ namespace Microsoft.Cci {
     public static IMethodDefinition UninstantiateAndUnspecialize(IMethodDefinition potentiallySpecializedMethod) {
       Contract.Requires(potentiallySpecializedMethod != null);
       Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+      Contract.Ensures(!(Contract.Result<IMethodDefinition>() is IGenericMethodInstanceReference));
+      Contract.Ensures(!(Contract.Result<IMethodDefinition>() is ISpecializedMethodReference));
+      Contract.Ensures(!(Contract.Result<IMethodDefinition>() is IGenericMethodInstance));
+      Contract.Ensures(!(Contract.Result<IMethodDefinition>() is ISpecializedMethodDefinition));
 
       var genericMethodInstance = potentiallySpecializedMethod as IGenericMethodInstance;
       if (genericMethodInstance != null)

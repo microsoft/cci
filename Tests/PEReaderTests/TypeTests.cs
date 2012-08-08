@@ -871,11 +871,11 @@ namespace ModuleReaderTests {
   }
   .custom instance void TestAttribute::.ctor([mscorlib]System.Type)
   {
-    .argument typeof(Faa`1<TestAttribute>/Baa`1<int32>)
+    .argument typeof(float32**)
   }
   .custom instance void TestAttribute::.ctor([mscorlib]System.Type)
   {
-    .argument typeof(float32**)
+    .argument typeof(Faa`1<TestAttribute>/Baa`1<int32>)
   }
   .field Foo : [.module MRW_Module1.netmodule]Module1.Foo
   .field FooNested : [.module MRW_Module1.netmodule]Module1.Foo/Nested

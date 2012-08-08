@@ -685,8 +685,8 @@ namespace Microsoft.Cci {
     public static bool IsOpen(ITypeReference typeReference) {
       Contract.Requires(typeReference != null);
 
-      var genericTypeParameter = typeReference as IGenericTypeParameterReference;
-      if (genericTypeParameter != null) return true;
+      var genericParameter = typeReference as IGenericParameterReference;
+      if (genericParameter != null) return true;
       var arrayType = typeReference as IArrayTypeReference;
       if (arrayType != null) return IsOpen(arrayType.ElementType);
       var managedPointerType = typeReference as IManagedPointerTypeReference;
@@ -938,6 +938,8 @@ namespace Microsoft.Cci {
     public static ITypeReference UninstantiateAndUnspecialize(ITypeReference type) {
       Contract.Requires(type != null);
       Contract.Ensures(Contract.Result<ITypeReference>() != null);
+      Contract.Ensures(!(Contract.Result<ITypeReference>() is IGenericTypeInstanceReference));
+      Contract.Ensures(!(Contract.Result<ITypeReference>() is ISpecializedNestedTypeReference));
 
       var genericTypeInstance = type as IGenericTypeInstanceReference;
       if (genericTypeInstance != null) return TypeHelper.UninstantiateAndUnspecialize(genericTypeInstance.GenericType);
@@ -1085,6 +1087,8 @@ namespace Microsoft.Cci {
       if (genericTypeParameter != null) return TypeHelper.GetDefiningUnit(genericTypeParameter.DefiningType);
       IGenericMethodParameter/*?*/ genericMethodParameter = typeDefinition as IGenericMethodParameter;
       if (genericMethodParameter != null) return TypeHelper.GetDefiningUnit(genericMethodParameter.DefiningMethod.ContainingType.ResolvedType);
+      IFunctionPointer/*?*/ functionPointer = typeDefinition as IFunctionPointer;
+      if (functionPointer != null) return TypeHelper.GetDefiningUnit(functionPointer.Type.ResolvedType);
       Contract.Assume(false);
       return Dummy.Unit;
     }
@@ -1116,6 +1120,8 @@ namespace Microsoft.Cci {
       if (genericTypeParameterReference != null) return TypeHelper.GetDefiningUnitReference(genericTypeParameterReference.DefiningType);
       IGenericMethodParameterReference/*?*/ genericMethodParameterReference = typeReference as IGenericMethodParameterReference;
       if (genericMethodParameterReference != null) return TypeHelper.GetDefiningUnitReference(genericMethodParameterReference.DefiningMethod.ContainingType);
+      IFunctionPointerTypeReference/*?*/ functionPointerTypeReference = typeReference as IFunctionPointerTypeReference;
+      if (functionPointerTypeReference != null) return TypeHelper.GetDefiningUnitReference(functionPointerTypeReference.Type);
       Contract.Assume(false);
       return Dummy.UnitReference;
     }
@@ -1464,7 +1470,6 @@ namespace Microsoft.Cci {
     public static string GetTypeName(ITypeReference type) {
       Contract.Requires(type != null);
       Contract.Ensures(Contract.Result<string>() != null);
-      Contract.Ensures(Contract.Result<string>() != null);
 
       return TypeHelper.GetTypeName(type, NameFormattingOptions.None);
     }
@@ -1475,7 +1480,6 @@ namespace Microsoft.Cci {
     [Pure]
     public static string GetTypeName(ITypeReference type, NameFormattingOptions formattingOptions) {
       Contract.Requires(type != null);
-      Contract.Ensures(Contract.Result<string>() != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
       return (new TypeNameFormatter()).GetTypeName(type, formattingOptions);

@@ -713,7 +713,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.fileAlignment = 512;
       this.ilOnly = true;
       this.StrongNameSigned = false;
-      this.NativeEntryPoint = false;
+      this.Prefers32bits = false;
       this.kind = ModuleKind.DynamicallyLinkedLibrary;
       this.linkerMajorVersion = 6;
       this.linkerMinorVersion = 0;
@@ -770,7 +770,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.fileAlignment = module.FileAlignment;
       this.ilOnly = module.ILOnly;
       this.strongNameSigned = module.StrongNameSigned;
-      this.nativeEntryPoint = module.NativeEntryPoint;
+      this.prefers32bits = module.Prefers32bits;
       this.kind = module.Kind;
       this.linkerMajorVersion = module.LinkerMajorVersion;
       this.linkerMinorVersion = module.LinkerMinorVersion;
@@ -941,14 +941,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     bool strongNameSigned;
 
     /// <summary>
-    /// True if the module has a native entry point.
+    /// If set, the module is platform independent but prefers to be loaded in a 32-bit process for performance reasons.
     /// </summary>
     /// <value></value>
-    public bool NativeEntryPoint {
-      get { return this.nativeEntryPoint; }
-      set { this.nativeEntryPoint = value; }
+    public bool Prefers32bits {
+      get { return this.prefers32bits; }
+      set { this.prefers32bits = value; }
     }
-    bool nativeEntryPoint;
+    bool prefers32bits;
 
     /// <summary>
     /// The kind of metadata stored in this module. For example whether this module is an executable or a manifest resource file.

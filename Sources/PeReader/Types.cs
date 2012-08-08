@@ -1416,13 +1416,14 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   internal abstract class TypeBase : ScopedContainerMetadataObject<ITypeDefinitionMember, ITypeDefinitionMember, ITypeDefinition>, IMetadataReaderNamedTypeReference, INamedTypeDefinition {
     internal readonly IName TypeName;
     internal readonly uint TypeDefRowId;
-    internal readonly TypeDefFlags TypeDefFlags;
+    internal TypeDefFlags TypeDefFlags;
     internal ITypeReference/*?*/ baseTypeReference;
     uint interfaceRowIdStart;
     uint interfaceRowIdEnd;
     protected byte initFlags;
     internal const byte BaseInitFlag = 0x01;
     internal const byte EnumInited = 0x02;
+    internal const byte InheritTypeParametersInited = 0x04;
 
     protected TypeBase(
       PEFileToObjectModel peFileToObjectModel,
@@ -2189,6 +2190,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       visitor.Visit((INestedTypeReference)this);
     }
 
+    public virtual bool DoesNotInheritGenericParameters {
+      get { return false; }
+    }
+
     public override ITypeReference/*?*/ UnderlyingType {
       get {
         if ((this.initFlags & TypeBase.EnumInited) != TypeBase.EnumInited) {
@@ -2368,6 +2373,38 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.GenericParamRowIdEnd = genericParamRowIdEnd;
     }
 
+    public override bool DoesNotInheritGenericParameters {
+      get {
+        if ((this.initFlags & TypeBase.InheritTypeParametersInited) != TypeBase.InheritTypeParametersInited) {
+          this.initFlags |= TypeBase.InheritTypeParametersInited;
+          if (this.ContainingParametersAreNotAPrefixOfOwnParameters())
+            this.TypeDefFlags |= TypeDefFlags.DoesNotInheritTypeParameters;
+        }
+        return (this.TypeDefFlags & TypeDefFlags.DoesNotInheritTypeParameters) == TypeDefFlags.DoesNotInheritTypeParameters;
+      }
+    }
+
+    private bool ContainingParametersAreNotAPrefixOfOwnParameters() {
+      var parentCount = this.ParentGenericTypeParameterCardinality;
+      if (parentCount == 0) return false;
+      var thisCount = this.GenericTypeParameterCardinality;
+      if (thisCount < parentCount) return true;
+      for (ushort i = 0; i < parentCount; i++) {
+        var ownPar = this.PEFileToObjectModel.GetGenericTypeParamAtRow(this.GenericParamRowIdStart+i, this);
+        var parentPar = this.OwningModuleType.GetGenericTypeParameterFromOrdinal(i) as GenericParameter;
+        if (ownPar == null || parentPar == null) return true;
+        if (ownPar.GenericParameterFlags != parentPar.GenericParameterFlags) return true;
+        var ownParamConstraintCount = ownPar.GenericParamConstraintCount;
+        if (ownParamConstraintCount != parentPar.GenericParamConstraintCount) return true;
+        for (uint genParamIter = 0; genParamIter < ownParamConstraintCount; genParamIter++) {
+          uint ownToken = this.PEFileToObjectModel.PEFileReader.GenericParamConstraintTable.GetConstraint(ownPar.GenericParamConstraintRowIDStart+genParamIter);
+          uint parentToken = this.PEFileToObjectModel.PEFileReader.GenericParamConstraintTable.GetConstraint(parentPar.GenericParamConstraintRowIDStart+genParamIter);
+          if (ownToken != parentToken) return true;
+        }
+      }
+      return false;
+    }
+    
     public override IName MangledTypeName {
       get {
         return this.MangledName;
@@ -2376,8 +2413,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public override IEnumerable<IGenericTypeParameter> GenericParameters {
       get {
+        ushort offset = this.DoesNotInheritGenericParameters ? (ushort)0 : this.OwningModuleType.GenericTypeParameterCardinality;
         uint genericRowIdEnd = this.GenericParamRowIdEnd;
-        for (uint genericParamIter = this.GenericParamRowIdStart + this.OwningModuleType.GenericTypeParameterCardinality; genericParamIter < genericRowIdEnd; ++genericParamIter) {
+        for (uint genericParamIter = this.GenericParamRowIdStart + offset; genericParamIter < genericRowIdEnd; ++genericParamIter) {
           GenericTypeParameter/*?*/ mgtp = this.PEFileToObjectModel.GetGenericTypeParamAtRow(genericParamIter, this);
           yield return mgtp == null ? Dummy.GenericTypeParameter : mgtp;
         }
@@ -2428,7 +2466,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       return new GenericTypeInstanceReference(nominalType, IteratorHelper.GetReadonly(genericArgumentsReferences), this.PEFileToObjectModel.InternFactory);
     }
 
-
     public override ushort GenericTypeParameterCardinality {
       get { return (ushort)(this.GenericParamRowIdEnd - this.GenericParamRowIdStart); }
     }
@@ -2444,7 +2481,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         //  TODO: MD Error
         return null;
       }
-      if (genericParamOrdinal < this.ParentGenericTypeParameterCardinality)
+      if (genericParamOrdinal < this.ParentGenericTypeParameterCardinality && !this.DoesNotInheritGenericParameters)
         return this.OwningModuleType.GetGenericTypeParameterFromOrdinal(genericParamOrdinal);
       uint genericRowId = this.GenericParamRowIdStart + genericParamOrdinal;
       return this.PEFileToObjectModel.GetGenericTypeParamAtRow(genericRowId, this);
@@ -3200,7 +3237,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   internal abstract class GenericParameter : SimpleStructuralType, IGenericParameter {
     protected readonly ushort GenericParameterOrdinality;
-    protected readonly GenericParamFlags GenericParameterFlags;
+    internal readonly GenericParamFlags GenericParameterFlags;
     protected readonly IName GenericParameterName;
     internal readonly uint GenericParameterRowId;
     uint genericParamConstraintRowIDStart;
@@ -3567,19 +3604,18 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return TokenTypeIds.ExportedType | this.ExportedTypeRowId; }
     }
 
-    internal INamedTypeDefinition/*?*/ Resolve(PEFileToObjectModel startingPeFileToObjectModel) {
-      if (startingPeFileToObjectModel == this.PEFileToObjectModel) return null;
-      var tr = this.aliasTypeReference = this.PEFileToObjectModel.GetReferenceToAliasedType(this, startingPeFileToObjectModel);
-      if (tr == null) return null;
-      return tr.ResolvedType;
-    }
-
     #region IAliasForType Members
 
     public INamedTypeReference AliasedType {
       get {
-        if (this.aliasTypeReference == null)
-          this.aliasTypeReference = this.PEFileToObjectModel.GetReferenceToAliasedType(this)??Dummy.NamedTypeReference;
+        if (this.aliasTypeReference == null || this.aliasTypeReference is Dummy) { //if it is a Dummy, perhaps it is being resolved by another thread.
+          lock (GlobalLock.LockingObject) {
+            if (this.aliasTypeReference == null) { //if it is a Dummy, it can't be resolved.
+              this.aliasTypeReference = Dummy.NamedTypeReference; //guard against circular alias chains
+              this.aliasTypeReference = this.PEFileToObjectModel.GetReferenceToAliasedType(this)??Dummy.NamedTypeReference;
+            }
+          }
+        }
         return this.aliasTypeReference;
       }
     }

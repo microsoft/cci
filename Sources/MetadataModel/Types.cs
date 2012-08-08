@@ -2435,6 +2435,13 @@ namespace Microsoft.Cci {
   public interface INestedTypeDefinition : INamedTypeDefinition, ITypeDefinitionMember, INestedTypeReference {
 
     /// <summary>
+    /// If true, the type does not inherit generic parameters from its containing type.
+    /// </summary>
+    bool DoesNotInheritGenericParameters {
+      get;
+    }
+
+    /// <summary>
     /// The number of generic parameters. Zero if the type is not generic.
     /// </summary>
     new ushort GenericParameterCount { get; }
@@ -2463,6 +2470,10 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> BaseClasses {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool DoesNotInheritGenericParameters {
       get { throw new NotImplementedException(); }
     }
 
@@ -2923,6 +2934,10 @@ namespace Microsoft.Cci {
     }
 
     public IEnumerable<ITypeReference> BaseClasses {
+      get { throw new NotImplementedException(); }
+    }
+
+    public bool DoesNotInheritGenericParameters {
       get { throw new NotImplementedException(); }
     }
 

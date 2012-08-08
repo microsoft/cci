@@ -420,8 +420,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return (this.Cor20Flags & COR20Flags.StrongNameSigned) == COR20Flags.StrongNameSigned; }
     }
 
-    bool IModule.NativeEntryPoint {
-      get { return (this.Cor20Flags & COR20Flags.NativeEntryPoint) == COR20Flags.NativeEntryPoint; }
+    bool IModule.Prefers32bits {
+      get { return (this.Cor20Flags & (COR20Flags.Bit32Required|COR20Flags.Prefers32bits)) == (COR20Flags.Bit32Required|COR20Flags.Prefers32bits); }
     }
 
     ModuleKind IModule.Kind {
@@ -469,7 +469,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     bool IModule.Requires32bits {
-      get { return (this.Cor20Flags & COR20Flags.Bit32Required) == COR20Flags.Bit32Required; }
+      get { return (this.Cor20Flags & (COR20Flags.Bit32Required|COR20Flags.Prefers32bits)) == COR20Flags.Bit32Required; }
     }
 
     bool IModule.Requires64bits {

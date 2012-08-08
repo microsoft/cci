@@ -786,7 +786,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       this.referenceRewrites[methodReference] = mutableMethodReference;
       this.RewriteChildren(mutableMethodReference);
-      return methodReference;
+      return mutableMethodReference;
     }
 
     /// <summary>

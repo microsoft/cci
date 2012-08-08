@@ -296,7 +296,8 @@ namespace Microsoft.Cci.Analysis {
         case OperationCode.Calli:
           var funcPointer = instruction.Operation.Value as IFunctionPointerTypeReference;
           Contract.Assume(funcPointer != null); //This is an informally specified property of the Metadata model.
-          this.stack.Pop(); //The function pointer
+          var fp = this.stack.Pop(); //The function pointer
+          fp.Type = funcPointer;
           numArguments = IteratorHelper.EnumerableCount(funcPointer.Parameters);
           for (var i = numArguments; i > 0; i--)
             this.stack.Pop();

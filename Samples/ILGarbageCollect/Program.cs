@@ -112,7 +112,9 @@ namespace ILGarbageCollect {
 
         WholeProgram wholeProgram = new WholeProgram(rootAssemblies, host);
 
-        string reportPath = options.report + @"\" + "ILGarbageCollectReport";
+        string reportPath = "ILGarbageCollectReport";
+        if (!String.IsNullOrWhiteSpace(options.report))
+          reportPath = options.report + @"\" + reportPath;
 
 
         bool performMark = (options.mode == RunMode.Mark || options.mode == RunMode.MarkAndSweep);

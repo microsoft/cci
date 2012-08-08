@@ -2685,6 +2685,13 @@ namespace Microsoft.Cci.Immutable {
     }
     IEnumerable<ITypeReference>/*?*/ baseClasses;
 
+    /// <summary>
+    /// If true, the type does not inherit generic parameters from its containing type.
+    /// </summary>
+    public bool DoesNotInheritGenericParameters {
+      get { return this.UnspecializedVersion.DoesNotInheritGenericParameters; }
+    }
+
     internal static ITypeReference DeepCopyTypeReference(INestedTypeReference nestedType, SpecializedNestedTypeDefinition targetContainer, IInternFactory internFactory) {
       var parentCopy = TypeDefinition.DeepCopyTypeReference(nestedType.ContainingType, targetContainer, internFactory);
       if (parentCopy == nestedType.ContainingType) return nestedType;

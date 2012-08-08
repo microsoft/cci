@@ -994,7 +994,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public bool NativeEntryPoint {
+    public bool Prefers32bits {
       get { return false; }
     }
 
@@ -3084,7 +3084,7 @@ namespace Microsoft.Cci {
       get { return false; }
     }
 
-    public bool NativeEntryPoint {
+    public bool Prefers32bits {
       get { return false; }
     }
 
@@ -4362,6 +4362,10 @@ namespace Microsoft.Cci {
 
     public IEnumerable<ITypeReference> BaseClasses {
       get { return Enumerable<ITypeReference>.Empty; }
+    }
+
+    public bool DoesNotInheritGenericParameters {
+      get { throw new NotImplementedException(); }
     }
 
     public IEnumerable<IEventDefinition> Events {
@@ -5839,6 +5843,10 @@ namespace Microsoft.Cci {
 
     public IEnumerable<ITypeReference> BaseClasses {
       get { return Enumerable<ITypeReference>.Empty; }
+    }
+
+    public bool DoesNotInheritGenericParameters {
+      get { throw new NotImplementedException(); }
     }
 
     public IEnumerable<IEventDefinition> Events {

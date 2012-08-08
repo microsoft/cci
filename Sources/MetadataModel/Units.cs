@@ -217,7 +217,7 @@ namespace Microsoft.Cci {
       get { throw new NotImplementedException(); }
     }
 
-    public bool NativeEntryPoint {
+    public bool Prefers32bits {
       get { throw new NotImplementedException(); }
     }
 
@@ -826,11 +826,6 @@ namespace Microsoft.Cci {
     bool StrongNameSigned { get; }
 
     /// <summary>
-    /// True if the module has a native entry point.
-    /// </summary>
-    bool NativeEntryPoint { get; }
-
-    /// <summary>
     /// The kind of metadata stored in this module. For example whether this module is an executable or a manifest resource file.
     /// </summary>
     ModuleKind Kind { get; }
@@ -844,6 +839,11 @@ namespace Microsoft.Cci {
     /// The first part of a two part version number indicating the version of the linker that produced this module. For example, the 0 in 8.0.
     /// </summary>
     byte LinkerMinorVersion { get; }
+
+    /// <summary>
+    /// Specifies the target CPU. 
+    /// </summary>
+    Machine Machine { get; }
 
     /// <summary>
     /// The first part of a two part version number indicating the version of the format used to persist this module. For example, the 1 in 1.0.
@@ -877,9 +877,9 @@ namespace Microsoft.Cci {
     System.Guid PersistentIdentifier { get; }
 
     /// <summary>
-    /// Specifies the target CPU. 
+    /// If set, the module is platform independent but prefers to be loaded in a 32-bit process for performance reasons.
     /// </summary>
-    Machine Machine { get; }
+    bool Prefers32bits { get; }
 
     /// <summary>
     /// If set, the module contains instructions or assumptions that are specific to the AMD 64 bit instruction set. Setting this flag to
@@ -1054,7 +1054,7 @@ namespace Microsoft.Cci {
       get { throw new NotImplementedException(); }
     }
 
-    public bool NativeEntryPoint {
+    public bool Prefers32bits {
       get { throw new NotImplementedException(); }
     }
 

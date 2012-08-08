@@ -159,7 +159,7 @@ namespace Microsoft.Cci.MetadataReader.PEFileFlags {
     Bit32Required = 0x00000002,
     ILLibrary = 0x00000004,
     StrongNameSigned = 0x00000008,
-    NativeEntryPoint = 0x00000010,
+    Prefers32bits = 0x00000010,
     TrackDebugData = 0x00010000,
   }
 
@@ -478,21 +478,21 @@ namespace Microsoft.Cci.MetadataReader.PEFileFlags {
     AbstractSemantics = 0x00000080,
     SealedSemantics = 0x00000100,
     SpecialNameSemantics = 0x00000400,
+    RTSpecialNameReserved = 0x00000800,
 
     ImportImplementation = 0x00001000,
     SerializableImplementation = 0x00002000,
     IsForeign = 0x00004000,
-    BeforeFieldInitImplementation = 0x00100000,
-    ForwarderImplementation = 0x00200000,
 
     AnsiString = 0x00000000,
     UnicodeString = 0x00010000,
     AutoCharString = 0x00020000,
-    CustomFormatString = 0x00020000,
     StringMask = 0x00030000,
-
-    RTSpecialNameReserved = 0x00000800,
     HasSecurityReserved = 0x00040000,
+
+    BeforeFieldInitImplementation = 0x00100000,
+    ForwarderImplementation = 0x00200000,
+    DoesNotInheritTypeParameters = 0x10000000
   }
 
   internal enum FieldFlags : ushort {

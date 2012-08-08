@@ -293,7 +293,7 @@ namespace ILGarbageCollect {
       this.worklist.Add(m);
     }
 
-    public void Run(IEnumerable<IMethodReference> roots) {
+      public void Run(IEnumerable<IMethodReference> roots) {
 
       // add the rootset
       foreach (var rootReference in roots) {
@@ -625,8 +625,37 @@ namespace ILGarbageCollect {
     public ISet<IReference> UnresolvedReferences() {
       return unresolvedReferences;
     }
-  }
 
+    // Filter all methods in methodref by those that ILGC says are reachable.
+    public IEnumerable<IMethodReference> GetMethodCallees(IMethodReference methodref) {
+        Contract.Requires(methodref != null);
+        Contract.Requires(!(methodref is Dummy));
+        //Contract.Requires(this.methods.Count > 0); // we have at least 1 method in the reachable set
+
+        // use a set to remove potential duplicates.
+        ISet<IMethodDefinition> calls = new HashSet<IMethodDefinition>(new MethodDefinitionEqualityComparer());
+
+        // get unspecialized definition of this method reference
+        IMethodDefinition methoddef = GarbageCollectHelper.UnspecializeAndResolveMethodReference(methodref);        
+
+        IMethodSummarizer bestSummarizer = new CompleteBytecodeMethodSummarizer();
+        ReachabilitySummary summary = bestSummarizer.SummarizeMethod(methoddef, wholeProgram);
+
+
+        if (summary != null) {
+            foreach (var method in summary.NonvirtuallyCalledMethods) {
+                if (this.ReachableMethods().Contains(GarbageCollectHelper.UnspecializeAndResolveMethodReference(method as IMethodReference))) // && this.ReachableTypes().Contains(method.ContainingTypeDefinition))
+                    calls.Add(method);
+            }
+
+            foreach (var method in summary.VirtuallyCalledMethods)
+                if (this.ReachableMethods().Contains(GarbageCollectHelper.UnspecializeAndResolveMethodReference(method as IMethodReference)))// && this.ReachableTypes().Contains(method.ContainingTypeDefinition))
+                    calls.Add(method);
+        }
+
+        return calls;
+    }
+  }
   
 
   internal class VirtualDispatchDemand {

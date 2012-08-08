@@ -1102,8 +1102,13 @@ namespace Microsoft.Cci.Immutable {
     /// </summary>
     /// <value></value>
     public IMethodDefinition ResolvedMethod {
-      get { return new GenericMethodInstance(this.GenericMethod.ResolvedMethod, this.GenericArguments, this.InternFactory); }
+      get {
+        if (this.resolvedMethod == null)
+          this.resolvedMethod = new GenericMethodInstance(this.GenericMethod.ResolvedMethod, this.GenericArguments, this.InternFactory);
+        return this.resolvedMethod;
+      }
     }
+    IMethodDefinition resolvedMethod;
 
     /// <summary>
     /// Returns a key that is computed from the information in this reference and that distinguishes
@@ -2384,10 +2389,8 @@ namespace Microsoft.Cci.Immutable {
     object Specialize(IGenericMethodInstanceReference unspecialized, Dictionary<object, object> map) {
       var specializedMethod = (IMethodReference)this.Specialize(unspecialized.GenericMethod, map);
       var args = new List<ITypeReference>(unspecialized.GenericArguments);
-      for (int i = 0, n = args.Count; i < n; i++) {
-        var arg = TypeHelper.SpecializeTypeReference(args[i], unspecialized, this.internFactory);
-        args[i] = TypeHelper.SpecializeTypeReference(arg, this.containingMethod, this.internFactory);
-      }
+      for (int i = 0, n = args.Count; i < n; i++)
+        args[i] = TypeHelper.SpecializeTypeReference(args[i], this.containingMethod, this.internFactory);
       var specialized = new GenericMethodInstanceReference(specializedMethod, IteratorHelper.GetReadonly(args.ToArray()), this.internFactory);
       map.Add(unspecialized, specialized);
       return specialized;

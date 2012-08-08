@@ -54,7 +54,7 @@ namespace Microsoft.Cci {
     Hashtable<ILGeneratorLabel> labelFor = new Hashtable<ILGeneratorLabel>();
     readonly HashtableForUintValues<ILocalDefinition> localIndex = new HashtableForUintValues<ILocalDefinition>();
     readonly List<ILocalDefinition> localVariables = new List<ILocalDefinition>();
-    readonly Stack<ILocalScope> scopeStack = new Stack<ILocalScope>();
+    readonly Microsoft.Cci.ILGeneratorImplementation.Stack<ILocalScope> scopeStack = new Microsoft.Cci.ILGeneratorImplementation.Stack<ILocalScope>();
     IEnumerator<ILocalScope>/*?*/ scopeEnumerator;
     bool scopeEnumeratorIsValid;
     IEnumerator<ILocalScope>/*?*/ iteratorScopeEnumerator;

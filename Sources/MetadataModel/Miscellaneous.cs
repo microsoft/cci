@@ -29,6 +29,7 @@ namespace Microsoft.Cci {
     /// An empty enumerable of element type T.
     /// </summary>
     public static IEnumerable<T> Empty {
+      [ContractVerification(false)] //ensures unproven: Contract.ForAll(Contract.Result<IEnumerable<T>>(), x => x != null)
       get {
         Contract.Ensures(Contract.Result<IEnumerable<T>>() != null);
         Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<T>>(), x => x != null));
@@ -190,10 +191,16 @@ namespace Microsoft.Cci {
     sealed class ReaonlyOnlyArrayWrapper<T> : ICollection<T> {
 
       internal ReaonlyOnlyArrayWrapper(T[] array) {
+        Contract.Requires(array != null);
         this.array = array;
       }
 
       T[] array;
+
+      [ContractInvariantMethod]
+      private void ObjectInvariant() {
+        Contract.Invariant(this.array != null);
+      }
 
       public IEnumerator<T> GetEnumerator() {
         return new Enumerator(this.array);
@@ -206,6 +213,8 @@ namespace Microsoft.Cci {
       struct Enumerator : IEnumerator<T> {
 
         internal Enumerator(T[] array) {
+          Contract.Requires(array != null);
+
           this.array = array;
           this.index = -1;
         }
@@ -213,9 +222,15 @@ namespace Microsoft.Cci {
         T[] array;
         int index;
 
+        [ContractInvariantMethod]
+        private void ObjectInvariant() {
+          Contract.Invariant(this.array != null);
+        }
+
         #region IEnumerator<T> Members
 
         public T Current {
+          [ContractVerification(false)] 
           get { return this.array[this.index]; }
         }
 
@@ -255,12 +270,14 @@ namespace Microsoft.Cci {
         throw new InvalidOperationException();
       }
 
+      [ContractVerification(false)] //ensures unproven: !Contract.Result<bool>() || this.Count > 0
       public bool Contains(T item) {
         foreach (var elem in this.array) if (elem.Equals(item)) return true;
         return false;
       }
 
       public void CopyTo(T[] array, int arrayIndex) {
+        Contract.Assume(this.array.Length+arrayIndex <= array.Length);
         for (int i = 0, n = this.array.Length; i < n; i++)
           array[i+arrayIndex] = this.array[i];
       }
@@ -294,7 +311,7 @@ namespace Microsoft.Cci {
     /// Returns an enumerable that acts like cast on enumeration.
     /// </summary>
     /// <returns></returns>
-    [ContractVerification(false)]
+    [ContractVerification(false)] //ensures unproven: Contract.ForAll(Contract.Result<IEnumerable<TargetType>>(), x => x != null)
     public static IEnumerable<TargetType> GetConversionEnumerable<SourceType, TargetType>(IEnumerable<SourceType> sourceEnumeration) where SourceType : TargetType {
       Contract.Requires(sourceEnumeration != null);
       Contract.Requires(Contract.ForAll(sourceEnumeration, x => x != null));

@@ -1999,6 +1999,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public NestedTypeDefinition() {
       this.containingTypeDefinition = Dummy.TypeDefinition;
+      this.doesNotInheritGenericParameters = false;
     }
 
     /// <summary>
@@ -2013,6 +2014,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public void Copy(INestedTypeDefinition nestedTypeDefinition, IInternFactory internFactory) {
       ((ICopyFrom<INamedTypeDefinition>)this).Copy(nestedTypeDefinition, internFactory);
       this.containingTypeDefinition = nestedTypeDefinition.ContainingTypeDefinition;
+      this.doesNotInheritGenericParameters = nestedTypeDefinition.DoesNotInheritGenericParameters;
       this.Visibility = nestedTypeDefinition.Visibility;
     }
 
@@ -2025,6 +2027,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.containingTypeDefinition = value; }
     }
     ITypeDefinition containingTypeDefinition;
+
+    /// <summary>
+    /// If true, the type does not inherit generic parameters from its containing type.
+    /// </summary>
+    public bool DoesNotInheritGenericParameters {
+      get { return this.doesNotInheritGenericParameters; }
+      set { this.doesNotInheritGenericParameters = value; }
+    }
+    bool doesNotInheritGenericParameters;
 
     /// <summary>
     /// Indicates if the member is public or confined to its containing type, derived types and/or declaring assembly.

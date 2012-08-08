@@ -577,7 +577,7 @@ namespace Microsoft.Cci {
 
     private IEnumerable<IGenericTypeParameter>/*?*/ GetConsolidatedTypeParameters(ITypeDefinition typeDef) {
       INestedTypeDefinition/*?*/ nestedTypeDef = typeDef as INestedTypeDefinition;
-      if (nestedTypeDef == null) {
+      if (nestedTypeDef == null || nestedTypeDef.DoesNotInheritGenericParameters) {
         if (typeDef.IsGeneric) return typeDef.GenericParameters;
         return null;
       }
@@ -975,7 +975,7 @@ namespace Microsoft.Cci {
       if (this.module.ILOnly) result |= 1;
       if (this.module.Requires32bits) result |= 2;
       if (this.module.StrongNameSigned) result |= 8;
-      if (this.module.NativeEntryPoint) result |= 0x10;
+      if (this.module.Prefers32bits) result |= 0x12;
       if (this.module.TrackDebugData) result |= 0x10000;
       return result;
     }
@@ -1012,7 +1012,7 @@ namespace Microsoft.Cci {
           //TODO: error
           goto case PESectionKind.Text;
       }
-      if (sectionBlock.PESectionKind != PESectionKind.Text)
+      if (sectionBlock.PESectionKind != PESectionKind.Text && sectionBlock.Offset < uint.MaxValue)
         sectionWriter.BaseStream.Position = sectionBlock.Offset;
       uint result = sectionWriter.BaseStream.Position;
       sectionWriter.WriteBytes(new List<byte>(sectionBlock.Data).ToArray());
@@ -2609,13 +2609,14 @@ namespace Microsoft.Cci {
         MethodSemanticsRow r = new MethodSemanticsRow();
         r.Association = (propertyIndex<<1)|1;
         foreach (IMethodReference accessorMethod in propertyDef.Accessors) {
-          if (accessorMethod == propertyDef.Setter)
+          var accessorMethodInternedKey = accessorMethod.InternedKey;
+          if (propertyDef.Setter != null && accessorMethodInternedKey == propertyDef.Setter.InternedKey)
             r.Semantic = 0x0001;
-          else if (accessorMethod == propertyDef.Getter)
+          else if (propertyDef.Getter != null && accessorMethodInternedKey == propertyDef.Getter.InternedKey)
             r.Semantic = 0x0002;
           else
             r.Semantic = 0x0004;
-          r.Method = this.methodDefIndex[accessorMethod.InternedKey];
+          r.Method = this.methodDefIndex[accessorMethodInternedKey];
           r.OriginalIndex = i++;
           this.methodSemanticsTable.Add(r);
         }
@@ -2627,14 +2628,15 @@ namespace Microsoft.Cci {
         MethodSemanticsRow r = new MethodSemanticsRow();
         r.Association = eventIndex<<1;
         foreach (IMethodReference accessorMethod in eventDef.Accessors) {
+          var accessorMethodInternedKey = accessorMethod.InternedKey;
           r.Semantic = 0x0004;
-          if (accessorMethod == eventDef.Adder)
+          if (accessorMethodInternedKey == eventDef.Adder.InternedKey)
             r.Semantic = 0x0008;
-          else if (accessorMethod == eventDef.Remover)
+          else if (accessorMethodInternedKey == eventDef.Remover.InternedKey)
             r.Semantic = 0x0010;
-          else if (accessorMethod == eventDef.Caller)
+          else if (eventDef.Caller != null && accessorMethodInternedKey == eventDef.Caller.InternedKey)
             r.Semantic = 0x0020;
-          r.Method = this.methodDefIndex[accessorMethod.InternedKey];
+          r.Method = this.methodDefIndex[accessorMethodInternedKey];
           r.OriginalIndex = i++;
           this.methodSemanticsTable.Add(r);
         }

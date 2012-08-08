@@ -151,8 +151,10 @@ namespace Microsoft.Cci.Analysis {
           var pred = predecessorEdges[block.firstPredecessorEdge+i];
           Contract.Assume(pred != null);
           var a = pred;
-          while (a != block.immediateDominator) {
+          while (true) {
+            if (a == block.immediateDominator) break; //Any node that dominates node a will also dominate node block and hence block will not be in its dominance frontier.
             frontierFor.Add(a.Offset, block);
+            if (a == a.immediateDominator) break; //Since there are multiple roots, block can be its own immediate dominator while still having predecessors.
             a = (BasicBlock)a.immediateDominator;
             Contract.Assume(a != null);
           }
@@ -171,6 +173,8 @@ namespace Microsoft.Cci.Analysis {
 
     private void SetupImmediateDominators() {
       Contract.Ensures(this.immediateDominatorsAreInitialized);
+      //Note this is an adaptation of the algorithm in Cooper, Keith D.; Harvey, Timothy J.; and Kennedy, Ken (2001). A Simple, Fast Dominance Algorithm
+      //The big difference is that we deal with multiple roots at the same time.
 
       if (this.postOrder == null)
         this.SetupTraversalOrders();
@@ -203,8 +207,10 @@ namespace Microsoft.Cci.Analysis {
                 if (intersection.postOrderNumber > newIDom.postOrderNumber)
                   newIDom = intersection;
               } else {
-                if (predecessor.postOrderNumber > newIDom.postOrderNumber)
-                  newIDom = predecessor;
+                //This can happen when predecessor and newIDom are only reachable via distinct roots.
+                //We now have two distinct paths from a root to b. This means b is its own dominator.
+                b.immediateDominator = newIDom = b;
+                break;
               }
             }
           }
@@ -223,11 +229,15 @@ namespace Microsoft.Cci.Analysis {
 
       while (block1 != block2) {
         while (block1.postOrderNumber < block2.postOrderNumber) {
-          block1 = (BasicBlock)block1.immediateDominator; //The block with the smaller post order number cannot be a predecessor of the other block.
+          var block1dominator = block1.immediateDominator;
+          if (block1dominator == block1) return null; //block2 is its own dominator, which means it has no predecessors
+          block1 = (BasicBlock)block1dominator; //The block with the smaller post order number cannot be a predecessor of the other block.
           if (block1 == null) return null;
         }
         while (block2.postOrderNumber < block1.postOrderNumber) {
-          block2 = (BasicBlock)block2.immediateDominator; //The block with the smaller post order number cannot be a predecessor of the other block.
+          var block2dominator = block2.immediateDominator;
+          if (block2dominator == block2) return null; //block2 is its own dominator, which means it has no predecessors
+          block2 = (BasicBlock)block2dominator; //The block with the smaller post order number cannot be a predecessor of the other block.
           if (block2 == null) return null;
         }
       }

@@ -2771,7 +2771,6 @@ namespace Microsoft.Cci {
     /// Performs some computation with the given unit set.
     /// </summary>
     public virtual void Visit(IUnitSet unitSet) {
-      Contract.Requires(unitSet != null);
     }
 
     /// <summary>
