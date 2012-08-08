@@ -34,33 +34,38 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.sourceLocationProvider = sourceMethodBody.sourceLocationProvider;
       this.singleUseExpressionChecker = new SingleUseExpressionChecker();
       Contract.Assume(sourceMethodBody.ilMethodBody != null);
+      this.isVoidMethod = sourceMethodBody.ilMethodBody.MethodDefinition.Type.TypeCode == PrimitiveTypeCode.Void;
       while (block != null) {
         var n = block.Statements.Count;
         if (n > 0) {
           var nestedBlock = block.Statements[n-1] as BlockStatement;
           if (nestedBlock != null) { block = nestedBlock; continue; }
         }
-        if (n >= 2 && sourceMethodBody.ilMethodBody.MethodDefinition.Type.TypeCode != PrimitiveTypeCode.Void) {
+        if (n >= 2) { // && sourceMethodBody.ilMethodBody.MethodDefinition.Type.TypeCode != PrimitiveTypeCode.Void) {
           var labeledStatement = block.Statements[n-2] as LabeledStatement;
           if (labeledStatement == null && n >= 3 && block.Statements[n-2] is EmptyStatement) {
             labeledStatement = block.Statements[n-3] as LabeledStatement;
           }
           var returnStatement = block.Statements[n-1] as ReturnStatement;
           if (labeledStatement != null && returnStatement != null) {
-            var boundExpression = returnStatement.Expression as BoundExpression;
-            if (boundExpression != null) {
-              this.returnValueTemp = boundExpression.Definition as ILocalDefinition;
-              if (this.returnValueTemp != null) {
-                bool isCompilerGenerated = false;
-                if (this.sourceLocationProvider != null)
-                  this.sourceLocationProvider.GetSourceNameFor(this.returnValueTemp, out isCompilerGenerated);
-                if (isCompilerGenerated) {
-                  this.labelOfFinalReturn = labeledStatement.Label;
-                  this.finalBlock = block;
-                } else {
-                  this.returnValueTemp = null;
+            if (sourceMethodBody.ilMethodBody.MethodDefinition.Type.TypeCode != PrimitiveTypeCode.Void) {
+              var boundExpression = returnStatement.Expression as BoundExpression;
+              if (boundExpression != null) {
+                this.returnValueTemp = boundExpression.Definition as ILocalDefinition;
+                if (this.returnValueTemp != null) {
+                  bool isCompilerGenerated = false;
+                  if (this.sourceLocationProvider != null)
+                    this.sourceLocationProvider.GetSourceNameFor(this.returnValueTemp, out isCompilerGenerated);
+                  if (isCompilerGenerated) {
+                    this.labelOfFinalReturn = labeledStatement.Label;
+                    this.finalBlock = block;
+                  } else {
+                    this.returnValueTemp = null;
+                  }
                 }
               }
+            } else {
+              this.labelOfFinalReturn = labeledStatement.Label;
             }
           }
         }
@@ -82,6 +87,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     ISourceLocationProvider/*?*/ sourceLocationProvider;
     LabeledStatement labelImmediatelyFollowingCurrentBlock;
     IBlockStatement finalBlock;
+    bool isVoidMethod;
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
@@ -131,6 +137,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.ReplacePostBinopPattern(b) ||
       this.ReplacePropertyBinopPattern(b) ||
       this.ReplaceReturnViaGoto(b) ||
+      this.ReplaceReturnViaGotoInVoidMethods(b) ||
       this.ReplaceSelfAssignment(b) ||
       this.ReplaceShortCircuitAnd(b) ||
       this.ReplaceShortCircuitAnd2(b) ||
@@ -398,7 +405,9 @@ namespace Microsoft.Cci.ILToCodeModel {
         var conditional = new Conditional() { Condition = ifStatement.Condition, ResultIfTrue = pushTrueCase.ValueToPush, ResultIfFalse = pushFalseCase.ValueToPush };
         pushTrueCase.ValueToPush = TypeInferencer.FixUpType(conditional);
         pushTrueCase.Locations.AddRange(ifStatement.Locations);
-        statements.RemoveAt(i+6);
+        gotos = this.gotosThatTarget[(uint)endLabel.Label.UniqueKey];
+        gotos.Remove(gotoEnd);
+        if (gotos.Count == 0) statements.RemoveAt(i+6);
         statements.RemoveRange(i, 5);
         replacedPattern = true;
       }
@@ -463,12 +472,13 @@ namespace Microsoft.Cci.ILToCodeModel {
         var es1 = statements[i] as ExpressionStatement;
         if (es1 == null) continue;
         var setterCall = es1.Expression as MethodCall;
-        if (setterCall == null || setterCall.IsStaticCall || setterCall.IsJumpCall || setterCall.Arguments.Count != 1) continue;
+        if (setterCall == null || /*setterCall.IsStaticCall ||*/ setterCall.IsJumpCall || setterCall.Arguments.Count != 1) continue;
         var binaryOp = setterCall.Arguments[0] as BinaryOperation;
         if (binaryOp == null) continue;
         var getterCall = binaryOp.LeftOperand as MethodCall;
-        if (getterCall == null || getterCall.IsStaticCall || getterCall.IsJumpCall || getterCall.Arguments.Count != 0) continue;
-        if (!(getterCall.ThisArgument is IDupValue)) continue;
+        if (getterCall == null || /*getterCall.IsStaticCall ||*/ getterCall.IsJumpCall || getterCall.Arguments.Count != 0) continue;
+        if (!(setterCall.IsStaticCall == getterCall.IsStaticCall)) continue;
+        if (!setterCall.IsStaticCall && !(getterCall.ThisArgument is IDupValue)) continue;
         var setterName = setterCall.MethodToCall.Name.Value;
         var getterName = getterCall.MethodToCall.Name.Value;
         if (setterName.Length != getterName.Length || setterName.Length <= 4) continue;
@@ -477,11 +487,12 @@ namespace Microsoft.Cci.ILToCodeModel {
         var propertyNameStr = setterCall.MethodToCall.Name.Value.Substring(4);
         var propertyName = this.host.NameTable.GetNameFor(propertyNameStr);
         var property = new PropertyDefinition() {
-          CallingConvention = CallingConvention.HasThis, ContainingTypeDefinition = getterCall.MethodToCall.ContainingType.ResolvedType,
+          CallingConvention = setterCall.IsStaticCall ? CallingConvention.Default : CallingConvention.HasThis,
+          ContainingTypeDefinition = getterCall.MethodToCall.ContainingType.ResolvedType,
           Name = propertyName, Getter = getterCall.MethodToCall, Setter = setterCall.MethodToCall, Type = getterCall.Type
         };
         binaryOp.LeftOperand = new TargetExpression() {
-          Definition = property, Instance = setterCall.ThisArgument,
+          Definition = property, Instance = setterCall.IsStaticCall ? null : setterCall.ThisArgument,
           GetterIsVirtual = getterCall.IsVirtualCall, SetterIsVirtual = setterCall.IsVirtualCall,
           Type = getterCall.Type
         };
@@ -1108,6 +1119,24 @@ namespace Microsoft.Cci.ILToCodeModel {
       return replacedPattern;
     }
 
+    private bool ReplaceReturnViaGotoInVoidMethods(BlockStatement b) {
+      Contract.Requires(b != null);
+      if (!this.isVoidMethod) return false;
+      if (this.labelOfFinalReturn == null) return false;
+      bool replacedPattern = false;
+      var statements = b.Statements;
+      for (int i = 1; i < b.Statements.Count - 1; i++) {
+        var gotoStatement = statements[i] as GotoStatement;
+        if (gotoStatement == null) continue;
+        if (gotoStatement.TargetStatement.Label != this.labelOfFinalReturn) continue;
+        var gotos = this.gotosThatTarget[(uint)gotoStatement.TargetStatement.Label.UniqueKey];
+        if (gotos != null) gotos.Remove(gotoStatement);
+        statements[i] = new ReturnStatement();
+        replacedPattern = true;
+      }
+      return replacedPattern;
+    }
+
     private bool ReplaceSelfAssignment(BlockStatement b) {
       Contract.Requires(b != null);
       if (this.returnValueTemp == null) return false;
@@ -1211,7 +1240,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (this.numberOfReferencesToLocal[local] != (uint)j) continue;
         Contract.Assume(i + j < statements.Count); //i < statements.Count-1 and (j == 1 or the loop above established i+j < statements.Count-1)
         Contract.Assume(statements[i + j] != null);
-        if (this.singleAssignmentReferenceFinder.LocalCanBeReplacedIn(statements[i + j], local)) {
+        if (LocalFinder.LocalOccursIn(statements[i+j], local) && this.singleAssignmentReferenceFinder.LocalCanBeReplacedIn(statements[i + j], local)) {
           var newLocal = new LocalDefinition() {
             Name = this.host.NameTable.GetNameFor(local.Name.Value + "_prime"),
             MethodDefinition = local.MethodDefinition,
@@ -1243,7 +1272,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             statements.RemoveRange(i, j);
             replacedPattern = true;
           } else
-            Contract.Assume(false); // replacement should succeed since LocalCanBeReplacedIn returned true
+            Contract.Assume(false); // replacement should succeed since the combination of LocalOccursIn and LocalCanBeReplacedIn returned true
         }
       }
       return replacedPattern;
@@ -1271,6 +1300,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private static bool IsSetter(IMethodReference methodReference) {
+      Contract.Requires(methodReference != null);
       // can't check IsSpecialName unless we resolve, which we don't want to do
       return methodReference.Name.Value.StartsWith("set_")
         && methodReference.Type.TypeCode == PrimitiveTypeCode.Void;
@@ -1353,6 +1383,22 @@ namespace Microsoft.Cci.ILToCodeModel {
         replacedPattern = true;
       }
       return replacedPattern;
+    }
+  }
+
+  internal class LocalFinder : CodeTraverser {
+    bool found = false;
+    private ILocalDefinition local;
+    private LocalFinder(ILocalDefinition local) {
+      this.local = local;
+    }
+    public static bool LocalOccursIn(IStatement s, ILocalDefinition local) {
+      var lf = new LocalFinder(local);
+      lf.Traverse(s);
+      return lf.found;
+    }
+    public override void TraverseChildren(ILocalDefinition localDefinition) {
+      if (localDefinition == this.local) this.found = true;
     }
   }
 

@@ -626,9 +626,9 @@ namespace Microsoft.Cci.Ast {
     readonly IEnumerable<IModuleReference> moduleReferences;
 
     /// <summary>
-    /// True if the module has a native entry point.
+    /// If set, the module is platform independent but prefers to be loaded in a 32-bit process for performance reasons.
     /// </summary>
-    public bool NativeEntryPoint {
+    public bool Prefers32bits {
       get { return false; }
     }
 

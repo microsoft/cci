@@ -380,6 +380,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     private static void DeleteNops(BlockStatement block) {
+      Contract.Requires(block != null);
       var statements = block.Statements;
       var n = statements.Count;
       var numberOfStatementsToDelete = 0;
@@ -404,7 +405,9 @@ namespace Microsoft.Cci.ILToCodeModel {
         block.Statements = newStmts;
       }
     }
+
     private void DeleteLocalAssignedLocal(BlockStatement block) {
+      Contract.Requires(block != null);
       var statements = block.Statements;
       List<IStatement> newStatements = null;
       var n = statements.Count;
@@ -412,6 +415,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         var s = statements[i];
         ILocalDefinition local;
         if (IsAssignmentOfLocalToLocal(s, out local)) {
+          Contract.Assert(local != null);
           if (newStatements == null) {
             newStatements = new List<IStatement>(n - 1);
             for (int j = 0; j < i; j++) newStatements.Add(statements[j]);
@@ -429,7 +433,9 @@ namespace Microsoft.Cci.ILToCodeModel {
       if (newStatements != null)
         block.Statements = newStatements;
     }
+
     private static bool IsAssignmentOfLocalToLocal(IStatement s, out ILocalDefinition local) {
+      Contract.Ensures(!Contract.Result<bool>() || Contract.ValueAtReturn<ILocalDefinition>(out local) != null);
       var es = s as IExpressionStatement;
       if (es != null) {
         var assign = es.Expression as IAssignment;

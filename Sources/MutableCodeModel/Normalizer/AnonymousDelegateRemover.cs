@@ -226,6 +226,11 @@ namespace Microsoft.Cci.MutableCodeModel {
             }
           });
       }
+      if (this.method.IsConstructor) {
+        var offset = this.GetOffsetOfFirstStatementAfterBaseOrThisConstructorCall(body.Statements);
+        statements.AddRange(body.Statements.GetRange(0, offset));
+        body.Statements.RemoveRange(0, offset);
+      }
       //intialize the this argument field if that exists
       if (this.fieldReferencesForUseInsideThisMethod.TryGetValue(this.method, out fieldReference)) {
         statements.Add(
@@ -239,6 +244,26 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
       statements.AddRange(body.Statements);
       body.Statements = statements;
+    }
+
+    private int GetOffsetOfFirstStatementAfterBaseOrThisConstructorCall(List<IStatement> list) {
+      Contract.Requires(list != null);
+
+      for (int i = 0, count = list.Count; i < count; i++) {
+        var exprStat = list[i] as ExpressionStatement;
+        if (exprStat == null) continue;
+        var mcall = exprStat.Expression as MethodCall;
+        if (mcall == null) continue;
+        var method = mcall.MethodToCall.ResolvedMethod;
+        if (!method.IsConstructor) continue;
+        if (TypeHelper.TypesAreEquivalent(this.method.ContainingTypeDefinition, method.ContainingTypeDefinition))
+          return i + 1;
+        foreach (var baseClass in this.method.ContainingTypeDefinition.BaseClasses) {
+          if (TypeHelper.TypesAreEquivalent(baseClass, method.ContainingTypeDefinition))
+            return i+1;
+        }
+      }
+      return 0;
     }
 
     /// <summary>
@@ -417,7 +442,8 @@ namespace Microsoft.Cci.MutableCodeModel {
         LocalsAreZeroed = true
       };
       var counter = isPeerMethod ? this.helperMembers.Count : this.anonymousDelegateCounter++;
-      var prefix = isPeerMethod ? "<>p__" : "<>b__";
+      var prefix = "<"+this.method.Name.Value;
+      prefix += isPeerMethod ? ">p__" : ">b__";
       var method = new MethodDefinition() {
         ContainingTypeDefinition = isPeerMethod ? this.method.ContainingTypeDefinition : this.currentClosureClass,
         Name = this.host.NameTable.GetNameFor(prefix+counter),
@@ -508,6 +534,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     private void MakeDelegateMethodGeneric(MethodDefinition delegateMethod) {
       delegateMethod.CallingConvention |= CallingConvention.Generic;
+      var savedGenericMethodParameterMap = this.genericMethodParameterMap;
       this.genericMethodParameterMap = new Dictionary<ushort, IGenericParameterReference>();
       delegateMethod.GenericParameters = new List<IGenericMethodParameter>(this.method.GenericParameterCount);
       foreach (var genericParameter in this.method.GenericParameters) {
@@ -518,6 +545,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.genericMethodParameterMap.Add(genericParameter.Index, delPar);
       }
       new GenericParameterRewriter(this.host, this.genericMethodParameterMap).RewriteChildren(delegateMethod);
+      this.genericMethodParameterMap = savedGenericMethodParameterMap;
     }
 
     class GenericParameterRewriter : CodeRewriter {

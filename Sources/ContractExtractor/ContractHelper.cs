@@ -297,24 +297,6 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     /// <summary>
-    /// First, uninstantiates the method if it is a reference to a generic method.
-    /// Then, if the resulting method reference is specialized, the unspecialized
-    /// version is returned.
-    /// </summary>
-    public static IMethodReference UninstantiateAndUnspecialize(IMethodReference method) {
-      IMethodReference result = method;
-      IGenericMethodInstanceReference gmir = result as IGenericMethodInstanceReference;
-      if (gmir != null) {
-        result = gmir.GenericMethod;
-      }
-      ISpecializedMethodReference smr = result as ISpecializedMethodReference;
-      if (smr != null) {
-        result = smr.UnspecializedVersion;
-      }
-      return result;
-    }
-
-    /// <summary>
     /// 
     /// </summary>
     /// <param name="method"></param>
@@ -447,11 +429,11 @@ namespace Microsoft.Cci.MutableContracts {
       ITypeDefinition typeHoldingContractDefinition = GetTypeDefinitionFromAttribute(definingType, "System.Diagnostics.Contracts.ContractClassAttribute");
       if (typeHoldingContractDefinition == null) return null;
       if (definingType.IsInterface) {
-        var unspecializedMethodDefinition = UninstantiateAndUnspecialize(methodDefinition);
+        var unspecializedMethodDefinition = MemberHelper.UninstantiateAndUnspecialize(methodDefinition);
         definingType = unspecializedMethodDefinition.ResolvedMethod.ContainingTypeDefinition;
         #region Explicit Interface Implementations
         foreach (IMethodImplementation methodImplementation in typeHoldingContractDefinition.ExplicitImplementationOverrides) {
-          var implementedInterfaceMethod = UninstantiateAndUnspecialize(methodImplementation.ImplementedMethod);
+          var implementedInterfaceMethod = MemberHelper.UninstantiateAndUnspecialize(methodImplementation.ImplementedMethod);
           if (unspecializedMethodDefinition.InternedKey == implementedInterfaceMethod.InternedKey)
               return methodImplementation.ImplementingMethod.ResolvedMethod;
         }
@@ -481,7 +463,7 @@ namespace Microsoft.Cci.MutableContracts {
 
     private static bool ImplicitlyImplementsInterfaceMethod(IMethodDefinition contractClassMethod, IMethodDefinition ifaceMethod) {
       foreach (var ifm in ContractHelper.GetAllImplicitlyImplementedInterfaceMethods(contractClassMethod)) {
-        var unspec = UninstantiateAndUnspecialize(ifm);
+        var unspec = MemberHelper.UninstantiateAndUnspecialize(ifm);
         if (MemberHelper.MethodsAreEquivalent(unspec.ResolvedMethod, ifaceMethod)) return true;
       }
       return false;
@@ -622,7 +604,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// The namespace the attribute belongs to is ignored.
     /// </summary>
     public static ICustomAttribute/*?*/ IsModel(IMethodReference method) {
-      var mr = UninstantiateAndUnspecialize(method);
+      var mr = MemberHelper.UninstantiateAndUnspecialize(method);
       IMethodDefinition methodDefinition = mr.ResolvedMethod;
       if (methodDefinition is Dummy) return null;
       ICustomAttribute/*?*/ attr;
@@ -1231,7 +1213,7 @@ namespace Microsoft.Cci.MutableContracts {
         return mf.found;
       }
       public override void TraverseChildren(IMethodReference methodReference) {
-        var mr = ContractHelper.UninstantiateAndUnspecialize(methodReference);
+        var mr = MemberHelper.UninstantiateAndUnspecialize(methodReference);
         if (mr.InternedKey == (this.memberToFind as IMethodReference).InternedKey) {
           this.StopTraversal = true;
           this.found = true;
@@ -1260,7 +1242,7 @@ namespace Microsoft.Cci.MutableContracts {
         return rewriter.Rewrite(e);
       }
       public override IExpression Rewrite(IMethodCall methodCall) {
-        var mr = ContractHelper.UninstantiateAndUnspecialize(methodCall.MethodToCall);
+        var mr = MemberHelper.UninstantiateAndUnspecialize(methodCall.MethodToCall);
         if (mr.InternedKey == this.getter.InternedKey) {
           if (this.setter != null) {
             var p = IteratorHelper.First(this.setter.Parameters);

@@ -125,7 +125,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           var trycf = newStatements[i] as TryCatchFinallyStatement;
           if (trycf == null) continue;
           var followingBlock = newStatements[i+1] as DecompiledBlock;
-          if (followingBlock != null) this.RemoveUncondionalBranchesToLabelImmediatelyFollowing(trycf, followingBlock);
+          if (followingBlock != null) this.RemoveUnconditionalBranchesToLabelImmediatelyFollowing(trycf, followingBlock);
           this.ConsolidateScopes(trycf);
         }
       }
@@ -208,23 +208,20 @@ namespace Microsoft.Cci.ILToCodeModel {
       return false;
     }
 
-    private void RemoveUncondionalBranchesToLabelImmediatelyFollowing(TryCatchFinallyStatement trycf, DecompiledBlock followingBlock) {
+    private void RemoveUnconditionalBranchesToLabelImmediatelyFollowing(TryCatchFinallyStatement trycf, DecompiledBlock followingBlock) {
       Contract.Requires(trycf != null);
       while (followingBlock != null) {
-        while (true) {
-          if (followingBlock.Statements.Count == 0) return;
-          var label = followingBlock.Statements[0] as LabeledStatement;
-          if (label != null) {
-            this.unconditionalBranchRemover.StopTraversal = false;
-            this.unconditionalBranchRemover.targetLabel = label;
-            this.unconditionalBranchRemover.Traverse(trycf);
-            var gotos = this.gotosThatTarget.Find((uint)label.Label.UniqueKey);
-            if (gotos == null || gotos.Count == 0) {
-              followingBlock.Statements.RemoveAt(0);
-              continue;
-            }
+        if (followingBlock.Statements.Count == 0) return;
+        var label = followingBlock.Statements[0] as LabeledStatement;
+        if (label != null) {
+          this.unconditionalBranchRemover.StopTraversal = false;
+          this.unconditionalBranchRemover.targetLabel = label;
+          this.unconditionalBranchRemover.Traverse(trycf);
+          var gotos = this.gotosThatTarget.Find((uint)label.Label.UniqueKey);
+          if (gotos == null || gotos.Count == 0) {
+            followingBlock.Statements.RemoveAt(0);
           }
-          break;
+          return;
         }
         followingBlock = followingBlock.Statements[0] as DecompiledBlock;
       }
@@ -287,6 +284,7 @@ namespace Microsoft.Cci.ILToCodeModel {
 
     private ILocalDefinition ExtractExceptionContainer(DecompiledBlock nestedBlock, ITypeReference exceptionType) {
       Contract.Requires(nestedBlock != null);
+      Contract.Requires(exceptionType != null);
       Contract.Ensures(Contract.Result<ILocalDefinition>() != null);
 
       Contract.Assume(nestedBlock.Statements.Count > 0);

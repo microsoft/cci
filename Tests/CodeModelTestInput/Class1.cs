@@ -369,6 +369,27 @@ namespace CodeModelTestInput {
       return x;
     }
 
+    private static int StaticIntProperty {
+      get { return 3; }
+      set { }
+    }
+
+    public void Method48(int x) {
+      StaticIntProperty += x;
+      StaticIntProperty -= x;
+      StaticIntProperty *= x;
+      StaticIntProperty /= x;
+    }
+
+    public void Method49(bool b) {
+      try {
+        if (b) return;
+        Console.WriteLine("bar");
+      } finally {
+        Console.WriteLine("finally");
+      }
+    }
+
   }
 
   struct SomeStruct {

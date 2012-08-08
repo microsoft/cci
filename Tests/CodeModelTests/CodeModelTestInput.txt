@@ -847,12 +847,57 @@ namespace CodeModelTestInput
 
         }
 
+        public void Method48(int x)
+        {
+            CodeModelTestInput.Class1.StaticIntProperty = CodeModelTestInput.Class1.StaticIntProperty + x;
+            CodeModelTestInput.Class1.StaticIntProperty = CodeModelTestInput.Class1.StaticIntProperty - x;
+            CodeModelTestInput.Class1.StaticIntProperty = CodeModelTestInput.Class1.StaticIntProperty * x;
+            CodeModelTestInput.Class1.StaticIntProperty = CodeModelTestInput.Class1.StaticIntProperty / x;
+            return;
+
+        }
+
+        public void Method49(bool b)
+        {
+            try
+            {
+                if (b)
+                {
+                    goto IL_0029;
+                }
+                System.Console.WriteLine("bar");
+                goto IL_0028;
+            }
+            finally
+            {
+                System.Console.WriteLine("finally");
+            }
+        IL_0028:
+        IL_0029:
+            return;
+
+        }
+
         public Class1()
         {
             this.c = 0;
             this.object();
             return;
 
+        }
+
+        private static int StaticIntProperty
+        {
+            get
+            {
+                return 3;
+
+            }
+            set
+            {
+                return;
+
+            }
         }
 
         private int c;

@@ -34,7 +34,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <param name="host">An object representing the application that is hosting this rewriter. It is used to obtain access to some global
     /// objects and services such as the shared name table and the table for interning references.</param>
-    /// <param name="copyAndRewriteImmutableReferences">If true, the rewriter replaces frozen or immutable references with shallow copies.</param>
+    /// <param name="copyAndRewriteImmutableReferences">
+    /// If true, the rewriter replaces frozen or immutable references with shallow copies.
+    /// Mutable method definitions that are being used as method references are considered to be "frozen" and so also
+    /// get copied.
+    /// </param>
     public CodeRewriter(IMetadataHost host, bool copyAndRewriteImmutableReferences = false)
       : base(host, copyAndRewriteImmutableReferences) {
       this.dispatchingVisitor = new Dispatcher() { rewriter = this };

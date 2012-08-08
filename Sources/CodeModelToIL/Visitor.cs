@@ -194,12 +194,12 @@ namespace Microsoft.Cci {
     }
 
     private void LoadAddressOf(object container, IExpression/*?*/ instance, bool emitReadonlyPrefix) {
-      this.StackSize++;
       ILocalDefinition/*?*/ local = container as ILocalDefinition;
       if (local != null) {
         ushort localIndex = this.GetLocalIndex(local);
         if (localIndex <= byte.MaxValue) this.generator.Emit(OperationCode.Ldloca_S, local);
         else this.generator.Emit(OperationCode.Ldloca, local);
+        this.StackSize++;
         return;
       }
       IParameterDefinition/*?*/ parameter = container as IParameterDefinition;
@@ -207,13 +207,15 @@ namespace Microsoft.Cci {
         ushort parIndex = GetParameterIndex(parameter);
         if (parIndex <= byte.MaxValue) this.generator.Emit(OperationCode.Ldarga_S, parameter);
         else this.generator.Emit(OperationCode.Ldarga, parameter);
+        this.StackSize++;
         return;
       }
       IFieldReference/*?*/ field = container as IFieldReference;
       if (field != null) {
-        if (instance == null)
+        if (instance == null) {
           this.generator.Emit(OperationCode.Ldsflda, field);
-        else {
+          this.StackSize++;
+        } else {
           this.Traverse(instance);
           this.generator.Emit(OperationCode.Ldflda, field);
         }
@@ -226,15 +228,19 @@ namespace Microsoft.Cci {
         if (emitReadonlyPrefix)
           this.generator.Emit(OperationCode.Readonly_);
         IArrayTypeReference arrayType = (IArrayTypeReference)arrayIndexer.IndexedObject.Type;
-        if (arrayType.IsVector)
+        if (arrayType.IsVector) {
           this.generator.Emit(OperationCode.Ldelema, arrayType.ElementType);
-        else
+          this.StackSize--;
+        } else {
           this.generator.Emit(OperationCode.Array_Addr, arrayType);
+          this.StackSize -= (ushort)IteratorHelper.EnumerableCount(arrayIndexer.Indices);
+        }
         return;
       }
       IAddressDereference/*?*/ addressDereference = container as IAddressDereference;
       if (addressDereference != null) {
         this.Traverse(addressDereference.Address);
+        this.StackSize++;
         return;
       }
       IMethodReference/*?*/ method = container as IMethodReference;
@@ -244,11 +250,13 @@ namespace Microsoft.Cci {
           this.generator.Emit(OperationCode.Ldvirtftn, method);
         } else
           this.generator.Emit(OperationCode.Ldftn, method);
+        this.StackSize++;
         return;
       }
       IThisReference/*?*/ thisParameter = container as IThisReference;
       if (thisParameter != null) {
         this.generator.Emit(OperationCode.Ldarg_0);
+        this.StackSize++;
         return;
       }
       IAddressableExpression/*?*/ addressableExpression = container as IAddressableExpression;
@@ -341,7 +349,7 @@ namespace Microsoft.Cci {
       get { return this._stackSize; }
       set {
         this._stackSize = value; if (value > this.maximumStackSizeNeeded) maximumStackSizeNeeded = value;
-        if (value == ushort.MaxValue) { }
+        Contract.Assume(value <= ushort.MaxValue-20, "Probable stack underflow");
       }
     }
     ushort _stackSize;
@@ -464,7 +472,6 @@ namespace Microsoft.Cci {
       object container = addressOf.Expression.Definition;
       IExpression/*?*/ instance = addressOf.Expression.Instance;
       this.LoadAddressOf(container, instance, addressOf.ObjectControlsMutability);
-      this.StackSize++;
     }
 
     /// <summary>
@@ -564,6 +571,7 @@ namespace Microsoft.Cci {
         if (source is IDefaultValue && !local.Type.ResolvedType.IsReferenceType) {
           this.LoadAddressOf(local, null);
           this.generator.Emit(OperationCode.Initobj, local.Type);
+          this.StackSize--;
           if (!treatAsStatement) this.LoadLocal(local);
         } else {
           if (pushTargetRValue) {
@@ -587,6 +595,7 @@ namespace Microsoft.Cci {
         if (source is IDefaultValue && !parameter.Type.ResolvedType.IsReferenceType) {
           this.LoadAddressOf(parameter, null);
           this.generator.Emit(OperationCode.Initobj, parameter.Type);
+          this.StackSize--;
           if (!treatAsStatement) this.LoadParameter(parameter);
         } else {
           if (pushTargetRValue) {
@@ -627,16 +636,24 @@ namespace Microsoft.Cci {
             this.Traverse(target.Instance);
             if (pushTargetRValue) {
               this.generator.Emit(OperationCode.Dup);
-              this.generator.Emit(OperationCode.Ldfld, field);
               this.StackSize++;
-              if (!treatAsStatement && resultIsInitialTargetRValue) {
-                this.generator.Emit(OperationCode.Dup);
-                this.StackSize++;
-                temp = new TemporaryVariable(source.Type, this.method);
-                this.VisitAssignmentTo(temp);
-              }
             }
           }
+          if (pushTargetRValue) {
+            if (target.Instance != null)
+              this.generator.Emit(OperationCode.Ldfld, field);
+            else {
+              this.generator.Emit(OperationCode.Ldsfld, field);
+              this.StackSize++;
+            }
+            if (!treatAsStatement && resultIsInitialTargetRValue) {
+              this.generator.Emit(OperationCode.Dup);
+              this.StackSize++;
+              temp = new TemporaryVariable(source.Type, this.method);
+              this.VisitAssignmentTo(temp);
+            }
+          }
+          
           sourceTraverser(source);
           if (!treatAsStatement && !resultIsInitialTargetRValue) {
             this.generator.Emit(OperationCode.Dup);
@@ -682,7 +699,7 @@ namespace Microsoft.Cci {
               this.generator.Emit(OperationCode.Ldelema);
             else
               this.generator.Emit(OperationCode.Array_Addr, arrayType);
-            this.generator.Emit(OperationCode.Dup);
+            this.generator.Emit(OperationCode.Dup); this.StackSize++;
             this.LoadIndirect(arrayType.ElementType);
             if (!treatAsStatement && resultIsInitialTargetRValue) {
               this.generator.Emit(OperationCode.Dup);
@@ -703,10 +720,11 @@ namespace Microsoft.Cci {
           } else {
             if (arrayType.IsVector)
               this.StoreVectorElement(arrayType.ElementType);
-            else
+            else {
               this.generator.Emit(OperationCode.Array_Set, arrayType);
+              this.StackSize-=(ushort)(IteratorHelper.EnumerableCount(arrayIndexer.Indices)+2);
+            }
           }
-          this.StackSize-=(ushort)(IteratorHelper.EnumerableCount(arrayIndexer.Indices)+2);
           if (temp != null) this.LoadLocal(temp);
         }
         return;
@@ -738,6 +756,7 @@ namespace Microsoft.Cci {
           ILocalDefinition/*?*/ temp = null;
           if (pushTargetRValue) {
             this.generator.Emit(OperationCode.Dup);
+            this.StackSize++;
             if (addressDereference.IsUnaligned)
               this.generator.Emit(OperationCode.Unaligned_, addressDereference.Alignment);
             if (addressDereference.IsVolatile)
@@ -772,9 +791,11 @@ namespace Microsoft.Cci {
         if (pushTargetRValue) {
           if (!propertyDefinition.IsStatic) {
             this.generator.Emit(OperationCode.Dup);
+            this.StackSize++;
             this.generator.Emit(target.GetterIsVirtual ? OperationCode.Callvirt : OperationCode.Call, propertyDefinition.Getter);
           } else {
             this.generator.Emit(OperationCode.Call, propertyDefinition.Getter);
+            this.StackSize++;
           }
           if (!treatAsStatement && resultIsInitialTargetRValue) {
             this.generator.Emit(OperationCode.Dup);
@@ -792,8 +813,10 @@ namespace Microsoft.Cci {
         }
         if (!propertyDefinition.IsStatic) {
           this.generator.Emit(target.SetterIsVirtual ? OperationCode.Callvirt : OperationCode.Call, propertyDefinition.Setter);
+          this.StackSize -= 2;
         } else {
           this.generator.Emit(OperationCode.Call, propertyDefinition.Setter);
+          this.StackSize--;
         }
         if (temp != null) this.LoadLocal(temp);
         return;
@@ -822,11 +845,13 @@ namespace Microsoft.Cci {
         default:
           if (elementTypeReference.IsValueType || elementTypeReference is IGenericParameterReference) {
             this.generator.Emit(OperationCode.Stelem, elementTypeReference);
+            this.StackSize -= 3;
             return;
           }
           opcode = OperationCode.Stelem_Ref; break;
       }
       this.generator.Emit(opcode);
+      this.StackSize -= 3;
     }
 
     private void VisitAssignmentTo(IAddressDereference addressDereference) {
@@ -1029,8 +1054,10 @@ namespace Microsoft.Cci {
       if (!(catchClause.ExceptionContainer is Dummy)) {
         this.generator.AddVariableToCurrentScope(catchClause.ExceptionContainer);
         this.VisitAssignmentTo(catchClause.ExceptionContainer);
-      } else
+      } else {
         this.generator.Emit(OperationCode.Pop);
+        this.StackSize--;
+      }
       this.lastStatementWasUnconditionalTransfer = false;
       this.Traverse(catchClause.Body);
       if (!this.lastStatementWasUnconditionalTransfer)
@@ -1099,14 +1126,21 @@ namespace Microsoft.Cci {
     public override void TraverseChildren(IConditionalStatement conditionalStatement) {
       this.EmitSequencePoint(conditionalStatement.Condition.Locations);
       ILGeneratorLabel/*?*/ endif = null;
-      if (conditionalStatement.TrueBranch is IBreakStatement && !this.LabelIsOutsideCurrentExceptionBlock(this.currentBreakTarget))
+      var trueBranchDelta = 0;
+      ushort stackSizeAfterCondition = 0;
+      if (conditionalStatement.TrueBranch is IBreakStatement && !this.LabelIsOutsideCurrentExceptionBlock(this.currentBreakTarget)) {
         this.VisitBranchIfTrue(conditionalStatement.Condition, this.currentBreakTarget);
-      else if (conditionalStatement.TrueBranch is IContinueStatement &&  !this.LabelIsOutsideCurrentExceptionBlock(this.currentContinueTarget))
+        stackSizeAfterCondition = this.StackSize;
+      } else if (conditionalStatement.TrueBranch is IContinueStatement && !this.LabelIsOutsideCurrentExceptionBlock(this.currentContinueTarget)) {
         this.VisitBranchIfTrue(conditionalStatement.Condition, this.currentContinueTarget);
-      else {
+        stackSizeAfterCondition = this.StackSize;
+      } else {
         ILGeneratorLabel falseCase = new ILGeneratorLabel();
         this.VisitBranchIfFalse(conditionalStatement.Condition, falseCase);
+        stackSizeAfterCondition = this.StackSize;
         this.Traverse(conditionalStatement.TrueBranch);
+        trueBranchDelta = this.StackSize - stackSizeAfterCondition;
+        this.StackSize = stackSizeAfterCondition;
         if (!this.lastStatementWasUnconditionalTransfer) {
           endif = new ILGeneratorLabel();
           this.generator.Emit(OperationCode.Br, endif);
@@ -1114,7 +1148,12 @@ namespace Microsoft.Cci {
         }
         this.generator.MarkLabel(falseCase);
       }
+      var beginningOfFalseBranch = this.StackSize;
       this.Traverse(conditionalStatement.FalseBranch);
+      var falseBranchDelta = this.StackSize - beginningOfFalseBranch;
+      Contract.Assume(trueBranchDelta == falseBranchDelta, "Conditional branches not balanced");
+      this.StackSize = (ushort)(stackSizeAfterCondition + falseBranchDelta);
+
       if (endif != null) {
         this.generator.MarkLabel(endif);
         this.lastStatementWasUnconditionalTransfer = false;
@@ -1508,6 +1547,7 @@ namespace Microsoft.Cci {
       this.EmitSequencePoint(forEachStatement.Variable.Locations);
       this.Traverse(forEachStatement.Collection);
       this.generator.Emit(OperationCode.Dup);
+      this.StackSize++;
       var array = new TemporaryVariable(arrayType, this.method);
       this.VisitAssignmentTo(array);
       var length = new TemporaryVariable(this.host.PlatformType.SystemInt32, this.method);
@@ -1537,6 +1577,7 @@ namespace Microsoft.Cci {
       this.LoadLocal(counter);
       this.LoadLocal(length);
       this.generator.Emit(OperationCode.Blt, loopStart);
+      this.StackSize -= 2;
       this.generator.MarkLabel(this.currentBreakTarget);
 
       this.currentBreakTarget = savedCurrentBreakTarget;
@@ -1741,6 +1782,7 @@ namespace Microsoft.Cci {
             if (localDeclarationStatement.InitialValue is IDefaultValue) {
               this.LoadAddressOf(localDeclarationStatement.LocalVariable, null);
               this.generator.Emit(OperationCode.Initobj, localDeclarationStatement.LocalVariable.Type);
+              this.StackSize--;
               this.lastStatementWasUnconditionalTransfer = false;
               return;
             }
@@ -2344,6 +2386,7 @@ namespace Microsoft.Cci {
         }
       }
       this.generator.Emit(OperationCode.Switch, labels);
+      this.StackSize--;
       this.generator.Emit(OperationCode.Br, defaultLabel);
       ILGeneratorLabel savedCurrentBreakTarget = this.currentBreakTarget;
       if (!foundDefault)
@@ -4674,7 +4717,27 @@ namespace Microsoft.Cci {
     public virtual void ConvertToIL(IBlockStatement body) {
       ITypeReference returnType = this.method.Type;
       new LabelAndTryBlockAssociater(this.mostNestedTryCatchFor).Traverse(body);
+      Contract.Assume(this.StackSize == 0);
       this.Traverse(body);
+      var ending = this.StackSize;
+      if (this.StackSize != 0) {
+        //
+        // Put a breakpoint here to find (potential) bugs in the decompiler and/or this traverser's
+        // tracking of the stack size. However, it cannot be enforced because when structured code
+        // is not completely decompiled, the resulting explicit stack instructions cannot be tracked
+        // accurately by this traverser. (Unstructured source code can also lead to this situation.)
+        //
+        // For instance, the following will result in both pushes being counted, but the stack size
+        // should increase only by one.
+        //
+        // if (c) goto L1;
+        // push e;
+        // goto L2;
+        // L1:
+        // push f;
+        // L2:
+        // an expression containing a pop value
+      }
       this.generator.MarkLabel(this.endOfMethod);
       if (this.returnLocal != null) {
         this.LoadLocal(this.returnLocal);

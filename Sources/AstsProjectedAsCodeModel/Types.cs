@@ -734,6 +734,13 @@ namespace Microsoft.Cci.Ast {
     }
 
     /// <summary>
+    /// If true, the type does not inherit generic parameters from its containing type.
+    /// </summary>
+    public bool DoesNotInheritGenericParameters {
+      get { return false; }
+    }
+
+    /// <summary>
     /// A collection of well known types that must be part of every target platform and that are fundamental to modeling compiled code.
     /// The types are obtained by querying the unit set of the compilation and thus can include types that are defined by the compilation itself.
     /// </summary>

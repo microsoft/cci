@@ -267,7 +267,27 @@ namespace Microsoft.Cci.Contracts {
       /// <param name="methodCall"></param>
       public override void RewriteChildren(MethodCall methodCall) {
         var mtc = methodCall.MethodToCall;
-        var ct = ContractHelper.UninstantiateAndUnspecialize(mtc).ContainingType;
+        var ct = MemberHelper.UninstantiateAndUnspecialize(mtc).ContainingType;
+
+        // For backward compatibility: it used to be that contract classes for interfaces were required
+        // to explicitly implement the interface methods. But that meant that every use of "this" (for
+        // a method call) in a contract had to be cast to the interface type. So it used to be allowed
+        // to have a local declaration "J jThis = this;" at the beginning of the contract section and
+        // to use that local as the receiver for method calls. But the extractor does not keep such
+        // local declaration statements. 
+        if (!methodCall.IsStaticCall) {
+          var be = methodCall.ThisArgument as IBoundExpression;
+          if (be != null) {
+            var localDefinition = be.Definition as ILocalDefinition;
+            if (localDefinition != null) {
+              if (TypeHelper.TypesAreEquivalent(TypeHelper.UninstantiateAndUnspecialize(localDefinition.Type), this.abstractType))
+                methodCall.ThisArgument = new ThisReference() {
+                  Type = this.abstractType,
+                };
+            }
+          }
+        }
+
         if (ct.InternedKey != this.contractClass.InternedKey) {
           base.RewriteChildren(methodCall);
           return;
@@ -281,7 +301,7 @@ namespace Microsoft.Cci.Contracts {
         return;
       }
 
-    }
+   }
 
   }
 

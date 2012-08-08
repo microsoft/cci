@@ -12685,25 +12685,31 @@ namespace Microsoft.Cci.Ast {
         } else
           result = qualName.Qualifier;
       }
-      if (!result.Type.IsReferenceType) {
-        if (result is ThisReference || result is BaseClassReference) return result;
-        if (this.IsStoredInWritableMemory(result))
-          result = new AddressOf(new AddressableExpression(result), result.SourceLocation);
-        else if (!TypeHelper.TypesAreEquivalent(this.ResolvedMethod.ContainingTypeDefinition, result.Type))
-          //The type will be System.Object, System.ValueType or System.Enum. Hence boxing is required.
-          result = new Conversion(result, this.PlatformType.SystemObject.ResolvedType, result.SourceLocation);
-        else {
-          var statements = new List<Statement>(1);
-          var block = new BlockStatement(statements, this.SourceLocation);
-          var temp = Expression.CreateInitializedLocalDeclarationAndAddDeclarationsStatementToList(result, statements);
-          var addressOf = new AddressOf(new AddressableExpression(new BoundExpression(result, temp)), result.SourceLocation);
-          var be = new BlockExpression(block, addressOf, this.SourceLocation);
-          be.SetContainingExpression(this);
-          result = be;
-        }
-        result.SetContainingExpression(this);
+      return this.GetAsReferenceIfValueType(result);
+    }
+
+    /// <summary>
+    /// If the type of the given expression is a value type, return an expression that results in a reference to the value that expression results in.
+    /// </summary>
+    protected Expression GetAsReferenceIfValueType(Expression expression) {
+      if (expression.Type.IsReferenceType) return expression;
+      if (expression is ThisReference || expression is BaseClassReference) return expression;
+      if (this.IsStoredInWritableMemory(expression))
+        expression = new AddressOf(new AddressableExpression(expression), expression.SourceLocation);
+      else if (!TypeHelper.TypesAreEquivalent(this.ResolvedMethod.ContainingTypeDefinition, expression.Type))
+        //The type will be System.Object, System.ValueType or System.Enum. Hence boxing is required.
+        expression = new Conversion(expression, this.PlatformType.SystemObject.ResolvedType, expression.SourceLocation);
+      else {
+        var statements = new List<Statement>(1);
+        var block = new BlockStatement(statements, this.SourceLocation);
+        var temp = Expression.CreateInitializedLocalDeclarationAndAddDeclarationsStatementToList(expression, statements);
+        var addressOf = new AddressOf(new AddressableExpression(new BoundExpression(expression, temp)), expression.SourceLocation);
+        var be = new BlockExpression(block, addressOf, this.SourceLocation);
+        be.SetContainingExpression(this);
+        expression = be;
       }
-      return result;
+      expression.SetContainingExpression(this);
+      return expression;
     }
 
     /// <summary>
@@ -16357,13 +16363,16 @@ namespace Microsoft.Cci.Ast {
       if (field != null && this.Helper.UseCompileTimeValueOfField(field)) return this.cachedProjection = CompileTimeConstant.For(field.CompileTimeValue, this);
       IPropertyDefinition/*?*/ property = boundDefinition as IPropertyDefinition;
       if (property != null) {
+        Expression e;
         if (property.Getter != null) {
           if (property.Getter.ResolvedMethod.IsStatic)
-            return this.cachedProjection = new ResolvedMethodCall(property.Getter.ResolvedMethod, new List<Expression>(0), this.SourceLocation);
+            e = new ResolvedMethodCall(property.Getter.ResolvedMethod, new List<Expression>(0), this.SourceLocation);
           else
-            return this.cachedProjection = new ResolvedMethodCall(property.Getter.ResolvedMethod, this.Qualifier, new List<Expression>(0), this.SourceLocation);
-        }
-        return this.cachedProjection = new DummyExpression(this.SourceLocation);
+            e = new ResolvedMethodCall(property.Getter.ResolvedMethod, this.Qualifier, new List<Expression>(0), this.SourceLocation);
+        } else 
+          e = new DummyExpression(this.SourceLocation);
+        e.SetContainingExpression(this);
+        return this.cachedProjection = (IExpression)e;
       }
       if (boundDefinition is IEventDefinition) return this.cachedProjection = new DummyExpression(this.SourceLocation); //TODO: is this right?
       if (boundDefinition == null) boundDefinition = Dummy.Field;
@@ -17544,11 +17553,13 @@ namespace Microsoft.Cci.Ast {
       get
         //^^ requires !this.ResolvedMethod.IsStatic;
       {
-        //^ assume this.thisArgument != null;
-        return this.thisArgument;
+        if (this.convertedThisArgument == null)
+          this.convertedThisArgument = this.GetAsReferenceIfValueType(this.thisArgument);
+        return this.convertedThisArgument;
       }
     }
     readonly Expression/*?*/ thisArgument;
+    Expression/*?*/ convertedThisArgument;
 
   }
 
