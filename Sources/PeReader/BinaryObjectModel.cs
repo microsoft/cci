@@ -29,7 +29,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   /// Represents a metadata entity. This has an associated Token Value...
   /// This is used in maintaining type spec cache.
   /// </summary>
-  internal abstract class MetadataObject : IReference, IMetadataObjectWithToken {
+  internal abstract class MetadataObject : IReference, IMetadataObjectWithToken, ITokenDecoder {
 
     internal PEFileToObjectModel PEFileToObjectModel;
 
@@ -83,6 +83,15 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     #endregion
+
+    #region ITokenDecoder Members
+
+    public object GetObjectForToken(uint token) {
+      return this.PEFileToObjectModel.GetReferenceForToken(this, token);
+    }
+
+    #endregion
+
   }
 
   /// <summary>
@@ -1936,7 +1945,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     #endregion
   }
 
-  internal abstract class MethodDefinition : TypeMember, IMethodDefinition, ITokenDecoder {
+  internal abstract class MethodDefinition : TypeMember, IMethodDefinition {
     internal readonly uint MethodDefRowId;
     internal MethodFlags MethodFlags;
     internal MethodImplFlags MethodImplFlags;
@@ -2320,13 +2329,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #endregion
 
-    #region ITokenDecoder Members
-
-    public object GetObjectForToken(uint token) {
-      return this.PEFileToObjectModel.GetReferenceForToken(this, token);
-    }
-
-    #endregion
   }
 
   internal class NonGenericMethod : MethodDefinition {
