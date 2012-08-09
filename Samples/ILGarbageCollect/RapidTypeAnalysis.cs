@@ -52,8 +52,10 @@ namespace ILGarbageCollect {
     private readonly HashSet<ITypeDefinition> unspecializedTypesPassedAsTypeVariables;
 
     private readonly AnalysisReasons analysisReasons = new AnalysisReasons();
+    private bool finishedAnalysis;
 
     public RapidTypeAnalysis(WholeProgram wholeProgram, TargetProfile profile) {
+      Contract.Ensures(!this.FinishedAnalysis);
 
       this.types = new HashSet<ITypeDefinition>(new TypeDefinitionEqualityComparer());
       this.methods = new HashSet<IMethodDefinition>(new MethodDefinitionEqualityComparer());
@@ -201,7 +203,6 @@ namespace ILGarbageCollect {
       Contract.Assert(implementationsOfFinalizeForT.Count() == 1);
 
       // t-devinc: Need to to add reason for this
-
       this.AddToWorklist(GarbageCollectHelper.UnspecializeAndResolveMethodReference(implementationsOfFinalizeForT.First()));
     }
 
@@ -294,6 +295,8 @@ namespace ILGarbageCollect {
     }
 
       public void Run(IEnumerable<IMethodReference> roots) {
+        Contract.Requires(!this.FinishedAnalysis);
+        Contract.Ensures(this.FinishedAnalysis);
 
       // add the rootset
       foreach (var rootReference in roots) {
@@ -354,6 +357,7 @@ namespace ILGarbageCollect {
 
 
       //Console.WriteLine("Used flow-based summarizer for {0}/{1} methods", countUsedFlowBasedSummarizer, ReachableMethods().Count());
+      this.finishedAnalysis = true;
 
     }
 
@@ -630,7 +634,7 @@ namespace ILGarbageCollect {
     public IEnumerable<IMethodReference> GetMethodCallees(IMethodReference methodref) {
         Contract.Requires(methodref != null);
         Contract.Requires(!(methodref is Dummy));
-        //Contract.Requires(this.methods.Count > 0); // we have at least 1 method in the reachable set
+        Contract.Requires(this.FinishedAnalysis);
 
         // use a set to remove potential duplicates.
         ISet<IMethodDefinition> calls = new HashSet<IMethodDefinition>(new MethodDefinitionEqualityComparer());
@@ -655,6 +659,8 @@ namespace ILGarbageCollect {
 
         return calls;
     }
+
+    public bool FinishedAnalysis { get { return this.finishedAnalysis; } }
   }
   
 

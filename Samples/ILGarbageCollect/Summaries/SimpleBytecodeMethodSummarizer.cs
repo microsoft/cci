@@ -11,12 +11,77 @@ using ILGarbageCollect.Mark;
 
 namespace ILGarbageCollect.Summaries {
 
+    internal class CompleteBytecodeMethodSummarizer : IMethodSummarizer {
+        public CompleteBytecodeMethodSummarizer() { }
+
+        public ReachabilitySummary SummarizeMethod(IMethodDefinition method, WholeProgram wholeProgram) {
+
+            if (method.IsExternal == false && method.IsAbstract == false) {
+                ReachabilitySummary summary = new ReachabilitySummary();
+                IMethodDefinition target;
+
+
+                // foreach MSIL instruction in the method
+                foreach (var op in method.Body.Operations) {
+                    switch (op.OperationCode) {
+                        // non virtual method calls: just add static type
+                        case OperationCode.Newobj:
+                        case OperationCode.Call:
+                        case OperationCode.Calli:
+                            target = (op.Value as IMethodReference).ResolvedMethod;
+                            summary.NonvirtuallyCalledMethods.Add(target);
+                            break;
+
+                        case OperationCode.Ldvirtftn:
+                        case OperationCode.Callvirt:
+                            target = (op.Value as IMethodReference).ResolvedMethod;            
+
+                            if (target.IsVirtual == false) {
+                                summary.NonvirtuallyCalledMethods.Add(target);
+                            } else {
+                                ITypeDefinition typeDefiningTarget = target.ContainingTypeDefinition;                                
+                                IMethodDefinition targetUnspecialized = GarbageCollectHelper.UnspecializeAndResolveMethodReference(op.Value as IMethodReference);
+
+                                // find all possible implementations of virtual call
+                                foreach (ITypeDefinition subType in new ITypeDefinition[] { typeDefiningTarget }.Concat(wholeProgram.ClassHierarchy().AllSubClassesOfClass(typeDefiningTarget))) {
+                                    if (GarbageCollectHelper.TypeIsConstructable(subType)) {
+
+                                        // walk class hierarchy from subType up to (including) typeDefiningTarget, looking for targetUnspecialized.
+                                        ICollection<IMethodDefinition> implementationsOfMethodDefinitionForSubType = GarbageCollectHelper.Implements(subType, typeDefiningTarget, targetUnspecialized);
+
+                                        // we have to have found at least 1 implementation
+                                        Contract.Assert(implementationsOfMethodDefinitionForSubType.Count() > 0);
+
+                                        // add all of them as virtually called methods
+                                        foreach (IMethodDefinition implementationOfTarget in implementationsOfMethodDefinitionForSubType) {
+                                            summary.VirtuallyCalledMethods.Add(implementationOfTarget);
+                                        }
+                                    }
+                                }
+
+                            }
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+
+                return summary;
+            } else {
+                return null;
+            }
+        }
+    }
+
+
   internal class SimpleBytecodeMethodSummarizer : IMethodSummarizer {
     public SimpleBytecodeMethodSummarizer() {
 
     }
 
     public ReachabilitySummary SummarizeMethod(IMethodDefinition methodDefinition, WholeProgram wholeProgram) {
+        
       // if there is an implementation available (e.g. we can get to opcodes)
       if (methodDefinition.IsExternal == false && methodDefinition.IsAbstract == false) {
         BytecodeVisitor visitor = new BytecodeVisitor();
@@ -52,7 +117,7 @@ namespace ILGarbageCollect.Summaries {
             target = ResolveMethodReference(op.Value as IMethodReference);
 
             if (target != null) {
-              Contract.Assert(target != Dummy.Method && target != Dummy.SpecializedMethodDefinition);
+              Contract.Assert(!(target is Dummy));
 
               if (target.ContainingType is INamedTypeReference) {
                 //Console.WriteLine("Got newobj to {0}", ((INamedTypeReference)target.ContainingType).Name);
@@ -148,6 +213,7 @@ namespace ILGarbageCollect.Summaries {
               }
 
               if (target.IsVirtual) {
+                
                 summary.VirtuallyCalledMethods.Add(target);
               }
               else {
@@ -188,7 +254,7 @@ namespace ILGarbageCollect.Summaries {
       protected IMethodDefinition ResolveMethodReference(IMethodReference reference) {
         IMethodDefinition methodDefinition = reference.ResolvedMethod;
 
-        if (methodDefinition != Dummy.Method && methodDefinition != Dummy.SpecializedMethodDefinition) {
+        if (!(methodDefinition is Dummy)) {
           return methodDefinition;
         }
         else {
@@ -200,7 +266,7 @@ namespace ILGarbageCollect.Summaries {
       protected ITypeDefinition ResolveTypeReference(ITypeReference reference) {
         ITypeDefinition typeDefinition = reference.ResolvedType;
 
-        if (typeDefinition != Dummy.Type && typeDefinition != Dummy.SpecializedNestedTypeDefinition) {
+        if (!(typeDefinition is Dummy)) {
           return typeDefinition;
         }
         else {
@@ -212,7 +278,7 @@ namespace ILGarbageCollect.Summaries {
       protected IFieldDefinition ResolveFieldReference(IFieldReference reference) {
         IFieldDefinition fieldDefinition = reference.ResolvedField;
 
-        if (fieldDefinition != Dummy.Field && fieldDefinition != Dummy.SpecializedFieldDefinition) {
+        if (!(fieldDefinition is Dummy)) {
           return fieldDefinition;
         }
         else {

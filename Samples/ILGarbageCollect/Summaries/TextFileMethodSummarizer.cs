@@ -182,7 +182,7 @@ namespace ILGarbageCollect.Summaries {
 
             IMethodDefinition setterMethod = TypeHelper.GetMethod(constructorType, setterName, namedArgument.ArgumentValue.Type);
 
-            if (setterMethod != Dummy.Method) {
+            if (!(setterMethod is Dummy)) {
               // We treat this as a non-virtual call because we know the exact runtime-type of the attribute
               summary.NonvirtuallyCalledMethods.Add(setterMethod);
             }
