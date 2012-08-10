@@ -228,9 +228,14 @@ namespace Microsoft.Cci.ILToCodeModel {
             beforeBlock.Statements.Add(nb);
           } else if (nb.StartOffset < startOffset) {
             Contract.Assume(nb.EndOffset <= endOffset);  //nb starts before newNestedBlock but ends inside it.
-            Contract.Assume(!nb.IsLexicalScope); //lexical scopes are assumed to nest cleanly.
             Contract.Assume(beforeBlock != null);
-            this.SplitBlock(nb, startOffset, beforeBlock.Statements, newNestedBlock.Statements);
+            if (nb.IsLexicalScope) {
+              //Lexical scopes are assumed to nest cleanly. But the C# is not playing along when one using statement immediately follows another
+              //Well fix matters by making nb.EndOffset == startOffset
+              nb.EndOffset = startOffset;
+              beforeBlock.Statements.Add(nb);
+            } else
+              this.SplitBlock(nb, startOffset, beforeBlock.Statements, newNestedBlock.Statements);
           } else if (nb.EndOffset <= endOffset) {
             newNestedBlock.Statements.Add(nb);
           } else if (nb.StartOffset < endOffset) {
@@ -394,7 +399,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             DeleteNops(bs);
         }
       }
-      if (0 < numberOfStatementsToDelete){
+      if (0 < numberOfStatementsToDelete) {
         var newBlock = new BlockStatement();
         var newStmts = new List<IStatement>(n - numberOfStatementsToDelete);
         for (int i = 0; i < n; i++) {
