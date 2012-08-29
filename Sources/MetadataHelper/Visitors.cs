@@ -3940,6 +3940,11 @@ namespace Microsoft.Cci {
       typeMember.Dispatch(this.dispatchingVisitor);
     }
 
+    private void Traverse(ITypeMemberReference typeMemberReference) {
+      Contract.Requires(typeMemberReference != null);
+      typeMemberReference.DispatchAsReference(this.dispatchingVisitor);
+    }
+
     /// <summary>
     /// Traverses the specified type reference.
     /// </summary>
@@ -4299,6 +4304,18 @@ namespace Microsoft.Cci {
       Contract.Requires(securityAttributes != null);
       foreach (ISecurityAttribute securityAttribute in securityAttributes) {
         this.Traverse(securityAttribute);
+        if (this.stopTraversal) break;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the specified type member references.
+    /// </summary>
+    /// <remarks>Not used by the traverser itself.</remarks>
+    public void Traverse(IEnumerable<ITypeMemberReference> typeMemberReferences) {
+      Contract.Requires(typeMemberReferences != null);
+      foreach (ITypeMemberReference typeMemberReference in typeMemberReferences) {
+        this.Traverse(typeMemberReference);
         if (this.stopTraversal) break;
       }
     }

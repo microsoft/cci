@@ -181,6 +181,7 @@ namespace Microsoft.Cci.Analysis {
       var postOrder = this.postOrder;
       if (this.predecessorEdges == null)
         this.SetupPredecessorEdges();
+      foreach (var rootBlock in this.cfg.RootBlocks) rootBlock.immediateDominator = rootBlock;
       var predecessorEdges = this.predecessorEdges;
       var n = postOrder.Length;
       var changed = true;
@@ -189,6 +190,7 @@ namespace Microsoft.Cci.Analysis {
         for (int i = n-1; i >= 0; i--) { //We iterate in reverse post order so that a block always has its immediateDominator field filled in before we get to any of its successors.
           var b = postOrder[i];
           Contract.Assume(b != null);
+          if (b.immediateDominator == b) continue;
           if (b.predeccessorCount == 0) {
             b.immediateDominator = b;
             continue; 
@@ -278,6 +280,15 @@ namespace Microsoft.Cci.Analysis {
       foreach (var rootBlock in cfg.RootBlocks) {
         Contract.Assume(rootBlock != null);
         this.SetupTraversalOrders(rootBlock, alreadyTraversed, ref preorderCounter, ref postorderCounter);
+      }
+      Contract.Assume(preorderCounter == postorderCounter);
+      if (preorderCounter != n) {      
+        //Add unreachable blocks to traversal order, treating them as if they were roots.
+        foreach (var block in cfg.AllBlocks) {
+          Contract.Assume(block != null);
+          if (alreadyTraversed.Contains(block)) continue;
+          this.SetupTraversalOrders(block, alreadyTraversed, ref preorderCounter, ref postorderCounter);
+        }
       }
       Contract.Assume(this.postOrder != null);
       Contract.Assume(this.preOrder != null);

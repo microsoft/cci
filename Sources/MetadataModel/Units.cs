@@ -201,6 +201,18 @@ namespace Microsoft.Cci {
       throw new NotImplementedException();
     }
 
+    public IEnumerable<IGenericMethodInstanceReference> GetGenericMethodInstances() {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeReference> GetStructuralTypeInstances() {
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeMemberReference> GetStructuralTypeInstanceMembers() {
+      throw new NotImplementedException();
+    }
+
     public IEnumerable<ITypeReference> GetTypeReferences() {
       throw new NotImplementedException();
     }
@@ -802,6 +814,24 @@ namespace Microsoft.Cci {
     IEnumerable<INamedTypeDefinition> GetAllTypes();
 
     /// <summary>
+    /// Returns zero or more generic method instance references used directly or indirectly by the module.
+    /// Note that this collection is always empty when the module is produced by reading a CLR PE file.
+    /// </summary>
+    IEnumerable<IGenericMethodInstanceReference> GetGenericMethodInstances();
+
+    /// <summary>
+    /// Returns zero or more structural type instance references used in directly or indirectly by module (arrays, pointers and generic type instances are examples of structural type instances).
+    /// Note that this collection is always empty when the module is produced by reading a CLR PE file.
+    /// </summary>
+    IEnumerable<ITypeReference> GetStructuralTypeInstances();
+
+    /// <summary>
+    /// Returns zero or more type members whose containing types are structural type instances used directly or indirectly by the module.
+    /// Note that this collection is always empty when the module is produced by reading a CLR PE file.
+    /// </summary>
+    IEnumerable<ITypeMemberReference> GetStructuralTypeInstanceMembers();
+
+    /// <summary>
     /// Returns zero or more type references used in the module. If the module is produced by reading in a CLR PE file, then this will be the contents
     /// of the type reference table. If the module is produced some other way, the method may return an empty enumeration or an enumeration that is a
     /// subset of the type references actually used in the module. 
@@ -1033,6 +1063,21 @@ namespace Microsoft.Cci {
 
     public IEnumerable<INamedTypeDefinition> GetAllTypes() {
       Contract.Ensures(Contract.Result<IEnumerable<INamedTypeDefinition>>() != null);
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<IGenericMethodInstanceReference> GetGenericMethodInstances() {
+      Contract.Ensures(Contract.Result<IEnumerable<IGenericMethodInstanceReference>>() != null);
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeReference> GetStructuralTypeInstances() {
+      Contract.Ensures(Contract.Result<IEnumerable<ITypeReference>>() != null);
+      throw new NotImplementedException();
+    }
+
+    public IEnumerable<ITypeMemberReference> GetStructuralTypeInstanceMembers() {
+      Contract.Ensures(Contract.Result<IEnumerable<ITypeMemberReference>>() != null);
       throw new NotImplementedException();
     }
 

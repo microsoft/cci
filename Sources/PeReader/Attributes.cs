@@ -527,6 +527,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         containingNamespace = module.ResolvedModule.UnitNamespaceRoot;
       else
         containingNamespace = this.NamespaceName.Resolve(module.ResolvedModule);
+      if (containingNamespace == null) return null;
       foreach (var member in containingNamespace.GetMembersNamed(this.UnmangledTypeName, false)) {
         var t = member as INamedTypeDefinition;
         if (t != null && t.GenericParameterCount == this.GenericParameterCount) return t;

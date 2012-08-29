@@ -2396,11 +2396,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (ownPar.GenericParameterFlags != parentPar.GenericParameterFlags) return true;
         var ownParamConstraintCount = ownPar.GenericParamConstraintCount;
         if (ownParamConstraintCount != parentPar.GenericParamConstraintCount) return true;
-        for (uint genParamIter = 0; genParamIter < ownParamConstraintCount; genParamIter++) {
-          uint ownToken = this.PEFileToObjectModel.PEFileReader.GenericParamConstraintTable.GetConstraint(ownPar.GenericParamConstraintRowIDStart+genParamIter);
-          uint parentToken = this.PEFileToObjectModel.PEFileReader.GenericParamConstraintTable.GetConstraint(parentPar.GenericParamConstraintRowIDStart+genParamIter);
-          if (ownToken != parentToken) return true;
-        }
       }
       return false;
     }

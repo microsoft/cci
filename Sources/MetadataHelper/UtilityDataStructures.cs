@@ -477,8 +477,8 @@ namespace Microsoft.Cci.UtilityDataStructures {
   /// </summary>
   /// <typeparam name="InternalT"></typeparam>
   /// <typeparam name="Key"></typeparam>
-  public sealed class MultiHashtable<Key, InternalT> 
-    where Key : class 
+  public sealed class MultiHashtable<Key, InternalT>
+    where Key : class
     where InternalT : class {
 
     struct KeyValuePair {
@@ -1418,11 +1418,16 @@ namespace Microsoft.Cci.UtilityDataStructures {
 
       public DebugView(HashtableForUintValues<Key> hashTable) {
         var numEntries = hashTable.Count;
+        var sortedList = new SortedList<Key, uint>();
         this.entries = new KeyValuePair[numEntries];
         var len = hashTable.keyValueTable.Length;
-        var j = 0;
         for (int i = 0; i < len; i++) {
-          this.entries[j++] = hashTable.keyValueTable[i];
+          if (hashTable.keyValueTable[i].value > 0)
+            sortedList.Add(hashTable.keyValueTable[i].key, hashTable.keyValueTable[i].value);
+        }
+        var j = 0;
+        foreach (var entry in sortedList) {
+          this.entries[j++] = new KeyValuePair() { key = entry.Key, value = entry.Value };
         }
       }
 
@@ -1436,6 +1441,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
   /// Hashtable that can hold only single non null value per uint key.
   /// </summary>
   /// <typeparam name="InternalT"></typeparam>
+#if !__MonoCS__
+  [DebuggerTypeProxy(typeof(Hashtable<>.DebugView))]
+#endif
   public sealed class Hashtable<InternalT> where InternalT : class {
     /// <summary>
     /// 
@@ -1746,6 +1754,25 @@ namespace Microsoft.Cci.UtilityDataStructures {
         return new ValuesEnumerable(this);
       }
     }
+
+    internal class DebugView {
+
+      public DebugView(Hashtable<InternalT> hashTable) {
+        var numEntries = hashTable.Count;
+        this.entries = new KeyValuePair[numEntries];
+        var len = hashTable.keyValueTable.Length;
+        var j = 0;
+        for (int i = 0; i < len; i++) {
+          if (hashTable.keyValueTable[i].Value != null)
+            this.entries[j++] = hashTable.keyValueTable[i];
+        }
+        Array.Sort(this.entries, (x, y) => (int)x.Key - (int)y.Key);
+      }
+
+      [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+      public KeyValuePair[] entries;
+
+    }
   }
 
   /// <summary>
@@ -2003,10 +2030,22 @@ namespace Microsoft.Cci.UtilityDataStructures {
   /// <summary>
   /// Hashtable that can hold only single uint value per uint key.
   /// </summary>
+#if !__MonoCS__
+  [DebuggerTypeProxy(typeof(Hashtable.DebugView))]
+#endif
   public sealed class Hashtable {
-    struct KeyValuePair {
-      internal uint Key;
-      internal uint Value;
+    /// <summary>
+    /// 
+    /// </summary>
+    public struct KeyValuePair {
+      /// <summary>
+      /// 
+      /// </summary>
+      public uint Key;
+      /// <summary>
+      /// 
+      /// </summary>
+      public uint Value;
     }
     KeyValuePair[] keyValueTable;
     uint size; //always a power of two
@@ -2264,6 +2303,26 @@ namespace Microsoft.Cci.UtilityDataStructures {
         return new ValuesEnumerable(this);
       }
     }
+
+    internal class DebugView {
+
+      public DebugView(Hashtable hashTable) {
+        var numEntries = hashTable.Count;
+        this.entries = new KeyValuePair[numEntries*2];
+        var len = hashTable.keyValueTable.Length;
+        var j = 0;
+        for (int i = 0; i < len; i++) {
+          if (hashTable.keyValueTable[i].Value != 0)
+            this.entries[j++] = hashTable.keyValueTable[i];
+        }
+        Array.Sort(this.entries, (x, y) => (int)x.Key - (int)y.Key);
+      }
+
+      [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+      public KeyValuePair[] entries;
+
+    }
+
   }
 
   /// <summary>
@@ -2568,7 +2627,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
       var n = setToClone.elements.Length;
       this.elements = new object[n];
       for (int i = 0; i < n; i++)
-        this.elements[i] = setToClone.elements[i];     
+        this.elements[i] = setToClone.elements[i];
     }
 
     /// <summary>
@@ -2796,6 +2855,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
   /// <summary>
   /// A hash table used to keep track of a set of non zero uint values, providing methods to add values to the set and to determine if an value is a member of the set.
   /// </summary>
+#if !__MonoCS__
+  [DebuggerTypeProxy(typeof(SetOfUints.DebugView))]
+#endif
   public sealed class SetOfUints {
     uint[] elements;
     uint size;
@@ -3047,6 +3109,27 @@ namespace Microsoft.Cci.UtilityDataStructures {
         return new ValuesEnumerable(this);
       }
     }
+
+    internal class DebugView {
+
+      public DebugView(SetOfUints setOfUints) {
+        var numEntries = setOfUints.Count;
+        this.elements = new uint[numEntries];
+        var len = setOfUints.elements.Length;
+        var j = 0;
+        for (int i = 0; i < len; i++) {
+          var elem = setOfUints.elements[i];
+          if (elem != 0 && elem != uint.MaxValue)
+            this.elements[j++] = elem;
+        }
+        Array.Sort(this.elements, (x, y) => (int)x - (int)y);
+      }
+
+      [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+      readonly public uint[] elements;
+
+    }
+
   }
 
   /// <summary>
@@ -3054,7 +3137,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
   /// </summary>
   [ContractVerification(true)]
 #if !__MonoCS__
-  [DebuggerTypeProxy(typeof(Sublist<>.SublistView))]
+  [DebuggerTypeProxy(typeof(Sublist<>.DebugView))]
 #endif
   public struct Sublist<T> {
 
@@ -3093,9 +3176,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     }
 
 
-    internal class SublistView {
+    internal class DebugView {
 
-      public SublistView(Sublist<T> list) {
+      public DebugView(Sublist<T> list) {
         var numEntries = list.Count;
         this.elements = new T[numEntries];
         for (int i = 0; i < numEntries; i++) {

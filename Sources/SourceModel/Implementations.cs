@@ -38,6 +38,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Provides an abstraction over the application hosting compilers based on this framework.
   /// </summary>
+  [ContractVerification(false)]
   public abstract class SourceEditHostEnvironment : MetadataReaderHost, ISourceEditHost {
 
     /// <summary>
@@ -188,6 +189,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An object that describes an edit to a source file.
   /// </summary>
+  [ContractVerification(false)]
   public abstract class SourceDocumentEdit : ISourceDocumentEdit {
 
     /// <summary>
@@ -277,6 +279,8 @@ namespace Microsoft.Cci {
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
+      Contract.Invariant(this.sourceLocation != null);
+      Contract.Invariant(this.relatedLocations != null);
       Contract.Invariant(this.messageKey != null);
       Contract.Invariant(this.messageArguments != null);
     }
@@ -417,6 +421,7 @@ namespace Microsoft.Cci {
   /// An object that represents a source document that is the composition of an ordered enumeration of fragments from other source document.
   /// The document is parsed according to the rules of a particular language, such as C#, to produce an object model that can be obtained via the CompilationPart property.
   /// </summary>
+  [ContractVerification(false)]
   public abstract class CompositeSourceDocument : SourceDocument, IDerivedSourceDocument {
 
     /// <summary>
@@ -792,6 +797,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A source location that falls inside a region of text that originally came from another source document.
   /// </summary>
+  [ContractVerification(false)]
   public class IncludedSourceLocation : IIncludedSourceLocation {
 
     /// <summary>
@@ -1049,6 +1055,7 @@ namespace Microsoft.Cci {
   /// makes the wrapped source location appear as if it were a location in the document that was included.
   /// This is useful for error reporting. For editing, the wrapped location is better.
   /// </summary>
+  [ContractVerification(false)]
   public sealed class OriginalSourceLocation : IPrimarySourceLocation {
 
     /// <summary>
@@ -1149,6 +1156,7 @@ namespace Microsoft.Cci {
   /// An object that represents a source document that corresponds to a persistable artifact such as a file or an editor buffer.
   /// The document is parsed according to the rules of a particular language, such as C#, to produce an object model that can be obtained via the CompilationPart property.
   /// </summary>
+  [ContractVerification(false)]
   public abstract class PrimarySourceDocument : SourceDocument, IPrimarySourceDocument {
 
     /// <summary>
@@ -1677,6 +1685,7 @@ namespace Microsoft.Cci {
   /// An object that represents a source document.
   /// The document is parsed according to the rules of a particular language, such as C#, to produce an object model that can be obtained via the CompilationPart property.
   /// </summary>
+  [ContractVerification(false)]
   public abstract class SourceDocument : ISourceDocument {
 
     /// <summary>
@@ -1887,6 +1896,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An object that represents a primary source document that has a region of text that originally came from another source document.
   /// </summary>
+  [ContractVerification(false)]
   public sealed class SourceDocumentWithInclusion : IPrimarySourceDocument {
 
     /// <summary>
@@ -2147,6 +2157,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A range of source text that corresponds to an identifiable entity.
   /// </summary>
+  [ContractVerification(false)]
   public abstract class SourceLocation : ISourceLocation {
 
     /// <summary>
@@ -2329,6 +2340,7 @@ namespace Microsoft.Cci {
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
+      Contract.Invariant(this.derivedSourceDocument != null);
       //Contract.Invariant(this.Length <= this.SourceDocument.Length);
       //Contract.Invariant(this.StartIndex <= this.SourceDocument.Length);
       //Contract.Invariant(this.StartIndex+this.Length <= this.SourceDocument.Length);
@@ -2369,6 +2381,7 @@ namespace Microsoft.Cci {
     /// <param name="primarySourceDocument">The document containing the source text of which this location is a subrange.</param>
     /// <param name="startIndex">The character index of the first character of this location, when treating the source document as a single string.</param>
     /// <param name="length">The number of characters in this source location.</param>
+    [ContractVerification(false)]
     public PrimarySourceLocation(IPrimarySourceDocument primarySourceDocument, int startIndex, int length)
       : base(startIndex, length) {
       Contract.Requires(primarySourceDocument != null);
@@ -2382,6 +2395,7 @@ namespace Microsoft.Cci {
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
+      Contract.Invariant(this.primarySourceDocument != null);
       Contract.Invariant(this.Length <= this.PrimarySourceDocument.Length);
       Contract.Invariant(this.StartIndex <= this.PrimarySourceDocument.Length);
       Contract.Invariant(0 <= this.StartIndex+this.Length);
@@ -2468,6 +2482,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A source location that spans entire primary source document, but that delays computing this.Length until needed so that the document can be streamed.
   /// </summary>
+  [ContractVerification(false)]
   public sealed class SourceLocationSpanningEntirePrimaryDocument : PrimarySourceLocation {
 
     /// <summary>
@@ -2527,6 +2542,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A source location that spans entire derived source document, but that delays computing this.Length until needed so that the document can be streamed.
   /// </summary>
+  [ContractVerification(false)]
   public sealed class SourceLocationSpanningEntireDerivedSourceDocument : DerivedSourceLocation {
 
     /// <summary>
@@ -2585,6 +2601,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// Describes an edit to a compilation as being either the addition, deletion or modification of a definition.
   /// </summary>
+  [ContractVerification(false)]
   public sealed class EditDescriptor : IEditDescriptor {
 
     /// <summary>
@@ -2615,6 +2632,16 @@ namespace Microsoft.Cci {
       this.modifiedParent = modifiedParent;
       this.originalSourceDocument = originalSourceDocument;
       this.originalParent = originalParent;
+    }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.affectedDefinition != null);
+      Contract.Invariant(this.modifiedParent != null);
+      Contract.Invariant(this.modifiedSourceDocument != null);
+      Contract.Invariant(this.originalParent != null);
+      Contract.Invariant(this.originalSourceDocument != null);
+      Contract.Invariant(this.modifiedSourceDocument.IsUpdatedVersionOf(this.originalSourceDocument));
     }
 
     /// <summary>
@@ -2686,7 +2713,6 @@ namespace Microsoft.Cci {
     public SourceLocationBuilder(ISourceLocation sourceLocation) {
       Contract.Requires(sourceLocation != null);
       Contract.Ensures(this.SourceDocument == sourceLocation.SourceDocument);
-      Contract.Assume(sourceLocation.Length <= sourceLocation.SourceDocument.Length);
 
       this.sourceDocument = sourceLocation.SourceDocument;
       this.length = sourceLocation.Length;
@@ -2730,6 +2756,7 @@ namespace Microsoft.Cci {
     /// Make the smallest update to the current start index and/or length so that the value of this.GetSourceLocation resulting from a subsequent call will span the given source location.
     /// </summary>
     /// <param name="sourceLocation"></param>
+    [ContractVerification(false)]
     public void UpdateToSpan(ISourceLocation sourceLocation) {
       Contract.Requires(sourceLocation != null);
 
@@ -2884,6 +2911,12 @@ namespace Microsoft.Cci {
       this.synchronizationPoint = synchronizationPoint;
     }
 
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.document != null);
+      Contract.Invariant(this.synchronizationPoint != null);
+    }
+
     /// <summary>
     /// 
     /// </summary>
@@ -2915,6 +2948,11 @@ namespace Microsoft.Cci {
       Contract.Requires(synchronizationPointLocation != null);
 
       this.synchronizationPointLocation = synchronizationPointLocation;
+    }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.synchronizationPointLocation != null);
     }
 
     /// <summary>

@@ -1098,6 +1098,18 @@ namespace Microsoft.Cci {
       return Enumerable<INamedTypeDefinition>.Empty;
     }
 
+    public IEnumerable<IGenericMethodInstanceReference> GetGenericMethodInstances() {
+      return Enumerable<IGenericMethodInstanceReference>.Empty;
+    }
+
+    public IEnumerable<ITypeReference> GetStructuralTypeInstances() {
+      return Enumerable<ITypeReference>.Empty;
+    }
+
+    public IEnumerable<ITypeMemberReference> GetStructuralTypeInstanceMembers() {
+      return Enumerable<ITypeMemberReference>.Empty;
+    }
+
     public IEnumerable<ITypeReference> GetTypeReferences() {
       return Enumerable<ITypeReference>.Empty;
     }
@@ -3186,6 +3198,18 @@ namespace Microsoft.Cci {
 
     public IEnumerable<INamedTypeDefinition> GetAllTypes() {
       return Enumerable<INamedTypeDefinition>.Empty;
+    }
+
+    public IEnumerable<IGenericMethodInstanceReference> GetGenericMethodInstances() {
+      return Enumerable<IGenericMethodInstanceReference>.Empty;
+    }
+
+    public IEnumerable<ITypeReference> GetStructuralTypeInstances() {
+      return Enumerable<ITypeReference>.Empty;
+    }
+
+    public IEnumerable<ITypeMemberReference> GetStructuralTypeInstanceMembers() {
+      return Enumerable<ITypeMemberReference>.Empty;
     }
 
     public IEnumerable<ITypeReference> GetTypeReferences() {

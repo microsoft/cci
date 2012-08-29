@@ -441,6 +441,12 @@ namespace Microsoft.Cci {
       if (this.pdbWriter != null) this.pdbWriter.OpenTokenSourceLocationsScope();
       foreach (INamedTypeDefinition typeDef in this.module.GetAllTypes())
         this.CreateIndicesFor(typeDef);
+      foreach (IGenericMethodInstanceReference methodInstantiation in this.module.GetGenericMethodInstances())
+        this.GetMethodSpecIndex(methodInstantiation);
+      foreach (ITypeReference typeInstantiation in this.module.GetStructuralTypeInstances())
+        this.GetTypeSpecIndex(typeInstantiation);
+      foreach (ITypeMemberReference instantiatedTypeMethod in this.module.GetStructuralTypeInstanceMembers())
+        this.GetMemberRefIndex(instantiatedTypeMethod);
       if (this.pdbWriter != null) this.pdbWriter.CloseTokenSourceLocationsScope();
       //Only the second pass is necessary. The first helps to make type reference tokens be more like C#.
       new ReferenceIndexer(this, false).Traverse(this.module);
@@ -646,6 +652,7 @@ namespace Microsoft.Cci {
     private void CreateInitialTypeRefIndex() {
       Debug.Assert(!this.tableIndicesAreComplete);
       foreach (var typeRef in this.module.GetTypeReferences()) {
+        if (IsTypeSpecification(typeRef)) continue;
         this.GetTypeRefIndex(typeRef);
       }
     }

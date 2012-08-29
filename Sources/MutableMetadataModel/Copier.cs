@@ -1150,6 +1150,29 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Invariant(this.internFactory != null);
     }
 
+    /// <summary>
+    /// Returns a map from original definition objects to the copies that were made by this copier.
+    /// </summary>
+    public Hashtable<object, object> CopyFor {
+      get { return this.SubstituteCopiesForOriginals.DefinitionCache; }
+    }
+
+    /// <summary>
+    /// Returns a map from copied definition objects to the original definitions from which the copies were constructed.
+    /// </summary>
+    public Hashtable<object, object> OriginalFor {
+      get {
+        if (this.originalFor == null) {
+          var copyFor = this.SubstituteCopiesForOriginals.DefinitionCache;
+          var originalFor = this.originalFor = new Hashtable<object, object>(copyFor.Count);
+          foreach (var keyValPair in copyFor) {
+            originalFor[keyValPair.value] = keyValPair.key;
+          }
+        }
+        return this.originalFor;
+      }
+    }
+    Hashtable<object, object> originalFor;
 
     Substitutor SubstituteCopiesForOriginals {
       get {

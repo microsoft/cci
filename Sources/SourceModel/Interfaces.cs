@@ -31,6 +31,11 @@ namespace Microsoft.Cci {
       this.edits = edits;
     }
 
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.edits != null);
+    }
+
     /// <summary>
     /// A list of descriptors that collectively describe the edit that has caused this event.
     /// </summary>
@@ -1446,7 +1451,11 @@ namespace Microsoft.Cci {
     }
 
     public int StartIndex {
-      get { throw new NotImplementedException(); }
+      get {
+        Contract.Ensures(Contract.Result<int>() >= 0);
+        //Contract.Ensures(Contract.Result<int>() < this.SourceDocument.Length || Contract.Result<int>() == 0);
+        throw new NotImplementedException(); 
+      }
     }
 
     #endregion
@@ -1857,6 +1866,11 @@ namespace Microsoft.Cci {
     public SourceEditEventArgs(IEnumerable<ISourceDocumentEdit> edits) {
       Contract.Requires(edits != null);
       this.edits = edits;
+    }
+
+    [ContractInvariantMethod]
+    private void ObjectInvariant() {
+      Contract.Invariant(this.edits != null);
     }
 
     /// <summary>

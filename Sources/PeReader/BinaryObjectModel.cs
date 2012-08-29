@@ -541,6 +541,18 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       return this.PEFileToObjectModel.GetAllTypes();
     }
 
+    IEnumerable<IGenericMethodInstanceReference> IModule.GetGenericMethodInstances() {
+      return Enumerable<IGenericMethodInstanceReference>.Empty;
+    }
+
+    IEnumerable<ITypeReference> IModule.GetStructuralTypeInstances() {
+      return Enumerable<ITypeReference>.Empty;
+    }
+
+    IEnumerable<ITypeMemberReference> IModule.GetStructuralTypeInstanceMembers() {
+      return Enumerable<ITypeMemberReference>.Empty;
+    }
+
     IEnumerable<ITypeMemberReference> IModule.GetTypeMemberReferences() {
       return this.PEFileToObjectModel.GetMemberReferences();
     }

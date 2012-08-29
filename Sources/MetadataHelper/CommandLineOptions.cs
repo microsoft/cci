@@ -432,14 +432,24 @@ namespace Microsoft.Cci
       return success;
     }
 
+    /// <summary>
+    /// A delegate that represents the various TryParse methods from int, bool, etc.
+    /// </summary>
+    public delegate bool TryParseConverter<in TInput, TOutput>(TInput input, out TOutput output);
+
+    private bool TryParseValue<T>(TryParseConverter<string, T> tryParser, string argument, ref T result) {
+      return (argument != null) ? tryParser(argument, out result) : false;
+    }
+
     private object ParseValue(Type type, string argument, string option)
     {
       object result = null;
       if (type == typeof(bool))
       {
+        bool boolResult = false;
         if (argument != null)
         {
-          if (!ParseValue<bool>(Boolean.Parse, argument, ref result))
+          if (!TryParseValue<bool>(Boolean.TryParse, argument, ref boolResult))
           {
             // Allow "+/-" to turn on/off boolean options
             if (argument.Equals("-"))
@@ -455,6 +465,10 @@ namespace Microsoft.Cci
               AddError("option -{0} requires a bool argument", option);
             }
           }
+          else
+          {
+            result = boolResult;
+          }
         }
         else
         {
@@ -463,16 +477,21 @@ namespace Microsoft.Cci
       }
       else if (type == typeof(string))
       {
-        if (!ParseValue<string>(Identity, argument, ref result))
+        if (!ParseValue<string>(s => s, argument, ref result))
         {
           AddError("option -{0} requires a string argument", option);
         }
       }
       else if (type == typeof(int))
       {
-        if (!ParseValue<int>(Int32.Parse, argument, ref result))
+        int intResult = 0;
+        if (!TryParseValue<int>(Int32.TryParse, argument, ref intResult))
         {
           AddError("option -{0} requires an int argument", option);
+        }
+        else
+        {
+          result = intResult;
         }
       }
       else if (type.IsEnum)
@@ -696,8 +715,6 @@ namespace Microsoft.Cci
 
       return res;
     }
-
-    string Identity(string s) { return s; }
 
     Converter<string, object> ParseEnum(Type enumType)
     {

@@ -393,6 +393,9 @@ namespace Microsoft.Cci {
       /// Performs some computation with the given generic parameter.
       /// </summary>
       public void Visit(IGenericParameterReference genericParameterReference) {
+        var mfmv = this.validator.currentModule.MetadataFormatMajorVersion;
+        if (mfmv < 2)
+          this.ReportError(MetadataError.InvalidMetadataFormatVersionForGenerics, genericParameterReference, mfmv.ToString());
         this.Visit((ITypeReference)genericParameterReference);
       }
 
@@ -400,6 +403,9 @@ namespace Microsoft.Cci {
       /// Performs some computation with the given generic type instance reference.
       /// </summary>
       public void Visit(IGenericTypeInstanceReference genericTypeInstanceReference) {
+        var mfmv = this.validator.currentModule.MetadataFormatMajorVersion;
+        if (mfmv < 2)
+          this.ReportError(MetadataError.InvalidMetadataFormatVersionForGenerics, genericTypeInstanceReference, mfmv.ToString());
         this.Visit((ITypeReference)genericTypeInstanceReference);
       }
 
@@ -661,6 +667,11 @@ namespace Microsoft.Cci {
         this.CheckGenericMethodTypeParameterUniqueness(method);
         if (method.ReturnValueIsMarshalledExplicitly) {
         }
+        if (method.IsGeneric) {
+          var mfmv = this.validator.currentModule.MetadataFormatMajorVersion;
+          if (mfmv < 2)
+            this.ReportError(MetadataError.InvalidMetadataFormatVersionForGenerics, method, mfmv.ToString());
+        }
       }
 
       private void CheckGenericMethodTypeParameterUniqueness(IMethodDefinition methodDefinition) {
@@ -769,6 +780,7 @@ namespace Microsoft.Cci {
           else
             refsSeenSoFar.Add(assemblyReference.AssemblyIdentity, assemblyReference);
         }
+        //TODO: other kinds of refs?
         foreach (var typeMemberReference in module.GetTypeMemberReferences())
           this.Visit(typeMemberReference);
         foreach (var typeReference in module.GetTypeReferences())
@@ -1158,6 +1170,11 @@ namespace Microsoft.Cci {
         }
         if (typeDefinition.IsRuntimeSpecial && !typeDefinition.IsSpecialName)
           this.ReportError(MetadataError.RuntimeSpecialMustAlsoBeSpecialName, typeDefinition);
+        if (typeDefinition.IsGeneric) {
+          var mfmv = this.validator.currentModule.MetadataFormatMajorVersion;
+          if (mfmv < 2)
+            this.ReportError(MetadataError.InvalidMetadataFormatVersionForGenerics, typeDefinition, mfmv.ToString());
+        }
         this.CheckEventNameUniqueness(typeDefinition);
         this.CheckFieldUniqueness(typeDefinition);
         this.CheckInterfaceUniqueness(typeDefinition);
@@ -1697,6 +1714,10 @@ namespace Microsoft.Cci {
       /// The value of a IMetadataConstant instance must be a bool, char, number, string, or a null object. 
       /// </summary>
       InvalidMetadataConstant,
+      /// <summary>
+      /// Bad module metadata format version. Found '{0}', should be at least 2.
+      /// </summary>
+      InvalidMetadataFormatVersionForGenerics,
       /// <summary>
       /// The PInvokeCallingConvention property
       /// </summary>

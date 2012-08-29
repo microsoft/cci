@@ -2470,11 +2470,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public SpecializedNestedTypeReference() {
       this.unspecializedVersion = Dummy.NestedTypeDefinition;
+      Contract.Assume(!(this.unspecializedVersion.ContainingType is ISpecializedNestedTypeReference));
+      Contract.Assume(!(this.unspecializedVersion.ContainingType is IGenericTypeInstanceReference));
+      Contract.Assume(!(this.unspecializedVersion is ISpecializedNestedTypeReference));
     }
 
     [ContractInvariantMethod]
     void ObjectInvariant() {
       Contract.Invariant(this.unspecializedVersion != null);
+      Contract.Invariant(!(this.unspecializedVersion.ContainingType is ISpecializedNestedTypeReference));
+      Contract.Invariant(!(this.unspecializedVersion.ContainingType is IGenericTypeInstanceReference));
+      Contract.Invariant(!(this.unspecializedVersion is ISpecializedNestedTypeReference));
     }
 
     /// <summary>
@@ -2509,6 +2515,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       set {
         Contract.Requires(value != null);
         Contract.Requires(!this.IsFrozen);
+        Contract.Requires(!(value.ContainingType is ISpecializedNestedTypeReference));
+        Contract.Requires(!(value.ContainingType is IGenericTypeInstanceReference));
+        Contract.Requires(!(value is ISpecializedNestedTypeReference));
         this.unspecializedVersion = value;
       }
     }

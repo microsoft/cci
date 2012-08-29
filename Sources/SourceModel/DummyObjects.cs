@@ -325,6 +325,7 @@ namespace Microsoft.Cci {
 
   }
 
+  [ContractVerification(false)]
   internal sealed class DummySourceDocumentEdit : ISourceDocumentEdit {
 
     #region ISourceDocumentEdit Members
