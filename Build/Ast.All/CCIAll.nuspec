@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>1.0.9</version>
+    <version>1.0.12</version>
     <authors>hermanv@microsoft.com</authors>
     <owners />
     <licenseUrl>http://cciast.codeplex.com/license</licenseUrl>
@@ -69,6 +69,9 @@
     <file src="Microsoft.Cci.ReflectionEmitter.dll" target="lib\net40\Microsoft.Cci.ReflectionEmitter.dll" />
     <file src="Microsoft.Cci.ReflectionEmitter.pdb" target="lib\net40\Microsoft.Cci.ReflectionEmitter.pdb" />
     <file src="Microsoft.Cci.ReflectionEmitter.xml" target="lib\net40\Microsoft.Cci.ReflectionEmitter.xml" />
+    <file src="Microsoft.Cci.SourceEmitter.dll" target="lib\net40\Microsoft.Cci.SourceEmitter.dll" />
+    <file src="Microsoft.Cci.SourceEmitter.pdb" target="lib\net40\Microsoft.Cci.SourceEmitter.pdb" />
+    <file src="Microsoft.Cci.SourceEmitter.xml" target="lib\net40\Microsoft.Cci.SourceEmitter.xml" />
     <file src="Microsoft.Cci.SourceModel.dll" target="lib\net40\Microsoft.Cci.SourceModel.dll" />
     <file src="Microsoft.Cci.SourceModel.pdb" target="lib\net40\Microsoft.Cci.SourceModel.pdb" />
     <file src="Microsoft.Cci.SourceModel.xml" target="lib\net40\Microsoft.Cci.SourceModel.xml" />
@@ -79,6 +82,7 @@
     <file src="..\..\Sources\MutableCodeModel\*.cs" target="src\Ast\Sources\MutableCodeModel" />
     <file src="..\..\Sources\MutableCodeModel\Normalizer\*.cs" target="src\Ast\Sources\MutableCodeModel\Normalizer" />
     <file src="..\..\Sources\NewILToCodeModel\*.cs" target="src\Ast\Sources\NewILToCodeModel" />
+    <file src="..\..\Sources\SourceEmitter\*.cs" target="src\Ast\Sources\SourceEmitter" />
     <file src="..\..\Tests\CSharpSourceEmitter\*.cs" target="src\Ast\Tests\CSharpSourceEmitter" />
     <file src="..\..\Metadata\Sources\ControlAndDataFlowGraph\*.cs" target="src\Metadata\Sources\ControlAndDataFlowGraph" />
     <file src="..\..\Metadata\Sources\ILGenerator\*.cs" target="src\Metadata\Sources\ILGenerator" />

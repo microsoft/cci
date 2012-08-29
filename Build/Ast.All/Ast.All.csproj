@@ -103,6 +103,10 @@
       <Project>{A555D4CB-F16F-4049-A8CF-180B8A05C755}</Project>
       <Name>NewILToCodeModel</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Sources\SourceEmitter\SourceEmitter.csproj">
+      <Project>{584898C1-C197-4D9A-8231-90B41C2793C9}</Project>
+      <Name>SourceEmitter</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Tests\CSharpSourceEmitter\CSharpSourceEmitter.csproj">
       <Project>{A9103DDA-3A93-441A-8326-6EB20518C251}</Project>
       <Name>CSharpSourceEmitter</Name>
@@ -116,7 +120,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>nuget pack CCIAll.nuspec -Symbols
-nuget push CCI.1.0.9.nupkg</PostBuildEvent>
+nuget push CCI.1.0.12.nupkg</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>del *.* /q</PreBuildEvent>
