@@ -1151,8 +1151,27 @@ namespace Microsoft.Cci {
       var beginningOfFalseBranch = this.StackSize;
       this.Traverse(conditionalStatement.FalseBranch);
       var falseBranchDelta = this.StackSize - beginningOfFalseBranch;
-      Contract.Assume(trueBranchDelta == falseBranchDelta, "Conditional branches not balanced");
-      this.StackSize = (ushort)(stackSizeAfterCondition + falseBranchDelta);
+
+      if (trueBranchDelta != falseBranchDelta) {
+        //
+        // Put a breakpoint here to find (potential) bugs in the decompiler and/or this traverser's
+        // tracking of the stack size. However, it cannot be enforced because when structured code
+        // is not completely decompiled, the resulting explicit stack instructions cannot be tracked
+        // accurately by this traverser. (Unstructured source code can also lead to this situation.)
+        //
+        // For instance, the following will result in both pushes being counted, but the stack size
+        // should increase only by one.
+        //
+        // if (c) goto L1;
+        // push e;
+        // goto L2;
+        // L1:
+        // push f;
+        // L2:
+        // an expression containing a pop value
+      }
+
+      this.StackSize = (ushort)(stackSizeAfterCondition + Math.Max(trueBranchDelta, falseBranchDelta));
 
       if (endif != null) {
         this.generator.MarkLabel(endif);

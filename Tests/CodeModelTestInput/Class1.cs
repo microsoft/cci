@@ -390,6 +390,31 @@ namespace CodeModelTestInput {
       }
     }
 
+    public void Method50(int x) {
+      switch (x) {
+        case 64:
+          Console.WriteLine("64");
+          return;
+
+        case 62:
+          Console.WriteLine("62");
+          return;
+
+        case 85:
+          Console.WriteLine("85");
+          return;
+
+        case 86:
+          Console.WriteLine("86");
+          return;
+      }
+      Console.WriteLine("in between");
+      switch (x) {
+        case 71:
+          Console.WriteLine("71");
+          break;
+      }
+    }
   }
 
   struct SomeStruct {
@@ -1320,6 +1345,20 @@ namespace CodeModelTestInput {
       yield return asyncResult;
     }
   }
+
+  /// <summary>
+  /// If the decompiler gets better and this lambda gets decompiled into
+  /// an expression without pops, then this test is meaningless.
+  /// </summary>
+  public class ClassThatHasLambdaWithPopsInIt {
+    public void TakeLambdaAsArg(Func<string, bool> f) { }
+    public string CallMethodWithLambda() {
+      var msg = "If the decompiler gets better and this lambda gets decompiled into an expression without pops, then this test is meaningless.";
+      TakeLambdaAsArg(s => s.Contains("foo") && s.Contains("bar") && s.Contains("baz"));
+      return msg;
+    }
+  }
+
 
   #endregion 
 

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>1.0.7</version>
+    <version>1.0.8</version>
     <authors>hermanv@microsoft.com</authors>
     <owners />
     <licenseUrl>http://cciast.codeplex.com/license</licenseUrl>

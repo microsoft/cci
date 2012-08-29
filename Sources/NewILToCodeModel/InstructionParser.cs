@@ -158,54 +158,51 @@ namespace Microsoft.Cci.ILToCodeModel {
           case OperationCode.Ldloca:
           case OperationCode.Ldloca_S:
             var local = (ILocalDefinition)instruction.Operation.Value;
-            if (NextReferenceIsAssignment(local, bb, i+1))
+            if (this.NextReferenceIsAssignment(local, bb, i+1, new SetOfObjects()))
               this.instructionsThatMakeALastUseOfALocalVersion.Add(instruction);
             break;
         }
       }
     }
 
-    private bool NextReferenceIsAssignment(ILocalDefinition local, BasicBlock<Instruction> bb, int offset) {
+    private bool NextReferenceIsAssignment(ILocalDefinition local, BasicBlock<Instruction> bb, int offset, SetOfObjects blocksAlreadyVisited) {
       Contract.Requires(bb != null);
       Contract.Requires(offset >= 0);
-      var blocksToVisit = new Queue<BasicBlock<Instruction>>(this.cdfg.AllBlocks.Count);
-      var blocksAlreadyVisited = new SetOfObjects((uint)blocksToVisit.Count);
-      blocksToVisit.Enqueue(bb);
+      Contract.Requires(blocksAlreadyVisited != null);
 
-      while (blocksToVisit.Count > 0) {
-        bb = blocksToVisit.Dequeue();
-        Contract.Assume(bb != null);
-        if (blocksAlreadyVisited.Contains(bb)) continue;
-        for (int i = offset, n = bb.Instructions.Count; i < n; i++) {
-          var instruction = bb.Instructions[i];
-          switch (instruction.Operation.OperationCode) {
-            case OperationCode.Ldloc:
-            case OperationCode.Ldloc_0:
-            case OperationCode.Ldloc_1:
-            case OperationCode.Ldloc_2:
-            case OperationCode.Ldloc_3:
-            case OperationCode.Ldloc_S:
-            case OperationCode.Ldloca:
-            case OperationCode.Ldloca_S:
-              if (instruction.Operation.Value == local) return false;
-              break;
+      blocksAlreadyVisited.Add(bb);
+      for (int i = offset, n = bb.Instructions.Count; i < n; i++) {
+        var instruction = bb.Instructions[i];
+        switch (instruction.Operation.OperationCode) {
+          case OperationCode.Ldloc:
+          case OperationCode.Ldloc_0:
+          case OperationCode.Ldloc_1:
+          case OperationCode.Ldloc_2:
+          case OperationCode.Ldloc_3:
+          case OperationCode.Ldloc_S:
+          case OperationCode.Ldloca:
+          case OperationCode.Ldloca_S:
+            if (instruction.Operation.Value == local) return false;
+            break;
 
-            case OperationCode.Stloc:
-            case OperationCode.Stloc_0:
-            case OperationCode.Stloc_1:
-            case OperationCode.Stloc_2:
-            case OperationCode.Stloc_3:
-            case OperationCode.Stloc_S:
-              if (instruction.Operation.Value == local) return true;
-              break;
-          }
+          case OperationCode.Stloc:
+          case OperationCode.Stloc_0:
+          case OperationCode.Stloc_1:
+          case OperationCode.Stloc_2:
+          case OperationCode.Stloc_3:
+          case OperationCode.Stloc_S:
+            if (instruction.Operation.Value == local) return true;
+            break;
         }
-        blocksAlreadyVisited.Add(bb);
-        offset = 0;
-        foreach (var successor in this.cdfg.SuccessorsFor(bb))
-          blocksToVisit.Enqueue(successor);
       }
-      return true;
+      var result = true;
+      foreach (var successor in this.cdfg.SuccessorsFor(bb)) {
+        Contract.Assume(successor != null);
+        if (blocksAlreadyVisited.Contains(successor)) continue;
+        result &= this.NextReferenceIsAssignment(local, successor, 0, blocksAlreadyVisited);
+        if (!result) break;
+      }
+      return result;
     }
 
     [ContractVerification(false)]

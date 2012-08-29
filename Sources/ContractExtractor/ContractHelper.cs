@@ -355,30 +355,6 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
     /// <summary>
-    /// Searches for the method used as the implementation for <paramref name="interfaceMethod"/> in the type
-    /// <paramref name="typeDefinition"/>. Note that the method may not be from a type that implements the interface
-    /// itself: it might be inherited from a base class, but matches the signature.
-    /// </summary>
-    /// <param name="typeDefinition">The type to start the search at.</param>
-    /// <param name="interfaceMethod">The interface method whose implementation is being searched for.</param>
-    /// <returns>
-    /// The method definition if found, otherwise a Dummy.
-    /// </returns>
-    public static IMethodDefinition GetMethodImplementingInterfaceMethod(ITypeDefinition typeDefinition, IMethodDefinition interfaceMethod) {
-      Contract.Requires(interfaceMethod != null);
-      Contract.Requires(interfaceMethod.ContainingTypeDefinition.IsInterface);
-      Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
-      while (!(typeDefinition is Dummy)) {
-        var m = TypeHelper.GetMethod(typeDefinition, interfaceMethod);
-        if (!(m is Dummy)) return m;
-        foreach (var b in typeDefinition.BaseClasses) {
-          typeDefinition = b.ResolvedType;
-        }
-      }
-      return Dummy.Method;
-    }
-
-    /// <summary>
     /// Returns a type definition for a type referenced in a custom attribute.
     /// </summary>
     /// <param name="typeDefinition">The type definition whose attributes will be searched</param>

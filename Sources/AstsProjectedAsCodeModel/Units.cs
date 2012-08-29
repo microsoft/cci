@@ -811,6 +811,18 @@ namespace Microsoft.Cci.Ast {
       return Enumerable<ITypeReference>.Empty;
     }
 
+    IEnumerable<IGenericMethodInstanceReference> IModule.GetGenericMethodInstances() {
+      return Enumerable<IGenericMethodInstanceReference>.Empty;
+    }
+
+    IEnumerable<ITypeReference> IModule.GetStructuralTypeInstances() {
+      return Enumerable<ITypeReference>.Empty;
+    }
+
+    IEnumerable<ITypeMemberReference> IModule.GetStructuralTypeInstanceMembers() {
+      return Enumerable<ITypeMemberReference>.Empty;
+    }
+
     IEnumerable<ITypeMemberReference> IModule.GetTypeMemberReferences() {
       return Enumerable<ITypeMemberReference>.Empty;
     }

@@ -234,7 +234,7 @@ namespace Microsoft.Cci.ILToCodeModel {
               //Well fix matters by making nb.EndOffset == startOffset
               nb.EndOffset = startOffset;
               beforeBlock.Statements.Add(nb);
-            } else
+            } else 
               this.SplitBlock(nb, startOffset, beforeBlock.Statements, newNestedBlock.Statements);
           } else if (nb.EndOffset <= endOffset) {
             newNestedBlock.Statements.Add(nb);
@@ -399,8 +399,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             DeleteNops(bs);
         }
       }
-      if (0 < numberOfStatementsToDelete) {
-        var newBlock = new BlockStatement();
+      if (0 < numberOfStatementsToDelete){
         var newStmts = new List<IStatement>(n - numberOfStatementsToDelete);
         for (int i = 0; i < n; i++) {
           var s = statements[i];

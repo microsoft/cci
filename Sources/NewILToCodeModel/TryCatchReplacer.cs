@@ -269,8 +269,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       internal ILocalDefinition localVariableToRemove;
 
       public override void TraverseChildren(IBlockStatement block) {
-        Contract.Assume(block is DecompiledBlock);
-        var b = (DecompiledBlock)block;
+        Contract.Assume(block is BlockStatement);
+        var b = (BlockStatement)block;
         for (int i = 0, n = b.Statements.Count; i < n; i++) {
           var localDecl = b.Statements[i] as LocalDeclarationStatement;
           if (localDecl == null || localDecl.LocalVariable != this.localVariableToRemove) continue;

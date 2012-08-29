@@ -30,7 +30,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.numberOfReferencesToLocal = sourceMethodBody.numberOfReferencesToLocal; Contract.Assume(this.numberOfReferencesToLocal != null);
       this.bindingsThatMakeALastUseOfALocalVersion = sourceMethodBody.bindingsThatMakeALastUseOfALocalVersion; Contract.Assume(this.bindingsThatMakeALastUseOfALocalVersion != null);
       this.singleAssignmentReferenceFinder = new SingleAssignmentSingleReferenceFinder(this.bindingsThatMakeALastUseOfALocalVersion, this.numberOfReferencesToLocal);
-      this.singleAssignmentLocalReplacer = new SingleAssignmentLocalReplacer(this.host, this.numberOfAssignmentsToLocal);
+      this.singleAssignmentLocalReplacer = new SingleAssignmentLocalReplacer(this.host, this.bindingsThatMakeALastUseOfALocalVersion, this.numberOfAssignmentsToLocal);
       this.sourceLocationProvider = sourceMethodBody.sourceLocationProvider;
       this.singleUseExpressionChecker = new SingleUseExpressionChecker();
       Contract.Assume(sourceMethodBody.ilMethodBody != null);
@@ -406,6 +406,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         pushTrueCase.ValueToPush = TypeInferencer.FixUpType(conditional);
         pushTrueCase.Locations.AddRange(ifStatement.Locations);
         gotos = this.gotosThatTarget[(uint)endLabel.Label.UniqueKey];
+        Contract.Assume(gotos != null && gotos.Count > 0);
         gotos.Remove(gotoEnd);
         if (gotos.Count == 0) statements.RemoveAt(i+6);
         statements.RemoveRange(i, 5);
@@ -1393,6 +1394,8 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.local = local;
     }
     public static bool LocalOccursIn(IStatement s, ILocalDefinition local) {
+      Contract.Requires(s != null);
+      Contract.Requires(local != null);
       var lf = new LocalFinder(local);
       lf.Traverse(s);
       return lf.found;
@@ -1484,23 +1487,28 @@ namespace Microsoft.Cci.ILToCodeModel {
 
   internal class SingleAssignmentLocalReplacer : CodeRewriter {
 
-    internal SingleAssignmentLocalReplacer(IMetadataHost host, HashtableForUintValues<object> numberOfAssignmentsToLocal)
+    internal SingleAssignmentLocalReplacer(IMetadataHost host, SetOfObjects bindingsThatMakeALastUseOfALocalVersion, HashtableForUintValues<object> numberOfAssignmentsToLocal)
       : base(host) {
       Contract.Requires(host != null);
+      Contract.Requires(bindingsThatMakeALastUseOfALocalVersion != null);
       Contract.Requires(numberOfAssignmentsToLocal != null);
 
+      this.bindingsThatMakeALastUseOfALocalVersion = bindingsThatMakeALastUseOfALocalVersion;
       this.numberOfAssignmentsToLocal = numberOfAssignmentsToLocal;
       this.local = Dummy.LocalVariable;
       this.expressionToSubstituteForLocal = CodeDummy.Expression;
     }
 
+    SetOfObjects bindingsThatMakeALastUseOfALocalVersion;
     HashtableForUintValues<object> numberOfAssignmentsToLocal;
     ILocalDefinition local;
     IExpression expressionToSubstituteForLocal;
     bool replacementHappened;
+    internal bool replacedLastUseOfLocalVersion;
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
+      Contract.Invariant(this.bindingsThatMakeALastUseOfALocalVersion != null);
       Contract.Invariant(this.numberOfAssignmentsToLocal != null);
       Contract.Invariant(this.local != null);
       Contract.Invariant(this.expressionToSubstituteForLocal != null);
@@ -1515,6 +1523,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       this.expressionToSubstituteForLocal = TypeInferencer.Convert(expressionToSubstituteForLocal, local.Type);
       this.local = local;
       this.replacementHappened = false;
+      this.replacedLastUseOfLocalVersion = false;
       this.Rewrite(statement);
       return this.replacementHappened;
     }
@@ -1522,6 +1531,7 @@ namespace Microsoft.Cci.ILToCodeModel {
     public override IExpression Rewrite(IBoundExpression boundExpression) {
       if (boundExpression.Definition == this.local) {
         this.replacementHappened = true;
+        this.replacedLastUseOfLocalVersion = this.bindingsThatMakeALastUseOfALocalVersion.Contains(boundExpression);
         return this.expressionToSubstituteForLocal;
       }
       return base.Rewrite(boundExpression);
@@ -1605,6 +1615,13 @@ namespace Microsoft.Cci.ILToCodeModel {
       base.TraverseChildren(expression);
     }
 
+    /// <summary>
+    /// Do not count pops in lambdas: they must not be confused with pops that
+    /// are not within them.
+    /// </summary>
+    public override void TraverseChildren(IAnonymousDelegate anonymousDelegate) {
+    }
+
   }
 
   internal class PopReplacer : CodeRewriter {
@@ -1647,6 +1664,14 @@ namespace Microsoft.Cci.ILToCodeModel {
         return expression;
       }
       return base.Rewrite(expression);
+    }
+
+    /// <summary>
+    /// Do not replace pops in lambdas: they must not be confused with pops that
+    /// are not within them.
+    /// </summary>
+    public override IExpression Rewrite(IAnonymousDelegate anonymousDelegate) {
+      return anonymousDelegate;
     }
 
   }

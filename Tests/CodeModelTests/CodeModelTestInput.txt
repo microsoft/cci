@@ -878,6 +878,52 @@ namespace CodeModelTestInput
 
         }
 
+        public void Method50(int x)
+        {
+            int CS$4$0000 = x;
+            switch(CS$4$0000 - 62){
+                case 0:
+                    goto IL_0038;
+                case 1:
+                    goto IL_005f;
+                case 2:
+                    goto IL_002b;
+            }
+            switch(CS$4$0000 - 85){
+                case 0:
+                    goto IL_0045;
+                case 1:
+                    goto IL_0052;
+                default:
+                    goto IL_005f;
+            }
+        IL_002b:
+            System.Console.WriteLine("64");
+            goto IL_0080;
+        IL_0038:
+            System.Console.WriteLine("62");
+            goto IL_0080;
+        IL_0045:
+            System.Console.WriteLine("85");
+            goto IL_0080;
+        IL_0052:
+            System.Console.WriteLine("86");
+            goto IL_0080;
+        IL_005f:
+            System.Console.WriteLine("in between");
+            CS$4$0000 = x;
+            if (CS$4$0000 != 71)
+            {
+            }
+            else
+            {
+                System.Console.WriteLine("71");
+            }
+        IL_0080:
+            return;
+
+        }
+
         public Class1()
         {
             this.c = 0;
@@ -1917,6 +1963,46 @@ namespace CodeModelTestInput
         }
 
         public UnusedCapturedLocal()
+        {
+            this.object();
+            return;
+
+        }
+    }
+
+    public class ClassThatHasLambdaWithPopsInIt
+    {
+        public void TakeLambdaAsArg(System.Func<string, bool> f)
+        {
+            return;
+
+        }
+
+        public string CallMethodWithLambda()
+        {
+            string CS$1$0000;
+            string msg = "If the decompiler gets better and this lambda gets decompiled into an expression without pops, then this test is meaningless.";
+            this.TakeLambdaAsArg(delegate (string s) {
+                bool __temp_1;
+                bool CS$1$0000;
+                if (s.Contains("foo") && s.Contains("bar"))
+                {
+                    __temp_1 = s.Contains("baz");
+                }
+                else
+                {
+                    __temp_1 = false;
+                }
+                CS$1$0000 = __temp_1;
+                return CS$1$0000;
+
+            });
+            CS$1$0000 = msg;
+            return CS$1$0000;
+
+        }
+
+        public ClassThatHasLambdaWithPopsInIt()
         {
             this.object();
             return;
