@@ -72,6 +72,7 @@
       <Link>Build\Version.cs</Link>
     </Compile>
     <Compile Include="ControlFlowInferencer.cs" />
+    <Compile Include="ControlFlowQueries.cs" />
     <Compile Include="DataFlowInferencer.cs" />
     <Compile Include="Graph.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
