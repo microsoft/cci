@@ -309,7 +309,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.referenceRewrites.TryGetValue(assemblyReference, out result)) return (IAssemblyReference)result;
       var mutableAssemblyReference = assemblyReference as AssemblyReference;
       if (mutableAssemblyReference == null || mutableAssemblyReference.IsFrozen) {
-        if (this.shallowCopier == null) return assemblyReference;
+        if (this.shallowCopier == null || assemblyReference is Assembly) return assemblyReference;
         mutableAssemblyReference = this.shallowCopier.Copy(assemblyReference);
       }
       this.referenceRewrites[assemblyReference] = mutableAssemblyReference;
@@ -421,7 +421,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.referenceRewrites.TryGetValue(fieldReference, out result)) return (IFieldReference)result;
       var mutableFieldReference = fieldReference as FieldReference;
       if (mutableFieldReference == null || mutableFieldReference.IsFrozen) {
-        if (this.shallowCopier == null) return fieldReference;
+        if (this.shallowCopier == null || fieldReference is FieldDefinition) return fieldReference;
         mutableFieldReference = this.shallowCopier.Copy(fieldReference);
       }
       this.referenceRewrites[fieldReference] = mutableFieldReference;
@@ -509,7 +509,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.referenceRewrites.TryGetValue(genericMethodParameterReference, out result)) return (IGenericMethodParameterReference)result;
       var mutableGenericMethodInstanceReference = genericMethodParameterReference as GenericMethodParameterReference;
       if (mutableGenericMethodInstanceReference == null || mutableGenericMethodInstanceReference.IsFrozen) {
-        if (this.shallowCopier == null) return genericMethodParameterReference;
+        if (this.shallowCopier == null || genericMethodParameterReference is GenericMethodParameter) return genericMethodParameterReference;
         mutableGenericMethodInstanceReference = this.shallowCopier.Copy(genericMethodParameterReference);
       }
       this.referenceRewrites[genericMethodParameterReference] = mutableGenericMethodInstanceReference;
@@ -563,7 +563,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.referenceRewrites.TryGetValue(genericTypeParameterReference, out result)) return (IGenericTypeParameterReference)result;
       var mutableGenericTypeParameterReference = genericTypeParameterReference as GenericTypeParameterReference;
       if (mutableGenericTypeParameterReference == null || mutableGenericTypeParameterReference.IsFrozen) {
-        if (this.shallowCopier == null) return genericTypeParameterReference;
+        if (this.shallowCopier == null || genericTypeParameterReference is GenericTypeParameter) return genericTypeParameterReference;
         mutableGenericTypeParameterReference = this.shallowCopier.Copy(genericTypeParameterReference);
       }
       this.referenceRewrites[genericTypeParameterReference] = mutableGenericTypeParameterReference;
@@ -781,7 +781,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.referenceRewrites.TryGetValue(methodReference, out result)) return (IMethodReference)result;
       var mutableMethodReference = methodReference as MethodReference;
       if (mutableMethodReference == null || mutableMethodReference.IsFrozen) {
-        if (this.shallowCopier == null) return methodReference;
+        if (this.shallowCopier == null || methodReference is MethodDefinition) return methodReference;
         mutableMethodReference = this.shallowCopier.Copy(methodReference);
       }
       this.referenceRewrites[methodReference] = mutableMethodReference;
@@ -837,7 +837,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.referenceRewrites.TryGetValue(moduleReference, out result)) return (IModuleReference)result;
       var mutableModuleReference = moduleReference as ModuleReference;
       if (mutableModuleReference == null || mutableModuleReference.IsFrozen) {
-        if (this.shallowCopier == null) return moduleReference;
+        if (this.shallowCopier == null || moduleReference is Module) return moduleReference;
         mutableModuleReference = this.shallowCopier.Copy(moduleReference);
       }
       this.referenceRewrites[moduleReference] = mutableModuleReference;
@@ -933,7 +933,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.referenceRewrites.TryGetValue(namespaceTypeReference, out result)) return (INamespaceTypeReference)result;
       var mutableNamespaceTypeReference = namespaceTypeReference as NamespaceTypeReference;
       if (mutableNamespaceTypeReference == null || mutableNamespaceTypeReference.IsFrozen) {
-        if (this.shallowCopier == null) return namespaceTypeReference;
+        if (this.shallowCopier == null || namespaceTypeReference is NamespaceTypeDefinition) return namespaceTypeReference;
         mutableNamespaceTypeReference = this.shallowCopier.Copy(namespaceTypeReference);
       }
       this.referenceRewrites[namespaceTypeReference] = mutableNamespaceTypeReference;
@@ -994,7 +994,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.referenceRewrites.TryGetValue(nestedTypeReference, out result)) return (INestedTypeReference)result;
       var mutableNestedTypeReference = nestedTypeReference as NestedTypeReference;
       if (mutableNestedTypeReference == null || mutableNestedTypeReference.IsFrozen) {
-        if (this.shallowCopier == null) return nestedTypeReference;
+        if (this.shallowCopier == null || nestedTypeReference is NestedTypeDefinition) return nestedTypeReference;
         mutableNestedTypeReference = this.shallowCopier.Copy(nestedTypeReference);
       }
       this.referenceRewrites[nestedTypeReference] = mutableNestedTypeReference;
@@ -1028,7 +1028,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.referenceRewrites.TryGetValue(nestedUnitNamespaceReference, out result)) return (INestedUnitNamespaceReference)result;
       var mutableNestedUnitNamespaceReference = nestedUnitNamespaceReference as NestedUnitNamespaceReference;
       if (mutableNestedUnitNamespaceReference == null || mutableNestedUnitNamespaceReference.IsFrozen) {
-        if (this.shallowCopier == null) return nestedUnitNamespaceReference;
+        if (this.shallowCopier == null || nestedUnitNamespaceReference is NestedUnitNamespace) return nestedUnitNamespaceReference;
         mutableNestedUnitNamespaceReference = this.shallowCopier.Copy(nestedUnitNamespaceReference);
       }
       this.referenceRewrites[nestedUnitNamespaceReference] = mutableNestedUnitNamespaceReference;
@@ -1195,7 +1195,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.referenceRewrites.TryGetValue(rootUnitNamespaceReference, out result)) return (IRootUnitNamespaceReference)result;
       var mutableRootUnitNamespaceReference = rootUnitNamespaceReference as RootUnitNamespaceReference;
       if (mutableRootUnitNamespaceReference == null || mutableRootUnitNamespaceReference.IsFrozen) {
-        if (this.shallowCopier == null) return rootUnitNamespaceReference;
+        if (this.shallowCopier == null || rootUnitNamespaceReference is RootUnitNamespace) return rootUnitNamespaceReference;
         mutableRootUnitNamespaceReference = this.shallowCopier.Copy(rootUnitNamespaceReference);
       }
       this.referenceRewrites[rootUnitNamespaceReference] = mutableRootUnitNamespaceReference;
@@ -1269,7 +1269,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.referenceRewrites.TryGetValue(specializedNestedTypeReference, out result)) return (ISpecializedNestedTypeReference)result;
       var mutableSpecializedNestedTypeReference = specializedNestedTypeReference as SpecializedNestedTypeReference;
       if (mutableSpecializedNestedTypeReference == null || mutableSpecializedNestedTypeReference.IsFrozen) {
-        if (this.shallowCopier == null) return specializedNestedTypeReference;
+        if (this.shallowCopier == null || specializedNestedTypeReference is SpecializedNestedTypeDefinition) return specializedNestedTypeReference;
         mutableSpecializedNestedTypeReference = this.shallowCopier.Copy(specializedNestedTypeReference);
       }
       this.referenceRewrites[specializedNestedTypeReference] = mutableSpecializedNestedTypeReference;

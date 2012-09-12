@@ -1847,6 +1847,10 @@ namespace Microsoft.Cci {
         case PrimitiveTypeCode.IntPtr:
         case PrimitiveTypeCode.UIntPtr:
           return type.PlatformType.SystemIntPtr;
+        case PrimitiveTypeCode.NotPrimitive:
+          if (type.IsEnum)
+            return StackType(type.ResolvedType.UnderlyingType);
+          break;
       }
       return type;
     }

@@ -2523,6 +2523,13 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     INestedTypeReference unspecializedVersion;
 
+    /// <summary>
+    /// A specialized type reference should always defer to its unspecialized version for whether it is a value type or not: that can't change.
+    /// </summary>
+    public new bool IsValueType {
+      get { return this.unspecializedVersion.IsValueType; }
+    }
+
   }
 
   /// <summary>

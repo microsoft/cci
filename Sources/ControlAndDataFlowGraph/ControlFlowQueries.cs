@@ -181,7 +181,10 @@ namespace Microsoft.Cci.Analysis {
       var postOrder = this.postOrder;
       if (this.predecessorEdges == null)
         this.SetupPredecessorEdges();
-      foreach (var rootBlock in this.cfg.RootBlocks) rootBlock.immediateDominator = rootBlock;
+      foreach (var rootBlock in this.cfg.RootBlocks) {
+        Contract.Assume(rootBlock != null);
+        rootBlock.immediateDominator = rootBlock;
+      }
       var predecessorEdges = this.predecessorEdges;
       var n = postOrder.Length;
       var changed = true;
