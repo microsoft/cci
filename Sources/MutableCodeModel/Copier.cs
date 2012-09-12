@@ -2183,6 +2183,8 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (copy == mutableCopy.ExceptionContainer) {
           mutableCopy.ExceptionContainer = this.Copy(mutableCopy.ExceptionContainer);
           this.LocalsInsideCone.Add(catchClause.ExceptionContainer, mutableCopy.ExceptionContainer);
+        } else {
+          mutableCopy.ExceptionContainer = copy;
         }
       }
       if (mutableCopy.FilterCondition != null)

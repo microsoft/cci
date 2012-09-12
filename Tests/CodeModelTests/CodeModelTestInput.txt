@@ -924,6 +924,19 @@ namespace CodeModelTestInput
 
         }
 
+        public CodeModelTestInput.SomeEnum SomeEnumValue()
+        {
+            return 0;
+
+        }
+
+        public CodeModelTestInput.SomeEnum Method51(CodeModelTestInput.Class1 c)
+        {
+            CodeModelTestInput.SomeEnum t = c != default(CodeModelTestInput.Class1) ? c.SomeEnumValue() : 0;
+            return t;
+
+        }
+
         public Class1()
         {
             this.c = 0;
@@ -974,6 +987,12 @@ namespace CodeModelTestInput
         }
 
         private int width;
+    }
+
+    public enum SomeEnum
+    {
+        e1 = 0,
+        e2 = 1,
     }
 
     public class Class2
@@ -2006,6 +2025,31 @@ namespace CodeModelTestInput
         {
             this.object();
             return;
+
+        }
+    }
+
+    public class TwoParameterGenericType<A, B>
+    {
+        public TwoParameterGenericType()
+        {
+            this.object();
+            return;
+
+        }
+    }
+
+    public static class LambdaThatTurnsIntoGenericMethod
+    {
+        public static CodeModelTestInput.TwoParameterGenericType<X, Y> CreateInstanceOfTwoParameterGenericType<X, Y>(X x, Y y)
+        {
+            return null;
+
+        }
+
+        public static System.Func<U, CodeModelTestInput.TwoParameterGenericType<U, U>> MethodContainingLambdaThatTurnsIntoGenericMethod<U>()
+        {
+            return (U u) => CodeModelTestInput.LambdaThatTurnsIntoGenericMethod.CreateInstanceOfTwoParameterGenericType<U, U>(u, u);
 
         }
     }

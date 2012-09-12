@@ -73,42 +73,61 @@ namespace Microsoft.Cci.ILToCodeModel {
     }
 
     internal LabeledStatement/*?*/ RemoveAndReturnInitialLabel() {
-      if (this.Statements.Count == 0) return null;
-      var firstStatement = this.Statements[0];
-      var result = firstStatement as LabeledStatement;
-      if (result != null) this.Statements.RemoveAt(0);
-      var firstBlock = firstStatement as DecompiledBlock;
-      if (firstBlock != null) return firstBlock.RemoveAndReturnInitialLabel();
-      return result;
-    }
-
-    internal LabeledStatement/*?*/ ReturnInitialLabel() {
-      if (this.Statements.Count == 0) return null;
-      var firstStatement = this.Statements[0];
-      var result = firstStatement as LabeledStatement;
-      if (result != null) return result;
-      var firstBlock = firstStatement as DecompiledBlock;
-      if (firstBlock != null) return firstBlock.ReturnInitialLabel();
+      for (int i = 0, n = this.Statements.Count; i < n; i++) {
+        var s = this.Statements[i];
+        var ls = s as LabeledStatement;
+        if (ls != null) { this.Statements.RemoveAt(i); return ls; }
+        var b = s as DecompiledBlock;
+        if (b != null) return b.RemoveAndReturnInitialLabel();
+        if (s is IEmptyStatement) continue;
+        var d = s as LocalDeclarationStatement;
+        if (d != null && d.InitialValue == null) continue;
+        break;
+      }
       return null;
     }
 
-    internal void ReplaceInitialLabel(LabeledStatement label) {
-      Contract.Requires(label != null);
-      if (this.Statements.Count == 0) return;
-      var firstStatement = this.Statements[0];
-      var result = firstStatement as LabeledStatement;
-      if (result != null) { this.Statements[0] = label; return; }
-      var firstBlock = firstStatement as DecompiledBlock;
-      if (firstBlock != null) firstBlock.ReplaceInitialLabel(label);
+    internal LabeledStatement/*?*/ ReturnInitialLabel() {
+      for (int i = 0, n = this.Statements.Count; i < n; i++) {
+        var s = this.Statements[i];
+        var ls = s as LabeledStatement;
+        if (ls != null) return ls;
+        var b = s as DecompiledBlock;
+        if (b != null) return b.ReturnInitialLabel();
+        if (s is IEmptyStatement) continue;
+        var d = s as LocalDeclarationStatement;
+        if (d != null && d.InitialValue == null) continue;
+        break;
+      }
+      return null;
     }
 
-    internal bool FirstStatementIs(IStatement statement) {
-      if (this.Statements.Count == 0) return false;
-      var firstStatement = this.Statements[0];
-      if (firstStatement == statement) return true;
-      var firstBlock = firstStatement as DecompiledBlock;
-      if (firstBlock == null) return false;
-      return firstBlock.FirstStatementIs(statement);
+    internal void ReplaceInitialLabel(LabeledStatement labeledStatement) {
+      Contract.Requires(labeledStatement != null);
+      for (int i = 0, n = this.Statements.Count; i < n; i++) {
+        var s = this.Statements[i];
+        var ls = s as LabeledStatement;
+        if (ls != null) { this.Statements[i] = labeledStatement; return; }
+        var b = s as DecompiledBlock;
+        if (b != null) b.ReplaceInitialLabel(labeledStatement);
+        var d = s as LocalDeclarationStatement;
+        if (d != null && d.InitialValue == null) continue;
+        break;
+      }
+    }
+
+    internal bool FirstExecutableStatementIs(IStatement statement) {
+      for (int i = 0, n = this.Statements.Count; i < n; i++) {
+        var s = this.Statements[i];
+        if (s == statement) return true;
+        var b = s as DecompiledBlock;
+        if (b != null) return b.FirstExecutableStatementIs(statement);
+        if (s is IEmptyStatement) continue;
+        var d = s as LocalDeclarationStatement;
+        if (d != null && d.InitialValue == null) continue;
+        break;
+      }
+      return false;
     }
   }
 

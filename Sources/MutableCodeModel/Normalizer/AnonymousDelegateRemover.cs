@@ -726,7 +726,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (this.closureLocalInstances == null) this.closureLocalInstances = new List<IExpression>();
       this.closureLocalInstances.Add(this.currentClosureObject);
       rewriteScope();
-      statements.Insert(0, new ExpressionStatement() {
+      Statement createClosure = new ExpressionStatement() {
         Expression = new Assignment() {
           Target = new TargetExpression() { Definition = closureLocal, Type = closureLocal.Type },
           Source = new CreateObjectInstance() {
@@ -734,7 +734,24 @@ namespace Microsoft.Cci.MutableCodeModel {
             Type = currentClosureSelfInstance,
           }
         }
-      });
+      };
+      ILabeledStatement labeledStatement = null;
+      for (int i = 0, n = statements.Count; i < n; i++) {
+        labeledStatement = statements[i] as ILabeledStatement;
+        if (labeledStatement != null) {
+          createClosure = new LabeledStatement() { Label = labeledStatement.Label, Statement = createClosure };
+          createClosure.Locations.AddRange(labeledStatement.Locations);
+          statements[i] = labeledStatement.Statement;
+          break;
+        } else if (statements[i] is IEmptyStatement) {
+          continue;
+        } else {
+          var declSt = statements[i] as ILocalDeclarationStatement;
+          if (declSt != null && declSt.InitialValue == null) continue;
+          break;
+        }
+      }
+      statements.Insert(0, createClosure);
       if (outerClosure != null) {
         statements.Insert(1, new ExpressionStatement() {
           Expression = new Assignment() {

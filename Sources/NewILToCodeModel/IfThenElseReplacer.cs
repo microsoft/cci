@@ -229,7 +229,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           break;
         }
         var block = statement as DecompiledBlock;
-        if (block != null && block.FirstStatementIs(labelOfSubsequentCode)) {
+        if (block != null && block.FirstExecutableStatementIs(labelOfSubsequentCode)) {
           if (removeLabel) block.RemoveAndReturnInitialLabel();
           break;
         }

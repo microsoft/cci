@@ -363,6 +363,11 @@ namespace Microsoft.Cci.ILToCodeModel {
       return genArg;
     }
 
+    public override IMethodReference Rewrite(IMethodReference methodReference) {
+      //Method references contain generic parameter references that should not be mapped.
+      return methodReference;
+    }
+
   }
 
   internal class MapGenericTypeParameters : CodeRewriter {

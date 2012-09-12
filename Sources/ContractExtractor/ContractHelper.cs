@@ -1056,9 +1056,13 @@ namespace Microsoft.Cci.MutableContracts {
       public override void RewriteChildren(MethodCall methodCall) {
         base.RewriteChildren(methodCall);
         if (!methodCall.IsStaticCall && !methodCall.IsJumpCall && methodCall.ThisArgument is IThisReference && methodCall.ThisArgument.Type.IsValueType) {
+          var t = methodCall.ThisArgument.Type;
+          var ntd = t as INamedTypeDefinition;
+          if (ntd != null)
+            t = Microsoft.Cci.MutableCodeModel.NamedTypeDefinition.SelfInstance(ntd, this.host.InternFactory);
           methodCall.ThisArgument =
               new ThisReference() {
-                Type = MutableModelHelper.GetManagedPointerTypeReference(methodCall.ThisArgument.Type, this.host.InternFactory, methodCall.ThisArgument.Type)
+                Type = MutableModelHelper.GetManagedPointerTypeReference(t, this.host.InternFactory, t)
               };
         }
       }
@@ -1469,21 +1473,6 @@ namespace Microsoft.Cci.MutableContracts {
       }
     }
 
-    //public override IParameterDefinition VisitReferenceTo(IParameterDefinition parameterDefinition) {
-    //  //The referrer must refer to the same copy of the parameter definition that was (or will be) produced by a visit to the actual definition.
-    //  return this.Visit(parameterDefinition);
-    //}
-
-    /// <summary>
-    /// Replaces the specified this reference with a this reference to the containing type of the target method
-    /// </summary>
-    /// <param name="thisReference">The this reference.</param>
-    /// <returns>a this reference to the containing type of the target method</returns>
-    public override IExpression Rewrite(IThisReference thisReference) {
-      return new ThisReference() {
-        Type = this.Rewrite(this.targetType),
-      };
-    }
   }
 
   /// <summary>

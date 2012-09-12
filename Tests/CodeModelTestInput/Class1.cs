@@ -415,6 +415,13 @@ namespace CodeModelTestInput {
           break;
       }
     }
+
+    public SomeEnum SomeEnumValue() { return SomeEnum.e1; }
+    public SomeEnum Method51(Class1 c) {
+      SomeEnum t = c == null ? SomeEnum.e1 : c.SomeEnumValue();
+      return t;
+    }
+
   }
 
   struct SomeStruct {
@@ -426,6 +433,7 @@ namespace CodeModelTestInput {
     int width;
   }
 
+  public enum SomeEnum { e1, e2, };
 
   public class Class2 {
     public interface IIncrementable<T> {
@@ -1356,6 +1364,16 @@ namespace CodeModelTestInput {
       var msg = "If the decompiler gets better and this lambda gets decompiled into an expression without pops, then this test is meaningless.";
       TakeLambdaAsArg(s => s.Contains("foo") && s.Contains("bar") && s.Contains("baz"));
       return msg;
+    }
+  }
+
+  public class TwoParameterGenericType<A, B> { }
+  public static class LambdaThatTurnsIntoGenericMethod {
+
+    public static TwoParameterGenericType<X, Y> CreateInstanceOfTwoParameterGenericType<X, Y>(X x, Y y) { return null; }
+
+    public static Func<U, TwoParameterGenericType<U, U>> MethodContainingLambdaThatTurnsIntoGenericMethod<U>() {
+      return u => CreateInstanceOfTwoParameterGenericType(u, u);
     }
   }
 

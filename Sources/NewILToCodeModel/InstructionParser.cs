@@ -833,8 +833,10 @@ namespace Microsoft.Cci.ILToCodeModel {
       Contract.Requires(elementType != null);
 
       uint rank = 1;
-      IArrayTypeReference/*?*/ arrayType = currentOperation.Value as IArrayTypeReference;
-      if (arrayType != null && !treatArrayAsSingleDimensioned) rank = arrayType.Rank;
+      IArrayTypeReference/*?*/ arrayType = null;
+      if (!treatArrayAsSingleDimensioned) //then currentOperation.Value contains the type of the array, not the type of the indexed element.
+        arrayType = currentOperation.Value as IArrayTypeReference;
+      if (arrayType != null) rank = arrayType.Rank;
       ArrayIndexer result = new ArrayIndexer();
       for (uint i = 0; i < rank; i++)
         result.Indices.Add(this.PopOperandStack());

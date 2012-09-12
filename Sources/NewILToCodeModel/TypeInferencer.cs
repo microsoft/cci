@@ -550,6 +550,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       }
       if (expression is IPopValue) return new PopValue() { Type = targetType };
       if (expression is IDupValue) return new DupValue() { Type = targetType };
+
+      // Null is polymorphic in IL: it can be assigned to any reference type. But we want assignments to not depend on implicit conversions.
+      var ctc = expression as ICompileTimeConstant;
+      if (ctc != null && ctc.Value == null && !TypeHelper.TypesAreEquivalent(targetType, targetType.PlatformType.SystemObject))
+        return new Conversion() { ValueToConvert = expression, TypeAfterConversion = targetType, Type = targetType };
+
       return expression;
     }
 

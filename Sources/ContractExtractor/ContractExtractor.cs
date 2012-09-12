@@ -262,8 +262,8 @@ namespace Microsoft.Cci.MutableContracts {
         stmts = new List<IStatement>(contractBlock.Statements);
 
       List<IStatement> newStmts = null;
-      
-      var i = 0;
+
+      var i = this.inCtor ? IndexOfStatementAfterCallToCtor(stmts) : 0;
       var n = stmts.Count;
       // skip prefix of nops, locals.
       // Also skip calls to ctors (i.e., "base" or "this" calls within ctors)
@@ -274,8 +274,8 @@ namespace Microsoft.Cci.MutableContracts {
           continue;
         else if (s is ILocalDeclarationStatement)
           continue;
-        else if (this.inCtor && IsCallToCtor(s))
-          continue;
+        //else if (this.inCtor && IsCallToCtor(s))
+        //  continue;
         else if (this.inCtor && IsFieldInitializer(s))
           continue;
         else {
@@ -327,6 +327,44 @@ namespace Microsoft.Cci.MutableContracts {
       }
 
       return block;
+    }
+
+    private int IndexOfStatementAfterCallToCtor(List<IStatement> stmts) {
+      if (this.currentMethod.ContainingType.IsValueType) return IndexOfStatementAfterCallToCtorInStruct(stmts);
+      var i = stmts.Count - 1;
+      while (0 <= i) {
+        var s = stmts[i];
+        if (IsCallToCtor(s)) return i+1;
+        i--;
+      }
+      return 0;
+    }
+
+    /// <summary>
+    /// Bizarre, but true code found in an assembly:
+    /// 
+    /// public struct S {
+    ///   private S(int x) : this() {
+    ///      ...
+    ///   }
+    /// }
+    /// 
+    /// Completely useless, but it messes up the contract extraction because any
+    /// contracts coming after the call to "this" (which shows up as an assignment
+    /// of the default value of S to "this") won't get found unless this "preamble"
+    /// is skipped over.
+    /// </summary>
+    private int IndexOfStatementAfterCallToCtorInStruct(List<IStatement> stmts) {
+      if (stmts.Count == 0) return 0;
+      var es = stmts[0] as IExpressionStatement;
+      if (es == null) return 0;
+      var assign = es.Expression as IAssignment;
+      if (assign == null) return 0;
+      if (!(assign.Source is IDefaultValue)) return 0;
+      var te = assign.Target;
+      var addrDeref = te.Definition as IAddressDereference;
+      if (addrDeref == null) return 0;
+      return (addrDeref.Address) is IThisReference ? 1 : 0;
     }
 
     private IBlockStatement ContainsContract(IBlockStatement block) {

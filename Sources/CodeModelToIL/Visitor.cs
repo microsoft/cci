@@ -1219,6 +1219,12 @@ namespace Microsoft.Cci {
       //TODO: change IConversion to make it illegal to convert to or from enum types.
       ITypeReference sourceType = conversion.ValueToConvert.Type;
       ITypeReference targetType = conversion.Type;
+      // The code model represents the implicit conversion of "null" to a reference type
+      // with an explicit conversion. But that does not need to be present in the IL.
+      // There it can just be implicit.
+      var ctc = conversion.ValueToConvert as ICompileTimeConstant;
+      if (ctc != null && ctc.Value == null && targetType.TypeCode == PrimitiveTypeCode.NotPrimitive && TypeHelper.TypesAreEquivalent(sourceType, this.host.PlatformType.SystemObject))
+        return;
       if (sourceType.ResolvedType.IsEnum && !TypeHelper.TypesAreEquivalent(targetType, this.host.PlatformType.SystemObject))
         sourceType = sourceType.ResolvedType.UnderlyingType;
       if (targetType.ResolvedType.IsEnum) targetType = targetType.ResolvedType.UnderlyingType;

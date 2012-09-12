@@ -624,7 +624,7 @@ namespace Microsoft.Cci.ILToCodeModel {
             if (!(assign2.Target.Instance is IPopValue)) continue;
             if (assign2.Target.Definition is IArrayIndexer) continue;
             assign1.Source = assign2;
-            assign2.Source = push2.ValueToPush;
+            assign2.Source = TypeInferencer.Convert(push2.ValueToPush, assign2.Target.Type);
             ((TargetExpression)assign2.Target).Instance = push1.ValueToPush;
             exprS1.Expression = this.CollapseOpAssign(assign1);
           }
