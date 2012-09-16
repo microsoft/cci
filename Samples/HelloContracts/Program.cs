@@ -95,7 +95,7 @@ namespace HelloContracts {
             ISourceLocationProvider sourceLocationProvider = pdbReader;
 
             // Construct a Code Model from the Metadata model via decompilation
-            var mutableModule = Decompiler.GetCodeModelFromMetadataModel(host, module, pdbReader);
+            var mutableModule = Decompiler.GetCodeModelFromMetadataModel(host, module, pdbReader, DecompilerOptions.AnonymousDelegates | DecompilerOptions.Loops);
             ILocalScopeProvider localScopeProvider = new Decompiler.LocalScopeProvider(pdbReader);
 
             // Extract contracts (side effect: removes them from the method bodies)
