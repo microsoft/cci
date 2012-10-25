@@ -1,0 +1,196 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{44C8DD37-CE28-4ACB-A861-EB70A13F7C06}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ILtoCTestRunner</RootNamespace>
+    <AssemblyName>ILtoCTestRunner</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CppCodeProvider, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Cci.Analysis.ControlAndDataFlowGraph, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.Analysis.ControlAndDataFlowGraph.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.AstsProjectedAsCodeModel, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.AstsProjectedAsCodeModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.CodeModel, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.CodeModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.CodeModelToIL, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.CodeModelToIL.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.ContractExtractor, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.ContractExtractor.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.CSharpSourceEmitter, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.CSharpSourceEmitter.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.ILGenerator, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.ILGenerator.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.MetadataHelper, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.MetadataHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.MetadataModel, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.MetadataModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.MutableCodeModel, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.MutableCodeModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.MutableMetadataModel, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.MutableMetadataModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.NewILToCodeModel, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.NewILToCodeModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.PdbReader, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.PdbReader.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.PdbWriter, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.PdbWriter.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.PeReader, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.PeReader.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.PeWriter, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.PeWriter.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.ReflectionEmitter, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.ReflectionEmitter.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.SourceEmitter, Version=1.0.12.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.SourceEmitter.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.SourceModel, Version=1.0.12.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.SourceModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualC.VSCodeProvider, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <CodeAnalysisDependentAssemblyPaths Condition=" '$(VS100COMNTOOLS)' != '' " Include="$(VS100COMNTOOLS)..\IDE\PrivateAssemblies">
+      <Visible>False</Visible>
+    </CodeAnalysisDependentAssemblyPaths>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ProgramTest.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="TestData\Generics.cs" />
+    <EmbeddedResource Include="TestData\Threads.cs" />
+    <EmbeddedResource Include="TestData\Delegates.cs" />
+    <EmbeddedResource Include="TestData\ExceptionHandling.cs" />
+    <EmbeddedResource Include="TestData\VirtualCalls\VirtualCalls.cs" />
+    <EmbeddedResource Include="TestData\ModifiedIL\SimpleOveriddenMethod.il" />
+    <EmbeddedResource Include="TestData\Strings\SimpleStrings.cs" />
+    <EmbeddedResource Include="TestData\Static\StaticFieldAccess.cs" />
+    <EmbeddedResource Include="TestData\Arrays.cs" />
+    <EmbeddedResource Include="TestData\Overflow\CheckedConvert.cs" />
+    <EmbeddedResource Include="TestData\Simple\Div.cs" />
+    <EmbeddedResource Include="TestData\Cast.cs" />
+    <EmbeddedResource Include="TestData\Overflow\CheckedMultiplyInt32.cs" />
+    <EmbeddedResource Include="TestData\Overflow\CheckedAddInt32.cs" />
+    <EmbeddedResource Include="TestData\Simple\Add.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Shadow Include="Test References\ILtoC.accessor" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\ILtoC\ILtoC\ILtoC.csproj">
+      <Project>{FF7BEEA2-5D29-4541-930D-2BE2C0274370}</Project>
+      <Name>ILtoC</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\ILtoC\Mscorlib\mscorlib.dll">
+      <Link>TestData\mscorlib.dll</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\ILtoC\Mscorlib\mscorlib.pdb">
+      <Link>TestData\mscorlib.pdb</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="TestData\ModifiedIL\ExclicitOverride.il" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="TestData\ModifiedIL\Ckfinite.il" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="TestData\ModifiedIL\Cpblk.il" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="TestData\ModifiedIL\Cpobj.il" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="TestData\ModifiedIL\NoPrefix.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

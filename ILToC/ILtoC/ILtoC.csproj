@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCpu</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{FF7BEEA2-5D29-4541-930D-2BE2C0274370}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ILtoC</RootNamespace>
+    <AssemblyName>ILtoC</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCpu' ">
+    <PlatformTarget>AnyCpu</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCpu' ">
+    <PlatformTarget>AnyCpu</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Cci.Analysis.ControlAndDataFlowGraph">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.Analysis.ControlAndDataFlowGraph.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.AstsProjectedAsCodeModel">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.AstsProjectedAsCodeModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.CodeModel">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.CodeModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.CodeModelToIL">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.CodeModelToIL.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.ContractExtractor">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.ContractExtractor.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.CSharpSourceEmitter">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.CSharpSourceEmitter.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.ILGenerator">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.ILGenerator.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.MetadataHelper">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.MetadataHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.MetadataModel">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.MetadataModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.MutableCodeModel">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.MutableCodeModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.MutableMetadataModel">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.MutableMetadataModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.NewILToCodeModel">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.NewILToCodeModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.PdbReader">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.PdbReader.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.PdbWriter">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.PdbWriter.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.PeReader">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.PeReader.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.PeWriter">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.PeWriter.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.ReflectionEmitter">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.ReflectionEmitter.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.SourceEmitter">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.SourceEmitter.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.SourceModel">
+      <HintPath>..\packages\CCI.1.0.12\lib\net40\Microsoft.Cci.SourceModel.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="EntryPoint.cs" />
+    <Compile Include="Instructions.cs" />
+    <Compile Include="Mangler.cs" />
+    <Compile Include="Methods.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Resources\OverflowChecker.h" />
+    <Compile Include="Structs.cs" />
+    <Compile Include="Translator.cs" />
+    <Compile Include="TypeReferences.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\OverflowChecker.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Platform.h" />
+    <EmbeddedResource Include="Resources\Platform_msvc.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Platform_msvc.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Platform.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Platform_unix.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\Platform_unix.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
