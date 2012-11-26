@@ -481,7 +481,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get {
         if (this.platformIDisposable == null) {
           this.platformIDisposable = new Immutable.NamespaceTypeReference(this.host, this.host.PlatformType.SystemObject.ContainingUnitNamespace,
-            this.host.NameTable.GetNameFor("IDisposable"), 0, false, false, PrimitiveTypeCode.Reference);
+            this.host.NameTable.GetNameFor("IDisposable"), 0, false, false, true, PrimitiveTypeCode.Reference);
         }
         return this.platformIDisposable;
       }

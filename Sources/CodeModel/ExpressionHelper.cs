@@ -18,6 +18,34 @@ namespace Microsoft.Cci {
   public static class ExpressionHelper {
 
     /// <summary>
+    /// Returns true if the given constant expression contains a finite numeric value. In other words, infinities and NaN are excluded.
+    /// </summary>
+    /// <param name="constExpression"></param>
+    /// <returns></returns>
+    public static bool IsFiniteNumeric(ICompileTimeConstant constExpression) {
+      IConvertible/*?*/ ic = constExpression.Value as IConvertible;
+      if (ic == null) return false;
+      switch (ic.GetTypeCode()) {
+        case System.TypeCode.SByte:
+        case System.TypeCode.Int16:
+        case System.TypeCode.Int32:
+        case System.TypeCode.Int64:
+        case System.TypeCode.Byte: 
+        case System.TypeCode.UInt16:
+        case System.TypeCode.UInt32:
+        case System.TypeCode.UInt64:
+          return true;
+        case System.TypeCode.Double:
+          var d = ic.ToDouble(null);
+          return !(Double.IsNaN(d) || Double.IsInfinity(d));
+        case System.TypeCode.Single:
+          var s = ic.ToSingle(null);
+          return !(Single.IsNaN(s) || Single.IsInfinity(s));
+      }
+      return false;
+    }
+
+    /// <summary>
     /// Returns true if the constant is an integral value that falls in the range of the target type. 
     /// The target type does have to be an integral type. If it is not, this method always returns false.
     /// </summary>
@@ -420,5 +448,6 @@ namespace Microsoft.Cci {
       else if (tc == PrimitiveTypeCode.UIntPtr) return ((UIntPtr)value) == UIntPtr.Zero;
       else return false;
     }
+
   }
 }

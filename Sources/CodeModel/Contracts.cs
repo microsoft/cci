@@ -243,7 +243,7 @@ namespace Microsoft.Cci.Contracts {
       get {
         if (this.predicateType == null)
           this.predicateType = new NamespaceTypeReference(this.host, this.host.PlatformType.SystemObject.ContainingUnitNamespace,
-            this.host.NameTable.GetNameFor("Predicate"), 1, false, false, PrimitiveTypeCode.NotPrimitive);
+            this.host.NameTable.GetNameFor("Predicate"), 1, false, false, true, PrimitiveTypeCode.NotPrimitive);
         return this.predicateType;
       }
     }

@@ -311,7 +311,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get {
         IUnitNamespaceReference ns = this.host.PlatformType.SystemObject.ContainingUnitNamespace;
         ns = new Immutable.NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor("Diagnostics"));
-        var debuggerHiddenClass = new Immutable.NamespaceTypeReference(this.host, ns, this.host.NameTable.GetNameFor("DebuggerHiddenAttribute"), 0, false, false, PrimitiveTypeCode.Reference);
+        var debuggerHiddenClass = new Immutable.NamespaceTypeReference(this.host, ns, this.host.NameTable.GetNameFor("DebuggerHiddenAttribute"), 0, false, false, true, PrimitiveTypeCode.Reference);
         if (this.debuggerHiddenCtor == null) {
           this.debuggerHiddenCtor = new Microsoft.Cci.MethodReference(this.host, debuggerHiddenClass, CallingConvention.HasThis, this.host.PlatformType.SystemVoid, this.host.NameTable.Ctor, 0);
         }
@@ -861,7 +861,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         IUnitNamespaceReference ns = new Immutable.RootUnitNamespaceReference(assemblyReference);
         ns = new Immutable.NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor("System"));
         var SystemDotThreading = new Immutable.NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor("Threading"));
-        ITypeReference ThreadingDotThread = new Immutable.NamespaceTypeReference(this.host, SystemDotThreading, this.host.NameTable.GetNameFor("Thread"), 0, false, false, PrimitiveTypeCode.Reference);
+        ITypeReference ThreadingDotThread = new Immutable.NamespaceTypeReference(this.host, SystemDotThreading, this.host.NameTable.GetNameFor("Thread"), 0, false, false, true, PrimitiveTypeCode.Reference);
         foreach (ITypeMemberReference memref in ThreadingDotThread.ResolvedType.GetMembersNamed(this.host.NameTable.GetNameFor("ManagedThreadId"), false)) {
           IPropertyDefinition propertyDef = memref as IPropertyDefinition;
           if (propertyDef != null) {
@@ -881,7 +881,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         IUnitNamespaceReference ns = new Immutable.RootUnitNamespaceReference(assemblyReference);
         ns = new Immutable.NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor("System"));
         var SystemDotThreading = new Immutable.NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor("Threading"));
-        var ThreadingDotThread = new Immutable.NamespaceTypeReference(this.host, SystemDotThreading, this.host.NameTable.GetNameFor("Thread"), 0, false, false, PrimitiveTypeCode.Reference);
+        var ThreadingDotThread = new Immutable.NamespaceTypeReference(this.host, SystemDotThreading, this.host.NameTable.GetNameFor("Thread"), 0, false, false, true, PrimitiveTypeCode.Reference);
         IMethodReference/*? !after search*/ CurrentThreadPropertyGetter = null;
         foreach (ITypeMemberReference memref in ThreadingDotThread.ResolvedType.GetMembersNamed(this.host.NameTable.GetNameFor("CurrentThread"), false)) {
           IPropertyDefinition property = memref as IPropertyDefinition;

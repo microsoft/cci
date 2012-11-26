@@ -1018,6 +1018,17 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     object/*?*/ value;
 
+    /// <summary>
+    /// Returns a <see cref="System.String"/> that represents this instance.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="System.String"/> that represents this instance.
+    /// </returns>
+    public override string ToString() {
+      if (this.Value == null) return "null";
+      return this.Value.ToString();
+    }
+
     #region IMetadataExpression Members
 
     ITypeReference IMetadataExpression.Type {

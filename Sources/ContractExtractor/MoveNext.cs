@@ -14,6 +14,7 @@ using Microsoft.Cci.Contracts;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.MutableCodeModel.Contracts;
 using System.Linq;
+using Microsoft.Cci.ILToCodeModel;
 
 namespace Microsoft.Cci.MutableContracts {
   /// <summary>
@@ -46,7 +47,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// <returns>Dummy.MethodBody if <paramref name="possibleIterator"/> does not fit into the code pattern of an iterator method, 
     /// or the body of the MoveNext method of the corresponding closure class if it does.
     /// </returns>
-    public static ISourceMethodBody/*?*/ FindClosureMoveNext(IMetadataHost host, ISourceMethodBody/*!*/ possibleIterator) {
+    public static IMethodBody/*?*/ FindClosureMoveNext(IMetadataHost host, ISourceMethodBody/*!*/ possibleIterator) {
       if (possibleIterator is Dummy) return null;
       var nameTable = host.NameTable;
       var possibleIteratorBody = possibleIterator.Block;
@@ -75,7 +76,7 @@ namespace Microsoft.Cci.MutableContracts {
       return null;
     }
 
-    private static ISourceMethodBody/*?*/ FirstStatementIsIteratorCreation(IMetadataHost host, ISourceMethodBody possibleIterator, INameTable nameTable, IStatement statement) {
+    private static IMethodBody/*?*/ FirstStatementIsIteratorCreation(IMetadataHost host, ISourceMethodBody possibleIterator, INameTable nameTable, IStatement statement) {
       ICreateObjectInstance createObjectInstance = GetICreateObjectInstance(statement);
       if (createObjectInstance == null) {
         // If the first statement in the method body is not the creation of iterator closure, return a dummy.
@@ -97,7 +98,7 @@ namespace Microsoft.Cci.MutableContracts {
             ISpecializedMethodDefinition moveNextGeneric = moveNext as ISpecializedMethodDefinition;
             if (moveNextGeneric != null)
               moveNext = moveNextGeneric.UnspecializedVersion.ResolvedMethod;
-            return moveNext.Body as ISourceMethodBody;
+            return moveNext.Body;
           }
         }
       }
@@ -176,20 +177,23 @@ namespace Microsoft.Cci.MutableContracts {
       }
       // Find all of the state captured for the IEnumerator
       // That state is captured at the beginning of the IEnumerable<T>.GetEnumerator method
-      MethodDefinition getEnumerator = null;
+      IMethodDefinition getEnumerator = null;
       var t = moveNextBody.MethodDefinition.ContainingTypeDefinition;
       foreach (IMethodImplementation methodImplementation in t.ExplicitImplementationOverrides) {
         if (methodImplementation.ImplementedMethod.Name == host.NameTable.GetNameFor("GetEnumerator")) {
           var gtir = methodImplementation.ImplementedMethod.ContainingType as IGenericTypeInstanceReference;
           if (gtir != null && TypeHelper.TypesAreEquivalent(gtir.GenericType, host.PlatformType.SystemCollectionsGenericIEnumerable)) {
-            getEnumerator = methodImplementation.ImplementingMethod.ResolvedMethod as MethodDefinition;
+            getEnumerator = methodImplementation.ImplementingMethod.ResolvedMethod as IMethodDefinition;
             break;
           }
         }
       }
       if (getEnumerator != null) {
-        ISourceMethodBody geBody = (ISourceMethodBody)getEnumerator.Body;
-        foreach (var stmt in geBody.Block.Statements) {
+        IMethodBody geBody = getEnumerator.Body;
+        var sourceGeBody = geBody as ISourceMethodBody;
+        if (sourceGeBody == null)
+          sourceGeBody = Decompiler.GetCodeModelFromMetadataModel(host, geBody, pdbReader, DecompilerOptions.AnonymousDelegates);
+        foreach (var stmt in sourceGeBody.Block.Statements) {
           var es = stmt as IExpressionStatement;
           if (es == null) continue;
           var assign = es.Expression as IAssignment;

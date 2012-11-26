@@ -38,7 +38,11 @@ namespace Microsoft.Cci.MutableContracts {
       #region Special case for iterators (until decompiler always handles them)
       var moveNext = IteratorContracts.FindClosureMoveNext(host, sourceMethodBody);
       if (moveNext != null) {
-        var mc = IteratorContracts.GetMethodContractFromMoveNext(host, e, sourceMethodBody, moveNext, pdbReader);
+        var sourceMoveNext = moveNext as ISourceMethodBody;
+        if (sourceMoveNext == null) {
+          sourceMoveNext = Decompiler.GetCodeModelFromMetadataModel(host, moveNext, pdbReader, DecompilerOptions.AnonymousDelegates);
+        }
+        var mc = IteratorContracts.GetMethodContractFromMoveNext(host, e, sourceMethodBody, sourceMoveNext, pdbReader);
         return new MethodContractAndMethodBody(mc, sourceMethodBody.Block);
       }
       #endregion
@@ -264,7 +268,11 @@ namespace Microsoft.Cci.MutableContracts {
       List<IStatement> newStmts = null;
 
       var i = this.inCtor ? IndexOfStatementAfterCallToCtor(stmts) : 0;
-      var n = stmts.Count;
+
+      // Find last statement that could be a contract
+      var n = IndexOfLastContractCall(stmts);
+        
+
       // skip prefix of nops, locals.
       // Also skip calls to ctors (i.e., "base" or "this" calls within ctors)
       // Also skip calls that assign to fields of a class. these are present in constructors.
@@ -287,17 +295,27 @@ namespace Microsoft.Cci.MutableContracts {
       // consequence of the decompiler not being perfect: need to find the last call to a contract method and use that to stop the search
       var j = i;
       IStatement lastContract = null;
-      while (j < n) {
-        var s = stmts[j++];
+      var localDecls = new List<IStatement>();
 
-        if (!(IsPotentialPartOfContract(s) || IsPreconditionOrPostcondition(s)))
-          break;
+      //while (j < n) {
+      //  var s = stmts[j++];
 
-        // legacy contracts can never be the last (since EndContractBlock is counted)
-        // but they match "IsPotentialPartOfContract" since they are conditional statements.
-        if (IsPrePostEndOrLegacy(s, false))
-          lastContract = s;
-      }
+      //  if (!(IsPotentialPartOfContract(s) || IsPreconditionOrPostcondition(s)))
+      //    break;
+
+      //  if (s is ILocalDeclarationStatement) {
+      //    localDecls.Add(s);
+      //  }
+
+      //  // legacy contracts can never be the last (since EndContractBlock is counted)
+      //  // but they match "IsPotentialPartOfContract" since they are conditional statements.
+      //  if (IsPrePostEndOrLegacy(s, false))
+      //    lastContract = s;
+      //}
+
+      if (n < stmts.Count)
+        lastContract = stmts[n];
+
       if (lastContract == null)
         return block;
       Contract.Assert(lastContract != null);
@@ -305,11 +323,14 @@ namespace Microsoft.Cci.MutableContracts {
       if (mutableBlock != null) {
         newStmts = new List<IStatement>();
         newStmts.AddRange(stmts.GetRange(0,i));
+        if (0 < localDecls.Count)
+          newStmts.AddRange(localDecls);
       }
+
 
       var foundNonLegacyContract = false; // extract legacy requires only until a non-legacy is found
       var currentClump = new List<IStatement>();
-      while (i < n) {
+      while (i < n+1) {
         var s = stmts[i++];
         currentClump.Add(s);
         if (IsPrePostEndOrLegacy(s, !foundNonLegacyContract)) {
@@ -322,11 +343,21 @@ namespace Microsoft.Cci.MutableContracts {
       }
 
       if (mutableBlock != null) {
-        newStmts.AddRange(stmts.GetRange(i, n - i));
+        newStmts.AddRange(stmts.GetRange(i, /*n*/stmts.Count - i));
         mutableBlock.Statements = newStmts;
       }
 
       return block;
+    }
+
+    private int IndexOfLastContractCall(List<IStatement> stmts) {
+      var k = stmts.Count - 1;
+      while (0 <= k) {
+        var s = stmts[k];
+        if (IsPrePostEndOrLegacy(s, false)) break;
+        k--;
+      }
+      return k;
     }
 
     private int IndexOfStatementAfterCallToCtor(List<IStatement> stmts) {
@@ -413,6 +444,8 @@ namespace Microsoft.Cci.MutableContracts {
       else if (s is ILabeledStatement)
         return true;
       else if (s is IGotoStatement)
+        return true;
+      else if (s is ILocalDeclarationStatement)
         return true;
       var es = s as IExpressionStatement;
       if (es != null && es.Expression is IMethodCall)
@@ -685,6 +718,10 @@ namespace Microsoft.Cci.MutableContracts {
       int startColumn;
       if (!TryGetSourceText(pdbReader, locations, out sourceText, out startColumn)) return false;
       int firstSourceTextIndex = sourceText.IndexOf('(');
+      // Special case: for VB Requires<E>, the exception type is written as "(Of E)" so need to skip all of that.
+      if (firstSourceTextIndex != -1 && firstSourceTextIndex + 3 < sourceText.Length && (String.Compare(sourceText, firstSourceTextIndex+1, "Of ", 0, 3) == 0)) {
+        firstSourceTextIndex += sourceText.Substring(firstSourceTextIndex + 1).IndexOf('(') + 1;
+      }
       firstSourceTextIndex = firstSourceTextIndex == -1 ? 0 : firstSourceTextIndex + 1; // the +1 is to skip the opening paren
       int lastSourceTextIndex = sourceText.LastIndexOf(')'); // hopefully the closing paren of the contract method call
       if (numArgs != 1) {

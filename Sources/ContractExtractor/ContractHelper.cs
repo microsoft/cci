@@ -123,6 +123,7 @@ namespace Microsoft.Cci.MutableContracts {
             0,
             false,
             false,
+            true,
             PrimitiveTypeCode.NotPrimitive
             );
           var contractInvariantMethodCtor = new Microsoft.Cci.MutableCodeModel.MethodReference() {
@@ -494,13 +495,20 @@ namespace Microsoft.Cci.MutableContracts {
       string[] names = typeName.Split('.');
       for (int i = 0, n = names.Length - 1; i < n; i++)
         ns = new Immutable.NestedUnitNamespaceReference(ns, host.NameTable.GetNameFor(names[i]));
-      return new Immutable.NamespaceTypeReference(host, ns, host.NameTable.GetNameFor(names[names.Length - 1]), 0, false, false, PrimitiveTypeCode.NotPrimitive);
+      return new Immutable.NamespaceTypeReference(host, ns, host.NameTable.GetNameFor(names[names.Length - 1]), 0, false, false, true, PrimitiveTypeCode.NotPrimitive);
     }
 
     /// <summary>
     /// C# uses CompilerGenerated, VB uses DebuggerNonUserCode
     /// </summary>
+    /// <returns>
+    /// True iff the member is a getter or a setter and in addition is marked by the compiler as being a compiler-generated method.
+    /// </returns>
     public static bool IsAutoPropertyMember(IMetadataHost host, ITypeDefinitionMember member) {
+      bool isPropertyGetter = member.Name.Value.StartsWith("get_");
+      bool isPropertySetter = member.Name.Value.StartsWith("set_");
+      if (!isPropertyGetter && !isPropertySetter) return false;
+
       if (AttributeHelper.Contains(member.Attributes, host.PlatformType.SystemRuntimeCompilerServicesCompilerGeneratedAttribute)) return true;
       var systemDiagnosticsDebuggerNonUserCodeAttribute = CreateTypeReference(host, new Immutable.AssemblyReference(host, host.ContractAssemblySymbolicIdentity), "System.Diagnostics.DebuggerNonUserCodeAttribute");
       return AttributeHelper.Contains(member.Attributes, systemDiagnosticsDebuggerNonUserCodeAttribute);
@@ -1094,7 +1102,7 @@ namespace Microsoft.Cci.MutableContracts {
       bool isPropertyGetter = methodDefinition.Name.Value.StartsWith("get_");
       bool isPropertySetter = methodDefinition.Name.Value.StartsWith("set_");
       //^ assume !(isPropertyGetter && isPropertySetter); // maybe neither, but never both!
-      if (!((isPropertyGetter || isPropertySetter) && ContractHelper.IsAutoPropertyMember(host, methodDefinition))) return null;
+      if (!ContractHelper.IsAutoPropertyMember(host, methodDefinition)) return null;
       IMethodDefinition getter = null;
       IMethodDefinition setter = null;
       // needs to have both a setter and a getter
@@ -1115,6 +1123,9 @@ namespace Microsoft.Cci.MutableContracts {
         }
       }
 
+      // Silent error?
+      if (getter == null || setter == null) return null;
+
       // If the auto-property inherits any contracts then it doesn't derive any from the invariant
       var inheritsContract = false;
       IMethodDefinition overriddenMethod = MemberHelper.GetImplicitlyOverriddenBaseClassMethod(getter) as IMethodDefinition;
@@ -1127,7 +1138,7 @@ namespace Microsoft.Cci.MutableContracts {
         inheritsContract |= IteratorHelper.EnumerableIsNotEmpty(MemberHelper.GetExplicitlyOverriddenMethods(getter));
       }
 
-      if (inheritsContract || getter == null || setter == null) return null;
+      if (inheritsContract) return null;
 
       if (typeContract == null) return null;
       MethodContract derivedMethodContract = null;
@@ -1651,8 +1662,11 @@ namespace Microsoft.Cci.MutableContracts {
 
   internal class SimpleHostEnvironment : MetadataReaderHost, IContractAwareHost {
     PeReader peReader;
-    internal SimpleHostEnvironment(INameTable nameTable, IInternFactory internFactory)
+    private readonly bool preserveILLocations;
+
+    internal SimpleHostEnvironment(INameTable nameTable, IInternFactory internFactory, bool preserveILLocations)
       : base(nameTable, internFactory, 0, null, false) {
+      this.preserveILLocations = preserveILLocations;
       this.peReader = new PeReader(this);
     }
 
@@ -1667,6 +1681,12 @@ namespace Microsoft.Cci.MutableContracts {
       this.RegisterAsLatest(result);
       return result;
     }
+
+    /// <summary>
+    /// True if IL locations should be preserved up into the code model by decompilers using this host.
+    /// </summary>
+    public override bool PreserveILLocations { get { return this.preserveILLocations; } }
+
 
 
     #region IContractAwareHost Members
@@ -2036,7 +2056,7 @@ namespace Microsoft.Cci.MutableContracts {
               }
               if (referenceUnit != null && loadedAssembly.AssemblyIdentity.Equals(this.CoreAssemblySymbolicIdentity)) {
                 // Need to use a separate host because the reference assembly for the core assembly thinks *it* is the core assembly
-                var separateHost = new SimpleHostEnvironment(this.NameTable, this.InternFactory);
+                var separateHost = new SimpleHostEnvironment(this.NameTable, this.InternFactory, this.PreserveILLocations);
                 this.disposableObjectAllocatedByThisHost.Add(separateHost);
                 referenceUnit = separateHost.LoadUnitFrom(referenceUnit.Location);
                 hostForReferenceAssembly = separateHost;
@@ -2046,7 +2066,7 @@ namespace Microsoft.Cci.MutableContracts {
               #region Load reference assembly
               if (loadedAssembly.AssemblyIdentity.Equals(this.CoreAssemblySymbolicIdentity)) {
                 // Need to use a separate host because the reference assembly for the core assembly thinks *it* is the core assembly
-                var separateHost = new SimpleHostEnvironment(this.NameTable, this.InternFactory);
+                var separateHost = new SimpleHostEnvironment(this.NameTable, this.InternFactory, this.PreserveILLocations);
                 this.disposableObjectAllocatedByThisHost.Add(separateHost);
                 referenceUnit = separateHost.LoadUnitFrom(referenceAssemblyIdentity.Location);
                 hostForReferenceAssembly = separateHost;
