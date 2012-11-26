@@ -3144,7 +3144,7 @@ namespace Microsoft.Cci.Immutable {
     public IMethodDefinition ResolvedMethod {
       get {
         if (this.resolvedMethod == null)
-          this.resolvedMethod = TypeHelper.GetMethod(this.ContainingType.ResolvedType, this, true);
+          this.resolvedMethod = MemberHelper.ResolveMethod(this);
         return this.resolvedMethod;
       }
     }

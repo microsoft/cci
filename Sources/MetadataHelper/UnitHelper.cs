@@ -131,6 +131,51 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns a unit namespace definition, nested in the given unitNamespace if possible,
+    /// otherwise nested in the given unit if possible, otherwise nested in the given host if possible, otherwise it returns Dummy.UnitNamespace.
+    /// If unitNamespaceReference is a root namespace, the result is equal to the given unitNamespace if not null,
+    /// otherwise the result is the root namespace of the given unit if not null, 
+    /// otherwise the result is root namespace of unitNamespaceReference.Unit, if that can be resolved via the given host, 
+    /// otherwise the result is Dummy.UnitNamespace.
+    /// </summary>
+    public static IUnitNamespace Resolve(IUnitNamespaceReference unitNamespaceReference, IMetadataHost host, IUnit unit = null, IUnitNamespace unitNamespace = null) {
+      Contract.Requires(unitNamespaceReference != null);
+      Contract.Requires(host != null);
+      Contract.Requires(unit != null || unitNamespace == null);
+      Contract.Ensures(Contract.Result<IUnitNamespace>() != null);
+
+      var rootNsRef = unitNamespaceReference as IRootUnitNamespaceReference;
+      if (rootNsRef != null) {
+        if (unitNamespace != null) return unitNamespace;
+        if (unit != null) return unit.UnitNamespaceRoot;
+        unit = UnitHelper.Resolve(unitNamespaceReference.Unit, host);
+        if (unit is Dummy) return Dummy.UnitNamespace;
+        return unit.UnitNamespaceRoot;
+      }
+      var nestedNsRef = unitNamespaceReference as INestedUnitNamespaceReference;
+      if (nestedNsRef == null) return Dummy.UnitNamespace;
+      var containingNsDef = UnitHelper.Resolve(nestedNsRef.ContainingUnitNamespace, host, unit, unitNamespace);
+      if (containingNsDef is Dummy) return Dummy.UnitNamespace;
+      foreach (var nsMem in containingNsDef.GetMembersNamed(nestedNsRef.Name, ignoreCase: false)) {
+        var neNsDef = nsMem as INestedUnitNamespace;
+        if (neNsDef != null) return neNsDef;
+      }
+      return Dummy.UnitNamespace;
+    }
+
+    /// <summary>
+    /// Returns a unit, loaded into the given host, that matches unitReference. The host will load the unit, if necessary and possible.
+    /// If the reference cannot be resolved a dummy unit is returned.
+    /// </summary>
+    public static IUnit Resolve(IUnitReference unitReference, IMetadataHost host) {
+      Contract.Requires(unitReference != null);
+      Contract.Requires(host != null);
+      Contract.Ensures(Contract.Result<IUnit>() != null);
+
+      return host.LoadUnit(unitReference.UnitIdentity);
+    }
+
+    /// <summary>
     /// Computes the string representing the strong name of the given assembly reference.
     /// </summary>
     public static string StrongName(IAssemblyReference assemblyReference) {

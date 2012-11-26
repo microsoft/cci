@@ -1199,11 +1199,13 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
     internal const uint ExportedType = 0x00000011;
     internal const uint ManifestResource = 0x00000012;
     internal const uint GenericParameter = 0x00000013;
+    internal const uint GenericParameterConstraint = 0x00000014;
+    internal const uint MethodSpec = 0x00000015;
     internal const uint TagMask = 0x0000001F;
     internal static uint[] TagToTokenTypeArray = { TokenTypeIds.MethodDef, TokenTypeIds.FieldDef, TokenTypeIds.TypeRef, TokenTypeIds.TypeDef, TokenTypeIds.ParamDef,
           TokenTypeIds.InterfaceImpl, TokenTypeIds.MemberRef, TokenTypeIds.Module, TokenTypeIds.Permission, TokenTypeIds.Property, TokenTypeIds.Event,
           TokenTypeIds.Signature, TokenTypeIds.ModuleRef, TokenTypeIds.TypeSpec, TokenTypeIds.Assembly, TokenTypeIds.AssemblyRef, TokenTypeIds.File, TokenTypeIds.ExportedType,
-          TokenTypeIds.ManifestResource, TokenTypeIds.GenericParam };
+          TokenTypeIds.ManifestResource, TokenTypeIds.GenericParam, TokenTypeIds.GenericParamConstraint, TokenTypeIds.MethodSpec };
     internal const TableMask TablesReferenced =
       TableMask.Method
       | TableMask.Field
@@ -1224,7 +1226,9 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
       | TableMask.File
       | TableMask.ExportedType
       | TableMask.ManifestResource
-      | TableMask.GenericParam;
+      | TableMask.GenericParam
+      | TableMask.GenericParamConstraint
+      | TableMask.MethodSpec;
     internal static uint ConvertToToken(
       uint hasCustomAttribute
     ) {
@@ -1276,6 +1280,10 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
           return rowId << HasCustomAttributeTag.NumberOfBits | HasCustomAttributeTag.ManifestResource;
         case TokenTypeIds.GenericParam:
           return rowId << HasCustomAttributeTag.NumberOfBits | HasCustomAttributeTag.GenericParameter;
+        case TokenTypeIds.GenericParamConstraint:
+          return rowId << HasCustomAttributeTag.NumberOfBits | HasCustomAttributeTag.GenericParameterConstraint;
+        case TokenTypeIds.MethodSpec:
+          return rowId << HasCustomAttributeTag.NumberOfBits | HasCustomAttributeTag.MethodSpec;
       }
       return 0;
     }

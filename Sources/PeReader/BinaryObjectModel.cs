@@ -3258,13 +3258,17 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
     }
 
-    public virtual IMethodDefinition ResolvedMethod {
+    /// <summary>
+    /// The method being referred to.
+    /// </summary>
+    public IMethodDefinition ResolvedMethod {
       get {
-        ITypeReference/*?*/moduleTypeRef = this.OwningTypeReference;
-        if (moduleTypeRef == null) return Dummy.MethodDefinition;
-        return TypeHelper.GetMethod(moduleTypeRef.ResolvedType, this, true);
+        if (this.resolvedMethod == null)
+          this.resolvedMethod = MemberHelper.ResolveMethod(this);
+        return this.resolvedMethod;
       }
     }
+    IMethodDefinition/*?*/ resolvedMethod;
 
     public ushort ParameterCount {
       get {

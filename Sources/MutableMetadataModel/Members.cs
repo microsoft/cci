@@ -520,6 +520,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.customModifiers = new List<ICustomModifier>(fieldReference.CustomModifiers);
       else
         this.customModifiers = null;
+      this.isStatic = fieldReference.IsStatic;
       this.internFactory = internFactory;
       if (IteratorHelper.EnumerableIsNotEmpty(fieldReference.Locations))
         this.locations = new List<ILocation>(fieldReference.Locations);
@@ -2398,7 +2399,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// Resolves the reference to find the method being referred to.
     /// </summary>
     protected virtual IMethodDefinition Resolve() {
-      return TypeHelper.GetMethod(this.ContainingType.ResolvedType, this, true);
+      return MemberHelper.ResolveMethod(this);
     }
 
     /// <summary>

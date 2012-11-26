@@ -1682,6 +1682,133 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Returns a type definition, nested in the given (generic) method if possible, otherwiwe nested in the given type if possible, otherwise nested in the given unitNamespace if possible,
+    /// otherwise nested in the given unit if possible, otherwise nested in the given host if possible, otherwise it returns Dummy.TypeDefinition.
+    /// </summary>
+    public static ITypeDefinition Resolve(ITypeReference typeReference, IMetadataHost host, IUnit unit = null, IUnitNamespace unitNamespace = null, ITypeDefinition type = null, IMethodDefinition method = null) {
+      Contract.Requires(typeReference != null);
+      Contract.Requires(host != null);
+      Contract.Requires(unit != null || unitNamespace == null);
+      Contract.Requires(unitNamespace != null || type == null);
+      Contract.Requires(method == null || method.IsGeneric);
+      Contract.Ensures(Contract.Result<ITypeDefinition>() != null);
+
+      var nsTypeRef = typeReference as INamespaceTypeReference;
+      if (nsTypeRef != null) {
+        var containingNamespaceDef = UnitHelper.Resolve(nsTypeRef.ContainingUnitNamespace, host, unit, unitNamespace);
+        if (containingNamespaceDef is Dummy) return Dummy.TypeDefinition;
+        foreach (var nsMember in containingNamespaceDef.GetMembersNamed(nsTypeRef.Name, ignoreCase: false)) {
+          var nsTypeDef = nsMember as INamespaceTypeDefinition;
+          if (nsTypeDef != null && nsTypeRef.GenericParameterCount == nsTypeDef.GenericParameterCount &&
+              (!nsTypeRef.IsEnum || nsTypeDef.IsEnum) && (!nsTypeRef.IsValueType || nsTypeDef.IsValueType) &&
+              nsTypeRef.TypeCode == nsTypeDef.TypeCode) return nsTypeDef;
+          var nsAlias = nsMember as INamespaceAliasForType;
+          if (nsAlias != null) return Resolve(nsAlias.AliasedType, host, unit, unitNamespace, type, method);
+        }
+        return Dummy.TypeDefinition;
+      }
+      var nestedTypeRef = typeReference as INestedTypeReference;
+      if (nestedTypeRef != null) {
+        if (type != null) {
+          foreach (var tyMember in type.GetMembersNamed(nestedTypeRef.Name, ignoreCase: false)) {
+            var neTypeDef = tyMember as INestedTypeDefinition;
+            if (neTypeDef != null && nestedTypeRef.GenericParameterCount == neTypeDef.GenericParameterCount &&
+              (!nestedTypeRef.IsEnum || neTypeDef.IsEnum) && (!nestedTypeRef.IsValueType || neTypeDef.IsValueType) &&
+              nestedTypeRef.TypeCode == neTypeDef.TypeCode) 
+              return neTypeDef;
+            var neAlias = tyMember as INestedAliasForType;
+            if (neAlias != null) return Resolve(neAlias.AliasedType, host, unit, unitNamespace, type, method);
+          }
+        }
+        var containingTypeDef = TypeHelper.Resolve(nestedTypeRef.ContainingType, host, unit, unitNamespace, type, method);
+        if (containingTypeDef is Dummy) return Dummy.TypeDefinition;
+        foreach (var tyMember in containingTypeDef.GetMembersNamed(nestedTypeRef.Name, ignoreCase: false)) {
+          var neTypeDef = tyMember as INestedTypeDefinition;
+          if (neTypeDef != null) return neTypeDef;
+          var neAlias = tyMember as INestedAliasForType;
+          if (neAlias != null) return Resolve(neAlias.AliasedType, host, unit, unitNamespace, type, method);
+        }
+        return Dummy.TypeDefinition;
+      }
+      var arrayType = typeReference as IArrayTypeReference;
+      if (arrayType != null) {
+        var elemTypeDef = TypeHelper.Resolve(arrayType.ElementType, host, unit, unitNamespace, type, method);
+        if (elemTypeDef is Dummy) return Dummy.TypeDefinition;
+        if (arrayType.IsVector) return Vector.GetVector(elemTypeDef, host.InternFactory);
+        return Matrix.GetMatrix(elemTypeDef, arrayType.Rank, arrayType.LowerBounds, arrayType.Sizes, host.InternFactory);
+      }
+      var genericTypeParameterRef = typeReference as IGenericTypeParameterReference;
+      if (genericTypeParameterRef != null) {
+        var definingType = TypeHelper.Resolve(genericTypeParameterRef.DefiningType, host, unit, unitNamespace, type, method);
+        if (!definingType.IsGeneric) return Dummy.TypeDefinition;
+        foreach (var genParDef in definingType.GenericParameters) {
+          if (genParDef.Index == genericTypeParameterRef.Index) return genParDef;
+        }
+        return Dummy.TypeDefinition;
+      }
+      var genericMethodTypeParameterRef = typeReference as IGenericMethodParameterReference;
+      if (genericMethodTypeParameterRef != null) {
+        if (method != null) {
+          foreach (var genParDef in method.GenericParameters) {
+            if (genParDef.Index == genericMethodTypeParameterRef.Index) return genParDef;
+          }
+        }
+        var definingMethod = MemberHelper.ResolveMethod(genericMethodTypeParameterRef.DefiningMethod, host, unit, unitNamespace, type);
+        if (!definingMethod.IsGeneric) return Dummy.TypeDefinition;
+        foreach (var genParDef in definingMethod.GenericParameters) {
+          if (genParDef.Index == genericMethodTypeParameterRef.Index) return genParDef;
+        }
+        return Dummy.TypeDefinition;
+      }
+      var genericTypeInstanceRef = typeReference as IGenericTypeInstanceReference;
+      if (genericTypeInstanceRef != null) {
+        var genericTypeDef = TypeHelper.Resolve(genericTypeInstanceRef.GenericType, host, unit, unitNamespace, type, method) as INamedTypeDefinition;
+        if (genericTypeDef == null || !genericTypeDef.IsGeneric) return Dummy.TypeDefinition;
+        ITypeReference[] genericArguments = new ITypeReference[genericTypeDef.GenericParameterCount];
+        var i = 0;
+        foreach (var genericArgRef in genericTypeInstanceRef.GenericArguments) {
+          if (i >= genericArguments.Length) return Dummy.TypeDefinition;
+          var genArgDef = TypeHelper.Resolve(genericArgRef, host, unit, unitNamespace, type, method);
+          if (genArgDef is Dummy) return Dummy.TypeDefinition;
+          genericArguments[i++] = genArgDef;
+        }
+        if (i < genericArguments.Length) return Dummy.TypeDefinition;
+        return GenericTypeInstance.GetGenericTypeInstance(genericTypeDef, IteratorHelper.GetReadonly(genericArguments), host.InternFactory);
+      }
+      var managedPointerTypeRef = typeReference as IManagedPointerTypeReference;
+      if (managedPointerTypeRef != null) {
+        var targetTypeDef = TypeHelper.Resolve(managedPointerTypeRef.TargetType, host, unit, unitNamespace, type, method);
+        if (targetTypeDef is Dummy) return Dummy.TypeDefinition;
+        return ManagedPointerType.GetManagedPointerType(targetTypeDef, host.InternFactory);
+      }
+      var modifiedPointerRef = typeReference as ModifiedPointerType;
+      if (modifiedPointerRef != null) {
+        var targetTypeDef = TypeHelper.Resolve(modifiedPointerRef.TargetType, host, unit, unitNamespace, type, method);
+        if (targetTypeDef is Dummy) return Dummy.TypeDefinition;
+        var customModifiers = new CustomModifier[IteratorHelper.EnumerableCount(modifiedPointerRef.CustomModifiers)];
+        var i = 0;
+        foreach (var customModifier in modifiedPointerRef.CustomModifiers) {
+          var modifierDef = TypeHelper.Resolve(customModifier.Modifier, host, unit, unitNamespace, type, method);
+          if (modifierDef is Dummy) return Dummy.TypeDefinition;
+          Contract.Assume(i < customModifiers.Length);
+          customModifiers[i++] = new CustomModifier(customModifier.IsOptional, modifierDef);
+        }
+        return ModifiedPointerType.GetModifiedPointerType(targetTypeDef, IteratorHelper.GetReadonly(customModifiers), host.InternFactory);
+      }
+      var modifiedTypeRef = typeReference as IModifiedTypeReference;
+      if (modifiedTypeRef != null) {
+        return TypeHelper.Resolve(modifiedTypeRef.UnmodifiedType, host, unit, unitNamespace, type, method);
+      }
+      var pointerTypeRef = typeReference as IPointerTypeReference;
+      if (pointerTypeRef != null) {
+        var targetTypeDef = TypeHelper.Resolve(pointerTypeRef.TargetType, host, unit, unitNamespace, type, method);
+        if (targetTypeDef is Dummy) return Dummy.TypeDefinition;
+        return PointerType.GetPointerType(targetTypeDef, host.InternFactory);
+      }
+      return Dummy.TypeDefinition;
+    }
+
+    /// <summary>
     /// If the given type is a unsigned integer type, return the equivalent signed integer type.
     /// Otherwise return the given type.
     /// </summary>
@@ -1766,6 +1893,7 @@ namespace Microsoft.Cci {
             if (TypeHelper.TypesAreEquivalent(rootType, type.ResolvedType.UnderlyingType, true)) return 0;
             return TypeHelper.SizeOfType(type.ResolvedType.UnderlyingType);
           }
+          if (type is IGenericParameter) return 1; // don't know the exact size, but it must be greater than zero
           uint result = mayUseSizeOfProperty ? type.ResolvedType.SizeOf : 0;
           if (result > 0) return result;
           IEnumerable<ITypeDefinitionMember> members = type.ResolvedType.Members;

@@ -248,12 +248,20 @@ namespace Microsoft.Cci {
       /// </summary>
       public void Visit(IEventDefinition eventDefinition) {
         this.Visit((ITypeDefinitionMember)eventDefinition);
+
         if (eventDefinition.Adder is Dummy)
           this.ReportError(MetadataError.IncompleteNode, eventDefinition, "Adder");
-        if (eventDefinition.Caller != null && eventDefinition.Caller is Dummy)
-          this.ReportError(MetadataError.IncompleteNode, eventDefinition, "Caller");
+        else if (!IteratorHelper.EnumerableContains(eventDefinition.Accessors, eventDefinition.Adder))
+          this.ReportError(MetadataError.AccessorListInconsistent, eventDefinition, "Adder");
+        if (eventDefinition.Caller != null)
+          if (eventDefinition.Caller is Dummy)
+            this.ReportError(MetadataError.IncompleteNode, eventDefinition, "Caller");
+          else if (!IteratorHelper.EnumerableContains(eventDefinition.Accessors, eventDefinition.Caller))
+            this.ReportError(MetadataError.AccessorListInconsistent, eventDefinition, "Caller");
         if (eventDefinition.Remover is Dummy)
           this.ReportError(MetadataError.IncompleteNode, eventDefinition, "Remover");
+        else if (!IteratorHelper.EnumerableContains(eventDefinition.Accessors, eventDefinition.Remover))
+          this.ReportError(MetadataError.AccessorListInconsistent, eventDefinition, "Remover");
         if (eventDefinition.IsRuntimeSpecial && !eventDefinition.IsSpecialName)
           this.ReportError(MetadataError.RuntimeSpecialMustAlsoBeSpecialName, eventDefinition);
         if (eventDefinition.Type != null) {
@@ -264,6 +272,16 @@ namespace Microsoft.Cci {
             if (!(etype is Dummy) && (etype.IsInterface || etype.IsValueType))
               this.ReportError(MetadataError.EventTypeMustBeClass, eventDefinition.Type, eventDefinition);
           }
+        }
+        foreach (var a in eventDefinition.Accessors) {
+          // if an accessor meets the naming conventions, then it should be the accessor it claims to be
+          var methodDefinition = a.ResolvedMethod;
+          if (MemberHelper.IsAdder(methodDefinition) && a != eventDefinition.Adder)
+            this.ReportError(MetadataError.EventPropertyNamingPatternWarning, methodDefinition);
+          if (MemberHelper.IsRemover(methodDefinition) && a != eventDefinition.Remover)
+            this.ReportError(MetadataError.EventPropertyNamingPatternWarning, methodDefinition);
+          if (MemberHelper.IsCaller(methodDefinition) && a != eventDefinition.Caller)
+            this.ReportError(MetadataError.EventPropertyNamingPatternWarning, methodDefinition);
         }
       }
 
@@ -283,7 +301,7 @@ namespace Microsoft.Cci {
             this.ReportError(MetadataError.ConstantFieldMustBeStatic, fieldDefinition);
           var fieldType = fieldDefinition.Type;
           if (fieldType.IsEnum && !(fieldType.ResolvedType is Dummy)) fieldType = fieldType.ResolvedType.UnderlyingType;
-          if (!TypeHelper.TypesAreEquivalent(fieldDefinition.CompileTimeValue.Type, fieldType))
+          if (CompileTimeConstantTypeDoesNotMatchDefinitionType(fieldDefinition.CompileTimeValue,  fieldType))
             this.ReportError(MetadataError.MetadataConstantTypeMismatch, fieldDefinition.CompileTimeValue, fieldDefinition);
         }
         if (fieldDefinition.IsRuntimeSpecial && !fieldDefinition.IsSpecialName)
@@ -309,9 +327,28 @@ namespace Microsoft.Cci {
             if (fieldDefinition.MarshallingInformation.NumberOfElements == 0)
               this.ReportError(MetadataError.MarshalledArraysMustHaveSizeKnownAtCompileTime, fieldDefinition.MarshallingInformation, fieldDefinition);
           }
-
-
         }
+      }
+
+      /// <summary>
+      /// Returns true if the given compile time constant does not match the type of the definition that it provides the initial value for.
+      /// </summary>
+      private static bool CompileTimeConstantTypeDoesNotMatchDefinitionType(IMetadataConstant compileTimeConstant, ITypeReference definitionType) {
+        Contract.Requires(compileTimeConstant != null);
+        Contract.Requires(definitionType != null);
+
+        if (TypeHelper.TypesAreEquivalent(compileTimeConstant.Type, definitionType)) return false;
+        if (definitionType.IsEnum || definitionType.ResolvedType.IsEnum)
+          return CompileTimeConstantTypeDoesNotMatchDefinitionType(compileTimeConstant, definitionType.ResolvedType.UnderlyingType);
+        if (compileTimeConstant.Value == null && TypeHelper.TypesAreEquivalent(compileTimeConstant.Type, compileTimeConstant.Type.PlatformType.SystemObject)) {
+          if (definitionType.IsValueType || definitionType.ResolvedType.IsValueType) {
+            var genericInstance = definitionType as IGenericTypeInstanceReference;
+            if (genericInstance == null) return true;
+            return !TypeHelper.TypesAreEquivalent(genericInstance.GenericType, definitionType.PlatformType.SystemNullable);
+          }
+          return false;
+        }
+        return true;
       }
 
       /// <summary>
@@ -597,6 +634,12 @@ namespace Microsoft.Cci {
       /// Performs some computation with the given method body.
       /// </summary>
       public void Visit(IMethodBody methodBody) {
+        if (!methodBody.LocalsAreZeroed) {
+          foreach (var l in methodBody.LocalVariables) {
+            this.ReportError(MetadataError.InitLocalsMustBeTrueIfLocalVariables, methodBody.MethodDefinition);
+            break;
+          }
+        }
       }
 
       /// <summary>
@@ -672,6 +715,8 @@ namespace Microsoft.Cci {
           if (mfmv < 2)
             this.ReportError(MetadataError.InvalidMetadataFormatVersionForGenerics, method, mfmv.ToString());
         }
+        // TODO: Check if method conforms to the naming conventions for event/property accessor. If so, make sure
+        // it really is the accessor it claims to be.
       }
 
       private void CheckGenericMethodTypeParameterUniqueness(IMethodDefinition methodDefinition) {
@@ -798,6 +843,9 @@ namespace Microsoft.Cci {
       /// Performs some computation with the given named type definition.
       /// </summary>
       public void Visit(INamedTypeDefinition namedTypeDefinition) {
+        if (namedTypeDefinition.IsValueType && TypeHelper.SizeOfType(namedTypeDefinition) == 0)
+          this.ReportError(MetadataError.StructSizeMustBeNonZero, namedTypeDefinition);
+
         this.Visit((ITypeDefinition)namedTypeDefinition);
       }
 
@@ -827,6 +875,17 @@ namespace Microsoft.Cci {
       /// Visits the specified namespace member.
       /// </summary>
       public void Visit(INamespaceMember namespaceMember) {
+        if (this.definitionsAlreadyVisited.Contains(namespaceMember)) {
+          this.ReportError(MetadataError.DuplicateDefinition, namespaceMember);
+          return;
+        }
+        this.definitionsAlreadyVisited.Add(namespaceMember);
+        if (namespaceMember.Name.Value == string.Empty)
+          this.ReportError(MetadataError.EmptyName, namespaceMember);
+        if (namespaceMember.ContainingNamespace is Dummy)
+          this.ReportError(MetadataError.IncompleteNode, namespaceMember, "ContainingNamespace");
+        if (!this.definitionsAlreadyVisited.Contains(namespaceMember.ContainingNamespace) && !(namespaceMember is ITypeDefinitionMember))
+          this.ReportError(MetadataError.ContainingNamespaceDefinitionNotVisited, namespaceMember);
       }
 
       /// <summary>
@@ -914,7 +973,7 @@ namespace Microsoft.Cci {
         if (parameterDefinition.HasDefaultValue) {
           var parameterType = parameterDefinition.Type;
           if (parameterType.IsEnum && !(parameterType.ResolvedType is Dummy)) parameterType = parameterType.ResolvedType.UnderlyingType;
-          if (!TypeHelper.TypesAreEquivalent(parameterDefinition.DefaultValue.Type, parameterType))
+          if (CompileTimeConstantTypeDoesNotMatchDefinitionType(parameterDefinition.DefaultValue, parameterType))
             this.ReportError(MetadataError.MetadataConstantTypeMismatch, parameterDefinition.DefaultValue, parameterDefinition);
         }
         if (parameterDefinition.IsMarshalledExplicitly) {
@@ -959,8 +1018,27 @@ namespace Microsoft.Cci {
         if (propertyDefinition.HasDefaultValue) {
           var propertyType = propertyDefinition.Type;
           if (propertyType.IsEnum && !(propertyType.ResolvedType is Dummy)) propertyType = propertyType.ResolvedType.UnderlyingType;
-          if (!TypeHelper.TypesAreEquivalent(propertyDefinition.DefaultValue.Type, propertyDefinition.Type))
+          if (CompileTimeConstantTypeDoesNotMatchDefinitionType(propertyDefinition.DefaultValue, propertyDefinition.Type))
             this.ReportError(MetadataError.MetadataConstantTypeMismatch, propertyDefinition.DefaultValue, propertyDefinition);
+        }
+        if (propertyDefinition.Getter != null) {
+          if (propertyDefinition.Getter is Dummy)
+            this.ReportError(MetadataError.IncompleteNode, propertyDefinition, "Getter");
+          else if (!IteratorHelper.EnumerableContains(propertyDefinition.Accessors, propertyDefinition.Getter))
+            this.ReportError(MetadataError.AccessorListInconsistent, propertyDefinition, "Getter");
+        }
+        if (propertyDefinition.Setter != null) {
+          if (propertyDefinition.Setter is Dummy)
+            this.ReportError(MetadataError.IncompleteNode, propertyDefinition, "Setter");
+          else if (!IteratorHelper.EnumerableContains(propertyDefinition.Accessors, propertyDefinition.Setter))
+            this.ReportError(MetadataError.AccessorListInconsistent, propertyDefinition, "Setter");
+        }
+
+        foreach (var a in propertyDefinition.Accessors) {
+          if (MemberHelper.IsGetter(a.ResolvedMethod) && a != propertyDefinition.Getter)
+            this.ReportError(MetadataError.EventPropertyNamingPatternWarning, a);
+          if (MemberHelper.IsSetter(a.ResolvedMethod) && a != propertyDefinition.Setter)
+            this.ReportError(MetadataError.EventPropertyNamingPatternWarning, a);
         }
       }
 
@@ -1526,6 +1604,10 @@ namespace Microsoft.Cci {
       /// </summary>
       AbstractMethodsMustBeVirtual,
       /// <summary>
+      /// An event's (property's) accessor list must be consistent with its Adder/Remover/Caller (Getter/Setter).
+      /// </summary>
+      AccessorListInconsistent,
+      /// <summary>
       /// The type referenced by this alias does not come from a module of this assembly.
       /// </summary>
       AliasedTypeDoesNotBelongToAModule,
@@ -1557,6 +1639,10 @@ namespace Microsoft.Cci {
       /// This type alias is referenced as the parent of an exported type alias, but does not itself appear in the ExportedTypes property of the assembly.
       /// </summary>
       ContainingAliasNotListedInExportedTypes,
+      /// <summary>
+      /// This namespace member is being visited before its parent is being visited, which can only happen if its ContainingNamespace value is not valid.
+      /// </summary>
+      ContainingNamespaceDefinitionNotVisited,
       /// <summary>
       /// This type member is being visited before its parent is being visited, which can only happen if its ContainingTypeDefinition value is not valid.
       /// </summary>
@@ -1646,6 +1732,10 @@ namespace Microsoft.Cci {
       /// </summary>
       EnumInstanceFieldTypeNotIntegral,
       /// <summary>
+      /// The method used for an event/property accessor should follow the standard naming patterns.
+      /// </summary>
+      EventPropertyNamingPatternWarning,
+      /// <summary>
       /// The type of an event may not be an interface or a value type.
       /// </summary>
       EventTypeMustBeClass,
@@ -1690,6 +1780,10 @@ namespace Microsoft.Cci {
       /// The node has not been fully initialized. Property {0} has a dummy value.
       /// </summary>
       IncompleteNode,
+      /// <summary>
+      /// Peverify complains if init locals is not set but there are local variables.
+      /// </summary>
+      InitLocalsMustBeTrueIfLocalVariables,
       /// <summary>
       /// An instance constructor (a method with the name .ctor) may not be marked as static. After all, it is supposed initialize its this object...
       /// </summary>
@@ -1889,6 +1983,10 @@ namespace Microsoft.Cci {
       /// </summary>
       StructsSizeMustBeLessThanOneMegaByte,
       /// <summary>
+      /// A struct must have a positive size.
+      /// </summary>
+      StructSizeMustBeNonZero,
+      /// <summary>
       /// A method defined by a value type operates on an object without identity, therefore it makes no sense to mark it as synchronized.
       /// </summary>
       SynchronizedValueTypeMethod,
@@ -1951,6 +2049,9 @@ namespace Microsoft.Cci {
             case MetadataError.MetadataConstantTypeMismatch:
               return true;
             case MetadataError.NumberOfElementsSpecifiedExplicitlyAsWellAsByAParameter:
+              return true;
+            case MetadataError.InitLocalsMustBeTrueIfLocalVariables:
+            case MetadataError.EventPropertyNamingPatternWarning:
               return true;
             default:
               return false;

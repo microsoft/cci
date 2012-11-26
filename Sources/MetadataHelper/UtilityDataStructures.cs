@@ -171,8 +171,10 @@ namespace Microsoft.Cci.UtilityDataStructures {
         uint hash2 = HashHelper.HashInt2(key);
         uint tableIndex = hash1 & mask;
         while (keyValueTable[tableIndex].Value != null) {
-          if (keyValueTable[tableIndex].Key == key && keyValueTable[tableIndex].Value == value)
+          if (keyValueTable[tableIndex].Key == key && keyValueTable[tableIndex].Value == value) {
+            keyValueTable[tableIndex].Value = value;
             return;
+          }
           tableIndex = (tableIndex + hash2) & mask;
         }
         keyValueTable[tableIndex].Key = key;
@@ -550,8 +552,10 @@ namespace Microsoft.Cci.UtilityDataStructures {
         uint hash2 = HashHelper.HashInt2(hash);
         uint tableIndex = hash1 & mask;
         while (keyValueTable[tableIndex].Value != null) {
-          if (keyValueTable[tableIndex].Key == key && keyValueTable[tableIndex].Value == value)
+          if (keyValueTable[tableIndex].Key == key && keyValueTable[tableIndex].Value == value) {
+            keyValueTable[tableIndex].Value = value;
             return;
+          }
           tableIndex = (tableIndex + hash2) & mask;
         }
         keyValueTable[tableIndex].Key = key;
@@ -1024,13 +1028,14 @@ namespace Microsoft.Cci.UtilityDataStructures {
         var hash = (uint)key.GetHashCode();
         uint hash1 = HashHelper.HashInt1(hash);
         uint tableIndex = hash1 & mask;
-        if (object.ReferenceEquals(keyValueTable[tableIndex].key, key) && keyValueTable[tableIndex].value != dummyObject)
-          return true;
+        Key tableKey = keyValueTable[tableIndex].key;
+        if (object.ReferenceEquals(tableKey, key))
+          return keyValueTable[tableIndex].value != dummyObject;
         uint hash2 = HashHelper.HashInt2(hash);
         tableIndex = (tableIndex + hash2) & mask;
-        while (object.ReferenceEquals(keyValueTable[tableIndex].key, key)) {
-          if (keyValueTable[tableIndex].value != dummyObject)
-            return true;
+        while ((tableKey = keyValueTable[tableIndex].key) != null) {
+          if (object.ReferenceEquals(tableKey, key))
+            return keyValueTable[tableIndex].value != dummyObject;
           tableIndex = (tableIndex + hash2) & mask;
         }
         return false;
@@ -1075,11 +1080,19 @@ namespace Microsoft.Cci.UtilityDataStructures {
           uint tableIndex = hash1 & mask;
           Key tableKey = keyValueTable[tableIndex].key;
           if (tableKey == null) return default(Value);
-          if (object.ReferenceEquals(tableKey, key)) return keyValueTable[tableIndex].value;
+          if (object.ReferenceEquals(tableKey, key)) {
+            var value = keyValueTable[tableIndex].value;
+            if (value == dummyObject) value = default(Value);
+            return value;
+          }
           uint hash2 = HashHelper.HashInt2(hash);
           tableIndex = (tableIndex + hash2) & mask;
           while ((tableKey = keyValueTable[tableIndex].key) != null) {
-            if (object.ReferenceEquals(tableKey, key)) return keyValueTable[tableIndex].value;
+            if (object.ReferenceEquals(tableKey, key)) {
+              var value = keyValueTable[tableIndex].value;
+              if (value == dummyObject) value = default(Value);
+              return value;
+            }
             tableIndex = (tableIndex + hash2) & mask;
           }
           return default(Value);
@@ -2111,6 +2124,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
         uint tableIndex = hash1 & mask;
         while (keyValueTable[tableIndex].Value != 0) {
           if (keyValueTable[tableIndex].Key == key) {
+            keyValueTable[tableIndex].Value = value;
             return;
           }
           tableIndex = (tableIndex + hash2) & mask;
@@ -2520,13 +2534,12 @@ namespace Microsoft.Cci.UtilityDataStructures {
         uint key2 = oldKeysValueTable[i].Key2;
         T value = oldKeysValueTable[i].Value;
         if (value != null) {
-          bool ret = this.AddInternal(key1, key2, value);
-          Debug.Assert(ret);
+          this.AddInternal(key1, key2, value);
         }
       }
     }
 
-    bool AddInternal(uint key1, uint key2, T value) {
+    void AddInternal(uint key1, uint key2, T value) {
       unchecked {
         var keysValueTable = this.keysValueTable;
         uint hash1 = HashHelper.HashDoubleInt1(key1, key2);
@@ -2535,7 +2548,8 @@ namespace Microsoft.Cci.UtilityDataStructures {
         uint tableIndex = hash1 & mask;
         while (keysValueTable[tableIndex].Value != null) {
           if (keysValueTable[tableIndex].Key1 == key1 && keysValueTable[tableIndex].Key2 == key2) {
-            return false;
+            keysValueTable[tableIndex].Value = value;
+            return;
           }
           tableIndex = (tableIndex + hash2) & mask;
         }
@@ -2543,18 +2557,18 @@ namespace Microsoft.Cci.UtilityDataStructures {
         keysValueTable[tableIndex].Key2 = key2;
         keysValueTable[tableIndex].Value = value;
         this.count++;
-        return true;
+        return;
       }
     }
 
     /// <summary>
     /// Add element to the DoubleHashtable
     /// </summary>
-    public bool Add(uint key1, uint key2, T value) {
+    public void Add(uint key1, uint key2, T value) {
       if (this.count >= this.resizeCount) {
         this.Expand();
       }
-      return this.AddInternal(key1, key2, value);
+      this.AddInternal(key1, key2, value);
     }
 
     /// <summary>
@@ -3133,13 +3147,61 @@ namespace Microsoft.Cci.UtilityDataStructures {
   }
 
   /// <summary>
+  /// A list with a count and a readonly indexer. No other functionality is provided.
+  /// </summary>
+  /// <typeparam name="T"></typeparam>
+  [ContractClass(typeof(ISimpleReadonlyListContract<>))]
+  public interface ISimpleReadonlyList<out T> {
+    /// <summary>
+    /// The number of elements in this list.
+    /// </summary>
+    int Count {
+      get;
+    }
+
+    /// <summary>
+    /// The i'th element of this list.
+    /// </summary>
+    T this[int i] {
+      get;
+    }
+
+  }
+
+  #region ISimpleReadonlyList contract binding
+  [ContractClassFor(typeof(ISimpleReadonlyList<>))]
+  abstract class ISimpleReadonlyListContract<T> : ISimpleReadonlyList<T> {
+    #region ISimpleReadonlyList<T> Members
+
+    public int Count {
+      get {
+        Contract.Ensures(Contract.Result<int>() >= 0);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    public T this[int i] {
+      get {
+        Contract.Requires(i >= 0);
+        Contract.Requires(i < this.Count);
+        Contract.Ensures(Contract.Result<T>() != null);
+        throw new NotImplementedException(); 
+      }
+    }
+
+    #endregion
+  }
+  #endregion
+
+
+  /// <summary>
   /// A list of elements represented as a sublist of a master list. Use this to avoid allocating lots of little list objects.
   /// </summary>
   [ContractVerification(true)]
 #if !__MonoCS__
   [DebuggerTypeProxy(typeof(Sublist<>.DebugView))]
 #endif
-  public struct Sublist<T> {
+  public struct Sublist<T> : ISimpleReadonlyList<T> {
 
     /// <summary>
     /// A list of elements represented as a sublist of a master list. Use this to avoid allocating lots of little list objects.
@@ -3196,7 +3258,6 @@ namespace Microsoft.Cci.UtilityDataStructures {
     /// </summary>
     public int Count {
       get {
-        Contract.Ensures(Contract.Result<int>() >= 0);
         return this.count;
       }
     }
@@ -3237,9 +3298,6 @@ namespace Microsoft.Cci.UtilityDataStructures {
     public T this[int i] {
       [ContractVerification(false)]
       get {
-        Contract.Requires(i >= 0);
-        Contract.Requires(i < this.Count);
-        Contract.Ensures(Contract.Result<T>() != null);
         Contract.Assume(this.masterList[this.offset+i] != null);
         return this.masterList[this.offset+i];
       }

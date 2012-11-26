@@ -1446,11 +1446,14 @@ namespace Microsoft.Cci {
       IGenericMethodInstanceReference/*?*/ methodSpec = methodReference as IGenericMethodInstanceReference;
       if (methodSpec != null)
         return 0x2B000000 | this.GetMethodSpecIndex(methodSpec);
-      IUnitReference/*?*/ definingUnit = PeWriter.GetDefiningUnitReference(methodReference.ContainingType);
-      if (definingUnit != null && definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity) && !methodReference.AcceptsExtraArguments)
-        return 0x06000000 | this.GetMethodDefIndex(methodReference);
-      else
-        return 0x0A000000 | this.GetMemberRefIndex(methodReference);
+      if (!methodReference.AcceptsExtraArguments || methodReference is IMethodDefinition) {
+        var definingUnit = PeWriter.GetDefiningUnitReference(methodReference.ContainingType);
+        if (definingUnit != null && definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity)) {
+          var methodDefIndex = this.GetMethodDefIndex(methodReference);
+          if (methodDefIndex != 0) return 0x06000000 | methodDefIndex;
+        }
+      }
+      return 0x0A000000 | this.GetMemberRefIndex(methodReference);
     }
 
     private static ushort GetParameterFlags(IParameterDefinition parDef) {
@@ -1934,7 +1937,8 @@ namespace Microsoft.Cci {
         this.hasConstantCodedIndexSize = 4;
       if (this.IndexDoesNotFit(16-5, TableIndices.Method, TableIndices.Field, TableIndices.TypeRef, TableIndices.TypeDef, TableIndices.Param, TableIndices.InterfaceImpl,
         TableIndices.MemberRef, TableIndices.Module, TableIndices.DeclSecurity, TableIndices.Property, TableIndices.Event, TableIndices.StandAloneSig,
-        TableIndices.ModuleRef, TableIndices.TypeSpec, TableIndices.Assembly, TableIndices.AssemblyRef, TableIndices.File, TableIndices.ExportedType, TableIndices.ManifestResource))
+        TableIndices.ModuleRef, TableIndices.TypeSpec, TableIndices.Assembly, TableIndices.AssemblyRef, TableIndices.File, TableIndices.ExportedType, TableIndices.ManifestResource, 
+        TableIndices.GenericParam, TableIndices.GenericParamConstraint, TableIndices.MethodSpec))
         this.hasCustomAttributeCodedIndexSize = 4;
       if (this.IndexDoesNotFit(16-1, TableIndices.Field, TableIndices.Param))
         this.hasFieldMarshallCodedIndexSize = 4;
@@ -4227,6 +4231,8 @@ namespace Microsoft.Cci {
     private static uint GetNumberOfInheritedTypeParameters(ITypeReference type) {
       INestedTypeReference/*?*/ nestedType = type as INestedTypeReference;
       if (nestedType == null) return 0;
+      INestedTypeDefinition/*?*/ nestedTypeDefinition = type.ResolvedType as INestedTypeDefinition;
+      if (nestedTypeDefinition != null && nestedTypeDefinition.DoesNotInheritGenericParameters) return 0;
       ISpecializedNestedTypeReference/*?*/ specializedNestedType = nestedType as ISpecializedNestedTypeReference;
       if (specializedNestedType != null)
         nestedType = specializedNestedType.UnspecializedVersion;

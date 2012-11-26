@@ -109,7 +109,7 @@ namespace ILMutator {
             host,
             systemString.ContainingUnitNamespace,
             nameTable.GetNameFor("Console"),
-            0, false, false, PrimitiveTypeCode.NotPrimitive);
+            0, false, false, true, PrimitiveTypeCode.NotPrimitive);
         this.consoleDotWriteLine = new Microsoft.Cci.MethodReference(
           host, SystemDotConsoleType,
           CallingConvention.Default,

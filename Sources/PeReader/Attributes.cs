@@ -583,7 +583,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     internal override INamedTypeDefinition/*?*/ ResolveNominalTypeName(IMetadataReaderModuleReference module) {
       var containingType = this.ContainingTypeName.ResolveNominalTypeName(module);
       if (containingType == null) return null;
-      return TypeHelper.GetNestedType(containingType, this.Name, (int)this.GenericParameterCount);
+      return TypeHelper.GetNestedType(containingType, this.UnmangledTypeName, (int)this.GenericParameterCount);
     }
 
     internal bool MangleName {

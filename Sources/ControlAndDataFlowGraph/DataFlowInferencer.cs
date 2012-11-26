@@ -150,7 +150,7 @@ namespace Microsoft.Cci.Analysis {
         int startingCount = this.operandStackSetupInstructions.Count;
         for (int i = 0; i <= n; i++) {
           var pushInstruction = this.stack.Peek(i);
-          this.operandStackSetupInstructions.Add(new Instruction() { Operand2 = new List<Instruction>(4) { pushInstruction } });
+          this.operandStackSetupInstructions.Add(new Instruction() { Operand1 = pushInstruction });
         }
         successor.OperandStack = new Sublist<Instruction>(this.operandStackSetupInstructions, startingCount, operandStackSetupInstructions.Count-startingCount);
       } else {
@@ -159,9 +159,17 @@ namespace Microsoft.Cci.Analysis {
         for (int i = 0; i <= n; i++) {
           var pushInstruction = this.stack.Peek(i);
           var setupInstruction = successor.OperandStack[i];
-          Contract.Assume(setupInstruction.Operand2 is List<Instruction>); //This is set up in the successor.OperandStack.Count == 0, but is hard to write a contract to that effect.
-          var list = (List<Instruction>)setupInstruction.Operand2;
-          list.Add(pushInstruction);
+          if (setupInstruction.Operand2 == null)
+            setupInstruction.Operand2 = pushInstruction;
+          else {
+            var list = setupInstruction.Operand2 as List<Instruction>;
+            if (list == null) {
+              Contract.Assume(setupInstruction.Operand2 is Instruction);
+              list = new List<Instruction>(4);
+              list.Add((Instruction)setupInstruction.Operand2);
+            }
+            list.Add(pushInstruction);
+          }
         }
       }
     }

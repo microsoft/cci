@@ -459,8 +459,10 @@ namespace Microsoft.Cci.Immutable {
     /// <param name="genericParameterCount">The number of generic parameters. Zero if the type is not generic.</param>
     /// <param name="isEnum">True if the type is an enumeration (it extends System.Enum and is sealed). Corresponds to C# enum.</param>
     /// <param name="isValueType">True if the referenced type is a value type.</param>
+    /// <param name="mangleName">If true, the persisted type name is mangled by appending "`n" where n is the number of type parameters, if the number of type parameters is greater than 0.</param>
     /// <param name="typeCode">A value indicating if the type is a primitive type or not.</param>
-    public NamespaceTypeReference(IMetadataHost host, IUnitNamespaceReference containingUnitNamespace, IName name, ushort genericParameterCount, bool isEnum, bool isValueType, PrimitiveTypeCode typeCode)
+    public NamespaceTypeReference(IMetadataHost host, IUnitNamespaceReference containingUnitNamespace, IName name, ushort genericParameterCount, bool isEnum, 
+      bool isValueType, bool mangleName = true, PrimitiveTypeCode typeCode = PrimitiveTypeCode.NotPrimitive)
       : base(host, isEnum, isValueType) {
       Contract.Requires(host != null);
       Contract.Requires(containingUnitNamespace != null);
@@ -469,6 +471,7 @@ namespace Microsoft.Cci.Immutable {
       this.containingUnitNamespace = containingUnitNamespace;
       this.name = name;
       this.genericParameterCount = genericParameterCount;
+      this.mangleName = mangleName;
       this.typeCode = typeCode;
     }
 
@@ -603,8 +606,9 @@ namespace Microsoft.Cci.Immutable {
     /// If true, the type name is mangled by appending "`n" where n is the number of type parameters, if the number of type parameters is greater than 0.
     /// </summary>
     public bool MangleName {
-      get { return true; }
+      get { return this.mangleName; }
     }
+    bool mangleName;
 
     INamedTypeDefinition INamedTypeReference.ResolvedType {
       get { return this.ResolvedType; }
@@ -618,6 +622,183 @@ namespace Microsoft.Cci.Immutable {
     public bool KeepDistinctFromDefinition {
       get { return false; }
     }
+  }
+
+  /// <summary>
+  /// A reference to a type definition that is a member of another type definition.
+  /// </summary>
+  public class NestedTypeReference : BaseTypeReference, INestedTypeReference {
+
+    /// <summary>
+    /// A reference to a type definition that is a member of another type definition.
+    /// </summary>
+    /// <param name="host">Provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.</param>
+    /// <param name="containingType">The type that contains the referenced type.</param>
+    /// <param name="name">The name of the referenced type.</param>
+    /// <param name="genericParameterCount">The number of generic parameters. Zero if the type is not generic.</param>
+    /// <param name="isEnum">True if the type is an enumeration (it extends System.Enum and is sealed). Corresponds to C# enum.</param>
+    /// <param name="isValueType">True if the referenced type is a value type.</param>
+    /// <param name="mangleName">If true, the persisted type name is mangled by appending "`n" where n is the number of type parameters, if the number of type parameters is greater than 0.</param>
+    public NestedTypeReference(IMetadataHost host, ITypeReference containingType, IName name, ushort genericParameterCount, bool isEnum,
+      bool isValueType, bool mangleName = true)
+      : base(host, isEnum, isValueType) {
+      this.containingType = containingType;
+      this.name = name;
+      this.genericParameterCount = genericParameterCount;
+      this.mangleName = mangleName;
+    }
+
+    /// <summary>
+    /// If this type reference can be resolved and it resolves to a type alias, the resolution continues on
+    /// to resolve the reference to the aliased type. This property provides a way to discover how that resolution
+    /// proceeded, by exposing the alias concerned. Think of this as a version of ResolvedType that does not
+    /// traverse aliases.
+    /// </summary>
+    public override IAliasForType AliasForType {
+      get {
+        if (this.aliasForType == null)
+          this.resolvedType = this.GetResolvedType(); //also fills in this.aliasForType
+        return this.aliasForType;
+      }
+    }
+    IAliasForType/*?*/ aliasForType;
+
+    /// <summary>
+    /// A reference to the containing type of the referenced type member.
+    /// </summary>
+    public ITypeReference ContainingType {
+      get { return this.containingType; }
+    }
+    ITypeReference containingType;
+
+    /// <summary>
+    /// Calls visitor.Visit(INestedTypeReference)
+    /// </summary>
+    public override void Dispatch(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// Calls visitor.Visit(INestedTypeReference)
+    /// </summary>
+    public override void DispatchAsReference(IMetadataVisitor visitor) {
+      visitor.Visit(this);
+    }
+
+    /// <summary>
+    /// The number of generic parameters. Zero if the type is not generic.
+    /// </summary>
+    public ushort GenericParameterCount {
+      get { return this.genericParameterCount; }
+    }
+    readonly ushort genericParameterCount;
+
+    /// <summary>
+    /// Returns the unique interned key associated with the type. This takes unification/aliases/custom modifiers into account .
+    /// </summary>
+    public override uint InternedKey {
+      get {
+        if (this.internedKey == 0)
+          this.internedKey = this.host.InternFactory.GetNestedTypeReferenceInternedKey(this.ContainingType, this.Name, this.GenericParameterCount);
+        return this.internedKey;
+      }
+    }
+    uint internedKey;
+
+    /// <summary>
+    /// If true, the type name is mangled by appending "`n" where n is the number of type parameters, if the number of type parameters is greater than 0.
+    /// </summary>
+    public bool MangleName {
+      get { return this.mangleName; }
+    }
+    bool mangleName;
+
+    /// <summary>
+    /// The name of the referenced type.
+    /// </summary>
+    public IName Name {
+      get { return this.name; }
+    }
+    readonly IName name;
+
+    /// <summary>
+    /// The type definition being referred to.
+    /// In case the reference is to an alias, then this is resolved type of the alias, which
+    /// could have a different InternedKey from this reference.
+    /// </summary>
+    public INestedTypeDefinition ResolvedType {
+      get { 
+        if (this.resolvedType == null)
+          this.resolvedType = this.GetResolvedType();
+        return this.resolvedType;
+      }
+    }
+    INestedTypeDefinition/*?*/ resolvedType;
+
+    /// <summary>
+    /// The nested type this reference resolves to.
+    /// </summary>
+    private INestedTypeDefinition GetResolvedType() {
+      this.aliasForType = Dummy.AliasForType;
+      foreach (INamespaceMember member in this.ContainingType.ResolvedType.GetMembersNamed(this.name, false)) {
+        var neTypeDef = member as INestedTypeDefinition;
+        if (neTypeDef != null) {
+          if (neTypeDef.GenericParameterCount == this.GenericParameterCount) return neTypeDef;
+        } else {
+          var neAlias = member as INestedAliasForType;
+          if (neAlias != null && neAlias.AliasedType.GenericParameterCount == this.GenericParameterCount) this.aliasForType = neAlias;
+        }
+      }
+      if (this.aliasForType != null) {
+        var resolvedType = this.aliasForType.AliasedType.ResolvedType as INestedTypeDefinition;
+        if (resolvedType != null && resolvedType.GenericParameterCount == this.GenericParameterCount) return resolvedType;
+      }
+      return Dummy.NestedTypeDefinition;
+    }
+
+    /// <summary>
+    /// The type definition being referred to.
+    /// In case this type was alias, this is also the type of the aliased type
+    /// </summary>
+    protected override ITypeDefinition Resolve()
+      //^^ ensures this.IsAlias ==> result == this.AliasForType.AliasedType.ResolvedType;
+      //^^ ensures (this is ITypeDefinition) ==> result == this;
+    {
+      var rt = this.ResolvedType;
+      if (rt is Dummy) return Dummy.Type;
+      return rt;
+    }
+
+    /// <summary>
+    /// Returns a string representation of this object.
+    /// </summary>
+    public override string ToString() {
+      return TypeHelper.GetTypeName(this);
+    }
+
+    #region INamedTypeReference Members
+
+    INamedTypeDefinition INamedTypeReference.ResolvedType {
+      get {
+        var result = this.ResolvedType;
+        if (result is Dummy) return Dummy.NamedTypeDefinition;
+        return result; 
+      }
+    }
+
+    #endregion
+
+    #region ITypeMemberReference Members
+
+    ITypeDefinitionMember ITypeMemberReference.ResolvedTypeDefinitionMember {
+      get {
+        var result = this.ResolvedType;
+        if (result is Dummy) return Dummy.TypeDefinitionMember;
+        return result;
+      }
+    }
+
+    #endregion
   }
 
   /// <summary>
@@ -775,7 +956,7 @@ namespace Microsoft.Cci.Immutable {
       IUnitNamespaceReference ns = new RootUnitNamespaceReference(assemblyReference);
       for (int i = 0, n = names.Length-1; i < n; i++)
         ns = new NestedUnitNamespaceReference(ns, this.host.NameTable.GetNameFor(names[i]));
-      return new NamespaceTypeReference(this.host, ns, this.host.NameTable.GetNameFor(names[names.Length-1]), genericParameterCount, false, isValueType, typeCode);
+      return new NamespaceTypeReference(this.host, ns, this.host.NameTable.GetNameFor(names[names.Length-1]), genericParameterCount, false, isValueType, typeCode: typeCode);
     }
 
     /// <summary>

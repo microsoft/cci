@@ -396,4 +396,19 @@
   <data name="InvalidMetadataFormatVersionForGenerics" xml:space="preserve">
     <value>Bad module metadata format version. Found '{0}', should be at least 2.</value>
   </data>
+  <data name="StructSizeMustBeNonZero" xml:space="preserve">
+    <value>A struct must have a non-zero size.</value>
+  </data>
+  <data name="ContainingNamespaceDefinitionNotVisited" xml:space="preserve">
+    <value>This namespace member is being visited before its parent is being visited, which can only happen if its ContainingNamespace value is not valid.</value>
+  </data>
+  <data name="AccessorListInconsistent" xml:space="preserve">
+    <value>No method found in the accessor list that is a {0}.</value>
+  </data>
+  <data name="InitLocalsMustBeTrueIfLocalVariables" xml:space="preserve">
+    <value>The method has local variables, but LocalsAreZeroed is not true.</value>
+  </data>
+  <data name="EventPropertyNamingPatternWarning" xml:space="preserve">
+    <value>An accessor method does not follow the naming conventions.</value>
+  </data>
 </root>
