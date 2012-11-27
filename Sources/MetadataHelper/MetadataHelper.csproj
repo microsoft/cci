@@ -125,6 +125,7 @@
     <Compile Include="AttributeHelper.cs" />
     <Compile Include="CommandLineOptions.cs" />
     <Compile Include="Core.cs" />
+    <Compile Include="ExpressionHelper.cs" />
     <Compile Include="GlobalAssemblyCache.cs" />
     <Compile Include="MemberHelper.cs" />
     <Compile Include="Members.cs" />
