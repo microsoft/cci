@@ -35,6 +35,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Metadata\Sources\AnalyisUtilities\AnalysisUtilities.csproj">
+      <Project>{E8B89C56-383A-4A1D-9EEE-E5FE9FC9DE03}</Project>
+      <Name>AnalysisUtilities</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Metadata\Sources\ControlAndDataFlowGraph\ControlAndDataFlowGraph.csproj">
       <Project>{2596EFB0-87AE-42CE-89EB-84F35D6350D2}</Project>
       <Name>ControlAndDataFlowGraph</Name>
@@ -115,6 +119,7 @@
   <ItemGroup>
     <Content Include="CCIAll.nuspec">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
