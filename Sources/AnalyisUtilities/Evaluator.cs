@@ -514,8 +514,12 @@ namespace Microsoft.Cci.Analysis {
           return Dummy.Constant; //We only known the value of the pointer at runtime.
       }
 
-      if (resultType != null)
-        return new MetadataConstant() { Value = resultValue, Type = resultType };
+      if (resultValue != null && resultType != null) {
+        var result = new MetadataConstant() { Value = resultValue, Type = resultType };
+        if (result.Locations == null) result.Locations = new List<ILocation>(1);
+        result.Locations.Add(operation.Location);
+        return result;
+      }
       return null; //force runtime evaluation.
     }
 
@@ -951,10 +955,18 @@ namespace Microsoft.Cci.Analysis {
           resultValue = u41 != u42;
           resultType = platformType.SystemBoolean;
           break;
+        case OperationCode.Nop:
+          if (i41 == i42) 
+            resultValue = i41;
+          break;
       }
 
-      if (resultType != null)
-        return new MetadataConstant() { Value = resultValue, Type = resultType };
+      if (resultValue != null && resultType != null) {
+        var result = new MetadataConstant() { Value = resultValue, Type = resultType };
+        if (result.Locations == null) result.Locations = new List<ILocation>(1);
+        result.Locations.Add(operation.Location);
+        return result;
+      }
       return null; //force runtime evaluation.
     }
 
@@ -1125,10 +1137,18 @@ namespace Microsoft.Cci.Analysis {
           resultValue = u81 != u82;
           resultType = platformType.SystemBoolean;
           break;
+        case OperationCode.Nop:
+          if (i81 == i82)
+            resultValue = i81;
+          break;
       }
 
-      if (resultType != null)
-        return new MetadataConstant() { Value = resultValue, Type = resultType };
+      if (resultValue != null && resultType != null) {
+        var result = new MetadataConstant() { Value = resultValue, Type = resultType };
+        if (result.Locations == null) result.Locations = new List<ILocation>(1);
+        result.Locations.Add(operation.Location);
+        return result;
+      }
       return null; //force runtime evaluation.
     }
 
@@ -1245,10 +1265,18 @@ namespace Microsoft.Cci.Analysis {
           resultValue = !(d1 == d2);
           resultType = platformType.SystemBoolean;
           break;
+        case OperationCode.Nop:
+          if (d1 == d2)
+            resultValue = d1;
+          break;
       }
 
-      if (resultType != null)
-        return new MetadataConstant() { Value = resultValue, Type = resultType };
+      if (resultValue != null && resultType != null) {
+        var result = new MetadataConstant() { Value = resultValue, Type = resultType };
+        if (result.Locations == null) result.Locations = new List<ILocation>(1);
+        result.Locations.Add(operation.Location);
+        return result;
+      }
       return null; //force runtime evaluation.
     }
 
@@ -1662,13 +1690,48 @@ namespace Microsoft.Cci.Analysis {
           break;
       }
 
-      if (resultType != null) {
+      if (resultValue != null && resultType != null) {
         var result = new MetadataConstant() { Value = resultValue, Type = resultType };
         if (result.Locations == null) result.Locations = new List<ILocation>(1);
         result.Locations.Add(operation.Location);
         return result;
       }
       return null; //force runtime evaluation.
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="Instruction"></typeparam>
+    /// <param name="operation"></param>
+    /// <param name="operand1"></param>
+    /// <param name="operands2toN"></param>
+    /// <param name="mappings"></param>
+    /// <param name="block"></param>
+    /// <returns></returns>
+    public static IMetadataConstant/*?*/ Evaluate<Instruction>(IOperation operation, Instruction operand1, Instruction[] operands2toN, ValueMappings<Instruction> mappings, AiBasicBlock<Instruction>/*?*/ block = null)
+      where Instruction : Microsoft.Cci.Analysis.Instruction, new() {
+      Contract.Requires(operation != null);
+      Contract.Requires(operand1 != null);
+      Contract.Requires(operands2toN != null);
+      Contract.Requires(mappings != null);
+
+      switch (operation.OperationCode) {
+        case OperationCode.Nop:
+          var phiVar = operation.Value as INamedEntity;
+          if (phiVar == null) return null;;
+          //We have a phi node. If all operands are constants and are moreover equal, we can reduce the phi node to a constant.
+          var cv1 = mappings.GetCompileTimeConstantValueFor(operand1, block);
+          if (cv1 == null) return null;
+          foreach (var operandi in operands2toN) {
+            Contract.Assume(operandi != null);
+            var cvi = mappings.GetCompileTimeConstantValueFor(operandi, block);
+            if (cvi == null) return null;
+            if (!Evaluator.IsNumericallyEqual(cv1, cvi)) return null;
+          }
+          return cv1;
+      }
+      return null;
     }
 
     /// <summary>
@@ -3297,6 +3360,7 @@ namespace Microsoft.Cci.Analysis {
       return null;
 
     }
+
 
   }
 

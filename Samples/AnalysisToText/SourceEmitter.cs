@@ -64,7 +64,7 @@ namespace CdfgToText {
 
     public override void Traverse(IMethodBody methodBody) {
       sourceEmitterOutput.WriteLine("");
-      this.sourceEmitterOutput.WriteLine(MemberHelper.GetMethodSignature(methodBody.MethodDefinition, 
+      this.sourceEmitterOutput.WriteLine(MemberHelper.GetMethodSignature(methodBody.MethodDefinition,
         NameFormattingOptions.Signature|NameFormattingOptions.ReturnType|NameFormattingOptions.ParameterModifiers|NameFormattingOptions.ParameterName));
       sourceEmitterOutput.WriteLine("");
       if (this.pdbReader != null)
@@ -76,7 +76,7 @@ namespace CdfgToText {
       this.cfgQueries = new ControlGraphQueries<AiBasicBlock<Instruction>, Instruction>(this.cdfg);
       SingleAssigner<AiBasicBlock<Instruction>, Instruction>.GetInSingleAssignmentForm(host.NameTable, this.cdfg, this.cfgQueries, this.pdbReader);
       this.valueMappings = new ValueMappings<Instruction>(this.host.PlatformType, new Z3Wrapper.Wrapper(host.PlatformType));
-      AbstractInterpreter<AiBasicBlock<Instruction>, Instruction>.InterpretUsingAbstractValues(this.cdfg, this.cfgQueries, this.valueMappings); 
+      AbstractInterpreter<AiBasicBlock<Instruction>, Instruction>.InterpretUsingAbstractValues(this.cdfg, this.cfgQueries, this.valueMappings);
 
       var numberOfBlocks = this.cdfg.BlockFor.Count;
 
@@ -110,7 +110,10 @@ namespace CdfgToText {
       }
       sourceEmitterOutput.WriteLine("  Initial stack:");
       foreach (var instruction in block.OperandStack) {
-        sourceEmitterOutput.WriteLine("    "+TypeHelper.GetTypeName(instruction.Type));
+        sourceEmitterOutput.Write("    "+TypeHelper.GetTypeName(instruction.Type));
+        sourceEmitterOutput.Write(' ');
+        this.PrintPhiNode(instruction);
+        sourceEmitterOutput.WriteLine();
       }
       sourceEmitterOutput.WriteLine();
 
@@ -234,7 +237,7 @@ namespace CdfgToText {
       if (this.valueMappings != null) {
         var constVal = this.valueMappings.GetCompileTimeConstantValueFor(instruction, block);
         if (constVal != null) {
-          if (constVal == CodeDummy.Constant)
+          if (constVal is Dummy)
             sourceEmitterOutput.WriteLine("      operation always fails to produce a value");
           else {
             sourceEmitterOutput.Write("      pushes constant: ");
@@ -264,8 +267,8 @@ namespace CdfgToText {
     }
 
     private void PrintFlowFrom(Instruction instruction) {
-      if (instruction.Operation is Dummy)
-        sourceEmitterOutput.Write("stack");
+      if (instruction.Operation.OperationCode == OperationCode.Nop && instruction.Operation.Value is INamedEntity)
+        sourceEmitterOutput.Write("stack slot "+instruction.Operation.Offset);
       else
         sourceEmitterOutput.Write(instruction.Operation.Offset.ToString("x4"));
     }
@@ -337,6 +340,10 @@ namespace CdfgToText {
     }
 
     private void PrintExpression(Instruction canonicalExpr) {
+      if (canonicalExpr.Operation.OperationCode == OperationCode.Nop && canonicalExpr.Operation.Value is INamedEntity) {
+        this.PrintPhiNode(canonicalExpr);
+        return;
+      }
       var operands2ToN = canonicalExpr.Operand2 as Instruction[];
       if (operands2ToN != null) {
         sourceEmitterOutput.Write('(');
@@ -368,6 +375,32 @@ namespace CdfgToText {
       }
     }
 
+    private void PrintPhiNode(Instruction canonicalExpr) {
+      var namedEntity = (INamedEntity)canonicalExpr.Operation.Value;
+      if (namedEntity.Name is Dummy)
+        sourceEmitterOutput.Write("stack slot "+canonicalExpr.Operation.Offset);
+      else
+        sourceEmitterOutput.Write(namedEntity.Name.Value);
+      sourceEmitterOutput.Write(" = phi(");
+      if (canonicalExpr.Operand1 != null) {
+        this.PrintExpression(canonicalExpr.Operand1);
+        var operand2 = canonicalExpr.Operand2 as Instruction;
+        if (operand2 != null) {
+          sourceEmitterOutput.Write(", ");
+          this.PrintExpression(operand2);
+        } else {
+          var operands2ToN = canonicalExpr.Operand2 as Instruction[];
+          if (operands2ToN != null) {
+            foreach (var operand in operands2ToN) {
+              sourceEmitterOutput.Write(", ");
+              this.PrintExpression(operand);
+            }
+          }
+        }
+      }
+      sourceEmitterOutput.Write(")");
+    }
+
     private void PrintOperator(IOperation operation) {
       sourceEmitterOutput.Write(operation.OperationCode.ToString());
       if (operation.Value != null) {
@@ -377,12 +410,12 @@ namespace CdfgToText {
     }
 
     private void PrintInterval(Interval interval) {
-      if (interval.LowerBound == CodeDummy.Constant)
+      if (interval.LowerBound is Dummy)
         sourceEmitterOutput.Write("-infinity");
       else
         this.sourceEmitterOutput.Write(interval.LowerBound.Value.ToString());
       sourceEmitterOutput.Write(" .. ");
-      if (interval.UpperBound == CodeDummy.Constant)
+      if (interval.UpperBound is Dummy)
         sourceEmitterOutput.Write("infinity");
       else
         this.sourceEmitterOutput.Write(interval.UpperBound.Value.ToString());

@@ -28,7 +28,7 @@ namespace Microsoft.Cci.Analysis {
     public ValueMappings(IPlatformType platformType, ISatSolver/*?*/ satSolver = null) {
       Contract.Requires(platformType != null);
       if (satSolver != null)
-        this.satSolverHelper = new SatSolverHelper<Instruction>(satSolver);
+        this.satSolverHelper = new SatSolverHelper<Instruction>(satSolver, this);
       this.Int8Interval = new Interval(new MetadataConstant() { Value = sbyte.MinValue, Type = platformType.SystemInt8 },
         new MetadataConstant() { Value = sbyte.MaxValue, Type = platformType.SystemInt8 });
       this.Int16Interval = new Interval(new MetadataConstant() { Value = short.MinValue, Type = platformType.SystemInt16 },
@@ -101,11 +101,21 @@ namespace Microsoft.Cci.Analysis {
       var operand1 = ce.Operand1 as Instruction;
       if (operand1 == null) return null;
       var operand2 = ce.Operand2 as Instruction;
-      if (operand2 == null) return null;
-      result = Evaluator.Evaluate(ce.Operation, operand1, operand2, this, block);
-      block.ConstantForExpression[expression] = result??Dummy.Constant;
-      if (result != null && result != Dummy.Constant) {
-        return result;
+      if (operand2 != null) {
+        result = Evaluator.Evaluate(ce.Operation, operand1, operand2, this, block);
+        block.ConstantForExpression[expression] = result??Dummy.Constant;
+        if (result != null && result != Dummy.Constant) {
+          return result;
+        }
+      } else {
+        var operands2toN = ce.Operand2 as Instruction[];
+        if (operands2toN != null) {
+          result = Evaluator.Evaluate(ce.Operation, operand1, operands2toN, this, block);
+          block.ConstantForExpression[expression] = result??Dummy.Constant;
+          if (result != null && result != Dummy.Constant) {
+            return result;
+          }
+        }
       }
       return null;
     }
@@ -222,23 +232,35 @@ namespace Microsoft.Cci.Analysis {
       Contract.Requires(expression != null);
       Contract.Requires(block != null);
 
-      if (this.satSolverHelper == null) return null;
+      var satSolverHelper = this.satSolverHelper;
+      if (satSolverHelper == null) return null;
       var context = block.SatSolverContext;
       if (context == null) {
-        block.SatSolverContext = context = this.satSolverHelper.SatSolver.GetNewContext();
+        block.SatSolverContext = context = satSolverHelper.SatSolver.GetNewContext();
         Contract.Assume(context != null);
-        var constraintsAtEntry = this.satSolverHelper.GetSolverExpressionFor(block.ConstraintsAtEntry);
+        var constraintsAtEntry = satSolverHelper.GetSolverExpressionFor(block.ConstraintsAtEntry);
         if (constraintsAtEntry != null) context.Add(constraintsAtEntry);
       }
+      var solverExpression = this.satSolverHelper.GetSolverExpressionFor(expression, block.ConstraintsAtEntry);
       context.MakeCheckPoint();
-      context.Add(this.satSolverHelper.GetSolverExpressionFor(expression));
+      if (!this.IsRecursive(expression))
+        satSolverHelper.AddPhiNodeConstraints(expression, context);
+      //context.MakeCheckPoint();
+      context.Add(solverExpression);
       var result = context.Check();
       context.RestoreCheckPoint();
-      if (result != null && !result.Value) return false; //The expression is never satisfied, so it is known to be false.
+      if (result != null && !result.Value) {
+        //context.RestoreCheckPoint();
+        return false; //The expression is never satisfied, so it is known to be false.
+      }
       context.MakeCheckPoint();
-      context.AddInverse(this.satSolverHelper.GetSolverExpressionFor(expression));
+      if (!this.IsRecursive(expression))
+        satSolverHelper.AddPhiNodeConstraints(expression, context);
+      context.AddInverse(solverExpression);
       result = context.Check();
       context.RestoreCheckPoint();
+      //context.RestoreCheckPoint();
+
       if (result != null && !result.Value) return true; //The inverse expression is never satisfied, so the expression is known to be true.
       return null;
     }

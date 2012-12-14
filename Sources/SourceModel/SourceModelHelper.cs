@@ -123,17 +123,24 @@ namespace Microsoft.Cci {
 
     private IMethodDefinition lastUsedMethod = Dummy.MethodDefinition;
     private ISourceLocationProvider lastUsedProvider = default(ISourceLocationProvider);
+
     private ISourceLocationProvider/*?*/ GetProvider(IMethodDefinition methodDefinition) {
       Contract.Requires(methodDefinition != null);
       if (methodDefinition == lastUsedMethod) return lastUsedProvider;
       ISourceLocationProvider provider = null;
-      var definingUnit = TypeHelper.GetDefiningUnit(methodDefinition.ResolvedMethod.ContainingTypeDefinition);
+      var definingUnit = TypeHelper.GetDefiningUnit(methodDefinition.ContainingTypeDefinition);
       this.unit2Provider.TryGetValue(definingUnit, out provider);
       if (provider != null) {
         this.lastUsedMethod = methodDefinition;
         this.lastUsedProvider = provider;
+        return provider;
       }
-      return provider;
+      foreach (var location in methodDefinition.Locations) {
+        var ilLocation = location as IILLocation;
+        if (ilLocation == null || ilLocation.MethodDefinition == methodDefinition) continue;
+        return this.GetProvider(ilLocation.MethodDefinition);
+      }
+      return null;
     }
 
     private ISourceLocationProvider/*?*/ GetProvider(IILLocation/*?*/ mbLocation) {
@@ -316,13 +323,19 @@ namespace Microsoft.Cci {
 
       if (methodDefinition == lastUsedMethod) return lastUsedProvider;
       ILocalScopeProvider provider = null;
-      var definingUnit = TypeHelper.GetDefiningUnit(methodDefinition.ResolvedMethod.ContainingTypeDefinition);
+      var definingUnit = TypeHelper.GetDefiningUnit(methodDefinition.ContainingTypeDefinition);
       this.unit2Provider.TryGetValue(definingUnit, out provider);
       if (provider != null) {
         this.lastUsedMethod = methodDefinition;
         this.lastUsedProvider = provider;
+        return provider;
       }
-      return provider;
+      foreach (var location in methodDefinition.Locations) {
+        var ilLocation = location as IILLocation;
+        if (ilLocation == null || ilLocation.MethodDefinition == methodDefinition) continue;
+        return this.GetProvider(ilLocation.MethodDefinition);
+      }
+      return null;
     }
 
     private ILocalScopeProvider/*?*/ GetProvider(IILLocation/*?*/ mbLocation) {

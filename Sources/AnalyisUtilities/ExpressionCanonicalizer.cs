@@ -135,7 +135,7 @@ namespace Microsoft.Cci.Analysis {
       if (ic != null)
         return this.GetAsLoadConstant(ic, originalInstruction);
       else if (compileTimeConstant.Value == null)
-        return new Instruction() { Operation = new Operation() { OperationCode = OperationCode.Ldnull, Location = originalInstruction.Operation.Location } };
+        return new Instruction() { Operation = new Operation() { OperationCode = OperationCode.Ldnull, Location = originalInstruction.Operation.Location }, Type = compileTimeConstant.Type };
       else
         return originalInstruction;
     }

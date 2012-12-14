@@ -240,6 +240,7 @@ namespace Microsoft.Cci.Analysis {
       this.blocksInterpretedAtLeastOnce.Add(block);
       this.currentBlock = block;
       block.IntervalForExpression.Clear();
+      block.SatSolverContext = null;
 
       //Get constraints from the predecessors
       Contract.Assume(block.Predecessors != null);
@@ -258,6 +259,8 @@ namespace Microsoft.Cci.Analysis {
       for (int i = 0, n = block.OperandStack.Count; i < n; i++) {
         Contract.Assume(n == block.OperandStack.Count);
         var stackSetupInstruction = block.OperandStack[i];
+        if (stackSetupInstruction.Operation.Value == null)
+          stackSetupInstruction.Operation = new Operation() { Value = Dummy.LocalVariable, Offset = (uint)i };
         Contract.Assume(stackSetupInstruction.Operand1 is Instruction);
         var canon = this.expressionCanonicalizer.GetCanonicalExpression(stackSetupInstruction, (Instruction)stackSetupInstruction.Operand1,
           stackSetupInstruction.Operand2 as Instruction, stackSetupInstruction.Operand2 as Instruction[]);
@@ -788,7 +791,7 @@ namespace Microsoft.Cci.Analysis {
       Contract.Requires(block != null);
       Contract.Ensures(Contract.Result<Instruction>() != null);
 
-      if (expression.Operation != Dummy.Operation) return expression; //Not a union
+      if (expression.Operation.OperationCode != OperationCode.Nop || !(expression.Operation.Value is INamedEntity)) return expression; //Not a union
       var operand1 = expression.Operand1 as Instruction;
       if (operand1 == null) return expression;
       var operand2 = expression.Operand2 as Instruction;
@@ -1101,7 +1104,8 @@ namespace Microsoft.Cci.Analysis {
 
       var predecessors = this.cfgQueries.PredeccessorsFor(block);
       var n = predecessors.Count;
-      var result = new Instruction() { Type = join.Type };
+      var joinOperation = new Operation() { Value = join.NewLocal };
+      var result = new Instruction() { Operation = joinOperation, Type = join.Type };
       if (n > 0) {
         result.Operand1 = this.GetDefininingExpressionFor(join, predecessors[0], block);
         if (n > 1) {
@@ -1116,12 +1120,6 @@ namespace Microsoft.Cci.Analysis {
           }
         }
       }
-      ////We want to make sure that there is a unique expression for the join and that it is canonical
-      //var canon = this.expressionCanonicalizer.GetCanonicalExpression(result, (Instruction)result.Operand1, result.Operand2 as Instruction, result.Operand2 as Instruction[]);
-      //result.Operand1 = canon.Operand1;
-      //result.Operand2 = canon.Operand2;
-      //return this.expressionCanonicalizer.GetCanonicalExpression(result); //This puts result in the canonical expression cache.
-
       return this.expressionCanonicalizer.GetCanonicalExpression(result, (Instruction)result.Operand1, result.Operand2 as Instruction, result.Operand2 as Instruction[]);
     }
 

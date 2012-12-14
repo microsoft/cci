@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using Microsoft.Cci;
 using Microsoft.Cci.UtilityDataStructures;
 using Microsoft.Cci.MutableCodeModel;
 using System;
@@ -288,6 +289,135 @@ namespace Microsoft.Cci.Analysis {
       if (operation != instruction.Operation || operand1 != instruction.Operand1 || operand2 != instruction.Operand2)
         return new Instruction() { Operation = operation, Operand1 = operand1, Operand2 = operand2, Type = instruction.Type };
       return instruction;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="Instruction"></typeparam>
+    /// <param name="instruction"></param>
+    /// <returns></returns>
+    public static Instruction HoistPhiNodes<Instruction>(Instruction instruction)
+      where Instruction : Microsoft.Cci.Analysis.Instruction, new() {
+
+      var operand1 = instruction.Operand1 as Instruction;
+      if (operand1 == null) return instruction;
+      var operand2 = instruction.Operand2 as Instruction;
+      if (operand2 == null) return instruction; //TODO: unary ops
+
+      bool operand1IsPhiNode = operand1.Operation.OperationCode == OperationCode.Nop && operand1.Operation.Value is INamedEntity;
+      bool operand2IsPhiNode = operand2.Operation.OperationCode == OperationCode.Nop && operand2.Operation.Value is INamedEntity;
+      if (operand1IsPhiNode) {
+        if (operand2IsPhiNode)
+          return HoistPhiPhi(instruction, operand1, operand2);
+        else
+          return HoistPhiOp(instruction, operand1, operand2);
+      } else {
+        if (operand2IsPhiNode)
+          return HoistOpPhi(instruction, operand1, operand2);
+      }
+      return instruction;
+    }
+
+    private static Instruction HoistPhiPhi<Instruction>(Instruction instruction, Instruction operand1, Instruction operand2)
+      where Instruction : Microsoft.Cci.Analysis.Instruction, new() {
+      Contract.Requires(instruction != null);
+      Contract.Requires(operand1 != null);
+      Contract.Requires(operand2 != null);
+      Contract.Ensures(Contract.Result<Instruction>() != null);
+
+      var result = new Instruction() { Operation = new Operation() { Value = Dummy.LocalVariable }, Type = instruction.Type };
+      var operand11 = operand1.Operand1 as Instruction;
+      var operand21 = operand2.Operand1 as Instruction;
+      if (operand11 == null) {
+        Contract.Assume(operand21 == null);
+        return result;
+      }
+      result.Operand1 = new Instruction() { Operation = instruction.Operation, Operand1 = operand11, Operand2 = operand21, Type = instruction.Type };
+      var operand12 = operand1.Operand2 as Instruction;
+      var operand22 = operand2.Operand2 as Instruction;
+      if (operand12 != null && operand22 != null) {
+        result.Operand2 = new Instruction() { Operation = instruction.Operation, Operand1 = operand12, Operand2 = operand22, Type = instruction.Type };
+      } else {
+        var operand12toN = operand1.Operand2 as Instruction[];
+        var operand22toN = operand2.Operand2 as Instruction[];
+        if (operand12toN != null && operand22toN != null) {
+          var n = operand12toN.Length;
+          Contract.Assume(n == operand22toN.Length);
+          var resultOperands2ToN = new Instruction[n];
+          result.Operand2 = resultOperands2ToN;
+          for (int i = 0; i < n; i++) {
+            var operand1i = operand12toN[i];
+            var operand2i = operand22toN[i];
+            resultOperands2ToN[i] = new Instruction() { Operation = instruction.Operation, Operand1 = operand1i, Operand2 = operand2i, Type = instruction.Type };
+          }
+        }
+      }
+      return result;
+    }
+
+    private static Instruction HoistPhiOp<Instruction>(Instruction instruction, Instruction operand1, Instruction operand2)
+      where Instruction : Microsoft.Cci.Analysis.Instruction, new() {
+      Contract.Requires(instruction != null);
+      Contract.Requires(operand1 != null);
+      Contract.Requires(operand2 != null);
+      Contract.Ensures(Contract.Result<Instruction>() != null);
+
+      var result = new Instruction() { Operation = new Operation() { Value = Dummy.LocalVariable }, Type = instruction.Type };
+      var operand11 = operand1.Operand1 as Instruction;
+      if (operand11 == null) {
+        Contract.Assume(false);
+        return result;
+      }
+      result.Operand1 = new Instruction() { Operation = instruction.Operation, Operand1 = operand11, Operand2 = operand2, Type = instruction.Type };
+      var operand12 = operand1.Operand2 as Instruction;
+      if (operand12 != null) {
+        result.Operand2 = new Instruction() { Operation = instruction.Operation, Operand1 = operand12, Operand2 = operand2, Type = instruction.Type };
+      } else {
+        var operand12toN = operand1.Operand2 as Instruction[];
+        if (operand12toN != null) {
+          var n = operand12toN.Length;
+          var resultOperands2ToN = new Instruction[n];
+          result.Operand2 = resultOperands2ToN;
+          for (int i = 0; i < n; i++) {
+            var operand1i = operand12toN[i];
+            resultOperands2ToN[i] = new Instruction() { Operation = instruction.Operation, Operand1 = operand1i, Operand2 = operand2, Type = instruction.Type };
+          }
+        }
+      }
+      return result;
+    }
+
+    private static Instruction HoistOpPhi<Instruction>(Instruction instruction, Instruction operand1, Instruction operand2)
+      where Instruction : Microsoft.Cci.Analysis.Instruction, new() {
+      Contract.Requires(instruction != null);
+      Contract.Requires(operand1 != null);
+      Contract.Requires(operand2 != null);
+      Contract.Ensures(Contract.Result<Instruction>() != null);
+
+      var result = new Instruction() { Operation = new Operation() { Value = Dummy.LocalVariable }, Type = instruction.Type };
+      var operand21 = operand2.Operand1 as Instruction;
+      if (operand21 == null) {
+        Contract.Assume(false);
+        return result;
+      }
+      result.Operand1 = new Instruction() { Operation = instruction.Operation, Operand1 = operand1, Operand2 = operand21, Type = instruction.Type };
+      var operand22 = operand2.Operand2 as Instruction;
+      if (operand22 != null) {
+        result.Operand2 = new Instruction() { Operation = instruction.Operation, Operand1 = operand1, Operand2 = operand22, Type = instruction.Type };
+      } else {
+        var operand22toN = operand2.Operand2 as Instruction[];
+        if (operand22toN != null) {
+          var n = operand22toN.Length;
+          var resultOperands2ToN = new Instruction[n];
+          result.Operand2 = resultOperands2ToN;
+          for (int i = 0; i < n; i++) {
+            var operand2i = operand22toN[i];
+            resultOperands2ToN[i] = new Instruction() { Operation = instruction.Operation, Operand1 = operand1, Operand2 = operand2i, Type = instruction.Type };
+          }
+        }
+      }
+      return result;
     }
 
     /// <summary>

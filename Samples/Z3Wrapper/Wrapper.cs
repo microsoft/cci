@@ -101,7 +101,26 @@ namespace Z3Wrapper {
     }
 
     public ISatExpressionWrapper/*?*/ MakeExpression(IOperation operation, ITypeReference expressionType) {
-      Expr expr;
+      Expr expr = null;
+      if (expressionType.TypeCode == PrimitiveTypeCode.Boolean) {
+        switch (operation.OperationCode) {
+          case OperationCode.Ldc_I4: expr = this.solver.MkBool(((int)operation.Value) != 0); break;
+          case OperationCode.Ldc_I4_0: 
+          case OperationCode.Ldc_I4_1: 
+          case OperationCode.Ldc_I4_2: 
+          case OperationCode.Ldc_I4_3: 
+          case OperationCode.Ldc_I4_4: 
+          case OperationCode.Ldc_I4_5: 
+          case OperationCode.Ldc_I4_6: 
+          case OperationCode.Ldc_I4_7: 
+          case OperationCode.Ldc_I4_8: 
+          case OperationCode.Ldc_I4_M1: expr = this.solver.MkBool(true); break;
+          case OperationCode.Ldc_I4_S: expr = this.solver.MkBool(((int)operation.Value) != 0); break;
+        }
+        if (expr != null)
+          return new ExpressionWrapper(expr, expressionType);
+      }
+
       switch (operation.OperationCode) {
         //Instructions that are side effect free and whose results can be cached and reused, but whose result values can never be known at compile time.
         case OperationCode.Arglist:
@@ -156,8 +175,12 @@ namespace Z3Wrapper {
         case OperationCode.Ldloc_2:
         case OperationCode.Ldloc_3:
         case OperationCode.Ldloc_S:
-          expr = this.GetVariableFor(operation.Value as INamedEntity, expressionType);
-          break;
+          var v = operation.Value as INamedEntity;
+          if (v != null && !(v.Name is Dummy)) {
+            expr = this.GetVariableFor(operation.Value as INamedEntity, expressionType);
+            break;
+          }
+          goto default;
 
         //Instructions that are side-effect free and that *could* result in compile time constant values.
         case OperationCode.Ldsfld:
@@ -178,21 +201,23 @@ namespace Z3Wrapper {
 
     public ISatExpressionWrapper/*?*/ MakeExpression(IOperation operation, ITypeReference expressionType, ISatExpressionWrapper operand1) {
       Expr expr;
+      ExpressionWrapper wrapper1 = operand1 as ExpressionWrapper;
+      var operationSize = Math.Max(TypeHelper.SizeOfType(expressionType), TypeHelper.SizeOfType(operand1.Type)) <= 4  ? 32u : 64u;
       switch (operation.OperationCode) {
         case OperationCode.Conv_I1:
         case OperationCode.Conv_Ovf_I1:
         case OperationCode.Conv_Ovf_I1_Un:
-          expr = this.solver.MkSignExt(24, this.solver.MkExtract(7, 0, this.ConvertToBitVector(operand1, 32)));
+          expr = this.solver.MkSignExt(24, this.solver.MkExtract(7, 0, this.ConvertToBitVector(operand1, operationSize)));
           break;
         case OperationCode.Conv_I2:
         case OperationCode.Conv_Ovf_I2:
         case OperationCode.Conv_Ovf_I2_Un:
-          expr = this.solver.MkSignExt(16, this.solver.MkExtract(16, 0, this.ConvertToBitVector(operand1, 32)));
+          expr = this.solver.MkSignExt(16, this.solver.MkExtract(16, 0, this.ConvertToBitVector(operand1, operationSize)));
           break;
         case OperationCode.Conv_I4:
         case OperationCode.Conv_Ovf_I4:
         case OperationCode.Conv_Ovf_I4_Un:
-          expr = this.solver.MkExtract(32, 0, this.ConvertToBitVector(operand1, 32));
+          expr = this.solver.MkExtract(32, 0, this.ConvertToBitVector(operand1, operationSize));
           break;
         case OperationCode.Conv_I8:
         case OperationCode.Conv_Ovf_I8:
@@ -200,7 +225,7 @@ namespace Z3Wrapper {
           if (TypeHelper.SizeOfType(operand1.Type) == 8)
             expr = this.ConvertToBitVector(operand1, 64);
           else
-            expr = this.solver.MkSignExt(32, this.ConvertToBitVector(operand1, 32));
+            expr = this.solver.MkSignExt(32, this.ConvertToBitVector(operand1, operationSize));
           break;
         case OperationCode.Conv_R4:
           goto default;
@@ -209,17 +234,17 @@ namespace Z3Wrapper {
         case OperationCode.Conv_U1:
         case OperationCode.Conv_Ovf_U1:
         case OperationCode.Conv_Ovf_U1_Un:
-          expr = this.solver.MkZeroExt(24, this.solver.MkExtract(7, 0, this.ConvertToBitVector(operand1, 32)));
+          expr = this.solver.MkZeroExt(24, this.solver.MkExtract(7, 0, this.ConvertToBitVector(operand1, operationSize)));
           break;
         case OperationCode.Conv_U2:
         case OperationCode.Conv_Ovf_U2:
         case OperationCode.Conv_Ovf_U2_Un:
-          expr = this.solver.MkZeroExt(16, this.solver.MkExtract(16, 0, this.ConvertToBitVector(operand1, 32)));
+          expr = this.solver.MkZeroExt(16, this.solver.MkExtract(16, 0, this.ConvertToBitVector(operand1, operationSize)));
           break;
         case OperationCode.Conv_U4:
         case OperationCode.Conv_Ovf_U4:
         case OperationCode.Conv_Ovf_U4_Un:
-          expr = this.solver.MkExtract(32, 0, this.ConvertToBitVector(operand1, 32));
+          expr = this.solver.MkExtract(32, 0, this.ConvertToBitVector(operand1, operationSize));
           break;
         case OperationCode.Conv_U8:
         case OperationCode.Conv_Ovf_U8:
@@ -250,18 +275,28 @@ namespace Z3Wrapper {
           return operand1;
 
         case OperationCode.Neg:
-          expr = this.solver.MkBVNeg(this.ConvertToBitVector(operand1, 32));
+          expr = this.solver.MkBVNeg(this.ConvertToBitVector(operand1, operationSize));
           break;
+
+        case OperationCode.Nop:
+          var v = operation.Value as INamedEntity;
+          if (v != null && !(v.Name is Dummy)) { //phi node
+            expr = this.GetVariableFor(v, expressionType);
+            break;
+          }
+          goto default;
 
         case OperationCode.Not:
           if (operand1.Type.TypeCode == PrimitiveTypeCode.Boolean)
             expr = this.solver.MkNot(operand1.Unwrap<BoolExpr>());
           else
-            expr = this.solver.MkBVNot(this.ConvertToBitVector(operand1, 32));
+            expr = this.solver.MkBVNot(this.ConvertToBitVector(operand1, operationSize));
           break;
 
         default:
-          expr = this.solver.MkConst("unary"+operation.GetHashCode().ToString(), this.GetSortFor(expressionType));
+          var hashCode = operation.GetHashCode();
+          if (operation is Dummy) hashCode = new object().GetHashCode();
+          expr = this.solver.MkConst("unary"+hashCode, this.GetSortFor(expressionType));
           break;
       }
       return new ExpressionWrapper(expr, expressionType);
@@ -269,109 +304,110 @@ namespace Z3Wrapper {
 
     public ISatExpressionWrapper MakeExpression(IOperation operation, ITypeReference expressionType, ISatExpressionWrapper operand1, ISatExpressionWrapper operand2) {
       Expr expr;
+      var operationSize = Math.Max(Math.Max(TypeHelper.SizeOfType(expressionType), TypeHelper.SizeOfType(operand1.Type)), TypeHelper.SizeOfType(operand2.Type)) <= 4  ? 32u : 64u;
       switch (operation.OperationCode) {
         //Instructions that are side-effect free and cacheable and that could result in compile time values.
         //We attempt to compute the compile time values.
         case OperationCode.Add:
         case OperationCode.Add_Ovf:
         case OperationCode.Add_Ovf_Un:
-          expr = this.solver.MkBVAdd(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVAdd(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.And:
           if (operand1.Type.TypeCode == PrimitiveTypeCode.Boolean)
             expr = this.solver.MkAnd(operand1.Unwrap<BoolExpr>(), this.ConvertToBool(operand2));
           else
-            expr = this.solver.MkBVAND(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+            expr = this.solver.MkBVAND(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Div:
-          expr = this.solver.MkBVSDiv(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVSDiv(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Div_Un:
-          expr = this.solver.MkBVUDiv(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVUDiv(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Mul:
         case OperationCode.Mul_Ovf:
         case OperationCode.Mul_Ovf_Un:
-          expr = this.solver.MkBVMul(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVMul(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Or:
           if (operand1.Type.TypeCode == PrimitiveTypeCode.Boolean)
             expr = this.solver.MkOr(operand1.Unwrap<BoolExpr>(), this.ConvertToBool(operand2));
           else
-            expr = this.solver.MkBVOR(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+            expr = this.solver.MkBVOR(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Rem:
-          expr = this.solver.MkBVSRem(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVSRem(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Rem_Un:
-          expr = this.solver.MkBVURem(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVURem(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Shl:
-          expr = this.solver.MkBVURem(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVURem(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Shr:
-          expr = this.solver.MkBVASHR(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVASHR(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Shr_Un:
-          expr = this.solver.MkBVLSHR(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVLSHR(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Sub:
         case OperationCode.Sub_Ovf:
         case OperationCode.Sub_Ovf_Un:
-          expr = this.solver.MkBVSub(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVSub(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Xor:
           if (operand1.Type.TypeCode == PrimitiveTypeCode.Boolean)
             expr = this.solver.MkXor(operand1.Unwrap<BoolExpr>(), this.ConvertToBool(operand2));
           else
-            expr = this.solver.MkBVXOR(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+            expr = this.solver.MkBVXOR(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
 
         //Boolean expression
         case OperationCode.Beq:
         case OperationCode.Beq_S:
         case OperationCode.Ceq:
-          expr = this.solver.MkEq(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkEq(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Bge:
         case OperationCode.Bge_S:
-          expr = this.solver.MkBVSGE(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVSGE(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Bge_Un:
         case OperationCode.Bge_Un_S:
-          expr = this.solver.MkBVUGE(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVUGE(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Bgt:
         case OperationCode.Bgt_S:
         case OperationCode.Cgt:
-          expr = this.solver.MkBVSGT(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVSGT(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Bgt_Un:
         case OperationCode.Bgt_Un_S:
         case OperationCode.Cgt_Un:
-          expr = this.solver.MkBVUGT(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVUGT(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Ble:
         case OperationCode.Ble_S:
-          expr = this.solver.MkBVSLE(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVSLE(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Ble_Un:
         case OperationCode.Ble_Un_S:
-          expr = this.solver.MkBVULE(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVULE(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Blt:
         case OperationCode.Blt_S:
         case OperationCode.Clt:
-          expr = this.solver.MkBVSLT(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVSLT(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Blt_Un:
         case OperationCode.Blt_Un_S:
         case OperationCode.Clt_Un:
-          expr = this.solver.MkBVULT(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32));
+          expr = this.solver.MkBVULT(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize));
           break;
         case OperationCode.Bne_Un:
         case OperationCode.Bne_Un_S:
-          expr = this.solver.MkNot(this.solver.MkEq(this.ConvertToBitVector(operand1, 32), this.ConvertToBitVector(operand2, 32)));
+          expr = this.solver.MkNot(this.solver.MkEq(this.ConvertToBitVector(operand1, operationSize), this.ConvertToBitVector(operand2, operationSize)));
           break;
 
         //Instructions that cause side-effect that we do not currently track.
@@ -410,11 +446,25 @@ namespace Z3Wrapper {
         case OperationCode.Ldelema:
           goto default;
 
+        case OperationCode.Nop:
+          var v = operation.Value as INamedEntity;
+          if (v != null && !(v.Name is Dummy)) { //phi node
+            expr = this.GetVariableFor(v, expressionType);
+            break;
+          }
+          goto default;
+
         default:
-          expr = this.solver.MkConst("binary"+operation.GetHashCode().ToString(), this.GetSortFor(expressionType));
+          var hashCode = operation.GetHashCode();
+          if (operation is Dummy) hashCode = new object().GetHashCode();
+          expr = this.solver.MkConst("binary"+hashCode, this.GetSortFor(expressionType));
           break;
       }
       return new ExpressionWrapper(expr, expressionType);
+    }
+
+    public ISatExpressionWrapper MakeImplication(ISatExpressionWrapper operand1, ISatExpressionWrapper operand2) {
+      return new ExpressionWrapper(this.solver.MkImplies(operand1.Unwrap<BoolExpr>(), operand2.Unwrap<BoolExpr>()), operand1.Type);
     }
 
     private BoolExpr ConvertToBool(ISatExpressionWrapper expr) {
@@ -446,6 +496,7 @@ namespace Z3Wrapper {
     public ISatExpressionWrapper True {
       get { return new ExpressionWrapper(this.solver.MkTrue(), this.platformType.SystemBoolean); }
     }
+
 
   }
 

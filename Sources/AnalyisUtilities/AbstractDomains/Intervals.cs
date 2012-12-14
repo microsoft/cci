@@ -717,7 +717,7 @@ namespace Microsoft.Cci.Analysis {
       if (singleton != null && TypeHelper.IsPrimitiveInteger(singleton.Type))
         return new Interval(singleton, singleton);
       else {
-        if (expression.Operation == Dummy.Operation)
+        if (expression.Operation.OperationCode == OperationCode.Nop && expression.Operation.Value is INamedEntity)
           result = TryToGetAsJoinedInterval(expression, referringBlock, joinBlock, definingBlock, mappings);
         else {
           var operand1 = expression.Operand1 as Instruction;

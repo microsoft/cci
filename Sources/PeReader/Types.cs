@@ -3912,7 +3912,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     public ITypeReference Type {
-      get { return this.type; }
+      get { return this.type??Dummy.TypeReference; }
     }
 
     #endregion

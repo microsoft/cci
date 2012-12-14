@@ -1388,6 +1388,7 @@ namespace Microsoft.Cci {
     /// be that obtained from the PDB of the module being rewritten or merged.
     /// </summary>
     private uint GetCorrespondingMethodToken(IMethodDefinition methodDefinition) {
+      if (methodDefinition is Dummy) return 0;
       var definingUnit = PeWriter.GetDefiningUnitReference(methodDefinition.ContainingType);
       if (definingUnit == null) { Contract.Assume(false); return 0; }
       if (definingUnit == this.module || definingUnit.UnitIdentity.Equals(this.module.ModuleIdentity))
@@ -1417,30 +1418,40 @@ namespace Microsoft.Cci {
       }
       var namespaceType = typeDefinition as INamespaceTypeDefinition;
       if (namespaceType == null) { Contract.Assume(false); return Dummy.TypeDefinition; }
-      IUnitNamespace correspondingNamespace = this.GetCorrespondingNamespace(namespaceType.ContainingUnitNamespace);
-      if (correspondingNamespace is Dummy) { Contract.Assume(false); return Dummy.TypeDefinition; }
-      foreach (var nsMem in correspondingNamespace.GetMembersNamed(namespaceType.Name, false)) {
-        var correspondingType = nsMem as INamespaceTypeDefinition;
-        if (correspondingType != null) return correspondingType;
+      foreach (var typeWithSameName in this.GetNamespaceTypesNamed(namespaceType.Name)) {
+        if (typeWithSameName.GenericParameterCount != namespaceType.GenericParameterCount) continue;
+        if (NamespaceNamesAreTheSame(typeWithSameName.ContainingUnitNamespace, namespaceType.ContainingUnitNamespace))
+          return typeWithSameName;
       }
       Contract.Assume(false);
       return Dummy.TypeDefinition;
     }
 
-    private IUnitNamespace GetCorrespondingNamespace(IUnitNamespace unitNamespace) {
-      var nestedNamespace = unitNamespace as INestedUnitNamespace;
-      if (nestedNamespace != null) {
-        IUnitNamespace correspondingNamespace = this.GetCorrespondingNamespace(nestedNamespace.ContainingUnitNamespace);
-        if (correspondingNamespace is Dummy) { Contract.Assume(false); return Dummy.UnitNamespace; }
-        foreach (var nsMem in correspondingNamespace.GetMembersNamed(nestedNamespace.Name, false)) {
-          var correspondingNestedNamespace = nsMem as IUnitNamespace;
-          if (correspondingNestedNamespace != null) return correspondingNestedNamespace;
-        }
-        Contract.Assume(false);
-        return Dummy.UnitNamespace;
-      }
-      return this.module.UnitNamespaceRoot;
+    private bool NamespaceNamesAreTheSame(IUnitNamespace namespaceDefinition1, IUnitNamespace namespaceDefinition2) {
+      Contract.Requires(namespaceDefinition1 != null);
+      Contract.Requires(namespaceDefinition2 != null);
+
+      if (namespaceDefinition1.Name != namespaceDefinition2.Name) return false;
+      var nested1 = namespaceDefinition1 as INestedUnitNamespace;
+      var nested2 = namespaceDefinition2 as INestedUnitNamespace;
+      if (nested1 == null) return nested2 == null;
+      if (nested2 == null) return false;
+      return NamespaceNamesAreTheSame(nested1.ContainingUnitNamespace, nested2.ContainingUnitNamespace);
     }
+
+    private MultiHashtable<INamespaceTypeDefinition>.KeyedValuesEnumerable GetNamespaceTypesNamed(IName name) {
+      Contract.Requires(name != null);
+      if (this.namespaceTypesByName == null) {
+        var namespaceTypesByName = this.namespaceTypesByName = new MultiHashtable<INamespaceTypeDefinition>();
+        foreach (var type in this.typeDefList) {
+          var nsType = type as INamespaceTypeDefinition;
+          if (nsType == null) continue;
+          namespaceTypesByName.Add((uint)nsType.Name.UniqueKey, nsType);
+        }
+      }
+      return this.namespaceTypesByName.GetValuesFor((uint)name.UniqueKey);
+    }
+    MultiHashtable<INamespaceTypeDefinition> namespaceTypesByName;
 
     internal uint GetMethodToken(IMethodReference methodReference) {
       IGenericMethodInstanceReference/*?*/ methodSpec = methodReference as IGenericMethodInstanceReference;

@@ -557,7 +557,7 @@ namespace Microsoft.Cci.Immutable {
     /// </summary>
     private INamespaceTypeDefinition GetResolvedType() {
       this.aliasForType = Dummy.AliasForType;
-      foreach (INamespaceMember member in this.ContainingUnitNamespace.ResolvedUnitNamespace.GetMembersNamed(this.name, false)) {
+      foreach (var member in this.ContainingUnitNamespace.ResolvedUnitNamespace.GetMembersNamed(this.name, false)) {
         var nsTypeDef = member as INamespaceTypeDefinition;
         if (nsTypeDef != null) {
           if (nsTypeDef.GenericParameterCount == this.GenericParameterCount) return nsTypeDef;
@@ -740,7 +740,7 @@ namespace Microsoft.Cci.Immutable {
     /// </summary>
     private INestedTypeDefinition GetResolvedType() {
       this.aliasForType = Dummy.AliasForType;
-      foreach (INamespaceMember member in this.ContainingType.ResolvedType.GetMembersNamed(this.name, false)) {
+      foreach (var member in this.ContainingType.ResolvedType.GetMembersNamed(this.name, false)) {
         var neTypeDef = member as INestedTypeDefinition;
         if (neTypeDef != null) {
           if (neTypeDef.GenericParameterCount == this.GenericParameterCount) return neTypeDef;
