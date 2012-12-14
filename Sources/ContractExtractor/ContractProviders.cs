@@ -111,22 +111,22 @@ namespace Microsoft.Cci.Contracts {
 
       if (cachedContract == null) { // (a)
 
-        // Check to see if its containing type points to a class holding the contract
-        IMethodDefinition/*?*/ proxyMethod = ContractHelper.GetMethodFromContractClass(this.host, unspecializedMethodDefinition);
-        if (proxyMethod == null) {
-          this.contractProviderCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
-          return null;
-        }
         MethodContract cumulativeContract = new MethodContract();
         if (underlyingContract != null) {
           ContractHelper.AddMethodContract(cumulativeContract, underlyingContract);
         }
 
-        IMethodContract proxyContract = this.underlyingContractProvider.GetMethodContractFor(proxyMethod);
-        ITypeReference contractClass = proxyMethod.ContainingTypeDefinition;
-        var gtir = contractClass as IGenericTypeInstanceReference;
-        if (gtir != null) {
-          contractClass = gtir.GenericType;
+        // Check to see if its containing type points to a class holding the contract
+        IMethodDefinition/*?*/ proxyMethod = ContractHelper.GetMethodFromContractClass(this.host, unspecializedMethodDefinition);
+        IMethodContract proxyContract = null;
+        ITypeReference contractClass = null;
+        if (proxyMethod != null) {
+          proxyContract = this.underlyingContractProvider.GetMethodContractFor(proxyMethod);
+          contractClass = proxyMethod.ContainingTypeDefinition;
+          var gtir = contractClass as IGenericTypeInstanceReference;
+          if (gtir != null) {
+            contractClass = gtir.GenericType;
+          }
         }
 
         if (proxyContract == null) {
@@ -314,7 +314,7 @@ namespace Microsoft.Cci.Contracts {
     /// <summary>
     /// Needed because the decompiler requires the concrete class ContractProvider
     /// </summary>
-    ContractProvider underlyingContractProvider;
+    ContractProvider contractCache;
     /// <summary>
     /// needed to pass to decompiler
     /// </summary>
@@ -339,7 +339,7 @@ namespace Microsoft.Cci.Contracts {
     /// <param name="usePdb">Whether to use the PDB file (and possibly the source files if available) during extraction.</param>
     public LazyContractExtractor(IContractAwareHost host, IUnit unit, IContractMethods contractMethods, bool usePdb) {
       this.host = host;
-      this.underlyingContractProvider = new ContractProvider(contractMethods, unit);
+      this.contractCache = new ContractProvider(contractMethods, unit);
       if (usePdb) {
         string pdbFile = Path.ChangeExtension(unit.Location, "pdb");
         if (File.Exists(pdbFile)) {
@@ -405,18 +405,18 @@ namespace Microsoft.Cci.Contracts {
     /// <returns></returns>
     public IMethodContract/*?*/ GetMethodContractFor(object method) {
 
-      IMethodContract contract = this.underlyingContractProvider.GetMethodContractFor(method);
+      IMethodContract contract = this.contractCache.GetMethodContractFor(method);
       if (contract != null) return contract == ContractDummy.MethodContract ? null : contract;
 
       IMethodReference methodReference = method as IMethodReference;
       if (methodReference == null) {
-        this.underlyingContractProvider.AssociateMethodWithContract(method, ContractDummy.MethodContract);
+        this.contractCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
         return null;
       }
 
       IMethodDefinition methodDefinition = methodReference.ResolvedMethod;
       if (methodDefinition is Dummy) {
-        this.underlyingContractProvider.AssociateMethodWithContract(method, ContractDummy.MethodContract);
+        this.contractCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
         return null;
       }
 
@@ -426,10 +426,10 @@ namespace Microsoft.Cci.Contracts {
           var pureMC = new MethodContract() {
             IsPure = true,
           };
-          this.underlyingContractProvider.AssociateMethodWithContract(method, pureMC);
+          this.contractCache.AssociateMethodWithContract(method, pureMC);
           return pureMC;
         } else {
-          this.underlyingContractProvider.AssociateMethodWithContract(method, ContractDummy.MethodContract);
+          this.contractCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
           return null;
         }
       }
@@ -437,7 +437,7 @@ namespace Microsoft.Cci.Contracts {
       var unspecializedMethodDefintion = ContractHelper.UninstantiateAndUnspecializeMethodDefinition(methodDefinition);
 
       if (unspecializedMethodDefintion != methodDefinition) {
-        contract = this.underlyingContractProvider.GetMethodContractFor(unspecializedMethodDefintion);
+        contract = this.contractCache.GetMethodContractFor(unspecializedMethodDefintion);
         if (contract != null) {
           return ContractHelper.InstantiateAndSpecializeContract(this.host, contract, methodDefinition, unspecializedMethodDefintion);
         }
@@ -446,7 +446,7 @@ namespace Microsoft.Cci.Contracts {
       IMethodBody methodBody = unspecializedMethodDefintion.Body;
 
       if (methodBody is Dummy) {
-        this.underlyingContractProvider.AssociateMethodWithContract(method, ContractDummy.MethodContract);
+        this.contractCache.AssociateMethodWithContract(method, ContractDummy.MethodContract);
         return null;
       }
 
@@ -482,9 +482,9 @@ namespace Microsoft.Cci.Contracts {
       #endregion
 
       if (methodContract == null) {
-        this.underlyingContractProvider.AssociateMethodWithContract(method, ContractDummy.MethodContract); // so we don't try to extract more than once
+        this.contractCache.AssociateMethodWithContract(method, ContractDummy.MethodContract); // so we don't try to extract more than once
       } else {
-        this.underlyingContractProvider.AssociateMethodWithContract(method, methodContract);
+        this.contractCache.AssociateMethodWithContract(method, methodContract);
       }
 
       // Notify all interested parties
@@ -514,28 +514,40 @@ namespace Microsoft.Cci.Contracts {
     /// <returns></returns>
     public ITypeContract/*?*/ GetTypeContractFor(object type) {
 
-      ITypeContract/*?*/ typeContract = this.underlyingContractProvider.GetTypeContractFor(type);
-      if (typeContract != null) return typeContract == ContractDummy.TypeContract ? null : typeContract;
-
       ITypeReference/*?*/ typeReference = type as ITypeReference;
       if (typeReference == null) {
-        this.underlyingContractProvider.AssociateTypeWithContract(type, ContractDummy.TypeContract);
+        this.contractCache.AssociateTypeWithContract(type, ContractDummy.TypeContract);
         return null;
       }
 
-      ITypeDefinition/*?*/ typeDefinition = typeReference.ResolvedType;
-      if (typeDefinition == null) {
-        this.underlyingContractProvider.AssociateTypeWithContract(type, ContractDummy.TypeContract);
+      var unspecializedTypeReference = TypeHelper.UninstantiateAndUnspecialize(typeReference);
+      var wasSpecialized = unspecializedTypeReference != typeReference;
+
+      var unspecializedTypeDefinition = unspecializedTypeReference.ResolvedType;
+
+      if (!(unspecializedTypeDefinition is INamedTypeDefinition)) {
+        this.contractCache.AssociateTypeWithContract(type, ContractDummy.TypeContract);
         return null;
       }
 
-      var contract = Microsoft.Cci.MutableContracts.ContractExtractor.GetTypeContract(this.host, typeDefinition, this.pdbReader, this.pdbReader);
+      // only the unspecialized contracts are cached
+      ITypeContract/*?*/ typeContract = this.contractCache.GetTypeContractFor(unspecializedTypeDefinition);
+      if (typeContract != null) {
+        if (typeContract is Dummy) return null;
+        if (!wasSpecialized)
+          return typeContract;
+        return ContractHelper.InstantiateAndSpecializeContract(host, typeContract, typeReference);
+      }
+
+      var contract = Microsoft.Cci.MutableContracts.ContractExtractor.GetTypeContract(this.host, unspecializedTypeDefinition, this.pdbReader, this.pdbReader);
       if (contract == null) {
-        this.underlyingContractProvider.AssociateTypeWithContract(type, ContractDummy.TypeContract); // so we don't try to extract more than once
+        this.contractCache.AssociateTypeWithContract(type, ContractDummy.TypeContract); // so we don't try to extract more than once
         return null;
       } else {
-        this.underlyingContractProvider.AssociateTypeWithContract(type, contract);
-        return contract;
+        this.contractCache.AssociateTypeWithContract(unspecializedTypeDefinition, contract); // cache uninstantiated contract
+        if (!wasSpecialized)
+          return contract;
+        return ContractHelper.InstantiateAndSpecializeContract(host, contract, typeReference);
       }
     }
 
@@ -544,7 +556,7 @@ namespace Microsoft.Cci.Contracts {
     /// </summary>
     /// <value></value>
     public IContractMethods ContractMethods {
-      get { return this.underlyingContractProvider.ContractMethods; }
+      get { return this.contractCache.ContractMethods; }
     }
 
     #endregion
@@ -591,37 +603,67 @@ namespace Microsoft.Cci.Contracts {
 
     internal IMethodReference Map(IMethodReference methodReference) {
       var result = new MetadataDeepCopier(host).Copy(methodReference);
-      var rewriter = new ActualMutator(host, targetUnit, sourceUnitIdentity);
+      var rewriter = new Reparenter(host, targetUnit, sourceUnitIdentity);
       return rewriter.Rewrite(result);
     }
     internal ITypeReference Map(ITypeReference typeReference) {
       var result = new MetadataDeepCopier(host).Copy(typeReference);
-      var rewriter = new ActualMutator(host, targetUnit, sourceUnitIdentity);
+      var rewriter = new Reparenter(host, targetUnit, sourceUnitIdentity);
       return rewriter.Rewrite(result);
     }
     internal IMethodContract Map(IMethodContract methodContract) {
       var result = new CodeAndContractDeepCopier(host).Copy(methodContract);
-      var rewriter = new ActualMutator(host, targetUnit, sourceUnitIdentity);
+      var rewriter = new Reparenter(host, targetUnit, sourceUnitIdentity);
       return rewriter.Rewrite(result);
     }
     internal ITypeContract Map(ITypeDefinition newParentTypeDefinition, ITypeContract typeContract) {
-      var result = new CodeAndContractDeepCopier(host).Copy(typeContract);
-      // Need to reparent any ContractFields and ContractMethods so that their ContainingTypeDefinition
-      // points to the correct type
-      foreach (var m in result.ContractMethods) {
-        var mutableMethod = (MethodDefinition)m;
-        mutableMethod.ContainingTypeDefinition = newParentTypeDefinition;
+
+      var copier = new CodeAndContractDeepCopier(host);
+      var reparenter = new Reparenter(host, targetUnit, sourceUnitIdentity);
+
+      var tc = new TypeContract();
+      var newInvs = new List<ITypeInvariant>();
+      foreach (var inv in typeContract.Invariants) {
+        var inv_prime = copier.Copy(inv);
+        var i2 = reparenter.Rewrite(inv_prime);
+        newInvs.Add(i2);
       }
-      foreach (var f in result.ContractFields) {
-        var mutableField = (FieldDefinition)f;
-        mutableField.ContainingTypeDefinition = newParentTypeDefinition;
+      tc.Invariants = newInvs;
+
+      var newMethods = new List<IMethodDefinition>();
+      foreach (var contractMethod in typeContract.ContractMethods) {
+        var mutableContractMethod = copier.Copy(contractMethod);
+        reparenter.RewriteChildren(mutableContractMethod);
+        // parent pointers of definitions don't get rewritten by the reparenter
+        mutableContractMethod.ContainingTypeDefinition = newParentTypeDefinition;
+        var specializedMethodDefinition = mutableContractMethod as SpecializedMethodDefinition;
+        if (specializedMethodDefinition != null) { // also need to reparent the unspecialized method
+          var mutableUnspecialized = (MethodDefinition)(specializedMethodDefinition.UnspecializedVersion);
+          mutableUnspecialized.ContainingTypeDefinition = TypeHelper.UninstantiateAndUnspecialize(newParentTypeDefinition).ResolvedType;
+        }
+        newMethods.Add(mutableContractMethod);
       }
-      var rewriter = new ActualMutator(host, targetUnit, sourceUnitIdentity);
-      var iTypeContract = rewriter.Rewrite(result);
-      return iTypeContract;
+      tc.ContractMethods = newMethods;
+
+      var newFields = new List<IFieldDefinition>();
+      foreach (var contractField in typeContract.ContractFields) {
+        var mutableContractField = copier.Copy(contractField);
+        reparenter.RewriteChildren(mutableContractField);
+        // parent pointers of definitions don't get rewritten by the reparenter
+        mutableContractField.ContainingTypeDefinition = newParentTypeDefinition;
+        var specializedFieldDefinition = mutableContractField as SpecializedFieldDefinition;
+        if (specializedFieldDefinition != null) { // also need to reparent the unspecialized field
+          var mutableUnspecialized = (FieldDefinition)(specializedFieldDefinition.UnspecializedVersion);
+          mutableUnspecialized.ContainingTypeDefinition = TypeHelper.UninstantiateAndUnspecialize(newParentTypeDefinition).ResolvedType;
+        }
+        newFields.Add(mutableContractField);
+      }
+      tc.ContractFields = newFields;
+
+      return tc;
     }
 
-    private class ActualMutator : CodeAndContractRewriter {
+    private class Reparenter : CodeAndContractRewriter {
 
       private UnitIdentity sourceUnitIdentity;
       private IUnit targetUnit = null;
@@ -640,7 +682,7 @@ namespace Microsoft.Cci.Contracts {
       /// <param name="sourceUnitIdentity">
       /// The unit from which references will be mapped into references from the <paramref name="targetUnit"/>
       /// </param>
-      internal ActualMutator(IMetadataHost host, IUnit targetUnit, UnitIdentity sourceUnitIdentity)
+      internal Reparenter(IMetadataHost host, IUnit targetUnit, UnitIdentity sourceUnitIdentity)
         : base(host) {
         this.sourceUnitIdentity = sourceUnitIdentity;
         this.targetUnit = targetUnit;

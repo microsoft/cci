@@ -282,8 +282,6 @@ namespace Microsoft.Cci.MutableContracts {
           continue;
         else if (s is ILocalDeclarationStatement)
           continue;
-        //else if (this.inCtor && IsCallToCtor(s))
-        //  continue;
         else if (this.inCtor && IsFieldInitializer(s))
           continue;
         else {
@@ -297,22 +295,6 @@ namespace Microsoft.Cci.MutableContracts {
       IStatement lastContract = null;
       var localDecls = new List<IStatement>();
 
-      //while (j < n) {
-      //  var s = stmts[j++];
-
-      //  if (!(IsPotentialPartOfContract(s) || IsPreconditionOrPostcondition(s)))
-      //    break;
-
-      //  if (s is ILocalDeclarationStatement) {
-      //    localDecls.Add(s);
-      //  }
-
-      //  // legacy contracts can never be the last (since EndContractBlock is counted)
-      //  // but they match "IsPotentialPartOfContract" since they are conditional statements.
-      //  if (IsPrePostEndOrLegacy(s, false))
-      //    lastContract = s;
-      //}
-
       if (n < stmts.Count)
         lastContract = stmts[n];
 
@@ -320,13 +302,20 @@ namespace Microsoft.Cci.MutableContracts {
         return block;
       Contract.Assert(lastContract != null);
 
+      // back up over any local declaration statements for locals used
+      // in the first contract
+      if (0 < i && stmts[i - 1] is ILocalDeclarationStatement) {
+        var k = i - 1;
+        while (0 <= k && stmts[k] is ILocalDeclarationStatement) k--;
+        i = k + 1;
+      }
+
       if (mutableBlock != null) {
         newStmts = new List<IStatement>();
         newStmts.AddRange(stmts.GetRange(0,i));
         if (0 < localDecls.Count)
           newStmts.AddRange(localDecls);
       }
-
 
       var foundNonLegacyContract = false; // extract legacy requires only until a non-legacy is found
       var currentClump = new List<IStatement>();
@@ -344,13 +333,19 @@ namespace Microsoft.Cci.MutableContracts {
 
       if (mutableBlock != null) {
         newStmts.AddRange(stmts.GetRange(i, /*n*/stmts.Count - i));
+        IntroduceLocalDeclarationsForUndeclaredLocals(newStmts);
         mutableBlock.Statements = newStmts;
       }
 
       return block;
     }
 
-    private int IndexOfLastContractCall(List<IStatement> stmts) {
+    private void IntroduceLocalDeclarationsForUndeclaredLocals(List<IStatement> newStmts) {
+      var undeclaredLocals = UndeclaredLocalFinder.GetDeclarationsForUndeclaredLocals(newStmts);
+      newStmts.InsertRange(0, undeclaredLocals);
+    }
+
+    internal int IndexOfLastContractCall(List<IStatement> stmts) {
       var k = stmts.Count - 1;
       while (0 <= k) {
         var s = stmts[k];
@@ -398,7 +393,7 @@ namespace Microsoft.Cci.MutableContracts {
       return (addrDeref.Address) is IThisReference ? 1 : 0;
     }
 
-    private IBlockStatement ContainsContract(IBlockStatement block) {
+    private IBlockStatement/*?*/ ContainsContract(IBlockStatement block) {
       foreach (var s in block.Statements) {
         if (IsPrePostEndOrLegacy(s, false)) {
           return block;
@@ -611,7 +606,7 @@ namespace Microsoft.Cci.MutableContracts {
       }
     }
 
-    private bool IsPrePostEndOrLegacy(IStatement statement, bool countLegacy) {
+    internal bool IsPrePostEndOrLegacy(IStatement statement, bool countLegacy) {
       if (statement is IBlockStatement) return false; // each block is searched separately, don't descend down into nested blocks
       if (countLegacy && IsLegacyRequires(statement)) return true;
       IExpressionStatement expressionStatement = statement as IExpressionStatement;
@@ -714,10 +709,19 @@ namespace Microsoft.Cci.MutableContracts {
       return (be.Definition is ILocalDefinition && be.Instance == null);
     }
 
-    private static bool TryGetConditionText(PdbReader pdbReader, IEnumerable<ILocation> locations, int numArgs, out string sourceText) {
+    private static bool TryGetConditionText(PdbReader pdbReader, IEnumerable<ILocation> locations, int numArgs, out string sourceText, bool pleaseNegate = false) {
       int startColumn;
       if (!TryGetSourceText(pdbReader, locations, out sourceText, out startColumn)) return false;
       int firstSourceTextIndex = sourceText.IndexOf('(');
+      // Special case: for VB legacy preconditions, no open paren, sourceText is of the form: "If ... Then"
+      if (firstSourceTextIndex == -1 && pleaseNegate) {
+        var match = new System.Text.RegularExpressions.Regex(@"If (.+) Then").Match(sourceText);
+        if (match.Success) {
+          sourceText = match.Groups[1].Value;
+          sourceText = String.Format("Not({0})", sourceText);
+          return true;
+        }
+      }
       // Special case: for VB Requires<E>, the exception type is written as "(Of E)" so need to skip all of that.
       if (firstSourceTextIndex != -1 && firstSourceTextIndex + 3 < sourceText.Length && (String.Compare(sourceText, firstSourceTextIndex+1, "Of ", 0, 3) == 0)) {
         firstSourceTextIndex += sourceText.Substring(firstSourceTextIndex + 1).IndexOf('(') + 1;
@@ -738,7 +742,10 @@ namespace Microsoft.Cci.MutableContracts {
       if (sourceText != null) {
         sourceText = new System.Text.RegularExpressions.Regex(@"\s+").Replace(sourceText, " ");
         sourceText = sourceText.Trim();
-      }
+      } 
+      if (pleaseNegate)
+        sourceText = BrianGru.NegatePredicate(sourceText);
+
       // This commented-out code was used when we wanted the text to be formatted as it was in the source file, line breaks and all
       //var indentSize = firstSourceTextIndex + startColumn;
       //sourceText = AdjustIndentationOfMultilineSourceText(sourceText, indentSize);
@@ -841,10 +848,7 @@ namespace Microsoft.Cci.MutableContracts {
       string origSource = null;
       if (0 < locations.Count) {
         if (this.pdbReader != null)
-          TryGetConditionText(this.pdbReader, locations, 1, out origSource);
-        if (origSource != null) {
-          origSource = BrianGru.NegatePredicate(origSource);
-        }
+          TryGetConditionText(this.pdbReader, locations, 1, out origSource, true);
       }
 
       if (throwStatement != null) {
@@ -1089,6 +1093,27 @@ namespace Microsoft.Cci.MutableContracts {
         if (ContractHelper.IsModel(methodCall.MethodToCall) != null)
           this.foundModelMember = true;
         base.TraverseChildren(methodCall);
+      }
+    }
+
+    private class UndeclaredLocalFinder : CodeTraverser {
+      private UndeclaredLocalFinder() { }
+      private List<IStatement> newDeclarations = new List<IStatement>();
+      private HashSet<ILocalDefinition> declaredLocals = new HashSet<ILocalDefinition>();
+      public static List<IStatement> GetDeclarationsForUndeclaredLocals(List<IStatement> stmts) {
+        var me = new UndeclaredLocalFinder();
+        me.Traverse(stmts);
+        return me.newDeclarations;
+      }
+      public override void TraverseChildren(ILocalDeclarationStatement localDeclarationStatement) {
+        this.declaredLocals.Add(localDeclarationStatement.LocalVariable);
+        base.TraverseChildren(localDeclarationStatement);
+      }
+      public override void TraverseChildren(ILocalDefinition localDefinition) {
+        if (!this.declaredLocals.Contains(localDefinition)) {
+          this.declaredLocals.Add(localDefinition);
+          this.newDeclarations.Add(new LocalDeclarationStatement() { InitialValue = null, LocalVariable = localDefinition, });
+        }
       }
     }
 

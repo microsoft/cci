@@ -13,7 +13,7 @@ using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci {
   /// <summary>
-  /// Class conraining helper routines for Expressions
+  /// Class containing helper routines for Expressions
   /// </summary>
   public static class ExpressionHelper {
 

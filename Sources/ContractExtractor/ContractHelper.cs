@@ -61,8 +61,6 @@ namespace Microsoft.Cci.MutableContracts {
         this.sourceLocationProvider = sourceLocationProvider;
       }
 
-      private static List<T> MkList<T>(T t) { var xs = new List<T>(); xs.Add(t); return xs; }
-
       public override INamespaceTypeDefinition Rewrite(INamespaceTypeDefinition namespaceTypeDefinition) {
         this.VisitTypeDefinition(namespaceTypeDefinition);
         return base.Rewrite(namespaceTypeDefinition);
@@ -102,7 +100,7 @@ namespace Microsoft.Cci.MutableContracts {
           #region Add calls to Contract.Invariant
           foreach (var inv in typeContract.Invariants) {
             var methodCall = new MethodCall() {
-              Arguments = MkList(inv.Condition),
+              Arguments = new List<IExpression> { inv.Condition, },
               IsStaticCall = true,
               MethodToCall = this.contractProvider.ContractMethods.Invariant,
               Type = systemVoid,
@@ -139,7 +137,14 @@ namespace Microsoft.Cci.MutableContracts {
           attributes.Add(contractInvariantMethodAttribute);
           #endregion
           var namedTypeDefinition = (NamedTypeDefinition)typeDefinition;
-          if (namedTypeDefinition.Methods == null) namedTypeDefinition.Methods = new List<IMethodDefinition>(1);
+          var newMethods = new List<IMethodDefinition>(namedTypeDefinition.Methods == null ? 1 : namedTypeDefinition.Methods.Count() + 1);
+          if (namedTypeDefinition.Methods != null) {
+            foreach (var meth in namedTypeDefinition.Methods) {
+              if (!ContractHelper.IsInvariantMethod(this.host, meth))
+                newMethods.Add(meth);
+            }
+          }
+          namedTypeDefinition.Methods = newMethods;
           namedTypeDefinition.Methods.Add(m);
           #endregion Define the method
         }
@@ -153,7 +158,7 @@ namespace Microsoft.Cci.MutableContracts {
         List<IStatement> contractStatements = new List<IStatement>();
         foreach (var precondition in methodContract.Preconditions) {
           var methodCall = new MethodCall() {
-            Arguments = MkList(precondition.Condition),
+            Arguments = new List<IExpression> { precondition.Condition, },
             IsStaticCall = true,
             MethodToCall = this.contractProvider.ContractMethods.Requires,
             Type = systemVoid,
@@ -166,7 +171,7 @@ namespace Microsoft.Cci.MutableContracts {
         }
         foreach (var postcondition in methodContract.Postconditions) {
           var methodCall = new MethodCall() {
-            Arguments = MkList(this.Rewrite(postcondition.Condition)),
+            Arguments = new List<IExpression> { this.Rewrite(postcondition.Condition), },
             IsStaticCall = true,
             MethodToCall = this.contractProvider.ContractMethods.Ensures,
             Type = systemVoid,
@@ -202,7 +207,7 @@ namespace Microsoft.Cci.MutableContracts {
       /// </summary>
       public override IStatement Rewrite(IAssertStatement assertStatement) {
         var methodCall = new MethodCall() {
-          Arguments = MkList(assertStatement.Condition),
+          Arguments = new List<IExpression> { assertStatement.Condition, },
           IsStaticCall = true,
           MethodToCall = this.contractProvider.ContractMethods.Assert,
           Type = systemVoid,
@@ -219,7 +224,7 @@ namespace Microsoft.Cci.MutableContracts {
       /// </summary>
       public override IStatement Rewrite(IAssumeStatement assumeStatement) {
         var methodCall = new MethodCall() {
-          Arguments = MkList(assumeStatement.Condition),
+          Arguments = new List<IExpression> { assumeStatement.Condition, },
           IsStaticCall = true,
           MethodToCall = this.contractProvider.ContractMethods.Assume,
           Type = systemVoid,
@@ -250,7 +255,7 @@ namespace Microsoft.Cci.MutableContracts {
           Type = oldValue.Type,
         };
         var methodCall = new MethodCall() {
-          Arguments = MkList(oldValue.Expression),
+          Arguments = new List<IExpression> { oldValue.Expression, },
           IsStaticCall = true,
           MethodToCall = methodToCall,
           Type = oldValue.Type,
@@ -412,7 +417,7 @@ namespace Microsoft.Cci.MutableContracts {
         foreach (IMethodImplementation methodImplementation in typeHoldingContractDefinition.ExplicitImplementationOverrides) {
           var implementedInterfaceMethod = MemberHelper.UninstantiateAndUnspecialize(methodImplementation.ImplementedMethod);
           if (unspecializedMethodDefinition.InternedKey == implementedInterfaceMethod.InternedKey)
-              return methodImplementation.ImplementingMethod.ResolvedMethod;
+            return methodImplementation.ImplementingMethod.ResolvedMethod;
         }
         #endregion Explicit Interface Implementations
         #region Implicit Interface Implementations
@@ -614,7 +619,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// <returns></returns>
     public static bool IsPure(IMetadataHost host, IMethodReference methodReference) {
       var contractAssemblyReference = new Immutable.AssemblyReference(host, host.ContractAssemblySymbolicIdentity);
-      var pureAttribute = ContractHelper.CreateTypeReference(host, contractAssemblyReference, "System.Diagnostics.Contracts.PureAttribute"); 
+      var pureAttribute = ContractHelper.CreateTypeReference(host, contractAssemblyReference, "System.Diagnostics.Contracts.PureAttribute");
       if (AttributeHelper.Contains(methodReference.Attributes, pureAttribute)) return true;
       var methodDefinition = methodReference.ResolvedMethod;
       return methodDefinition != methodReference && AttributeHelper.Contains(methodDefinition.Attributes, pureAttribute);
@@ -654,14 +659,14 @@ namespace Microsoft.Cci.MutableContracts {
     /// defined, and you know the method is uninstantiated and unspecialized,
     /// then you would do just as well to directly query that contract provider.
     /// </summary>
-    public static IMethodContract GetMethodContractFor(IContractAwareHost host, IMethodDefinition methodDefinition) {
+    public static IMethodContract GetMethodContractFor(IContractAwareHost host, IMethodReference methodReference) {
 
-      if (methodDefinition is Dummy) return null;
-      var u = TypeHelper.GetDefiningUnitReference(methodDefinition.ContainingType);
+      if (methodReference is Dummy) return null;
+      var u = TypeHelper.GetDefiningUnitReference(methodReference.ContainingType);
       if (u == null) return null;
       var cp = host.GetContractExtractor(u.UnitIdentity);
       if (cp == null) return null;
-      var mc = cp.GetMethodContractFor(methodDefinition);
+      var mc = cp.GetMethodContractFor(methodReference);
       return mc;
     }
 
@@ -698,7 +703,7 @@ namespace Microsoft.Cci.MutableContracts {
             // if the method is generic, then need to specialize the contract to have the same method type parameters as the method
             if (methodDefinition.IsGeneric) {
               var d = new Dictionary<uint, ITypeReference>();
-              IteratorHelper.Zip(overriddenMethod.GenericParameters, methodDefinition.GenericParameters, (i,j) => d.Add(i.InternedKey, j));
+              IteratorHelper.Zip(overriddenMethod.GenericParameters, methodDefinition.GenericParameters, (i, j) => d.Add(i.InternedKey, j));
               var cs = new CodeSpecializer(host, d);
               overriddenContract = cs.Rewrite(overriddenContract);
             }
@@ -869,9 +874,34 @@ namespace Microsoft.Cci.MutableContracts {
       var d = new Dictionary<uint, ITypeReference>();
       IteratorHelper.Zip(unspecializedTypeReferences, specializedTypeReferences, (u, s) => d.Add(u.InternedKey, s));
       var specializer = new CodeSpecializer(host, d);
-      
+
       mutableContract = (MethodContract)specializer.Rewrite(mutableContract);
       mutableContract = (MethodContract)ContractHelper.CopyContractIntoNewContext(host, mutableContract, smr != null ? smr.ResolvedMethod : mr.ResolvedMethod, unspecializedMethodDefinition);
+      return mutableContract;
+    }
+
+
+    /// <summary>
+    /// Given a type contract (<paramref name="typeContract"/> for a unspecialized/uninstantiated type reference/definition
+    /// specialize and instantiate (i.e., the generics) in the contract so that it is a contract
+    /// relative to the specialized/instantiated type reference/definition (<paramref name="context"/>).
+    /// </summary>
+    /// <param name="host"></param>
+    /// <param name="typeContract"></param>
+    /// <param name="context"></param>
+    /// <returns>
+    /// A deep copy of <paramref name="typeContract"/>, properly specialized and instantiated.
+    /// </returns>
+    public static TypeContract InstantiateAndSpecializeContract(IMetadataHost host, ITypeContract typeContract, ITypeReference context) {
+      Contract.Requires(host != null);
+      Contract.Requires(typeContract != null);
+      Contract.Requires(context != null);
+
+      var copier = new CodeAndContractDeepCopier(host);
+      var mutableContract = copier.Copy(typeContract);
+
+      var specializer = new TypeContractSpecializer(host, context);
+      mutableContract = (TypeContract)specializer.Rewrite(mutableContract);
       return mutableContract;
     }
 
@@ -1051,7 +1081,7 @@ namespace Microsoft.Cci.MutableContracts {
 
 
       public override void RewriteChildren(ThisReference thisReference) {
-        if (TypeHelper.TypesAreEquivalent(thisReference.Type,this.sourceType))
+        if (TypeHelper.TypesAreEquivalent(thisReference.Type, this.sourceType))
           thisReference.Type = this.targetType;
       }
 
@@ -1402,6 +1432,7 @@ namespace Microsoft.Cci.MutableContracts {
     }
 
   }
+
   /// <summary>
   /// A mutator that reparents locals defined in the target method so that they point to the source method.
   /// </summary>
@@ -1656,6 +1687,66 @@ namespace Microsoft.Cci.MutableContracts {
     /// </summary>
     public override object RewriteReference(ILocalDefinition localDefinition) {
       return this.Rewrite(localDefinition);
+    }
+
+  }
+
+  /// <summary>
+  /// A rewriter that instantiates any generic type references it encounters relative to a context.
+  /// </summary>
+  public class TypeContractSpecializer : CodeAndContractRewriter {
+
+    private ITypeReference context;
+    private ITypeReference unspec;
+    private bool isSpecialized;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="host"></param>
+    /// <param name="context"></param>
+    public TypeContractSpecializer(IMetadataHost host, ITypeReference context)
+      : base(host, true) {
+      this.context = context;
+      this.unspec = TypeHelper.UninstantiateAndUnspecialize(context);
+      this.isSpecialized = this.unspec != context;
+    }
+
+    /// <summary>
+    /// Rewrites unspecialized type references to become specialized ones, if they are the unspecialized
+    /// type this rewriter is created for.
+    /// </summary>
+    /// <param name="typeReference"></param>
+    /// <returns></returns>
+    public override ITypeReference Rewrite(ITypeReference typeReference) {
+      if (this.isSpecialized && TypeHelper.TypesAreEquivalent(typeReference, this.unspec))
+        return TypeHelper.SpecializeTypeReference(typeReference, this.context, this.host.InternFactory);
+      else
+        return base.Rewrite(typeReference);
+    }
+
+    /// <summary>
+    /// If the method reference's containing type is the unspecialized type this
+    /// rewriter was created for, then it returns a specialized method reference
+    /// whose containing type is the specialized type this rewriter was created for.
+    /// </summary>
+    /// <param name="methodDefinition"></param>
+    /// <returns></returns>
+    public override IMethodDefinition Rewrite(IMethodDefinition methodDefinition) {
+      if (this.isSpecialized && TypeHelper.TypesAreEquivalent(methodDefinition.ContainingType, this.unspec)) {
+        var smr = new SpecializedMethodReference() {
+          UnspecializedVersion = methodDefinition,
+          ContainingType = this.context,
+          CallingConvention = methodDefinition.CallingConvention,
+          InternFactory = this.host.InternFactory,
+          Name = methodDefinition.Name,
+          Parameters = new List<IParameterTypeInformation>(methodDefinition.Parameters),
+          Type = methodDefinition.Type,
+        };
+        return smr.ResolvedMethod;
+      };
+
+      return base.Rewrite(methodDefinition);
     }
 
   }

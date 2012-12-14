@@ -131,6 +131,7 @@ namespace Microsoft.Cci.MutableContracts {
       ISourceMethodBody moveNextBody,
       PdbReader pdbReader
       ) {
+
       // Walk the iterator method and collect all of the state that is assigned to fields in the iterator class
       // That state needs to replace any occurrences of the fields in the contracts (if they exist...)
       var iteratorStmts = new List<IStatement>(iteratorMethodBody.Block.Statements);
@@ -386,6 +387,10 @@ namespace Microsoft.Cci.MutableContracts {
       /// blocks, but is fully contained within a single list of statements.
       /// </summary>
       public override List<IStatement> Rewrite(List<IStatement> statements) {
+
+        if (this.extractor.IndexOfLastContractCall(statements) == -1)
+          return base.Rewrite(statements);
+
         // walk the list until the labeled statement is found that has the contracts in it
         var n = statements.Count;
         var indexOfContract = FindNextContractStatement(statements, 0);
@@ -419,7 +424,7 @@ namespace Microsoft.Cci.MutableContracts {
         var n = statements.Count;
         for (; i < n; i++) {
           var s = statements[i];
-          if (this.extractor.IsPreconditionOrPostcondition(s)) return i;
+          if (this.extractor.IsPrePostEndOrLegacy(s, true)) return i;
         }
         return -1;
       }
@@ -466,6 +471,7 @@ namespace Microsoft.Cci.MutableContracts {
           return base.Rewrite(boundExpression);
         }
       }
+
 
     }
   }
