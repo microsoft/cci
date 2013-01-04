@@ -819,7 +819,7 @@ namespace CodeModelTestInput
             __temp_16.charField = (ushort)__temp_17.charField;
             CodeModelTestInput.Class1 __temp_18 = o;
             CodeModelTestInput.Class1 __temp_19 = __temp_18;
-            __temp_18.charField = (ushort)(__temp_19.charField / (char)1);
+            __temp_18.charField = (ushort)(__temp_19.charField / '\u0001');
             CodeModelTestInput.Class1 __temp_20 = o;
             CodeModelTestInput.Class1 __temp_21 = __temp_20;
             string __temp_22 = __temp_21.stringField;

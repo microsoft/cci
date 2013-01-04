@@ -1139,10 +1139,9 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintCharacter(char c) {
-      if (char.IsControl(c))
-        this.sourceEmitterOutput.Write("(char)" + (int)c);
-      else
-        this.sourceEmitterOutput.Write("'" + c + "'");
+      sourceEmitterOutput.Write("'");
+      sourceEmitterOutput.Write(EscapeChar(c, true));
+      sourceEmitterOutput.Write("'");
     }
 
     public virtual void PrintEnumValue(ITypeDefinition enumType, object valObj) {
