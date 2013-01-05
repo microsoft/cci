@@ -180,18 +180,18 @@ public class CodeModelRoundTripTests {
     this.RoundTripCopyRewriteAndExecute("TestClass1.exe", "TestClass1.pdb", true);
   }
 
-  CodeAndContractMutatingVisitor CreateCodeMutator(IAssembly assembly, string pdbName) {
-    return new CodeAndContractMutatingVisitor(host, pdbReader, null);
+  CodeAndContractRewriter CreateCodeMutator(IAssembly assembly, string pdbName) {
+    return new CodeAndContractRewriter(host);
   }
 
-  void RoundTripWithMutator(PeVerifyResult expectedResult, IAssembly assembly, MutatingVisitor mutator) {
+  void RoundTripWithMutator(PeVerifyResult expectedResult, IAssembly assembly, MetadataRewriter mutator) {
     this.VisitAndMutate(mutator, ref assembly);
     AssertWriteToPeFile(expectedResult, assembly);
   }
 
   void RoundTripWithILMutator(string assemblyName, string pdbName) {
     PeVerifyResult expectedResult = PeVerify.VerifyAssembly(assemblyName);
-    RoundTripWithMutator(expectedResult, LoadAssembly(assemblyName), new MutatingVisitor(host));
+    RoundTripWithMutator(expectedResult, LoadAssembly(assemblyName), new MetadataRewriter(host));
   }
 
   void RoundTripWithCodeMutator(string assemblyName, string pdbName) {
@@ -220,8 +220,8 @@ public class CodeModelRoundTripTests {
     PeVerify.Assert(expectedResult, PeVerify.VerifyAssembly(assembly.Location));
   }
 
-  void VisitAndMutate(MutatingVisitor mutator, ref IAssembly assembly) {
-    assembly = mutator.Visit(assembly);
+  void VisitAndMutate(MetadataRewriter mutator, ref IAssembly assembly) {
+    assembly = mutator.Rewrite(assembly);
     Assert.NotNull(assembly);
   }
 
