@@ -2929,13 +2929,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           containingTypeReference = this.GetSpecializedType((INamedTypeDefinition)nestedType.ContainingTypeDefinition);
           if (containingTypeReference == nestedType.ContainingTypeDefinition) return typeDef;
         }
-        return new SpecializedNestedTypeReference() {
-          ContainingType = containingTypeReference,
-          InternFactory = this.InternFactory,
-          Name = nestedType.Name,
-          PlatformType = this.PlatformType,
-          UnspecializedVersion = nestedType,
-        };
+        return new Immutable.SpecializedNestedTypeReference(nestedType, containingTypeReference, this.InternFactory);
       }
       return typeDef;
     }
