@@ -13,47 +13,21 @@ namespace CodeModelTestInput
             int[] Ints = new int[3] {-128, -32768, int.MinValue};
             long[] Longs = new long[4] {-128, -32768, -2147483648, long.MinValue};
             char[] Chars = new char[3] {'a', 'b', 'c'};
-            return;
-
         }
 
         public void Method2()
         {
-            byte[] CS$0$0000 = new byte[1];
-            CS$0$0000[0] = 255;
-            byte[] Bytes = CS$0$0000;
-            ushort[] CS$0$0001 = new ushort[1];
-            CS$0$0001[0] = 65535;
-            ushort[] UShorts = CS$0$0001;
-            uint[] CS$0$0002 = new uint[1];
-            CS$0$0002[0] = -1;
-            uint[] UInts = CS$0$0002;
-            ulong[] CS$0$0003 = new ulong[1];
-            CS$0$0003[0] = (long)-1;
-            ulong[] ULongs = CS$0$0003;
-            sbyte[] CS$0$0004 = new sbyte[1];
-            CS$0$0004[0] = -128;
-            sbyte[] SBytes = CS$0$0004;
-            short[] CS$0$0005 = new short[1];
-            CS$0$0005[0] = -32768;
-            short[] Shorts = CS$0$0005;
-            int[] CS$0$0006 = new int[1];
-            CS$0$0006[0] = int.MinValue;
-            int[] Ints = CS$0$0006;
-            long[] CS$0$0007 = new long[1];
-            CS$0$0007[0] = long.MinValue;
-            long[] Longs = CS$0$0007;
-            char[] CS$0$0008 = new char[1];
-            CS$0$0008[0] = 'a';
-            char[] Chars = CS$0$0008;
-            bool[] CS$0$0009 = new bool[1];
-            CS$0$0009[0] = true;
-            bool[] Bools = CS$0$0009;
-            decimal[] CS$0$0010 = new decimal[1];
-            CS$0$0010[0] = new decimal(11, 0, 0, false, 1);
-            decimal[] Decimals = CS$0$0010;
-            return;
-
+            byte[] Bytes = new byte[1] {255};
+            ushort[] UShorts = new ushort[1] {65535};
+            uint[] UInts = new uint[1] {(uint)-1};
+            ulong[] ULongs = new ulong[1] {(ulong)(long)-1};
+            sbyte[] SBytes = new sbyte[1] {-128};
+            short[] Shorts = new short[1] {-32768};
+            int[] Ints = new int[1] {int.MinValue};
+            long[] Longs = new long[1] {long.MinValue};
+            char[] Chars = new char[1] {'a'};
+            bool[] Bools = new bool[1] {true};
+            decimal[] Decimals = new decimal[1] {new decimal(11, 0, 0, false, 1)};
         }
 
         private void Method3()
@@ -70,8 +44,6 @@ namespace CodeModelTestInput
                 j = 3;
             }
             k = i + j;
-            return;
-
         }
 
         private bool Method4(int[] xs, int x)
@@ -86,8 +58,6 @@ namespace CodeModelTestInput
             {
                 xs[x] = 3;
             }
-            return;
-
         }
 
         private void Method6(int[] xs, int x)
@@ -100,8 +70,6 @@ namespace CodeModelTestInput
             {
                 xs[0] = x;
             }
-            return;
-
         }
 
         private void Method7(int[] xs, int x)
@@ -113,13 +81,10 @@ namespace CodeModelTestInput
             if (0 < xs.Length)
             {
                 xs[0] = x;
-            }
-            else
-            {
-                xs = new int[3];
-            }
-            return;
+                return;
 
+            }
+            xs = new int[3];
         }
 
         private void Method8(int[] xs, int x)
@@ -136,166 +101,132 @@ namespace CodeModelTestInput
             {
                 xs[x] = 3;
             }
-            return;
-
         }
 
         private void Method9(int[] xs, int x)
         {
-            if (!(0 >= xs.Length || x >= xs.Length))
+            if (0 < xs.Length && x < xs.Length)
             {
                 xs[x] = 3;
             }
-            return;
-
         }
 
         private static void Method10(int x)
         {
             int[] a = new int[x > 0 ? x : 5];
-            return;
-
         }
 
         private static void Method11(int x)
         {
-            int[][] a = null;
+            int[][] a = (int[][])null;
             a[0] = new int[x > 0 ? x : 5];
-            return;
-
         }
 
         private static bool Method12(int x)
         {
-            bool CS$1$0000;
-            int CS$4$0001 = x;
-            switch(CS$4$0001 - 1){
+            switch(x - 1){
                 case 0:
                     goto IL_001d;
                 case 1:
                 case 2:
                 case 3:
                     goto IL_0021;
-                default:
-                    goto IL_0025;
             }
+            goto IL_0025;
         IL_001d:
-            CS$1$0000 = false;
-            goto IL_0029;
+            return false;
+
         IL_0021:
-            CS$1$0000 = true;
-            goto IL_0029;
+            return true;
+
         IL_0025:
-            CS$1$0000 = false;
-        IL_0029:
-            return CS$1$0000;
+            return false;
 
         }
 
         private string Method13()
         {
-            string CS$1$0000;
-            int CS$4$0001;
             try
             {
+                int x;
+                switch(this.c){
+                    case 0:
+                        goto IL_0019;
+                    case 1:
+                        goto IL_0021;
+                }
+                goto IL_0034;
+            IL_0019:
+                return "1";
+
+            IL_0021:
+                try
                 {
-                    int x;
-                    CS$4$0001 = this.c;
-                    switch(CS$4$0001){
+                    return "2";
+
+                }
+                catch
+                {
+                    return "3";
+
+                }
+            IL_0034:
+                x = 0;
+                try
+                {
+                    switch(x + this.c){
                         case 0:
-                            goto IL_0019;
+                            goto IL_0050;
                         case 1:
-                            goto IL_0021;
-                        default:
-                            goto IL_0034;
+                            goto IL_0058;
                     }
-                IL_0019:
-                    CS$1$0000 = "1";
-                    goto IL_007c;
-                IL_0021:
-                    try
-                    {
-                        CS$1$0000 = "2";
-                        goto IL_007c;
-                    }
-                    catch
-                    {
-                        CS$1$0000 = "3";
-                        goto IL_007c;
-                    }
-                IL_0034:
-                    x = 0;
-                    try
-                    {
-                        CS$4$0001 = x + this.c;
-                        switch(CS$4$0001){
-                            case 0:
-                                goto IL_0050;
-                            case 1:
-                                goto IL_0058;
-                            default:
-                                goto IL_0060;
-                        }
-                    IL_0050:
-                        CS$1$0000 = "4";
-                        goto IL_007c;
-                    IL_0058:
-                        CS$1$0000 = "5";
-                        goto IL_007c;
-                    IL_0060:
-                        CS$1$0000 = "6";
-                        goto IL_007c;
-                    }
-                    catch
-                    {
-                        CS$1$0000 = "7";
-                        goto IL_007c;
-                    }
+                    goto IL_0060;
+                IL_0050:
+                    return "4";
+
+                IL_0058:
+                    return "5";
+
+                IL_0060:
+                    return "6";
+
+                }
+                catch
+                {
+                    return "7";
+
                 }
             }
             catch
             {
-                CS$1$0000 = "8";
-            }
-        IL_007c:
-            return CS$1$0000;
+                return "8";
 
+            }
         }
 
         private void Method14()
         {
             try
             {
-                goto IL_003a;
             }
             catch(System.ApplicationException e)
             {
+                try
                 {
-                    int x;
-                    try
-                    {
-                        x = 4;
-                        System.Console.WriteLine(x);
-                        System.Console.WriteLine(e);
-                        System.Console.WriteLine(e);
-                        goto IL_002c;
-                    }
-                    catch(System.Exception e1)
-                    {
-                        System.Console.WriteLine(e1);
-                        goto IL_003a;
-                    }
-                IL_002c:
-                    goto IL_003a;
+                    int x = 4;
+                    System.Console.WriteLine(x);
+                    System.Console.WriteLine(e);
+                    System.Console.WriteLine(e);
+                }
+                catch(System.Exception e1)
+                {
+                    System.Console.WriteLine(e1);
                 }
             }
             catch(System.Exception ex)
             {
                 System.Console.WriteLine(ex);
             }
-        IL_003a:
-            return;
-
         }
 
         private System.Type Method15()
@@ -306,33 +237,19 @@ namespace CodeModelTestInput
 
         private int[] Method16(int[] xs)
         {
-            push &xs[0];
-            push dup;
-            pop = *pop + 1;
+            ++xs[0];
             return xs;
 
         }
 
         private bool Method17(bool A, bool B, bool C, bool D)
         {
-            int __temp_1;
-            bool CS$1$0000;
-            if (!(A && B))
-            {
-                __temp_1 = (int)(C && D);
-            }
-            else
-            {
-                __temp_1 = 1;
-            }
-            CS$1$0000 = (bool)__temp_1;
-            return CS$1$0000;
+            return A && B || C && D;
 
         }
 
         private int Method18(int x, int y, int z)
         {
-            int CS$1$0000;
             int midVal = z;
             if (y < z)
             {
@@ -348,75 +265,25 @@ namespace CodeModelTestInput
                     }
                 }
             }
-            CS$1$0000 = midVal;
-            return CS$1$0000;
+            return midVal;
 
         }
 
         public System.Collections.Generic.IEnumerable<int> Method19(int x)
         {
-            int <i>5__4 = 0;
-            goto IL_0101;
-        IL_0043:
-            if (<i>5__4 == 8)
-            {
-                if (x == <i>5__4)
-                {
-                    yield return x;
-
-                }
-                else
-                {
-                    yield return 8;
-
-                }
-                goto IL_00f2;
-            }
-            if (x > 0)
-            {
-            }
-            else
-            {
-                if (x < -2)
-                {
-                }
-                else
-                {
-                    yield return <i>5__4;
-
-                    {
-                    IL_00f2:
-                        ++<i>5__4;
-                    IL_0101:
-                        if (<i>5__4 < 10)
-                        {
-                            goto IL_0043;
-                        }
-                    }
-                }
-            }
-            yield break;
+            return new CodeModelTestInput.Class1.<Method19>d__3(-2){
+                <>4__this = this, 
+                <>3__x = x, 
+            };
 
         }
 
         public System.Collections.Generic.IEnumerable<int> Method20(int x)
         {
-            if (x > 0)
-            {
-                x = 2;
-            }
-            else
-            {
-                if (x > 1)
-                {
-                    x = 3;
-                }
-                else
-                {
-                    x = 4;
-                }
-            }
-            yield break;
+            return new CodeModelTestInput.Class1.<Method20>d__7(-2){
+                <>4__this = this, 
+                <>3__x = x, 
+            };
 
         }
 
@@ -426,300 +293,178 @@ namespace CodeModelTestInput
                 int i;
                 for (i = 0; i < 1; ++i)
                 {
-                    System.Action t;
-                    t = delegate () {
-                        i.Equals(i);
-                        return;
-
-                    };
-                    {
-                    }
+                    System.Action t = () => i.Equals(i);
                 }
-                return;
-
             }
         }
 
         public System.Collections.Generic.IEnumerable<int> Method22()
         {
-            int CS$0$0002;
-            {
-                int <flags>5__f = 1;
-                int __temp_6 = <flags>5__f & 2;
-                int __temp_7 = __temp_6;
-                CS$0$0002 = __temp_7;
-                <flags>5__f = __temp_6;
-                yield return CS$0$0002;
+            return new CodeModelTestInput.Class1.<Method22>d__e(-2){
+                <>4__this = this, 
+            };
 
-                yield break;
-
-            }
         }
 
         private static void Method23(out string x, out string y)
         {
-            push x;
-            push y;
-            pop = null;
-            pop = null;
-            return;
-
+            x = y = (string)null;
         }
 
         private void Method24()
         {
             string a = "abc";
             string b = a.Substring(1);
-            return;
-
         }
 
         public int Method25(object o)
         {
-            int CS$1$0000;
             int x = 3;
-            if (!(!(o is CodeModelTestInput.Class3) && !(o is CodeModelTestInput.Class1)))
+            if (o is CodeModelTestInput.Class3 || o is CodeModelTestInput.Class1)
             {
                 x = 27;
             }
-            CS$1$0000 = x;
-            return CS$1$0000;
+            return x;
 
         }
 
         public void Method26(out bool y)
         {
             y = false;
-            return;
-
         }
 
         private static int Method27(int n)
         {
-            int CS$1$0000;
             int i = 1;
-            int __temp_3 = i + 1;
-            int __temp_4 = __temp_3;
-            i = __temp_4;
-            if (__temp_3 > n)
+            if (++i > n)
             {
-                CS$1$0000 = i;
+                return i;
+
             }
-            else
-            {
-                CS$1$0000 = 0;
-            }
-            return CS$1$0000;
+            return 0;
 
         }
 
         public int Method28(int n)
         {
-            int CS$1$0000;
-            int __temp_5 = this.c + 1;
-            int __temp_6 = __temp_5;
-            int CS$0$0001 = __temp_6;
-            this.c = __temp_5;
-            if (CS$0$0001 > n)
+            if (++this.c > n)
             {
-                CS$1$0000 = this.c;
+                return this.c;
+
             }
-            else
-            {
-                CS$1$0000 = 0;
-            }
-            return CS$1$0000;
+            return 0;
 
         }
 
         public int Method29(int y)
         {
-            int __temp_2 = y;
-            int __temp_5 = this.c;
-            int __temp_6 = __temp_5;
-            int CS$0$0001 = __temp_6;
-            this.c = __temp_5 + 1;
-            return __temp_2 + CS$0$0001;
+            return y + this.c++;
 
         }
 
         private int Method30(int[] xs)
         {
-            push &xs[0];
-            push dup;
-            int __temp_2 = *pop;
-            int __temp_3 = __temp_2;
-            int CS$0$0001 = __temp_3;
-            pop = __temp_2 + 1;
-            return CS$0$0001;
+            return xs[0]++;
 
         }
 
         private int Method31(int[] xs)
         {
-            push &xs[0];
-            push dup;
-            int __temp_2 = *pop + 3;
-            int __temp_3 = __temp_2;
-            int CS$0$0001 = __temp_3;
-            pop = __temp_2;
-            return CS$0$0001;
+            return xs[0] += 3;
 
         }
 
         private void Method32()
         {
-            CodeModelTestInput.SomeStruct sstr;
-            sstr = default(CodeModelTestInput.SomeStruct);
-            push &sstr;
-            push dup;
-            pop.Width = pop.Width >> 1;
-            return;
-
+            CodeModelTestInput.SomeStruct sstr = default(CodeModelTestInput.SomeStruct);
+            sstr.Width >>= 1;
         }
 
         private static void Method33()
         {
             short[] a = new short[1];
             short[] b = new short[1];
-            push &a[0];
-            push dup;
-            pop = (short)(*pop + b[0]);
-            return;
-
+            a[0] += b[0];
         }
 
         private void Method33(System.Collections.ICollection c)
         {
             System.Console.WriteLine(c != default(System.Collections.ICollection) ? c.Count : 32);
-            return;
-
         }
 
         private void Method34()
         {
-            System.DateTime dt;
-            dt.System.DateTime((long)100);
-            return;
-
+            System.DateTime dt = new System.DateTime((long)100);
         }
 
         private System.Action Method35()
         {
-            System.Action CS$1$0000;
             object foo;
             try
             {
                 foo = "fi";
-                goto IL_001c;
             }
             catch
             {
-                CS$1$0000 = null;
-                goto IL_002c;
-            }
-        IL_001c:
-            CS$1$0000 = delegate () {
-                System.Console.WriteLine(foo);
-                return;
+                return (System.Action)null;
 
-            };
-        IL_002c:
-            return CS$1$0000;
+            }
+            return () => System.Console.WriteLine(foo);
 
         }
 
         public void Method36()
         {
-            object[] a = null;
+            object[] a = (object[])null;
             int i = 1;
-            object[] __temp_3 = a;
-            int __temp_4 = i - 1;
-            object[] __temp_5 = a;
-            int __temp_6 = i;
-            object CS$0$0000 = (object)"foo";
-            __temp_5[__temp_6] = (object)"foo";
-            __temp_3[__temp_4] = CS$0$0000;
-            return;
-
+            a[i - 1] = a[i] = "foo";
         }
 
         private static void Method37(out System.Action foo)
         {
-            string bar;
             foo = delegate () {
-                bar = "one";
+                string bar = "one";
                 System.Console.WriteLine(bar);
-                return;
-
             };
-            return;
-
         }
 
         private static void Method38(out System.Action foo)
         {
             string bar;
-            foo = delegate () {
-                bar = "one";
-                return;
-
-            };
+            foo = () => bar = "one";
             foo = delegate () {
                 bar = "two";
                 System.Console.WriteLine(bar);
-                return;
-
             };
-            return;
-
         }
 
         private void Method39(System.Action foo)
         {
-            int bar;
             foo = delegate () {
+                int bar;
                 this.Method40(out bar);
                 System.Console.WriteLine(bar);
-                return;
-
             };
-            return;
-
         }
 
         private void Method40(out int bar)
         {
             bar = 1;
-            return;
-
         }
 
         private void Method41(CodeModelTestInput.Class1 c, System.Action foo)
         {
-            string __temp_2;
-            CodeModelTestInput.Class1 __temp_3;
             string someString;
             if (c == default(CodeModelTestInput.Class1))
             {
-                __temp_2 = "";
+                push "";
             }
             else
             {
-                __temp_3 = c;
-                {
-                    string __temp_4 = __temp_3.Method42((object part) => part);
-                    __temp_2 = __temp_4;
-                }
+                push c.Method42((object part) => part);
             }
-            someString = __temp_2;
-            foo = delegate () {
-                someString = null;
-                return;
-
-            };
-            return;
-
+            someString = pop;
+            foo = () => someString = (string)null;
         }
 
         private string Method42(System.Func<object, object> something)
@@ -738,11 +483,7 @@ namespace CodeModelTestInput
                     {
                         foo = bar;
                     }
-                    return;
-
                 };
-                return;
-
             };
             return foo;
 
@@ -754,107 +495,48 @@ namespace CodeModelTestInput
             {
                 System.Console.WriteLine("foo");
             }
-            return;
-
         }
 
         private void Method45(char ch)
         {
-            bool __temp_1;
-            bool CS$4$0000;
-            if (!char.IsNumber(ch))
-            {
-                if (ch == '.')
-                {
-                    goto IL_001d;
-                }
-                if (ch == '-')
-                {
-                    goto IL_001d;
-                }
-                __temp_1 = ch != '+';
-            }
-            else
-            {
-            IL_001d:
-                __temp_1 = false;
-            }
-            CS$4$0000 = __temp_1;
-            if (!CS$4$0000)
+            if (char.IsNumber(ch) || ch == '.' || ch == '-' || ch == '+')
             {
                 System.Console.WriteLine("foo");
             }
-            return;
-
         }
 
         private void Method46(CodeModelTestInput.Class1 o)
         {
-            CodeModelTestInput.Class1 __temp_0 = o;
-            CodeModelTestInput.Class1 __temp_1 = __temp_0;
-            __temp_0.c = __temp_1.c;
-            CodeModelTestInput.Class1 __temp_2 = o;
-            CodeModelTestInput.Class1 __temp_3 = __temp_2;
-            __temp_2.c = __temp_3.c;
-            CodeModelTestInput.Class1 __temp_4 = o;
-            CodeModelTestInput.Class1 __temp_5 = __temp_4;
-            __temp_4.c = __temp_5.c;
-            CodeModelTestInput.Class1 __temp_6 = o;
-            CodeModelTestInput.Class1 __temp_7 = __temp_6;
-            __temp_6.c = __temp_7.c / 1;
-            CodeModelTestInput.Class1 __temp_8 = o;
-            CodeModelTestInput.Class1 __temp_9 = __temp_8;
-            __temp_8.boolField = __temp_9.boolField;
-            CodeModelTestInput.Class1 __temp_10 = o;
-            CodeModelTestInput.Class1 __temp_11 = __temp_10;
-            __temp_10.boolField = __temp_11.boolField;
-            CodeModelTestInput.Class1 __temp_12 = o;
-            CodeModelTestInput.Class1 __temp_13 = __temp_12;
-            __temp_12.charField = (ushort)__temp_13.charField;
-            CodeModelTestInput.Class1 __temp_14 = o;
-            CodeModelTestInput.Class1 __temp_15 = __temp_14;
-            __temp_14.charField = (ushort)__temp_15.charField;
-            CodeModelTestInput.Class1 __temp_16 = o;
-            CodeModelTestInput.Class1 __temp_17 = __temp_16;
-            __temp_16.charField = (ushort)__temp_17.charField;
-            CodeModelTestInput.Class1 __temp_18 = o;
-            CodeModelTestInput.Class1 __temp_19 = __temp_18;
-            __temp_18.charField = (ushort)(__temp_19.charField / '\u0001');
-            CodeModelTestInput.Class1 __temp_20 = o;
-            CodeModelTestInput.Class1 __temp_21 = __temp_20;
-            string __temp_22 = __temp_21.stringField;
-            string __temp_23 = __temp_22;
-            if (__temp_23 == default(string))
-            {
-                __temp_22;
-                __temp_22 = "";
-            }
-            __temp_20.stringField = __temp_22;
-            return;
-
+            o.c += 0;
+            o.c += 0;
+            o.c += 0;
+            o.c /= 1;
+            o.boolField |= false;
+            o.boolField |= false;
+            o.charField += (char)0;
+            o.charField += (char)0;
+            o.charField += (char)0;
+            o.charField /= '\u0001';
+            o.stringField += "";
         }
 
         public int Method47(object o)
         {
-            int CS$1$0000;
             int x = 3;
             if (!(o is CodeModelTestInput.Class3))
             {
                 x = 27;
             }
-            CS$1$0000 = x;
-            return CS$1$0000;
+            return x;
 
         }
 
         public void Method48(int x)
         {
-            CodeModelTestInput.Class1.StaticIntProperty = CodeModelTestInput.Class1.StaticIntProperty + x;
-            CodeModelTestInput.Class1.StaticIntProperty = CodeModelTestInput.Class1.StaticIntProperty - x;
-            CodeModelTestInput.Class1.StaticIntProperty = CodeModelTestInput.Class1.StaticIntProperty * x;
-            CodeModelTestInput.Class1.StaticIntProperty = CodeModelTestInput.Class1.StaticIntProperty / x;
-            return;
-
+            StaticIntProperty += x;
+            StaticIntProperty -= x;
+            StaticIntProperty *= x;
+            StaticIntProperty /= x;
         }
 
         public void Method49(bool b)
@@ -863,19 +545,15 @@ namespace CodeModelTestInput
             {
                 if (b)
                 {
-                    goto IL_0029;
+                    return;
+
                 }
                 System.Console.WriteLine("bar");
-                goto IL_0028;
             }
             finally
             {
                 System.Console.WriteLine("finally");
             }
-        IL_0028:
-        IL_0029:
-            return;
-
         }
 
         public void Method50(int x)
@@ -894,32 +572,32 @@ namespace CodeModelTestInput
                     goto IL_0045;
                 case 1:
                     goto IL_0052;
-                default:
-                    goto IL_005f;
             }
+            goto IL_005f;
         IL_002b:
             System.Console.WriteLine("64");
-            goto IL_0080;
+            return;
+
         IL_0038:
             System.Console.WriteLine("62");
-            goto IL_0080;
+            return;
+
         IL_0045:
             System.Console.WriteLine("85");
-            goto IL_0080;
+            return;
+
         IL_0052:
             System.Console.WriteLine("86");
-            goto IL_0080;
+            return;
+
         IL_005f:
             System.Console.WriteLine("in between");
-            CS$4$0000 = x;
-            if (CS$4$0000 != 71)
+            if (x != 71)
             {
+                return;
+
             }
-            else
-            {
-                System.Console.WriteLine("71");
-            }
-        IL_0080:
+            System.Console.WriteLine("71");
             return;
 
         }
@@ -932,7 +610,8 @@ namespace CodeModelTestInput
 
         public CodeModelTestInput.SomeEnum Method51(CodeModelTestInput.Class1 c)
         {
-            CodeModelTestInput.SomeEnum t = c != default(CodeModelTestInput.Class1) ? c.SomeEnumValue() : 0;
+            CodeModelTestInput.SomeEnum t;
+            t = c != default(CodeModelTestInput.Class1) ? c.SomeEnumValue() : 0;
             return t;
 
         }
@@ -941,8 +620,6 @@ namespace CodeModelTestInput
         {
             this.c = 0;
             this.object();
-            return;
-
         }
 
         private static int StaticIntProperty
@@ -954,8 +631,6 @@ namespace CodeModelTestInput
             }
             set
             {
-                return;
-
             }
         }
 
@@ -981,8 +656,6 @@ namespace CodeModelTestInput
             set
             {
                 this.width = value;
-                return;
-
             }
         }
 
@@ -1000,8 +673,6 @@ namespace CodeModelTestInput
         public Class2()
         {
             this.object();
-            return;
-
         }
 
         public interface IIncrementable<T>
@@ -1017,8 +688,6 @@ namespace CodeModelTestInput
             {
                 this.object();
                 this.s = s;
-                return;
-
             }
 
             public int Value()
@@ -1040,77 +709,58 @@ namespace CodeModelTestInput
         {
             public System.Collections.Generic.IEnumerable<string> Test1a(string s)
             {
-                yield return "hello";
-
-                yield break;
+                return new CodeModelTestInput.Class2.Test2.<Test1a>d__0(-2){
+                    <>4__this = this, 
+                    <>3__s = s, 
+                };
 
             }
 
             public System.Collections.Generic.IEnumerable<T> Test1c<T>(T t, System.Collections.Generic.IEnumerable<T> ts)
             {
-                T CS$0$0002;
-                push &t;
-                CS$0$0002 = default(T);
-                if (pop.Equals((object)CS$0$0002))
-                {
-                    throw new System.ArgumentException("");
-                }
-                yield return t;
-
-                yield break;
+                return new CodeModelTestInput.Class2.Test2.<Test1c>d__3<T>(-2){
+                    <>4__this = this, 
+                    <>3__t = t, 
+                    <>3__ts = ts, 
+                };
 
             }
 
             public System.Collections.Generic.IEnumerable<T> Test1d<T>(System.Collections.Generic.IEnumerable<T> input)
             {
-                System.Collections.Generic.IEnumerator<T> <>7__wrap8 = input.GetEnumerator();
-                goto IL_0073;
-                while (<>7__wrap8.MoveNext())
-                {
-                    T <t>5__7 = <>7__wrap8.Current;
-                    yield return <t>5__7;
-
-                IL_0073:
-                }
-                yield break;
+                return new CodeModelTestInput.Class2.Test2.<Test1d>d__6<T>(-2){
+                    <>4__this = this, 
+                    <>3__input = input, 
+                };
 
             }
 
             public System.Collections.Generic.IEnumerable<T> Test1e<T>(System.Collections.Generic.IEnumerable<T> input)
             {
-                System.Collections.Generic.IEnumerator<T> <>7__wrape = input.GetEnumerator();
-                goto IL_0075;
-                while (<>7__wrape.MoveNext())
-                {
-                    T <t>5__d = <>7__wrape.Current;
-                    yield return <t>5__d;
-
-                IL_0075:
-                }
-                yield break;
+                return new CodeModelTestInput.Class2.Test2.<Test1e>d__c<T>(-2){
+                    <>4__this = this, 
+                    <>3__input = input, 
+                };
 
             }
 
             public System.Collections.Generic.IEnumerable<int> Test1f(System.Collections.Generic.IEnumerable<int> inputArray, int max)
             {
-                System.Collections.Generic.IEnumerator<int> <>7__wrap14 = inputArray.GetEnumerator();
-                goto IL_007e;
-                while (<>7__wrap14.MoveNext())
-                {
-                    int <i>5__13 = <>7__wrap14.Current;
-                    yield return max - <i>5__13 - 1;
-
-                IL_007e:
-                }
-                yield break;
+                return new CodeModelTestInput.Class2.Test2.<Test1f>d__12(-2){
+                    <>4__this = this, 
+                    <>3__inputArray = inputArray, 
+                    <>3__max = max, 
+                };
 
             }
 
             public System.Collections.Generic.IEnumerable<T> Test1g<T>(System.Collections.Generic.IEnumerable<T> ts, T x)
             {
-                yield return x;
-
-                yield break;
+                return new CodeModelTestInput.Class2.Test2.<Test1g>d__18<T>(-2){
+                    <>4__this = this, 
+                    <>3__ts = ts, 
+                    <>3__x = x, 
+                };
 
             }
 
@@ -1123,28 +773,18 @@ namespace CodeModelTestInput
             public System.Collections.Generic.IEnumerable<T> Test1h<T>(System.Collections.Generic.IEnumerable<T> input, int x, int y)
                 where T: CodeModelTestInput.Class2.IIncrementable<T>
             {
-                T CS$0$0002;
-                System.Collections.Generic.IEnumerator<T> <>7__wrap1d = input.GetEnumerator();
-                goto IL_0089;
-                {
-                    while (<>7__wrap1d.MoveNext())
-                    {
-                        T <t>5__1c = <>7__wrap1d.Current;
-                        CS$0$0002 = <t>5__1c;
-                        yield return CS$0$0002.IncrementBy(y);
+                return new CodeModelTestInput.Class2.Test2.<Test1h>d__1b<T>(-2){
+                    <>4__this = this, 
+                    <>3__input = input, 
+                    <>3__x = x, 
+                    <>3__y = y, 
+                };
 
-                    IL_0089:
-                    }
-                    yield break;
-
-                }
             }
 
             public Test2()
             {
                 this.object();
-                return;
-
             }
         }
 
@@ -1154,67 +794,54 @@ namespace CodeModelTestInput
             {
                 this.object();
                 this.tfield = t;
-                return;
-
             }
 
             public System.Collections.Generic.IEnumerable<T> Test1a(T t)
             {
-                yield return t;
-
-                yield break;
+                return new CodeModelTestInput.Class2.Test3<T>.<Test1a>d__21(-2){
+                    <>4__this = this, 
+                    <>3__t = t, 
+                };
 
             }
 
             public System.Collections.Generic.IEnumerable<T> Test1b(T s)
             {
-                if ((object)s == null)
-                {
-                    throw new System.ArgumentException("");
-                }
-                yield return s;
-
-                yield break;
+                return new CodeModelTestInput.Class2.Test3<T>.<Test1b>d__24(-2){
+                    <>4__this = this, 
+                    <>3__s = s, 
+                };
 
             }
 
             public System.Collections.Generic.IEnumerable<T> Test1d(System.Collections.Generic.IEnumerable<T> input)
             {
-                System.Collections.Generic.IEnumerator<T> <>7__wrap29 = input.GetEnumerator();
-                goto IL_0073;
-                while (<>7__wrap29.MoveNext())
-                {
-                    T <t>5__28 = <>7__wrap29.Current;
-                    yield return <t>5__28;
-
-                IL_0073:
-                }
-                yield break;
+                return new CodeModelTestInput.Class2.Test3<T>.<Test1d>d__27(-2){
+                    <>4__this = this, 
+                    <>3__input = input, 
+                };
 
             }
 
             public System.Collections.Generic.IEnumerable<T1> Test1e<T1>(System.Collections.Generic.IEnumerable<T> input, T1 t)
                 where T1: CodeModelTestInput.Class2.IIncrementable<T1>
             {
-                yield return t;
-
-                yield break;
+                return new CodeModelTestInput.Class2.Test3<T>.<Test1e>d__2d<T1>(-2){
+                    <>4__this = this, 
+                    <>3__input = input, 
+                    <>3__t = t, 
+                };
 
             }
 
             public System.Collections.Generic.IEnumerable<T1> Test1g<T1>(System.Collections.Generic.IEnumerable<T1> ts, T x)
                 where T1: CodeModelTestInput.Class2.IIncrementable<T1>
             {
-                System.Collections.Generic.IEnumerator<T1> <>7__wrap32 = ts.GetEnumerator();
-                goto IL_0073;
-                while (<>7__wrap32.MoveNext())
-                {
-                    T1 <t1>5__31 = <>7__wrap32.Current;
-                    yield return <t1>5__31;
-
-                IL_0073:
-                }
-                yield break;
+                return new CodeModelTestInput.Class2.Test3<T>.<Test1g>d__30<T1>(-2){
+                    <>4__this = this, 
+                    <>3__ts = ts, 
+                    <>3__x = x, 
+                };
 
             }
 
@@ -1226,13 +853,8 @@ namespace CodeModelTestInput
 
             private T Test1h(out System.Action foo)
             {
-                T ret;
-                ret = default(T);
-                foo = delegate () {
-                    ret = default(T);
-                    return;
-
-                };
+                T ret = default(T);
+                foo = () => ret = default(T);
                 return ret;
 
             }
@@ -1254,18 +876,13 @@ namespace CodeModelTestInput
     {
         public string M()
         {
-            T CS$0$0001;
-            CS$0$0001 = default(T);
-            CS$0$0001 = CS$0$0001;
-            return CS$0$0001.ToString();
+            return default(T).ToString();
 
         }
 
         public GenericParamMustBeStruct()
         {
             this.object();
-            return;
-
         }
     }
 
@@ -1276,10 +893,7 @@ namespace CodeModelTestInput
             this.fieldJustForCtorTest = false;
             this.list = new System.Collections.Generic.List<int>();
             this.object();
-            System.Collections.Generic.List<int> __temp_1 = xs;
-            this.fieldJustForCtorTest = __temp_1.TrueForAll((int i) => i > 0);
-            return;
-
+            this.fieldJustForCtorTest = xs.TrueForAll((int i) => i > 0);
         }
 
         public static bool Method3_1<T>(T p1)
@@ -1354,10 +968,12 @@ namespace CodeModelTestInput
             int j = 1;
             System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
             return list.TrueForAll(delegate (T1 t) {
-                System.Collections.Generic.List<T1> newList = list;
-                int k = 12;
-                return newList.TrueForAll((T1 t1) => t.GetHashCode() == t1.GetHashCode() + p1.GetHashCode() + j + k);
+                {
+                    System.Collections.Generic.List<T1> newList = list;
+                    int k = 12;
+                    return newList.TrueForAll((T1 t1) => t.GetHashCode() == t1.GetHashCode() + p1.GetHashCode() + j + k);
 
+                }
             });
 
         }
@@ -1368,12 +984,14 @@ namespace CodeModelTestInput
             int j = 1;
             System.Collections.Generic.List<T1> list = new System.Collections.Generic.List<T1>();
             return list.TrueForAll(delegate (T1 t) {
-                System.Collections.Generic.List<T1> newList = list;
-                int k = 12;
-                bool b1 = newList.TrueForAll((T1 t1) => t.GetHashCode() == t1.GetHashCode() + p1.GetHashCode() + j + k);
-                bool b2 = list.TrueForAll((T1 t1) => t1.GetHashCode() == t.GetHashCode() + j + k);
-                return b1 && b2;
+                {
+                    System.Collections.Generic.List<T1> newList = list;
+                    int k = 12;
+                    bool b1 = newList.TrueForAll((T1 t1) => t.GetHashCode() == t1.GetHashCode() + p1.GetHashCode() + j + k);
+                    bool b2 = list.TrueForAll((T1 t1) => t1.GetHashCode() == t.GetHashCode() + j + k);
+                    return b1 && b2;
 
+                }
             });
 
         }
@@ -1393,8 +1011,7 @@ namespace CodeModelTestInput
 
         public bool Method3_19(int p1)
         {
-            System.Collections.Generic.List<int> __temp_1 = this.list;
-            return __temp_1.TrueForAll((int t) => t == 10);
+            return this.list.TrueForAll((int t) => t == 10);
 
         }
 
@@ -1409,10 +1026,12 @@ namespace CodeModelTestInput
         {
             int j = 1;
             return this.list.TrueForAll(delegate (int t) {
-                System.Collections.Generic.List<int> newList = this.list;
-                int k = 12;
-                return newList.TrueForAll((int t1) => t == t1 + p1 + j + k);
+                {
+                    System.Collections.Generic.List<int> newList = this.list;
+                    int k = 12;
+                    return newList.TrueForAll((int t1) => t == t1 + p1 + j + k);
 
+                }
             });
 
         }
@@ -1421,12 +1040,14 @@ namespace CodeModelTestInput
         {
             int j = 1;
             return this.list.TrueForAll(delegate (int t) {
-                System.Collections.Generic.List<int> newList = this.list;
-                int k = 12;
-                bool b1 = newList.TrueForAll((int t1) => t.GetHashCode() == t1 + p1 + j + k);
-                bool b2 = this.list.TrueForAll((int t1) => t1.GetHashCode() == t.GetHashCode() + j + k);
-                return b1 && b2;
+                {
+                    System.Collections.Generic.List<int> newList = this.list;
+                    int k = 12;
+                    bool b1 = newList.TrueForAll((int t1) => t.GetHashCode() == t1 + p1 + j + k);
+                    bool b2 = this.list.TrueForAll((int t1) => t1.GetHashCode() == t.GetHashCode() + j + k);
+                    return b1 && b2;
 
+                }
             });
 
         }
@@ -1434,9 +1055,11 @@ namespace CodeModelTestInput
         public bool Method3_25(int i)
         {
             return this.list.TrueForAll(delegate (int t) {
-                System.Collections.Generic.List<int> newList = this.list;
-                return true;
+                {
+                    System.Collections.Generic.List<int> newList = this.list;
+                    return true;
 
+                }
             });
 
         }
@@ -1452,20 +1075,19 @@ namespace CodeModelTestInput
                 this.list_inner = new System.Collections.Generic.List<T2>();
                 this.fieldJustForCtorTest = false;
                 this.object();
-                System.Collections.Generic.List<T2> __temp_1 = xs;
-                this.fieldJustForCtorTest = __temp_1.TrueForAll((T2 i) => (object)i != null);
-                return;
-
+                this.fieldJustForCtorTest = xs.TrueForAll((T2 i) => !((object)i == null));
             }
 
             public bool Method3_11(int i)
             {
                 int j = 1;
                 return this.list_inner.TrueForAll(delegate (T2 t) {
-                    System.Collections.Generic.List<T2> newList = this.list_inner;
-                    int k = 12;
-                    return newList.TrueForAll((T2 t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
+                    {
+                        System.Collections.Generic.List<T2> newList = this.list_inner;
+                        int k = 12;
+                        return newList.TrueForAll((T2 t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
 
+                    }
                 });
 
             }
@@ -1474,12 +1096,14 @@ namespace CodeModelTestInput
             {
                 int j = 1;
                 return this.list_inner.TrueForAll(delegate (T2 t) {
-                    System.Collections.Generic.List<T2> newList = this.list_inner;
-                    int k = 12;
-                    bool b1 = newList.TrueForAll((T2 t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
-                    bool b2 = this.list_inner.TrueForAll((T2 t1) => t1.GetHashCode() == t.GetHashCode() + i + j + k);
-                    return b1 && b2;
+                    {
+                        System.Collections.Generic.List<T2> newList = this.list_inner;
+                        int k = 12;
+                        bool b1 = newList.TrueForAll((T2 t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
+                        bool b2 = this.list_inner.TrueForAll((T2 t1) => t1.GetHashCode() == t.GetHashCode() + i + j + k);
+                        return b1 && b2;
 
+                    }
                 });
 
             }
@@ -1496,20 +1120,19 @@ namespace CodeModelTestInput
                 this.list_inner = new System.Collections.Generic.List<int>();
                 this.fieldJustForCtorTest = false;
                 this.object();
-                System.Collections.Generic.List<int> __temp_1 = xs;
-                this.fieldJustForCtorTest = __temp_1.TrueForAll((int i) => i > 0);
-                return;
-
+                this.fieldJustForCtorTest = xs.TrueForAll((int i) => i > 0);
             }
 
             public bool Method3_13(int i)
             {
                 int j = 1;
                 return this.list_inner.TrueForAll(delegate (int t) {
-                    System.Collections.Generic.List<int> newList = this.list_inner;
-                    int k = 12;
-                    return newList.TrueForAll((int t1) => t == t1 + i + j + k);
+                    {
+                        System.Collections.Generic.List<int> newList = this.list_inner;
+                        int k = 12;
+                        return newList.TrueForAll((int t1) => t == t1 + i + j + k);
 
+                    }
                 });
 
             }
@@ -1518,12 +1141,14 @@ namespace CodeModelTestInput
             {
                 int j = 1;
                 return this.list_inner.TrueForAll(delegate (int t) {
-                    System.Collections.Generic.List<int> newList = this.list_inner;
-                    int k = 12;
-                    bool b1 = newList.TrueForAll((int t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
-                    bool b2 = this.list_inner.TrueForAll((int t1) => t1.GetHashCode() == t.GetHashCode() + i + j + k);
-                    return b1 && b2;
+                    {
+                        System.Collections.Generic.List<int> newList = this.list_inner;
+                        int k = 12;
+                        bool b1 = newList.TrueForAll((int t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
+                        bool b2 = this.list_inner.TrueForAll((int t1) => t1.GetHashCode() == t.GetHashCode() + i + j + k);
+                        return b1 && b2;
 
+                    }
                 });
 
             }
@@ -1539,10 +1164,12 @@ namespace CodeModelTestInput
             {
                 int j = 1;
                 return this.list_inner.TrueForAll(delegate (T2 t) {
-                    System.Collections.Generic.List<T2> newList = this.list_inner;
-                    int k = 12;
-                    return newList.TrueForAll((T2 t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
+                    {
+                        System.Collections.Generic.List<T2> newList = this.list_inner;
+                        int k = 12;
+                        return newList.TrueForAll((T2 t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
 
+                    }
                 });
 
             }
@@ -1551,12 +1178,14 @@ namespace CodeModelTestInput
             {
                 int j = 1;
                 return this.list_inner.TrueForAll(delegate (T2 t) {
-                    System.Collections.Generic.List<T2> newList = this.list_inner;
-                    int k = 12;
-                    bool b1 = newList.TrueForAll((T2 t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
-                    bool b2 = this.list_inner.TrueForAll((T2 t1) => t1.GetHashCode() == t.GetHashCode() + i + j + k);
-                    return b1 && b2;
+                    {
+                        System.Collections.Generic.List<T2> newList = this.list_inner;
+                        int k = 12;
+                        bool b1 = newList.TrueForAll((T2 t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
+                        bool b2 = this.list_inner.TrueForAll((T2 t1) => t1.GetHashCode() == t.GetHashCode() + i + j + k);
+                        return b1 && b2;
 
+                    }
                 });
 
             }
@@ -1565,8 +1194,6 @@ namespace CodeModelTestInput
             {
                 this.list_inner = new System.Collections.Generic.List<T2>();
                 this.object();
-                return;
-
             }
 
             private System.Collections.Generic.List<T2> list_inner;
@@ -1579,10 +1206,7 @@ namespace CodeModelTestInput
         {
             this.fieldJustForCtorTest = false;
             this.object();
-            System.Collections.Generic.List<T> __temp_1 = xs;
-            this.fieldJustForCtorTest = __temp_1.TrueForAll((T i) => (object)i != null);
-            return;
-
+            this.fieldJustForCtorTest = xs.TrueForAll((T i) => !((object)i == null));
         }
 
         public static bool Method4_1<T1>(T1 p1)
@@ -1648,10 +1272,12 @@ namespace CodeModelTestInput
         {
             int j = 1;
             return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
-                int k = 12;
-                return newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + p1.GetHashCode() + j + k);
+                {
+                    System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
+                    int k = 12;
+                    return newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + p1.GetHashCode() + j + k);
 
+                }
             });
 
         }
@@ -1661,12 +1287,14 @@ namespace CodeModelTestInput
         {
             int j = 1;
             return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
-                int k = 12;
-                bool b1 = newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + p1.GetHashCode() + j + k);
-                bool b2 = CodeModelTestInput.Class4<T>.list.TrueForAll((T t1) => t1.GetHashCode() == t.GetHashCode() + j + k);
-                return b1 && b2;
+                {
+                    System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
+                    int k = 12;
+                    bool b1 = newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + p1.GetHashCode() + j + k);
+                    bool b2 = CodeModelTestInput.Class4<T>.list.TrueForAll((T t1) => t1.GetHashCode() == t.GetHashCode() + j + k);
+                    return b1 && b2;
 
+                }
             });
 
         }
@@ -1686,8 +1314,7 @@ namespace CodeModelTestInput
 
         public static bool Method4_15(int p1)
         {
-            System.Collections.Generic.List<T> __temp_1 = CodeModelTestInput.Class4<T>.list;
-            return __temp_1.TrueForAll((T t) => (object)t == null);
+            return CodeModelTestInput.Class4<T>.list.TrueForAll((T t) => (object)t == null);
 
         }
 
@@ -1713,8 +1340,7 @@ namespace CodeModelTestInput
 
         public bool Method4_19(int p1)
         {
-            System.Collections.Generic.List<T> __temp_1 = CodeModelTestInput.Class4<T>.list;
-            return __temp_1.TrueForAll((T t) => (object)t == null);
+            return CodeModelTestInput.Class4<T>.list.TrueForAll((T t) => (object)t == null);
 
         }
 
@@ -1729,10 +1355,12 @@ namespace CodeModelTestInput
         {
             int j = 1;
             return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
-                int k = 12;
-                return newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + p1 + j + k);
+                {
+                    System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
+                    int k = 12;
+                    return newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + p1 + j + k);
 
+                }
             });
 
         }
@@ -1741,12 +1369,14 @@ namespace CodeModelTestInput
         {
             int j = 1;
             return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
-                int k = 12;
-                bool b1 = newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + p1.GetHashCode() + j + k);
-                bool b2 = CodeModelTestInput.Class4<T>.list.TrueForAll((T t1) => t1.GetHashCode() == t.GetHashCode() + j + k);
-                return b1 && b2;
+                {
+                    System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
+                    int k = 12;
+                    bool b1 = newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + p1.GetHashCode() + j + k);
+                    bool b2 = CodeModelTestInput.Class4<T>.list.TrueForAll((T t1) => t1.GetHashCode() == t.GetHashCode() + j + k);
+                    return b1 && b2;
 
+                }
             });
 
         }
@@ -1759,34 +1389,22 @@ namespace CodeModelTestInput
         {
             public Class4Inner1(System.Collections.Generic.List<T> xs, System.Collections.Generic.List<T2> ys)
             {
-                System.Collections.Generic.List<T2> __temp_2;
-                bool __temp_3;
                 this.list_inner = new System.Collections.Generic.List<T2>();
                 this.fieldJustForCtorTest = false;
                 this.object();
-                System.Collections.Generic.List<T> __temp_1 = xs;
-                if (__temp_1.TrueForAll((T i) => (object)i != null))
-                {
-                    __temp_2 = ys;
-                    __temp_3 = __temp_2.TrueForAll((T2 i) => (object)i != null);
-                }
-                else
-                {
-                    __temp_3 = false;
-                }
-                this.fieldJustForCtorTest = __temp_3;
-                return;
-
+                this.fieldJustForCtorTest = (xs.TrueForAll((T i) => !((object)i == null)) && ys.TrueForAll((T2 i) => !((object)i == null))) != 0;
             }
 
             public bool Method4_11(int i)
             {
                 int j = 1;
                 return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                    System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
-                    int k = 12;
-                    return newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
+                    {
+                        System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
+                        int k = 12;
+                        return newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
 
+                    }
                 });
 
             }
@@ -1795,12 +1413,14 @@ namespace CodeModelTestInput
             {
                 int j = 1;
                 return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                    System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
-                    int k = 12;
-                    bool b1 = newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
-                    bool b2 = this.list_inner.TrueForAll((T2 t1) => t1.GetHashCode() == t.GetHashCode() + i + j + k);
-                    return b1 && b2;
+                    {
+                        System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
+                        int k = 12;
+                        bool b1 = newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
+                        bool b2 = this.list_inner.TrueForAll((T2 t1) => t1.GetHashCode() == t.GetHashCode() + i + j + k);
+                        return b1 && b2;
 
+                    }
                 });
 
             }
@@ -1817,20 +1437,19 @@ namespace CodeModelTestInput
                 this.list_inner = new System.Collections.Generic.List<T>();
                 this.fieldJustForCtorTest = false;
                 this.object();
-                System.Collections.Generic.List<T> __temp_1 = xs;
-                this.fieldJustForCtorTest = __temp_1.TrueForAll((T i) => (object)i != null);
-                return;
-
+                this.fieldJustForCtorTest = xs.TrueForAll((T i) => !((object)i == null));
             }
 
             public bool Method4_11(int i)
             {
                 int j = 1;
                 return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                    System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
-                    int k = 12;
-                    return newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
+                    {
+                        System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
+                        int k = 12;
+                        return newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
 
+                    }
                 });
 
             }
@@ -1839,12 +1458,14 @@ namespace CodeModelTestInput
             {
                 int j = 1;
                 return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                    System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
-                    int k = 12;
-                    bool b1 = newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
-                    bool b2 = this.list_inner.TrueForAll((T t1) => t1.GetHashCode() == t.GetHashCode() + i + j + k);
-                    return b1 && b2;
+                    {
+                        System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
+                        int k = 12;
+                        bool b1 = newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
+                        bool b2 = this.list_inner.TrueForAll((T t1) => t1.GetHashCode() == t.GetHashCode() + i + j + k);
+                        return b1 && b2;
 
+                    }
                 });
 
             }
@@ -1860,10 +1481,12 @@ namespace CodeModelTestInput
             {
                 int j = 1;
                 return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                    System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
-                    int k = 12;
-                    return newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
+                    {
+                        System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
+                        int k = 12;
+                        return newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
 
+                    }
                 });
 
             }
@@ -1872,12 +1495,14 @@ namespace CodeModelTestInput
             {
                 int j = 1;
                 return CodeModelTestInput.Class4<T>.list.TrueForAll(delegate (T t) {
-                    System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
-                    int k = 12;
-                    bool b1 = newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
-                    bool b2 = this.list_inner.TrueForAll((T2 t1) => t1.GetHashCode() == t.GetHashCode() + i + j + k);
-                    return b1 && b2;
+                    {
+                        System.Collections.Generic.List<T> newList = CodeModelTestInput.Class4<T>.list;
+                        int k = 12;
+                        bool b1 = newList.TrueForAll((T t1) => t.GetHashCode() == t1.GetHashCode() + i + j + k);
+                        bool b2 = this.list_inner.TrueForAll((T2 t1) => t1.GetHashCode() == t.GetHashCode() + i + j + k);
+                        return b1 && b2;
 
+                    }
                 });
 
             }
@@ -1886,8 +1511,6 @@ namespace CodeModelTestInput
             {
                 this.list_inner = new System.Collections.Generic.List<T2>();
                 this.object();
-                return;
-
             }
 
             private System.Collections.Generic.List<T2> list_inner;
@@ -1898,18 +1521,14 @@ namespace CodeModelTestInput
     {
         public ClassWithCtorThatGeneratesTwoClosureClasses(object encoder, string[] data)
         {
-            System.Collections.Generic.List<int> __temp_4;
             this.name = "";
             this.object();
             {
                 System.Collections.Generic.List<int> xs = new System.Collections.Generic.List<int>();
-                __temp_4 = xs;
-                __temp_4.TrueForAll((int i) => data[i] == this.name);
+                xs.TrueForAll((int i) => data[i] == this.name);
                 string nullEncoder = encoder as string;
                 this.name = nullEncoder;
                 this.ValueToString = (object obj) => obj != default(object) ? encoder.ToString() : nullEncoder;
-                return;
-
             }
         }
 
@@ -1924,23 +1543,13 @@ namespace CodeModelTestInput
         {
             this.object();
             {
-                System.Action act2;
-                System.Action act1;
-                act1 = delegate () {
-                    System.Console.WriteLine(this.x);
-                    return;
-
-                };
-                act2 = delegate () {
+                System.Action act1 = () => System.Console.WriteLine(this.x);
+                System.Action act2 = delegate () {
                     if (b)
                     {
                         act1();
                     }
-                    return;
-
                 };
-                return;
-
             }
         }
 
@@ -1951,41 +1560,35 @@ namespace CodeModelTestInput
     {
         public static System.IAsyncResult foo(object o, System.AsyncCallback callback, object state)
         {
-            return null;
+            return (System.IAsyncResult)null;
 
         }
 
         public System.IAsyncResult BeginTask(System.Func<System.AsyncCallback, object, System.IAsyncResult> task)
         {
-            return null;
+            return (System.IAsyncResult)null;
 
         }
 
         public System.Collections.Generic.IEnumerator<System.IAsyncResult> Execute()
         {
-            object svc = new object();
-            System.IAsyncResult <asyncResult>5__4 = this.BeginTask((System.AsyncCallback c, object s) => CodeModelTestInput.UnusedCapturedLocal.foo(svc, c, s));
-            yield return <asyncResult>5__4;
-
-            yield break;
+            return new CodeModelTestInput.UnusedCapturedLocal.<Execute>d__3(0){
+                <>4__this = this, 
+            };
 
         }
 
         public System.Collections.Generic.IEnumerator<System.IAsyncResult> Execute2()
         {
-            CodeModelTestInput.UnusedCapturedLocal __temp_3 = this;
-            System.IAsyncResult <asyncResult>5__9 = __temp_3.BeginTask((System.AsyncCallback c, object s) => CodeModelTestInput.UnusedCapturedLocal.foo(new object(), c, s));
-            yield return <asyncResult>5__9;
-
-            yield break;
+            return new CodeModelTestInput.UnusedCapturedLocal.<Execute2>d__8(0){
+                <>4__this = this, 
+            };
 
         }
 
         public UnusedCapturedLocal()
         {
             this.object();
-            return;
-
         }
     }
 
@@ -1993,39 +1596,33 @@ namespace CodeModelTestInput
     {
         public void TakeLambdaAsArg(System.Func<string, bool> f)
         {
-            return;
-
         }
 
         public string CallMethodWithLambda()
         {
-            string CS$1$0000;
             string msg = "If the decompiler gets better and this lambda gets decompiled into an expression without pops, then this test is meaningless.";
             this.TakeLambdaAsArg(delegate (string s) {
-                bool __temp_1;
-                bool CS$1$0000;
-                if (s.Contains("foo") && s.Contains("bar"))
+                if (s.Contains("foo"))
                 {
-                    __temp_1 = s.Contains("baz");
+                    if (s.Contains("bar"))
+                    else                    goto IL_0027;
+                    push s.Contains("baz");
                 }
                 else
                 {
-                    __temp_1 = false;
+                IL_0027:
+                    push 0;
                 }
-                CS$1$0000 = __temp_1;
-                return CS$1$0000;
+                return pop != 0;
 
             });
-            CS$1$0000 = msg;
-            return CS$1$0000;
+            return msg;
 
         }
 
         public ClassThatHasLambdaWithPopsInIt()
         {
             this.object();
-            return;
-
         }
     }
 
@@ -2034,8 +1631,6 @@ namespace CodeModelTestInput
         public TwoParameterGenericType()
         {
             this.object();
-            return;
-
         }
     }
 
@@ -2043,7 +1638,7 @@ namespace CodeModelTestInput
     {
         public static CodeModelTestInput.TwoParameterGenericType<X, Y> CreateInstanceOfTwoParameterGenericType<X, Y>(X x, Y y)
         {
-            return null;
+            return (CodeModelTestInput.TwoParameterGenericType<X, Y>)null;
 
         }
 
@@ -2072,8 +1667,6 @@ namespace CodeModelTestInput
         public DecompilingFinallyHandlers()
         {
             this.object();
-            return;
-
         }
     }
 }

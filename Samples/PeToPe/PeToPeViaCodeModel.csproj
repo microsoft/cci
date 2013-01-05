@@ -41,10 +41,6 @@
       <Project>{CEB76EA1-A168-49B0-A410-2C4195FEE86F}</Project>
       <Name>CodeModelToIL</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Sources\ILToCodeModel\ILToCodeModel.csproj">
-      <Project>{27F2A417-B6ED-43AD-A38E-A0B6142216F6}</Project>
-      <Name>ILToCodeModel</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\metadata\Sources\PeReader\PeReader.csproj">
       <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
       <Name>PeReader</Name>
@@ -84,6 +80,10 @@
     <ProjectReference Include="..\..\Sources\CodeModel\CodeModel.csproj">
       <Project>{035FEA7F-0D36-4AE4-B694-EC45191B9AF2}</Project>
       <Name>CodeModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\NewILToCodeModel\NewILToCodeModel.csproj">
+      <Project>{A555D4CB-F16F-4049-A8CF-180B8A05C755}</Project>
+      <Name>NewILToCodeModel</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

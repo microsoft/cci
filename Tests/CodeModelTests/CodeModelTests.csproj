@@ -95,6 +95,10 @@
       <Project>{319E150C-8F33-49E7-81CA-30F02F9BA90A}</Project>
       <Name>MutableCodeModel</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Sources\NewILToCodeModel\NewILToCodeModel.csproj">
+      <Project>{A555D4CB-F16F-4049-A8CF-180B8A05C755}</Project>
+      <Name>NewILToCodeModel</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CodeModelTestInput\CodeModelTestInput.csproj">
       <Project>{965AF57D-DCE4-4112-BDC5-64CD63ACA88C}</Project>
       <Name>CodeModelTestInput</Name>
@@ -102,10 +106,6 @@
     <ProjectReference Include="..\..\Sources\CodeModelToIL\CodeModelToIL.csproj">
       <Project>{CEB76EA1-A168-49B0-A410-2C4195FEE86F}</Project>
       <Name>CodeModelToIL</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Sources\ILToCodeModel\ILToCodeModel.csproj">
-      <Project>{27F2A417-B6ED-43AD-A38E-A0B6142216F6}</Project>
-      <Name>ILToCodeModel</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Samples\PeToText\PeToTextViaCodeModel.csproj">
       <Project>{DDB020B7-6B28-40E8-B3D6-FD998EBDD552}</Project>

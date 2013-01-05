@@ -95,10 +95,6 @@
       <Project>{0703D916-A881-45E6-A5CD-6BC50E2E30E2}</Project>
       <Name>ContractExtractor</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Sources\ILToCodeModel\ILToCodeModel.csproj">
-      <Project>{27F2A417-B6ED-43AD-A38E-A0B6142216F6}</Project>
-      <Name>ILToCodeModel</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Sources\MutableCodeModel\MutableCodeModel.csproj">
       <Project>{319E150C-8F33-49E7-81CA-30F02F9BA90A}</Project>
       <Name>MutableCodeModel</Name>
