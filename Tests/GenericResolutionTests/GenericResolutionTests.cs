@@ -86,7 +86,7 @@ namespace ResolutionTests {
         }
 
         module = MetadataCopier.DeepCopy(host, module);
-        module = new MutatingVisitor(host).Visit(module);
+        module = new MetadataRewriter(host).Rewrite(module);
         TestResolution resolver = new TestResolution(host);
         resolver.Visit(module);
 
@@ -95,7 +95,7 @@ namespace ResolutionTests {
       }
     }
 
-    public class TestResolution : BaseCodeVisitor {
+    public class TestResolution : CodeVisitor {
 
       public StringBuilder Output = new StringBuilder();
 
