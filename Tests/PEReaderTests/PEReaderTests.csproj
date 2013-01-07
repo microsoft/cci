@@ -59,17 +59,9 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="arch-msil, Version=0.63.61101.0, Culture=neutral, PublicKeyToken=3330ea3d34fd0fe8, processorArchitecture=IA64" />
-    <Reference Include="MRW_Assembly, Version=0.0.0.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL" />
-    <Reference Include="MRW_CppAssembly, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86" />
-    <Reference Include="MRW_ILAsmAssembly, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
-    <Reference Include="MRW_TestAssembly, Version=0.0.0.0, Culture=neutral, PublicKeyToken=736440c9b414ea16, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="vjslib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
-      <Private>True</Private>
-    </Reference>
     <Reference Include="xunit, Version=1.4.9.1416, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\External\Xunit\xunit.dll</HintPath>
@@ -86,7 +78,7 @@
     <Compile Include="PrettyPrinter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <None Include="TestModules\MRW_Assembly.cs" />
+    <EmbeddedResource Include="TestModules\MRW_Assembly.cs" />
     <None Include="TestModules\MRW_Module1.cs" />
     <None Include="TestModules\MRW_Module2.cs" />
     <None Include="TestModules\MRW_TestAssembly.cs" />
@@ -94,22 +86,19 @@
     <Compile Include="TypeTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="TestModules\arch-msil.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="TestModules\MRW_Assembly.dll" />
+    <EmbeddedResource Include="TestModules\arch-msil.dll" />
+    <EmbeddedResource Include="TestModules\MRW_Assembly.dll" />
     <Content Include="TestModules\MRW_CppAssembly.cpp" />
-    <Content Include="TestModules\MRW_CppAssembly.dll" />
-    <Content Include="TestModules\MRW_ILAsmAssembly.dll" />
-    <Content Include="TestModules\MRW_TestAssembly.dll" />
-    <Content Include="TestModules\vjslib.dll">
-    </Content>
+    <EmbeddedResource Include="TestModules\MRW_CppAssembly.dll" />
+    <EmbeddedResource Include="TestModules\MRW_ILAsmAssembly.dll" />
+    <EmbeddedResource Include="TestModules\MRW_TestAssembly.dll" />
+    <EmbeddedResource Include="TestModules\vjslib.dll" />
   </ItemGroup>
   <ItemGroup>
     <None Include="TestModules\build.cmd" />
     <None Include="TestModules\MRW_ILAsmAssembly.il" />
-    <None Include="TestModules\MRW_Module1.netmodule" />
-    <None Include="TestModules\MRW_Module2.netmodule" />
+    <EmbeddedResource Include="TestModules\MRW_Module1.netmodule" />
+    <EmbeddedResource Include="TestModules\MRW_Module2.netmodule" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Sources\PeReader\PeReader.csproj">

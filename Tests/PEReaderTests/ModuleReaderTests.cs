@@ -385,28 +385,38 @@ namespace ModuleReaderTests {
       string testAssemblyPath = Path.Combine(location, "MRW_TestAssembly.dll");
       string assemblyPath = Path.Combine(location, "MRW_Assembly.dll");
       string vjslibPath = Path.Combine(location, "vjslib.dll");
+
+      ExtractResource("PEReaderTests.TestModules.MRW_CppAssembly.dll", cppAssemblyPath);
+      ExtractResource("PEReaderTests.TestModules.MRW_ILAsmAssembly.dll", ilAsmAssemblyPath);
+      ExtractResource("PEReaderTests.TestModules.MRW_Module1.netmodule", module1Path);
+      ExtractResource("PEReaderTests.TestModules.MRW_Module2.netmodule", module2Path);
+      ExtractResource("PEReaderTests.TestModules.arch-msil.dll", phxArchMsilPath);
+      ExtractResource("PEReaderTests.TestModules.MRW_TestAssembly.dll", testAssemblyPath);
+      ExtractResource("PEReaderTests.TestModules.MRW_Assembly.dll", assemblyPath);
+      ExtractResource("PEReaderTests.TestModules.vjslib.dll", vjslibPath);
+
       DirectoryInfo dirInfo = new DirectoryInfo(Path.GetDirectoryName(typeof(object).Assembly.Location));
       string clrLocation = dirInfo.Parent.FullName + "\\" + "v2.0.50727\\";
 
-      Console.WriteLine("location: {0}", location);
       this.MscorlibAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(clrLocation + "mscorlib.dll");
       this.SystemAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(clrLocation + "System.dll");
-      LogAssemblyFile("vjslibPath", vjslibPath);
       this.VjslibAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(vjslibPath);
-      LogAssemblyFile("assemblyPath", assemblyPath);
       this.AssemblyAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(assemblyPath);
-      LogAssemblyFile("cppAssemblyPath", cppAssemblyPath);
       this.CppAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(cppAssemblyPath);
-      LogAssemblyFile("testAssemblyPath", testAssemblyPath);
       this.TestAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(testAssemblyPath);
-      LogAssemblyFile("module1Path", module1Path);
       this.Module1 = (IModule)this.HostEnv.LoadUnitFrom(module1Path);
-      LogAssemblyFile("module2Path", module2Path);
       this.Module2 = (IModule)this.HostEnv.LoadUnitFrom(module2Path);
-      LogAssemblyFile("ilAsmAssemblyPath", ilAsmAssemblyPath);
       this.ILAsmAssembly = (IAssembly)this.HostEnv.LoadUnitFrom(ilAsmAssemblyPath);
-      LogAssemblyFile("phxArchMsilPath", phxArchMsilPath);
       this.PhxArchMsil = (IAssembly)this.HostEnv.LoadUnitFrom(phxArchMsilPath);
+    }
+
+    static void ExtractResource(string resource, string targetFile) {
+      System.Reflection.Assembly a = System.Reflection.Assembly.GetExecutingAssembly();
+      using (Stream srcStream = a.GetManifestResourceStream(resource)) {
+        byte[] bytes = new byte[srcStream.Length];
+        srcStream.Read(bytes, 0, bytes.Length);
+        File.WriteAllBytes(targetFile, bytes);
+      }
     }
 
     private static void LogAssemblyFile(string name, string path)
