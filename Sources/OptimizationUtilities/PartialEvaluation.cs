@@ -637,6 +637,7 @@ namespace Microsoft.Cci.Optimization {
       }
     }
 
+    [ContractVerification(false)]
     private void RemoveUselessBranches(PeBasicBlock<PeInstruction> block) {
       Contract.Requires(block != null);
 

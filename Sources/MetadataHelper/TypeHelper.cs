@@ -1417,17 +1417,6 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// Returns a C#-like string corresponds the the given type alias.
-    /// </summary>
-    /// <param name="alias"></param>
-    /// <returns></returns>
-    public static string GetAliasName(IAliasForType alias) {
-      Contract.Requires(alias != null);
-
-      return new TypeNameFormatter().GetAliasName(alias);
-    }
-
-    /// <summary>
     /// Returns the value of System.TypeCode that corresponds to the given type.
     /// </summary>
     public static TypeCode GetSytemTypeCodeFor(ITypeDefinition type) {
@@ -2612,39 +2601,6 @@ namespace Microsoft.Cci {
         typeName = typeName + "`" + genericParameterCount;
       }
       return typeName;
-    }
-
-    /// <summary>
-    /// Returns a C#-like string corresponds the the given type alias.
-    /// </summary>
-    /// <param name="alias"></param>
-    /// <returns></returns>
-    public string GetAliasName(IAliasForType alias) {
-      Contract.Requires(alias != null);
-
-      StringBuilder sb = new StringBuilder();
-      this.AppendAliasName(alias, sb);
-      sb.Append(" = ");
-      sb.Append(this.GetTypeName(alias.AliasedType, NameFormattingOptions.None));
-      return sb.ToString();
-    }
-
-    private void AppendAliasName(IAliasForType alias, StringBuilder sb) {
-      Contract.Requires(alias != null);
-      Contract.Requires(sb != null);
-
-      var nestedAlias = alias as INestedAliasForType;
-      if (nestedAlias != null) {
-        this.AppendAliasName(nestedAlias.ContainingAlias, sb);
-        sb.Append('.');
-        sb.Append(nestedAlias.Name.Value);
-      } else {
-        var namespaceAlias = alias as INamespaceAliasForType;
-        if (namespaceAlias != null) {
-          Contract.Assume(namespaceAlias.ContainingNamespace is IUnitNamespaceReference);
-          sb.Append(this.GetNamespaceName((IUnitNamespaceReference)namespaceAlias.ContainingNamespace, NameFormattingOptions.None));
-        }
-      }
     }
 
     /// <summary>

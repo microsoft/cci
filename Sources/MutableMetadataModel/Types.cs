@@ -96,6 +96,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       throw new InvalidOperationException();
     }
 
+    /// <summary>
+    /// The number of generic parameters. Zero if the type is not generic.
+    /// </summary>
+    public ushort GenericParameterCount {
+      get { return this.AliasedType.GenericParameterCount; }
+    }
+
     //^ [Pure]
     /// <summary>
     /// Returns the list of members with the given name that also satisfy the given predicate.
@@ -161,6 +168,13 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.members = value; }
     }
     List<IAliasMember>/*?*/ members;
+
+    /// <summary>
+    /// The name of the aliased type.
+    /// </summary>
+    public IName Name {
+      get { return this.AliasedType.Name; }
+    }
 
     #region IAliasForType
 
@@ -1502,7 +1516,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     public NamespaceAliasForType() {
       this.containingNamespace = Dummy.NamespaceDefinition;
       this.isPublic = false;
-      this.name = Dummy.Name;
     }
 
 
@@ -1519,7 +1532,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       ((ICopyFrom<IAliasForType>)this).Copy(namespaceAliasForType, internFactory);
       this.containingNamespace = namespaceAliasForType.ContainingNamespace;
       this.isPublic = namespaceAliasForType.IsPublic;
-      this.name = namespaceAliasForType.Name;
     }
 
     /// <summary>
@@ -1550,22 +1562,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     bool isPublic;
 
 
-    /// <summary>
-    /// The name of the entity.
-    /// </summary>
-    /// <value></value>
-    public IName Name {
-      get { return this.name; }
-      set { this.name = value; }
-    }
-    IName name;
-
     INamespaceDefinition IContainerMember<INamespaceDefinition>.Container {
       get { return this.ContainingNamespace; }
     }
 
     IScope<INamespaceMember> IScopeMember<IScope<INamespaceMember>>.ContainingScope {
       get { return this.ContainingNamespace; }
+    }
+
+    IName IContainerMember<INamespaceDefinition>.Name {
+      get { return this.AliasedType.Name; }
     }
 
   }
@@ -1839,7 +1845,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           if (nsTypeDef.GenericParameterCount == this.GenericParameterCount) return nsTypeDef;
         } else {
           var nsAlias = member as INamespaceAliasForType;
-          if (nsAlias != null && nsAlias.AliasedType.GenericParameterCount == this.GenericParameterCount) this.aliasForType = nsAlias;
+          if (nsAlias != null && nsAlias.GenericParameterCount == this.GenericParameterCount) this.aliasForType = nsAlias;
         }
       }
       if (this.aliasForType != null) {
@@ -1921,7 +1927,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public NestedAliasForType() {
       this.containingAlias = Dummy.AliasForType;
-      this.name = Dummy.Name;
       this.visibility = TypeMemberVisibility.Default;
     }
 
@@ -1937,7 +1942,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     public void Copy(INestedAliasForType nestedAliasForType, IInternFactory internFactory) {
       ((ICopyFrom<IAliasForType>)this).Copy(nestedAliasForType, internFactory);
       this.containingAlias = nestedAliasForType.ContainingAlias;
-      this.name = nestedAliasForType.Name;
       this.visibility = nestedAliasForType.Visibility;
     }
 
@@ -1959,16 +1963,6 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
-    /// The name of the entity.
-    /// </summary>
-    /// <value></value>
-    public IName Name {
-      get { return this.name; }
-      set { this.name = value; }
-    }
-    IName name;
-
-    /// <summary>
     /// Indicates if the member is public or confined to its containing type, derived types and/or declaring assembly.
     /// </summary>
     /// <value></value>
@@ -1985,6 +1979,10 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IAliasForType IContainerMember<IAliasForType>.Container {
       get { return this.ContainingAlias; }
+    }
+
+    IName IContainerMember<IAliasForType>.Name {
+      get { return this.AliasedType.Name; }
     }
 
   }
@@ -2312,6 +2310,7 @@ namespace Microsoft.Cci.MutableCodeModel {
                 var neAlias = alias as INestedAliasForType;
                 if (neAlias == null) continue;
                 if (neAlias.Name.UniqueKey != this.Name.UniqueKey) continue;
+                if (neAlias.GenericParameterCount != this.GenericParameterCount) continue;
                 if (neAlias.ContainingAlias != this.ContainingType.AliasForType) continue;
                 this.aliasForType = neAlias;
                 break;

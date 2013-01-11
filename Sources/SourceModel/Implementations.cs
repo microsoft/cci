@@ -1503,7 +1503,8 @@ namespace Microsoft.Cci {
       //^^ ensures line >= 1 && column >= 1;
     {
       int n = this.Length;
-      if (position == n) position--;
+      int offset = position == n ? 1 : 0;
+      position -= offset;
       int best = FindBestStartPointForPosition(position);
       line = this.lineCounters[best];
       column = this.columnCounters[best];
@@ -1553,7 +1554,7 @@ namespace Microsoft.Cci {
         }
       }
       this.lineCounters[best] = line;
-      this.columnCounters[best] = column;
+      this.columnCounters[best] = column+offset;
       this.lastPositions[best] = position;
     }
 

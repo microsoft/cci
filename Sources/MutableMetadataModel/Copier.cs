@@ -2871,8 +2871,12 @@ namespace Microsoft.Cci.MutableCodeModel {
 
       private void SubstituteElements(List<IAliasMember>/*?*/ aliasesMembers) {
         if (aliasesMembers == null) return;
-        for (int i = 0, n = aliasesMembers.Count; i < n; i++)
-          aliasesMembers[i] = (IAliasMember)this.Substitute((INestedAliasForType)aliasesMembers[i]);
+        for (int i = 0, n = aliasesMembers.Count; i < n; i++) {
+          var member = aliasesMembers[i];
+          object copy;
+          if (this.DefinitionCache.TryGetValue(member, out copy))
+            aliasesMembers[i] = (IAliasMember)copy;
+        }
       }
 
       private void SubstituteElements(List<IAssemblyReference>/*?*/ assemblyReferences) {

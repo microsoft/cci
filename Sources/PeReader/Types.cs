@@ -3573,14 +3573,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   }
 
   internal abstract class ExportedTypeAliasBase : ScopedContainerMetadataObject<IAliasMember, IAliasMember, IAliasForType>, IAliasForType {
-    internal readonly IName TypeName;
     internal readonly uint ExportedTypeRowId;
     internal readonly TypeDefFlags TypeDefFlags;
     INamedTypeReference/*?*/ aliasTypeReference;
 
-    internal ExportedTypeAliasBase(PEFileToObjectModel peFileToObjectModel, IName typeName, uint exportedTypeDefRowId, TypeDefFlags typeDefFlags)
+    internal ExportedTypeAliasBase(PEFileToObjectModel peFileToObjectModel, uint exportedTypeDefRowId, TypeDefFlags typeDefFlags)
       : base(peFileToObjectModel) {
-      this.TypeName = typeName;
       this.ExportedTypeRowId = exportedTypeDefRowId;
       this.TypeDefFlags = typeDefFlags;
     }
@@ -3593,6 +3591,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         this.PEFileToObjectModel.LoadNestedExportedTypesOfAlias(this);
         this.DoneLoadingMembers();
       }
+    }
+
+    public ushort GenericParameterCount {
+      get { return this.AliasedType.GenericParameterCount; }
     }
 
     internal override uint TokenValue {
@@ -3616,19 +3618,22 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     #endregion
+
+    #region INamedEntity Members
+
+    public IName Name {
+      get { return this.AliasedType.Name; }
+    }
+
+    #endregion
+
   }
 
   internal sealed class ExportedTypeNamespaceAlias : ExportedTypeAliasBase, INamespaceAliasForType {
     readonly Namespace ParentModuleNamespace;
 
-    internal ExportedTypeNamespaceAlias(
-      PEFileToObjectModel peFileToObjectModel,
-      IName typeName,
-      uint exportedTypeDefRowId,
-      TypeDefFlags typeDefFlags,
-      Namespace parentModuleNamespace
-    )
-      : base(peFileToObjectModel, typeName, exportedTypeDefRowId, typeDefFlags) {
+    internal ExportedTypeNamespaceAlias(PEFileToObjectModel peFileToObjectModel, uint exportedTypeDefRowId, TypeDefFlags typeDefFlags, Namespace parentModuleNamespace)
+      : base(peFileToObjectModel, exportedTypeDefRowId, typeDefFlags) {
       this.ParentModuleNamespace = parentModuleNamespace;
     }
 
@@ -3664,14 +3669,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     #endregion
 
-    #region INamedEntity Members
-
-    public IName Name {
-      get { return this.TypeName; }
-    }
-
-    #endregion
-
     #region IScopeMember<IScope<INamespaceMember>> Members
 
     public IScope<INamespaceMember> ContainingScope {
@@ -3684,14 +3681,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   internal sealed class ExportedTypeNestedAlias : ExportedTypeAliasBase, INestedAliasForType {
     readonly ExportedTypeAliasBase ParentExportedTypeAlias;
 
-    internal ExportedTypeNestedAlias(
-      PEFileToObjectModel peFileToObjectModel,
-      IName typeName,
-      uint exportedTypeDefRowId,
-      TypeDefFlags typeDefFlags,
-      ExportedTypeAliasBase parentExportedTypeAlias
-    )
-      : base(peFileToObjectModel, typeName, exportedTypeDefRowId, typeDefFlags) {
+    internal ExportedTypeNestedAlias(PEFileToObjectModel peFileToObjectModel, uint exportedTypeDefRowId, TypeDefFlags typeDefFlags, ExportedTypeAliasBase parentExportedTypeAlias)
+      : base(peFileToObjectModel, exportedTypeDefRowId, typeDefFlags) {
       this.ParentExportedTypeAlias = parentExportedTypeAlias;
     }
 
@@ -3735,14 +3726,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public IAliasForType Container {
       get { return this.ParentExportedTypeAlias; }
-    }
-
-    #endregion
-
-    #region INamedEntity Members
-
-    public IName Name {
-      get { return this.TypeName; }
     }
 
     #endregion

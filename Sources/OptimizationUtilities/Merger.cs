@@ -356,22 +356,21 @@ namespace Microsoft.Cci.Optimization {
           alias.ContainingNamespace = unitNamespace;
           for (int j = i+1; j < n; j++) {
             var laterAlias = members[j] as NamespaceAliasForType;
-            if (laterAlias == null || laterAlias.Name != alias.Name) continue; //Note: these names are not unmangled
-            this.ReportNameCollisionAndRename(alias, laterAlias, j);
+            if (laterAlias == null || laterAlias.Name != alias.Name || laterAlias.GenericParameterCount != alias.GenericParameterCount) continue; //Note: these names are not unmangled
+            this.ReportNameCollision(alias, laterAlias, j);
           }
           continue;
         }
       }
     }
 
-    private void ReportNameCollisionAndRename(NamespaceAliasForType alias, NamespaceAliasForType laterAlias, int position) {
+    private void ReportNameCollision(NamespaceAliasForType alias, NamespaceAliasForType laterAlias, int position) {
       Contract.Requires(alias != null);
       Contract.Requires(laterAlias != null);
 
-      laterAlias.Name = this.host.NameTable.GetNameFor(laterAlias.Name.Value+"``"+position);
       this.host.ReportError(new ErrorMessage() {
         Code = 1, ErrorReporter = this, Error = MergeError.DuplicateAlias,
-        MessageParameter = TypeHelper.GetAliasName(alias)
+        MessageParameter = TypeHelper.GetTypeName(alias.AliasedType)
       });
     }
 

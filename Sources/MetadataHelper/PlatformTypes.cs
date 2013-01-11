@@ -563,7 +563,7 @@ namespace Microsoft.Cci.Immutable {
           if (nsTypeDef.GenericParameterCount == this.GenericParameterCount) return nsTypeDef;
         } else {
           var nsAlias = member as INamespaceAliasForType;
-          if (nsAlias != null && nsAlias.AliasedType.GenericParameterCount == this.GenericParameterCount) this.aliasForType = nsAlias;
+          if (nsAlias != null && nsAlias.GenericParameterCount == this.GenericParameterCount) this.aliasForType = nsAlias;
         }
       }
       if (this.aliasForType != null) {
@@ -740,18 +740,26 @@ namespace Microsoft.Cci.Immutable {
     /// </summary>
     private INestedTypeDefinition GetResolvedType() {
       this.aliasForType = Dummy.AliasForType;
-      foreach (var member in this.ContainingType.ResolvedType.GetMembersNamed(this.name, false)) {
-        var neTypeDef = member as INestedTypeDefinition;
-        if (neTypeDef != null) {
-          if (neTypeDef.GenericParameterCount == this.GenericParameterCount) return neTypeDef;
-        } else {
-          var neAlias = member as INestedAliasForType;
-          if (neAlias != null && neAlias.AliasedType.GenericParameterCount == this.GenericParameterCount) this.aliasForType = neAlias;
+      foreach (ITypeDefinitionMember member in this.ContainingType.ResolvedType.GetMembersNamed(this.name, false)) {
+        INestedTypeDefinition/*?*/ neType = member as INestedTypeDefinition;
+        if (neType != null && neType.GenericParameterCount == this.genericParameterCount) {
+          if (this.ContainingType.IsAlias) {
+            //Then there must be an entry for this nested type in the exported types collection.
+            var assembly = TypeHelper.GetDefiningUnitReference(this).ResolvedUnit as IAssembly;
+            if (assembly != null) {
+              foreach (var alias in assembly.ExportedTypes) {
+                var neAlias = alias as INestedAliasForType;
+                if (neAlias == null) continue;
+                if (neAlias.Name.UniqueKey != this.Name.UniqueKey) continue;
+                if (neAlias.GenericParameterCount != this.GenericParameterCount) continue;
+                if (neAlias.ContainingAlias != this.ContainingType.AliasForType) continue;
+                this.aliasForType = neAlias;
+                break;
+              }
+            }
+          }
+          return neType;
         }
-      }
-      if (this.aliasForType != null) {
-        var resolvedType = this.aliasForType.AliasedType.ResolvedType as INestedTypeDefinition;
-        if (resolvedType != null && resolvedType.GenericParameterCount == this.GenericParameterCount) return resolvedType;
       }
       return Dummy.NestedTypeDefinition;
     }

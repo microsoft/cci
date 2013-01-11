@@ -30,11 +30,16 @@ namespace Microsoft.Cci {
   //  typereference(E.F).IsAlias == false
   //  Also, typereference(A.B).ResolvedType == typereference(C.D).ResolvedType == typereference(E.F).ResolvedType
   [ContractClass(typeof(IAliasForTypeContract))]
-  public interface IAliasForType : IContainer<IAliasMember>, IDefinition, IScope<IAliasMember> {
+  public interface IAliasForType : IContainer<IAliasMember>, IDefinition, INamedEntity, IScope<IAliasMember> {
     /// <summary>
     /// A reference to the type for which this is an alias.
     /// </summary>
     INamedTypeReference AliasedType { get; }
+
+    /// <summary>
+    /// The number of generic parameters. Zero if the type is not generic.
+    /// </summary>
+    ushort GenericParameterCount { get; }
 
     /// <summary>
     /// The collection of member objects comprising the type.
@@ -51,6 +56,10 @@ namespace Microsoft.Cci {
         Contract.Ensures(Contract.Result<INamedTypeReference>() != null);
         throw new NotImplementedException();
       }
+    }
+
+    public ushort GenericParameterCount {
+      get { throw new NotImplementedException(); }
     }
 
     IEnumerable<IAliasMember> IAliasForType.Members {
@@ -96,6 +105,10 @@ namespace Microsoft.Cci {
 
     public void DispatchAsReference(IMetadataVisitor visitor) {
       throw new NotImplementedException();
+    }
+
+    public IName Name {
+      get { throw new NotImplementedException(); }
     }
   }
 

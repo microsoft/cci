@@ -793,6 +793,10 @@ namespace Microsoft.Cci {
       get { return Dummy.NamedTypeReference; }
     }
 
+    public ushort GenericParameterCount {
+      get { return 0; }
+    }
+
     #endregion
 
     #region IContainer<IAliasMember> Members

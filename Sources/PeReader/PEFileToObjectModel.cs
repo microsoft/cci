@@ -1122,24 +1122,14 @@ namespace Microsoft.Cci.MetadataReader {
       return type;
     }
 
-    ExportedTypeNamespaceAlias CreateExportedNamespaceType(
-      uint exportedTypeRowId,
-      ExportedTypeRow exportedTypeRow,
-      Namespace moduleNamespace
-    ) {
-      IName typeName = this.GetNameFromOffset(exportedTypeRow.TypeName);
-      ExportedTypeNamespaceAlias exportedType = new ExportedTypeNamespaceAlias(this, typeName, exportedTypeRowId, exportedTypeRow.Flags, moduleNamespace);
+    ExportedTypeNamespaceAlias CreateExportedNamespaceType(uint exportedTypeRowId, ExportedTypeRow exportedTypeRow, Namespace moduleNamespace) {
+      ExportedTypeNamespaceAlias exportedType = new ExportedTypeNamespaceAlias(this, exportedTypeRowId, exportedTypeRow.Flags, moduleNamespace);
       moduleNamespace.AddMember(exportedType);
       return exportedType;
     }
 
-    ExportedTypeNestedAlias CreateExportedNestedType(
-      uint exportedTypeRowId,
-      ExportedTypeRow exportedTypeRow,
-      ExportedTypeAliasBase parentExportedType
-    ) {
-      IName typeName = this.GetNameFromOffset(exportedTypeRow.TypeName);
-      ExportedTypeNestedAlias exportedType = new ExportedTypeNestedAlias(this, typeName, exportedTypeRowId, exportedTypeRow.Flags, parentExportedType);
+    ExportedTypeNestedAlias CreateExportedNestedType(uint exportedTypeRowId, ExportedTypeRow exportedTypeRow, ExportedTypeAliasBase parentExportedType) {
+      ExportedTypeNestedAlias exportedType = new ExportedTypeNestedAlias(this, exportedTypeRowId, exportedTypeRow.Flags, parentExportedType);
       parentExportedType.AddMember(exportedType);
       return exportedType;
     }
