@@ -38,13 +38,14 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (tryCatchF == null) {
           tryCatchF = new TryCatchFinallyStatement();
           this.tryCatchFinallyMap.Add(exInfo.TryStartOffset, exInfo.TryEndOffset, tryCatchF);
-        }        
-        if (exInfo.HandlerKind == HandlerKind.Filter) {
-          this.tryCatchFinallyMap.Add(exInfo.FilterDecisionStartOffset, exInfo.HandlerEndOffset, tryCatchF); 
-          this.handlerMap.Add(exInfo.FilterDecisionStartOffset, exInfo.HandlerEndOffset, exInfo); 
         }
-        this.tryCatchFinallyMap.Add(exInfo.HandlerStartOffset, exInfo.HandlerEndOffset, tryCatchF);
-        this.handlerMap.Add(exInfo.HandlerStartOffset, exInfo.HandlerEndOffset, exInfo); 
+        if (exInfo.HandlerKind == HandlerKind.Filter) {
+          this.tryCatchFinallyMap.Add(exInfo.FilterDecisionStartOffset, exInfo.HandlerEndOffset, tryCatchF);
+          this.handlerMap.Add(exInfo.FilterDecisionStartOffset, exInfo.HandlerEndOffset, exInfo);
+        } else {
+          this.tryCatchFinallyMap.Add(exInfo.HandlerStartOffset, exInfo.HandlerEndOffset, tryCatchF);
+          this.handlerMap.Add(exInfo.HandlerStartOffset, exInfo.HandlerEndOffset, exInfo);
+        }
       }
     }
 
@@ -371,7 +372,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (nestedBlock != null) {
           if (this.RemovedFilterCondition(nestedBlock)) return true;
         }
-        block.Statements.RemoveAt(i);
+        block.Statements.RemoveAt(i--);
         if (statement is EndFilter) return true;
       }
       return false;

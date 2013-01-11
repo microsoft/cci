@@ -18387,6 +18387,10 @@ namespace Microsoft.Cci.Ast {
       INamespaceTypeDefinition/*?*/ namespaceTypeDefinition = null;
       INamespaceDefinition/*?*/ nestedNamespaceDefinition = null;
       foreach (INamespaceMember member in members) {
+        if (!restrictToNamespacesAndTypes) {
+          var globalField = member as IGlobalFieldDefinition;
+          if (globalField != null) return globalField;
+        }
         nestedNamespaceDefinition = member as INamespaceDefinition;
         if (nestedNamespaceDefinition != null) {
           //TODO: if aliasDeclaration != null give an ambiguous reference error

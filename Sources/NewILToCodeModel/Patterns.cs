@@ -309,7 +309,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         var targetLocal = assignment.Target.Definition as ILocalDefinition;
         if (targetLocal == null) continue;
         var createArray = assignment.Source as CreateArray;
-        if (createArray == null) continue;
+        if (createArray == null || createArray.Initializers.Count > 0) continue;
         int j = 0;
         for (; j+i+1 < b.Statements.Count; j++) {
           var initializer = b.Statements[j+i+1] as ExpressionStatement;
@@ -336,7 +336,6 @@ namespace Microsoft.Cci.ILToCodeModel {
             if (targetArrayIndex == null) break;
             if (j != ComputeFlatIndex(targetArrayIndex, createArray)) break;
           }
-          if (j == 0) createArray.Initializers = new List<IExpression>();
           createArray.Initializers.Add(initializingAssignment.Source);
         }
         if (j > 0) {
@@ -1112,7 +1111,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (gotoStatement.TargetStatement.Label != this.labelOfFinalReturn) continue;
         var gotos = this.gotosThatTarget[(uint)gotoStatement.TargetStatement.Label.UniqueKey];
         if (gotos != null) gotos.Remove(gotoStatement);
-        statements[i] = new ReturnStatement() { Expression = assign.Source };
+        statements[i] = new ReturnStatement() { Expression = assign.Source, Locations = expressionStatement.Locations };
         this.numberOfAssignmentsToLocal[this.returnValueTemp]--;
         statements.RemoveAt(i+1);
         replacedPattern = true;
@@ -1132,7 +1131,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (gotoStatement.TargetStatement.Label != this.labelOfFinalReturn) continue;
         var gotos = this.gotosThatTarget[(uint)gotoStatement.TargetStatement.Label.UniqueKey];
         if (gotos != null) gotos.Remove(gotoStatement);
-        statements[i] = new ReturnStatement();
+        statements[i] = new ReturnStatement() { Locations = gotoStatement.Locations };
         replacedPattern = true;
       }
       return replacedPattern;
@@ -1194,6 +1193,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         Contract.Assume(statements[i+j] != null);
         if (this.singleAssignmentReferenceFinder.LocalCanBeReplacedIn(statements[i+j], local)) {
           if (this.singleAssignmentLocalReplacer.Replace(assignment.Source, local, statements[i+j])) {
+            ((Expression)assignment.Source).Locations = expressionStatement.Locations;
             this.numberOfAssignmentsToLocal[local]--;
             this.numberOfReferencesToLocal[local] -= referencesToRemove;
             var s = statements[i + 1] as Statement;

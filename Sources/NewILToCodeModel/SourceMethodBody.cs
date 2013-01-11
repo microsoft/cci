@@ -135,7 +135,18 @@ namespace Microsoft.Cci.ILToCodeModel {
         result = new AnonymousDelegateInserter(this).InsertAnonymousDelegates(result, out didNothing);
         if (!didNothing) new DeclarationUnifier(this).Traverse(result);
       }
+      this.AddBackFirstNop(result as BlockStatement);
       return result;
+    }
+
+    private void AddBackFirstNop(BlockStatement block) {
+      if (this.sourceLocationProvider == null) return;
+      if (block == null) return;
+      foreach (var op in this.ilMethodBody.Operations) {
+        if (op.OperationCode != OperationCode.Nop) break;
+        block.Statements.Insert(0, new EmptyStatement() { Locations = new List<ILocation>() { op.Location } });
+        break;
+      }
     }
 
     private void CreateExceptionBlocks(DecompiledBlock block) {
@@ -149,7 +160,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.CreateNestedBlock(block, exInfo.TryStartOffset, exInfo.TryEndOffset);
         if (exInfo.HandlerKind == HandlerKind.Filter)
           this.CreateNestedBlock(block, exInfo.FilterDecisionStartOffset, exInfo.HandlerEndOffset);
-        this.CreateNestedBlock(block, exInfo.HandlerStartOffset, exInfo.HandlerEndOffset);
+        else
+          this.CreateNestedBlock(block, exInfo.HandlerStartOffset, exInfo.HandlerEndOffset);
       }
     }
 
@@ -391,7 +403,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       var numberOfStatementsToDelete = 0;
       for (int i = 0; i < n; i++) {
         var s = statements[i];
-        if (s is IEmptyStatement) {
+        if (s is IEmptyStatement && !(s is EndFilter || s is EndFinally || s is SwitchInstruction)) {
           numberOfStatementsToDelete++;
         } else {
           var bs = s as BlockStatement;

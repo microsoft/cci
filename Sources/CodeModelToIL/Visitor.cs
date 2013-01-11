@@ -1043,6 +1043,7 @@ namespace Microsoft.Cci {
     /// <param name="catchClause">The catch clause.</param>
     public override void TraverseChildren(ICatchClause catchClause) {
       this.generator.BeginScope(0);
+      this.StackSize++;
       if (catchClause.FilterCondition != null) {
         this.generator.BeginFilterBlock();
         this.Traverse(catchClause.FilterCondition);
@@ -1050,11 +1051,10 @@ namespace Microsoft.Cci {
       } else {
         this.generator.BeginCatchBlock(catchClause.ExceptionType);
       }
-      this.StackSize++;
       if (!(catchClause.ExceptionContainer is Dummy)) {
         this.generator.AddVariableToCurrentScope(catchClause.ExceptionContainer);
         this.VisitAssignmentTo(catchClause.ExceptionContainer);
-      } else {
+      } else if (catchClause.FilterCondition == null) {
         this.generator.Emit(OperationCode.Pop);
         this.StackSize--;
       }
@@ -1124,7 +1124,10 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="conditionalStatement">The conditional statement.</param>
     public override void TraverseChildren(IConditionalStatement conditionalStatement) {
-      this.EmitSequencePoint(conditionalStatement.Condition.Locations);
+      if (IteratorHelper.EnumerableIsNotEmpty(conditionalStatement.Condition.Locations))
+        this.EmitSequencePoint(conditionalStatement.Condition.Locations);
+      else
+        this.EmitSequencePoint(conditionalStatement.Locations);
       ILGeneratorLabel/*?*/ endif = null;
       var trueBranchDelta = 0;
       ushort stackSizeAfterCondition = 0;

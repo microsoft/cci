@@ -305,15 +305,15 @@ namespace CSharpSourceEmitter {
 
       // Assembly-level pseudo-custom attributes
       foreach (var alias in assembly.ExportedTypes) {
-        // Nested type are automatically included
-        if (!(alias.AliasedType is INestedTypeReference)) {
+        if (!(alias.AliasedType is INestedTypeReference)) { // Nested type aliases seem redundant and there appears to be no way to generate them via an attribute
           sourceEmitterOutput.Write("[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(");
           PrintTypeReference(alias.AliasedType);
           sourceEmitterOutput.WriteLine("))]");
         }
       }
       PrintToken(CSharpToken.NewLine);
-      base.TraverseChildren(assembly);
+      this.Traverse(assembly.SecurityAttributes);
+      this.TraverseChildren((IModule)assembly);
     }
 
     public override void TraverseChildren(IAssemblyReference assemblyReference) {
@@ -619,6 +619,10 @@ namespace CSharpSourceEmitter {
         PrintLong((long)val);
       else if (val is ulong)
         PrintUlong((ulong)val);
+      else if (val is float)
+        PrintFloat((float)val);
+      else if (val is double)
+        PrintDouble((double)val);
       else
         this.sourceEmitterOutput.Write(val.ToString());
     }
@@ -1066,6 +1070,10 @@ namespace CSharpSourceEmitter {
         PrintLong((long)val);
       else if (val is ulong)
         PrintUlong((ulong)val);
+      else if (val is float)
+        PrintFloat((float)val);
+      else if (val is double)
+        PrintDouble((double)val);
       else
         this.sourceEmitterOutput.Write(constant.Value.ToString());
     }
@@ -1102,8 +1110,12 @@ namespace CSharpSourceEmitter {
         sourceEmitterOutput.Write("double.MaxValue");
       else if (value == double.MinValue)
         sourceEmitterOutput.Write("double.MinValue");
-      else
-        sourceEmitterOutput.Write(value.ToString("R")); // round-trip format 
+      else {
+        var str = value.ToString("R");
+        sourceEmitterOutput.Write(str);
+        if (str.IndexOfAny(new char[] { '.', 'e', 'E' }) < 0)
+          sourceEmitterOutput.Write(".0");
+      }
     }
 
     public virtual void PrintLong(long value) {
@@ -1338,13 +1350,10 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(IModule module) {
-      if (!(module is IAssembly)) {
-        foreach (var attr in SortAttributes(module.Attributes)) {
-          PrintAttribute(module, attr, true, "module");
-        }
+      foreach (var attr in SortAttributes(module.ModuleAttributes)) {
+        PrintAttribute(module, attr, true, "module");
       }
-
-      base.TraverseChildren(module);
+      this.Traverse(module.UnitNamespaceRoot);
     }
 
     public override void TraverseChildren(IModuleReference moduleReference) {

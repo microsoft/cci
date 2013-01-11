@@ -25,6 +25,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public Addition() {
+      this.CheckOverflow = false;
+      this.TreatOperandsAsUnsignedIntegers = false;
     }
 
     /// <summary>
@@ -34,6 +36,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public Addition(IAddition addition)
       : base(addition) {
       this.CheckOverflow = addition.CheckOverflow;
+      this.TreatOperandsAsUnsignedIntegers = addition.TreatOperandsAsUnsignedIntegers;
     }
 
     /// <summary>
@@ -121,6 +124,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     public AddressOf() {
       this.expression = CodeDummy.AddressableExpression;
+      this.objectControlsMutability = false;
     }
 
     /// <summary>
@@ -130,6 +134,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public AddressOf(IAddressOf addressOf)
       : base(addressOf) {
       this.expression = addressOf.Expression;
+      this.objectControlsMutability = addressOf.ObjectControlsMutability;
     }
 
     /// <summary>
@@ -1514,6 +1519,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public Division() {
+      this.TreatOperandsAsUnsignedIntegers = false;
     }
 
     /// <summary>
@@ -1522,6 +1528,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="division"></param>
     public Division(IDivision division)
       : base(division) {
+        this.TreatOperandsAsUnsignedIntegers = division.TreatOperandsAsUnsignedIntegers;
     }
 
     /// <summary>
@@ -1798,6 +1805,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public GreaterThan() {
+      this.unsignedOrUnordered = false;
     }
 
     /// <summary>
@@ -1837,6 +1845,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public GreaterThanOrEqual() {
+      this.unsignedOrUnordered = false;
     }
 
     /// <summary>
@@ -1904,6 +1913,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public LessThan() {
+      this.isUnsignedOrUnordered = false;
     }
 
     /// <summary>
@@ -1912,7 +1922,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="lessThan"></param>
     public LessThan(ILessThan lessThan)
       : base(lessThan) {
-      this.unsignedOrUnordered = lessThan.IsUnsignedOrUnordered;
+      this.isUnsignedOrUnordered = lessThan.IsUnsignedOrUnordered;
     }
 
     /// <summary>
@@ -1927,10 +1937,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool IsUnsignedOrUnordered {
-      get { return this.unsignedOrUnordered; }
-      set { this.unsignedOrUnordered = value; }
+      get { return this.isUnsignedOrUnordered; }
+      set { this.isUnsignedOrUnordered = value; }
     }
-    bool unsignedOrUnordered;
+    bool isUnsignedOrUnordered;
 
   }
 
@@ -1943,6 +1953,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public LessThanOrEqual() {
+      this.isUnsignedOrUnordered = false;
     }
 
     /// <summary>
@@ -1951,7 +1962,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="lessThanOrEqual"></param>
     public LessThanOrEqual(ILessThanOrEqual lessThanOrEqual)
       : base(lessThanOrEqual) {
-      this.unsignedOrUnordered = lessThanOrEqual.IsUnsignedOrUnordered;
+      this.isUnsignedOrUnordered = lessThanOrEqual.IsUnsignedOrUnordered;
     }
 
     /// <summary>
@@ -1966,10 +1977,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool IsUnsignedOrUnordered {
-      get { return this.unsignedOrUnordered; }
-      set { this.unsignedOrUnordered = value; }
+      get { return this.isUnsignedOrUnordered; }
+      set { this.isUnsignedOrUnordered = value; }
     }
-    bool unsignedOrUnordered;
+    bool isUnsignedOrUnordered;
 
   }
 
@@ -2149,6 +2160,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public Modulus() {
+      this.TreatOperandsAsUnsignedIntegers = false;
     }
 
     /// <summary>
@@ -2157,6 +2169,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="modulus"></param>
     public Modulus(IModulus modulus)
       : base(modulus) {
+      this.TreatOperandsAsUnsignedIntegers = modulus.TreatOperandsAsUnsignedIntegers;
     }
 
     /// <summary>
@@ -2181,6 +2194,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public Multiplication() {
+      this.CheckOverflow = false;
+      this.TreatOperandsAsUnsignedIntegers = false;
     }
 
     /// <summary>
@@ -2190,6 +2205,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public Multiplication(IMultiplication multiplication)
       : base(multiplication) {
       this.CheckOverflow = multiplication.CheckOverflow;
+      this.TreatOperandsAsUnsignedIntegers = multiplication.TreatOperandsAsUnsignedIntegers;
     }
 
     /// <summary>
@@ -2223,6 +2239,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.argumentName = Dummy.Name;
       this.argumentValue = CodeDummy.Expression;
       this.resolvedDefinition = null;
+      this.getterIsVirtual = false;
+      this.setterIsVirtual = false;
     }
 
     /// <summary>
@@ -2472,6 +2490,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public PointerCall() {
       this.arguments = new List<IExpression>();
       this.pointer = CodeDummy.Expression;
+      this.isTailCall = false;
     }
 
     /// <summary>
@@ -2483,6 +2502,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Requires(pointerCall != null);
       this.arguments = new List<IExpression>(pointerCall.Arguments);
       this.pointer = pointerCall.Pointer;
+      this.isTailCall = pointerCall.IsTailCall;
     }
 
     [ContractInvariantMethod]
@@ -2804,6 +2824,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public Subtraction() {
+      this.CheckOverflow = false;
+      this.TreatOperandsAsUnsignedIntegers = false;
     }
 
     /// <summary>
@@ -2813,6 +2835,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public Subtraction(ISubtraction subtraction)
       : base(subtraction) {
       this.CheckOverflow = subtraction.CheckOverflow;
+      this.TreatOperandsAsUnsignedIntegers = subtraction.TreatOperandsAsUnsignedIntegers;
     }
 
     /// <summary>
@@ -2845,6 +2868,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     public TargetExpression() {
       this.definition = Dummy.LocalVariable;
       this.instance = null;
+      this.getterIsVirtual = false;
+      this.setterIsVirtual = false;
       this.alignment = 0;
       this.isVolatile = false;
     }
@@ -3088,6 +3113,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// 
     /// </summary>
     public UnaryNegation() {
+      this.CheckOverflow = false;
     }
 
     /// <summary>
