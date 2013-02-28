@@ -43,14 +43,12 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (initializerAssignStat != null) {
           if (!(initializerAssignStat.Expression is IAssignment)) continue;
           initializer = initializerAssignStat;
-          i++;
         } else {
           var initialDecl = statements[i] as ILocalDeclarationStatement;
           if (initialDecl == null || initialDecl.InitialValue == null) continue;
           initializer = initialDecl;
-          i++;
         }
-        var whileLoop = statements[i] as IWhileDoStatement;
+        var whileLoop = statements[i + 1] as IWhileDoStatement;
         if (whileLoop == null) continue;
         var loopBody = whileLoop.Body as BlockStatement;
         if (loopBody == null) continue;
@@ -60,12 +58,12 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (incrementAssignment == null || !(incrementAssignment.Source is IAddition || incrementAssignment.Source is ISubtraction)) continue;
         var forLoop = new ForStatement() { Condition = whileLoop.Condition, Body = loopBody };
         if (initializer != null) {
-          statements.RemoveAt(--i);
+          statements.RemoveAt(i--);
           forLoop.InitStatements.Add(initializer);
         }
         RemoveLastStatement(loopBody, incrementer);
         forLoop.IncrementStatements.Add(incrementer);
-        statements[i] = forLoop;
+        statements[i + 1] = forLoop;
       }
       base.TraverseChildren(block);
     }
