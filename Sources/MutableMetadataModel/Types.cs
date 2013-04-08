@@ -234,6 +234,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public ArrayTypeReference() {
+      Contract.Ensures(!this.IsFrozen);
+
       this.elementType = Dummy.TypeReference;
     }
 
@@ -423,6 +425,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public FunctionPointerTypeReference() {
+      Contract.Ensures(!this.IsFrozen);
+
       this.callingConvention = (CallingConvention)0;
       this.type = Dummy.TypeReference;
     }
@@ -637,6 +641,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public GenericMethodParameterReference() {
+      Contract.Ensures(!this.IsFrozen);
+
       this.definingMethod = Dummy.MethodReference;
       this.name = Dummy.Name;
       this.index = 0;
@@ -948,6 +954,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public GenericTypeInstanceReference() {
+      Contract.Ensures(!this.IsFrozen);
+
       this.genericType = Dummy.NamedTypeReference;
     }
 
@@ -1134,6 +1142,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public GenericTypeParameterReference() {
+      Contract.Ensures(!this.IsFrozen);
+
       this.definingType = Dummy.TypeReference;
       this.name = Dummy.Name;
       this.index = 0;
@@ -1349,6 +1359,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public MatrixTypeReference() {
+      Contract.Ensures(!this.IsFrozen);
+
       this.rank = 1;
     }
 
@@ -2384,6 +2396,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public PointerTypeReference() {
+      Contract.Ensures(!this.IsFrozen);
+
       this.targetType = Dummy.TypeReference;
       this.TypeCode = PrimitiveTypeCode.Pointer;
     }
@@ -2468,6 +2482,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public SpecializedNestedTypeReference() {
+      Contract.Ensures(!this.IsFrozen);
+
       this.unspecializedVersion = Dummy.NestedTypeDefinition;
       Contract.Assume(!(this.unspecializedVersion.ContainingType is ISpecializedNestedTypeReference));
       Contract.Assume(!(this.unspecializedVersion.ContainingType is IGenericTypeInstanceReference));
@@ -3528,6 +3544,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public ModifiedTypeReference() {
+      Contract.Ensures(!this.IsFrozen);
+
       this.customModifiers = new List<ICustomModifier>(1);
       this.unmodifiedType = Dummy.TypeReference;
     }
@@ -3920,6 +3938,8 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// or once the InternedKey of a reference has been computed, no further initialization is permitted.
     /// </summary>
     public VectorTypeReference() {
+      Contract.Ensures(!this.IsFrozen);
+
     }
 
     /// <summary>

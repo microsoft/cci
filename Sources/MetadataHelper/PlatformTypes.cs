@@ -1713,6 +1713,20 @@ namespace Microsoft.Cci.Immutable {
     INamespaceTypeReference/*?*/ systemRuntimeInteropServicesDllImportAttribute;
 
     /// <summary>
+    /// System.Runtime.InteropServices.TypeIdentifierAttribute
+    /// </summary>
+    public INamespaceTypeReference SystemRuntimeInteropServicesTypeIdentifierAttribute {
+      get {
+        if (this.systemRuntimeInteropServicesTypeIdentifierAttribute == null) {
+          this.systemRuntimeInteropServicesTypeIdentifierAttribute =
+            this.CreateReference(this.CoreAssemblyRef, "System", "Runtime", "InteropServices", "TypeIdentifierAttribute");
+        }
+        return this.systemRuntimeInteropServicesTypeIdentifierAttribute;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemRuntimeInteropServicesTypeIdentifierAttribute;
+
+    /// <summary>
     /// System.Security.Permissions.SecurityAction
     /// </summary>
     public INamespaceTypeReference SystemSecurityPermissionsSecurityAction {

@@ -791,7 +791,7 @@ namespace Microsoft.Cci {
     /// </returns>
     public IBinaryDocumentMemoryBlock OpenBinaryDocument(IBinaryDocument sourceDocument) {
       Contract.Requires(sourceDocument != null);
-      Contract.Ensures(Contract.Result<IBinaryDocumentMemoryBlock>() != null);
+      // MaF: too strong a contract here Contract.Ensures(Contract.Result<IBinaryDocumentMemoryBlock>() != null);
       throw new NotImplementedException();
     }
 

@@ -230,7 +230,15 @@ namespace Microsoft.Cci {
 #if !COMPACTFX
       IUnmanagedPdbWriter/*?*/ unmangedPdbWriter = pdbWriter as IUnmanagedPdbWriter;
       if (unmangedPdbWriter != null)
-        unmangedPdbWriter.SetMetadataEmitter(new MetadataWrapper(writer));
+      {
+        try
+        {
+          unmangedPdbWriter.SetMetadataEmitter(new MetadataWrapper(writer));
+        }
+        catch { 
+          // TODO: warn about failing pdb emit
+        }
+      }
 #endif
       writer.ntHeader.TimeDateStamp = (uint)((DateTime.Now.ToUniversalTime() - NineteenSeventy).TotalSeconds);
 

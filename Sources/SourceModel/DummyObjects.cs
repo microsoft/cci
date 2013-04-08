@@ -133,8 +133,8 @@ namespace Microsoft.Cci {
     }
 
     void IPrimarySourceDocument.ToLineColumn(int position, out int line, out int column) {
-      line = 0;
-      column = 0;
+      line = 1;
+      column = 1;
     }
 
     #endregion

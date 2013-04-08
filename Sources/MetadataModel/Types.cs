@@ -3726,6 +3726,11 @@ namespace Microsoft.Cci {
     INamespaceTypeReference SystemRuntimeInteropServicesDllImportAttribute { get; }
 
     /// <summary>
+    /// System.Runtime.InteropServices.TypeIdentifierAttribute
+    /// </summary>
+    INamespaceTypeReference SystemRuntimeInteropServicesTypeIdentifierAttribute { get; }
+
+    /// <summary>
     /// System.Security.Permissions.SecurityAction
     /// </summary>
     INamespaceTypeReference SystemSecurityPermissionsSecurityAction { get; }
@@ -4175,6 +4180,13 @@ namespace Microsoft.Cci {
     }
 
     public INamespaceTypeReference SystemRuntimeInteropServicesDllImportAttribute {
+      get {
+        Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
+        throw new NotImplementedException();
+      }
+    }
+
+    public INamespaceTypeReference SystemRuntimeInteropServicesTypeIdentifierAttribute {
       get {
         Contract.Ensures(Contract.Result<INamespaceTypeReference>() != null);
         throw new NotImplementedException();

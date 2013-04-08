@@ -837,7 +837,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// A collection of named members, with routines to search the collection.
   /// </summary>
-  [ContractClass(typeof(ISCopeContract<>))]
+  [ContractClass(typeof(IScopeContract<>))]
   public interface IScope<MemberType>
     where MemberType : class, INamedEntity {
 
@@ -882,7 +882,7 @@ namespace Microsoft.Cci {
 
   #region IScope<MemberType> contract binding
   [ContractClassFor(typeof(IScope<>))]
-  abstract class ISCopeContract<MemberType> : IScope<MemberType>
+  abstract class IScopeContract<MemberType> : IScope<MemberType>
     where MemberType : class, INamedEntity {
 
     public bool Contains(MemberType member) {

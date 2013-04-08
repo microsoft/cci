@@ -42,7 +42,17 @@ namespace Microsoft.Cci {
 
     private void Close() {
       if (this.symWriter != null)
-        this.symWriter.Close();
+      {
+        try
+        {
+          this.symWriter.Close();
+        }
+        catch
+        {
+          // TODO: warn about failed pdb write. 
+        }
+      }
+       
     }
 
     public void CloseMethod(uint offset) {

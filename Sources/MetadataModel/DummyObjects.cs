@@ -5003,6 +5003,10 @@ namespace Microsoft.Cci {
       get { return Dummy.NamespaceTypeReference; }
     }
 
+    public INamespaceTypeReference SystemRuntimeInteropServicesTypeIdentifierAttribute {
+      get { return Dummy.NamespaceTypeReference; }
+    }
+
     public INamespaceTypeReference SystemSecurityPermissionsSecurityAction {
       get { return Dummy.NamespaceTypeReference; }
     }
