@@ -235,8 +235,7 @@ namespace Microsoft.Cci.MutableContracts {
       if (this.methodIsInReferenceAssembly) {
         origSource = GetStringFromArgument(arguments[2]);
       } else {
-        if (this.pdbReader != null)
-          TryGetConditionText(this.pdbReader, locations, numArgs, out origSource);
+        TryGetConditionText(this.pdbReader, locations, numArgs, out origSource);
       }
 
       TypeInvariant invariant = new TypeInvariant() {
@@ -503,8 +502,7 @@ namespace Microsoft.Cci.MutableContracts {
             if (this.methodIsInReferenceAssembly) {
               origSource = GetStringFromArgument(arguments[2]);
             } else {
-              if (this.pdbReader != null)
-                TryGetConditionText(this.pdbReader, locations, numArgs, out origSource);
+              TryGetConditionText(this.pdbReader, locations, numArgs, out origSource);
             }
             IExpression/*?*/ description = numArgs >= 2 ? arguments[1] : null;
 
@@ -755,11 +753,29 @@ namespace Microsoft.Cci.MutableContracts {
       sourceText = null;
       startColumn = 0; // columns begin at 1, so this can work as a null value
       foreach (var loc in locations) {
-        foreach (IPrimarySourceLocation psloc in pdbReader.GetClosestPrimarySourceLocationsFor(loc)) {
-          if (!String.IsNullOrEmpty(psloc.Source)) {
-            sourceText = psloc.Source;
-            startColumn = psloc.StartColumn;
-            break;
+        if (pdbReader != null)
+        {
+          foreach (IPrimarySourceLocation psloc in pdbReader.GetClosestPrimarySourceLocationsFor(loc))
+          {
+            if (!String.IsNullOrEmpty(psloc.Source))
+            {
+              sourceText = psloc.Source;
+              startColumn = psloc.StartColumn;
+              break;
+            }
+          }
+        }
+        else
+        {
+          var psloc = loc as IPrimarySourceLocation;
+          if (psloc != null)
+          {
+            if (!String.IsNullOrEmpty(psloc.Source))
+            {
+              sourceText = psloc.Source;
+              startColumn = psloc.StartColumn;
+              break;
+            }
           }
         }
         if (sourceText != null) break;
@@ -847,8 +863,7 @@ namespace Microsoft.Cci.MutableContracts {
 
       string origSource = null;
       if (0 < locations.Count) {
-        if (this.pdbReader != null)
-          TryGetConditionText(this.pdbReader, locations, 1, out origSource, true);
+        TryGetConditionText(this.pdbReader, locations, 1, out origSource, true);
       }
 
       if (throwStatement != null) {
@@ -996,8 +1011,7 @@ namespace Microsoft.Cci.MutableContracts {
         if (mname != "Assert" && mname != "Assume") goto JustVisit;
 
         string/*?*/ origSource = null;
-        if (this.pdbReader != null)
-          ContractExtractor.TryGetConditionText(this.pdbReader, locations, numArgs, out origSource);
+        ContractExtractor.TryGetConditionText(this.pdbReader, locations, numArgs, out origSource);
 
 
         var locations2 = this.pdbReader == null ? new List<ILocation>() :

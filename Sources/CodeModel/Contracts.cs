@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System.Collections.Generic;
 using Microsoft.Cci.Immutable;
+using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci.Contracts {
 
@@ -420,7 +421,7 @@ namespace Microsoft.Cci.Contracts {
   /// A collection of collections of objects that augment the type signature of a method with additional information
   /// that describe the contract between calling method and called method.
   /// </summary>
-  public interface IMethodContract : IObjectWithLocations {
+  public partial interface IMethodContract : IObjectWithLocations {
 
     /// <summary>
     /// A possibly empty list of expressions that each represents a set of memory locations that are newly allocated by a call to the method.
@@ -479,6 +480,104 @@ namespace Microsoft.Cci.Contracts {
     bool IsPure { get; }
   }
 
+  #region IMethodContract contract binding
+  [ContractClass(typeof(IMethodContractContract))]
+  public partial interface IMethodContract { }
+
+  [ContractClassFor(typeof(IMethodContract))]
+  abstract class IMethodContractContract : IMethodContract
+  {
+    public IEnumerable<IExpression> Allocates
+    {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IExpression>>() != null);
+        throw new System.NotImplementedException(); 
+      }
+    }
+
+    public IEnumerable<IExpression> Frees
+    {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IExpression>>() != null);
+        throw new System.NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IAddressableExpression> ModifiedVariables
+    {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IAddressableExpression>>() != null);
+        throw new System.NotImplementedException();
+      }
+    }
+
+    public bool MustInline
+    {
+      get { throw new System.NotImplementedException(); }
+    }
+
+    public IEnumerable<IPostcondition> Postconditions
+    {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IPostcondition>>() != null);
+        throw new System.NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IPrecondition> Preconditions
+    {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IPrecondition>>() != null);
+        throw new System.NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IExpression> Reads
+    {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IExpression>>() != null);
+        throw new System.NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IThrownException> ThrownExceptions
+    {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IThrownException>>() != null);
+        throw new System.NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IExpression> Writes
+    {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IExpression>>() != null);
+        throw new System.NotImplementedException();
+      }
+    }
+
+    public IEnumerable<IExpression> Variants
+    {
+      get {
+        Contract.Ensures(Contract.Result<IEnumerable<IExpression>>() != null);
+        throw new System.NotImplementedException();
+      }
+    }
+
+    public bool IsPure
+    {
+      get { throw new System.NotImplementedException(); }
+    }
+
+    #region Inherited
+    public IEnumerable<ILocation> Locations
+    {
+      get { throw new System.NotImplementedException(); }
+    }
+    #endregion
+  }
+  #endregion
+
   /// <summary>
   /// A condition that must be true at the start of a method, possibly bundled with an exception that will be thrown if the condition does not hold.
   /// </summary>
@@ -509,7 +608,7 @@ namespace Microsoft.Cci.Contracts {
   /// <summary>
   /// An exception that can be thrown by the associated method, along with a possibly empty list of postconditions that are true when that happens.
   /// </summary>
-  public interface IThrownException : IObjectWithLocations {
+  public partial interface IThrownException : IObjectWithLocations {
 
     /// <summary>
     /// The exception that can be thrown by the associated method.
@@ -521,6 +620,40 @@ namespace Microsoft.Cci.Contracts {
     /// </summary>
     IPostcondition Postcondition { get; }
   }
+
+  #region IThrownException contract binding
+  [ContractClass(typeof(IThrownExceptionContract))]
+  public partial interface IThrownException {}
+
+  [ContractClassFor(typeof(IThrownException))]
+  abstract class IThrownExceptionContract : IThrownException
+  {
+    public ITypeReference ExceptionType
+    {
+      get {
+        Contract.Ensures(Contract.Result<ITypeReference>() != null);
+        throw new System.NotImplementedException(); 
+      }
+    }
+
+    public IPostcondition Postcondition
+    {
+      get {
+        Contract.Ensures(Contract.Result<IPostcondition>() != null); 
+        throw new System.NotImplementedException();
+      }
+    }
+
+    #region Inherited
+    public IEnumerable<ILocation> Locations
+    {
+      get {
+        throw new System.NotImplementedException();
+      }
+    }
+    #endregion
+  }
+  #endregion
 
   /// <summary>
   /// A collection of collections of objects that augment the signature of a type with additional information

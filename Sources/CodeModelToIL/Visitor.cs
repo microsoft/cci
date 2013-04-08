@@ -4423,6 +4423,7 @@ namespace Microsoft.Cci {
         this.Traverse(binaryOperation.RightOperand);
         this.StackSize-=2;
       }
+      this.EmitSourceLocation(expression);
       this.generator.Emit(branchOp, targetLabel);
     }
 

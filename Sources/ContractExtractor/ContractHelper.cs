@@ -1800,7 +1800,6 @@ namespace Microsoft.Cci.MutableContracts {
 
     #region Fields
     PeReader peReader;
-    readonly List<string> libPaths = new List<string>();
     /// <summary>
     /// 
     /// </summary>
@@ -2004,39 +2003,7 @@ namespace Microsoft.Cci.MutableContracts {
     /// Returns the unit that is stored at the given location, or a dummy unit if no unit exists at that location or if the unit at that location is not accessible.
     /// </summary>
     public override IUnit LoadUnitFrom(string location) {
-      if (location.StartsWith("file://")) { // then it is a URL
-        try {
-          Uri u = new Uri(location, UriKind.Absolute); // Let the Uri class figure out how to go from URL to local file path
-          location = u.LocalPath;
-        } catch (UriFormatException) {
-          return Dummy.Unit;
-        }
-      }
-
-      string pathFromTable;
-      var assemblyName = Path.GetFileNameWithoutExtension(location);
-      if (this.assemblyNameToPath.TryGetValue(assemblyName, out pathFromTable)) {
-        location = pathFromTable;
-      }
-
-      var unloadedOrFirstTime = UnloadPreviouslyLoadedUnitIfLocationIsNewer(location);
-      IUnit result = this.peReader.OpenModule(BinaryDocument.GetBinaryDocumentForFile(Path.GetFullPath(location), this));
-
-      this.RegisterAsLatest(result);
-
-      if (unloadedOrFirstTime) {
-        foreach (var d in result.UnitReferences) {
-          var key = d.UnitIdentity;
-          if (!this.unit2DependentUnits.ContainsKey(key)) {
-            this.unit2DependentUnits[key] = new List<IUnitReference>();
-          }
-          this.unit2DependentUnits[key].Add(result);
-        }
-
-        this.unit2ContractExtractor[result.UnitIdentity] = null; // a marker to communicate with GetContractExtractor
-        this.location2Unit[result.Location] = result;
-      }
-      return result;
+      return LoadUnitFrom(location, false);
     }
 
     #region Helper Methods
@@ -2068,11 +2035,22 @@ namespace Microsoft.Cci.MutableContracts {
       // version, but instead some completely different assembly?
       this.peReader = new PeReader(this);
 
-      var unit = this.location2Unit[location];
+      IUnit unit;
+      if (this.location2Unit.TryGetValue(location, out unit))
+      {
+        CleanupStaleUnit(unit);
+      }
+      return true;
+    }
+
+    private void CleanupStaleUnit(IUnit unit)
+    {
       // Need to dump all units that depended on this one because their reference is now stale.
       List<IUnitReference> referencesToDependentUnits;
-      if (this.unit2DependentUnits.TryGetValue(unit.UnitIdentity, out referencesToDependentUnits)) {
-        foreach (var d in referencesToDependentUnits) {
+      if (this.unit2DependentUnits.TryGetValue(unit.UnitIdentity, out referencesToDependentUnits))
+      {
+        foreach (var d in referencesToDependentUnits)
+        {
           this.RemoveUnit(d.UnitIdentity);
         }
       }
@@ -2080,21 +2058,26 @@ namespace Microsoft.Cci.MutableContracts {
       // Need to remove unit from the list of dependent units for each unit
       // it *was* dependent on in case the newer version has a changed list of
       // dependencies.
-      foreach (var d in unit.UnitReferences) {
-        this.unit2DependentUnits[d.UnitIdentity].Remove(unit);
+      foreach (var d in unit.UnitReferences)
+      {
+        List<IUnitReference> dependentUnits;
+        if (this.unit2DependentUnits.TryGetValue(d.UnitIdentity, out dependentUnits)) {
+          dependentUnits.Remove(unit);
+        }
       }
 
       // Dump all reference assemblies for this unit.
       List<IUnitReference> referenceAssemblies;
-      if (this.unit2ReferenceAssemblies.TryGetValue(unit, out referenceAssemblies)) {
-        foreach (var d in referenceAssemblies) {
+      if (this.unit2ReferenceAssemblies.TryGetValue(unit, out referenceAssemblies))
+      {
+        foreach (var d in referenceAssemblies)
+        {
           this.RemoveUnit(d.UnitIdentity);
         }
       }
 
       // Dump stale version from cache
       this.RemoveUnit(unit.UnitIdentity);
-      return true;
     }
 
     /// <summary>
@@ -2227,6 +2210,70 @@ namespace Microsoft.Cci.MutableContracts {
       this.callbacks.Add(contractProviderCallback);
     }
 
+    /// <summary>
+    /// Same as LoadUnitFrom(location), but if exactLocation is true, will make sure we didn't unify
+    /// to another assembly. Guarantees that the unit's location loaded is from the exact location given.
+    /// </summary>
+    /// <param name="location">Path to unit to load</param>
+    /// <param name="exactLocation">specifies if we must load from that path</param>
+    /// <returns>The loaded unit or dummy</returns>
+    public virtual IUnit LoadUnitFrom(string location, bool exactLocation)
+    {
+      Contract.Requires(location != null);
+      Contract.Ensures(Contract.Result<IUnit>() != null);
+      Contract.Ensures(!exactLocation || Contract.Result<IUnit>() is Dummy || Contract.Result<IUnit>().Location == location);
+
+      if (location.StartsWith("file://"))
+      { // then it is a URL
+        try
+        {
+          Uri u = new Uri(location, UriKind.Absolute); // Let the Uri class figure out how to go from URL to local file path
+          location = u.LocalPath;
+        }
+        catch (UriFormatException)
+        {
+          return Dummy.Unit;
+        }
+      }
+
+      string pathFromTable;
+      var assemblyName = Path.GetFileNameWithoutExtension(location);
+      if (this.assemblyNameToPath.TryGetValue(assemblyName, out pathFromTable))
+      {
+        location = pathFromTable;
+      }
+
+      var unloadedOrFirstTime = UnloadPreviouslyLoadedUnitIfLocationIsNewer(location);
+      IUnit result = this.peReader.OpenModule(BinaryDocument.GetBinaryDocumentForFile(Path.GetFullPath(location), this));
+
+      if (exactLocation && result.Location != location)
+      {
+        // we got tricked
+        this.peReader = new PeReader(this);
+        this.CleanupStaleUnit(result);
+        // try again
+        result = this.peReader.OpenModule(BinaryDocument.GetBinaryDocumentForFile(Path.GetFullPath(location), this));
+        unloadedOrFirstTime = true;
+      }
+      this.RegisterAsLatest(result);
+
+      if (unloadedOrFirstTime)
+      {
+        foreach (var d in result.UnitReferences)
+        {
+          var key = d.UnitIdentity;
+          if (!this.unit2DependentUnits.ContainsKey(key))
+          {
+            this.unit2DependentUnits[key] = new List<IUnitReference>();
+          }
+          this.unit2DependentUnits[key].Add(result);
+        }
+
+        this.unit2ContractExtractor[result.UnitIdentity] = null; // a marker to communicate with GetContractExtractor
+        this.location2Unit[result.Location] = result;
+      }
+      return result;
+    }
     #endregion
   }
 

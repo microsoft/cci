@@ -86,8 +86,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     HashtableForUintValues<object> numberOfAssignmentsToLocal;
     Hashtable<object, LocalDeclarationStatement> declarationFor = new Hashtable<object, LocalDeclarationStatement>();
     Hashtable<object, object> firstReferenceToLocal = new Hashtable<object, object>();
+    Hashtable<object, object> firstReferenceToLocalContainingStatement = new Hashtable<object, object>();
     SetOfObjects unifiedDeclarations = new SetOfObjects();
     BlockStatement currentBlock;
+    private IStatement lastStatement;
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
@@ -95,6 +97,7 @@ namespace Microsoft.Cci.ILToCodeModel {
       Contract.Invariant(this.numberOfAssignmentsToLocal != null);
       Contract.Invariant(this.declarationFor != null);
       Contract.Invariant(this.firstReferenceToLocal != null);
+      Contract.Invariant(this.firstReferenceToLocalContainingStatement != null);
       Contract.Invariant(this.unifiedDeclarations != null);
     }
 
@@ -158,6 +161,10 @@ namespace Microsoft.Cci.ILToCodeModel {
         this.unifiedDeclarations.Add(decl);
         this.declarationFor.Remove(local);
         decl.InitialValue = initialValue;
+        if (this.firstReferenceToLocalContainingStatement[local] != null) {
+          var s = (IStatement)this.firstReferenceToLocalContainingStatement[local];
+          decl.Locations = new List<ILocation>(s.Locations);
+        }
         block.Statements[i] = decl;
         unifications++;
       }
@@ -179,25 +186,34 @@ namespace Microsoft.Cci.ILToCodeModel {
       block.Statements = newStatements;
     }
 
+    public override void TraverseChildren(IStatement statement) {
+      this.lastStatement = statement;
+    }
     public override void TraverseChildren(IAddressableExpression addressableExpression) {
       base.TraverseChildren(addressableExpression);
       var local = addressableExpression.Definition as ILocalDefinition;
-      if (local != null && this.firstReferenceToLocal[local] == null)
+      if (local != null && this.firstReferenceToLocal[local] == null) {
         this.firstReferenceToLocal[local] = addressableExpression;
+        this.firstReferenceToLocalContainingStatement[local] = this.lastStatement;
+      }
     }
 
     public override void TraverseChildren(IBoundExpression boundExpression) {
       base.TraverseChildren(boundExpression);
       var local = boundExpression.Definition as ILocalDefinition;
-      if (local != null && this.firstReferenceToLocal[local] == null)
+      if (local != null && this.firstReferenceToLocal[local] == null) {
         this.firstReferenceToLocal[local] = boundExpression;
+        this.firstReferenceToLocalContainingStatement[local] = this.lastStatement;
+      }
     }
 
     public override void TraverseChildren(ITargetExpression targetExpression) {
       base.TraverseChildren(targetExpression);
       var local = targetExpression.Definition as ILocalDefinition;
-      if (local != null && this.firstReferenceToLocal[local] == null)
+      if (local != null && this.firstReferenceToLocal[local] == null) {
         this.firstReferenceToLocal[local] = targetExpression;
+        this.firstReferenceToLocalContainingStatement[local] = this.lastStatement;
+      }
     }
 
   }

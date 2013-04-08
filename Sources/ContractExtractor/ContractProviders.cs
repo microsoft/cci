@@ -639,7 +639,11 @@ namespace Microsoft.Cci.Contracts {
         var specializedMethodDefinition = mutableContractMethod as SpecializedMethodDefinition;
         if (specializedMethodDefinition != null) { // also need to reparent the unspecialized method
           var mutableUnspecialized = (MethodDefinition)(specializedMethodDefinition.UnspecializedVersion);
+          var foo = copier.Copy(mutableUnspecialized);
+          mutableUnspecialized = foo;
+          reparenter.RewriteChildren(mutableUnspecialized);
           mutableUnspecialized.ContainingTypeDefinition = TypeHelper.UninstantiateAndUnspecialize(newParentTypeDefinition).ResolvedType;
+          specializedMethodDefinition.UnspecializedVersion = mutableUnspecialized;
         }
         newMethods.Add(mutableContractMethod);
       }

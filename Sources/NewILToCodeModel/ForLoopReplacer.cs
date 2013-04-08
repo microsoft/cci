@@ -48,7 +48,7 @@ namespace Microsoft.Cci.ILToCodeModel {
           if (initialDecl == null || initialDecl.InitialValue == null) continue;
           initializer = initialDecl;
         }
-        var whileLoop = statements[i + 1] as IWhileDoStatement;
+        var whileLoop = statements[i+1] as IWhileDoStatement;
         if (whileLoop == null) continue;
         var loopBody = whileLoop.Body as BlockStatement;
         if (loopBody == null) continue;
