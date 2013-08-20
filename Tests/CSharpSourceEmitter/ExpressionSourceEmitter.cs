@@ -649,18 +649,21 @@ namespace CSharpSourceEmitter {
           goto Ret;
         }
         if (ExpressionHelper.IsIntegralOne(conditional.ResultIfFalse)) {
-          this.Traverse(conditional.Condition);
-          this.sourceEmitterOutput.Write(" && ");
-          var ln = conditional.ResultIfTrue as ILogicalNot;
+          var ln = conditional.Condition as ILogicalNot;
           if (ln != null)
+          {
             this.Traverse(ln.Operand);
-          else {
+          }
+          else
+          {
             this.sourceEmitterOutput.Write("!");
             var x = this.currentPrecedence;
             this.currentPrecedence = 13; // precedence of unary negation
-            this.Traverse(conditional.ResultIfTrue);
+            this.Traverse(conditional.Condition);
             this.currentPrecedence = x;
           }
+          this.sourceEmitterOutput.Write(" || ");
+          this.Traverse(conditional.ResultIfTrue);
           goto Ret;
         }
         if (ExpressionHelper.IsIntegralZero(conditional.ResultIfTrue)) {

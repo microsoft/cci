@@ -38,6 +38,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// True if loop structures should be decompiled into high-level loops (for-statements, while-statements, etc.)
     /// </summary>
     Loops = Iterators << 1,
+    /// <summary>
+    /// True if all explicit mention of the stack should be decompiled into assignments/uses of locals.
+    /// </summary>
+    Unstack = Loops << 1,
   }
 
   /// <summary>

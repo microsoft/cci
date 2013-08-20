@@ -1296,7 +1296,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public List<IExpression> Sizes {
       get {
-        Contract.Ensures(Contract.Result<List<Expression>>() != null);
+        Contract.Ensures(Contract.Result<List<IExpression>>() != null);
         return this.sizes; 
       }
       set {

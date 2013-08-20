@@ -64,7 +64,7 @@ public class PeVerify {
           }
         }
         if (_peVerify == null) {
-          sdk = new DirectoryInfo(sdk.FullName.Replace(" (x86)", ""));
+            sdk = new DirectoryInfo(Environment.ExpandEnvironmentVariables(@"%ProgramFiles(x86)%\Microsoft SDKs\Windows"));
           if (sdk.Exists) {
             foreach (var sdkVersion in sdk.GetDirectories()) {
               var peverify = Path.Combine(Path.Combine(sdkVersion.FullName, "bin\\NETFX 4.0 Tools"), "peverify.exe");

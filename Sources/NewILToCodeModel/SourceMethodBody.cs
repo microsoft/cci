@@ -136,6 +136,8 @@ namespace Microsoft.Cci.ILToCodeModel {
         if (!didNothing) new DeclarationUnifier(this).Traverse(result);
       }
       this.AddBackFirstNop(result as BlockStatement);
+      if ((this.options & DecompilerOptions.Unstack) != 0)
+        result = Unstacker.GetRidOfStack(this, result);
       return result;
     }
 
