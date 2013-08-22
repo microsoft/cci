@@ -37,7 +37,7 @@ namespace CodeModelTests {
         }
         using (pdbReader) {
           SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString();
-          SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, pdbReader, noIL: true, printCompilerGeneratedMembers: false);
+            SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, pdbReader, noIL: true, printCompilerGeneratedMembers: false, noStack: true);
           csSourceEmitter.Traverse((INamespaceDefinition)assembly.UnitNamespaceRoot);
           string result = sourceEmitterOutput.Data;
           string expected;

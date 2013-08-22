@@ -21,17 +21,19 @@ using Microsoft.Cci.Contracts;
 namespace PeToText {
   public class SourceEmitter : CSharpSourceEmitter.SourceEmitter {
 
-    public SourceEmitter(ISourceEmitterOutput sourceEmitterOutput, IMetadataHost host, PdbReader/*?*/ pdbReader, bool noIL, bool printCompilerGeneratedMembers)
+    public SourceEmitter(ISourceEmitterOutput sourceEmitterOutput, IMetadataHost host, PdbReader/*?*/ pdbReader, bool noIL, bool printCompilerGeneratedMembers, bool noStack)
       : base(sourceEmitterOutput) {
       this.host = host;
       this.pdbReader = pdbReader;
       this.noIL = noIL;
       this.printCompilerGeneratedMembers = printCompilerGeneratedMembers;
+      this.noStack = noStack;
     }
 
     IMetadataHost host;
     PdbReader/*?*/ pdbReader;
     bool noIL;
+    bool noStack;
 
     public override void Traverse(IMethodBody methodBody) {
       PrintToken(CSharpToken.LeftCurly);
@@ -41,6 +43,7 @@ namespace PeToText {
         var options = DecompilerOptions.Loops;
         if (!this.printCompilerGeneratedMembers)
           options |= (DecompilerOptions.AnonymousDelegates | DecompilerOptions.Iterators);
+        if (this.noStack) options |= DecompilerOptions.Unstack;
         sourceMethodBody = new SourceMethodBody(methodBody, this.host, this.pdbReader, this.pdbReader, options);
       }
       if (this.noIL)

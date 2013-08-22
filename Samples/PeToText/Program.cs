@@ -21,8 +21,10 @@ namespace PeToText {
         Console.WriteLine("usage: peToText [path]fileName.ext");
         return;
       }
-      bool noIL = args.Length == 2;
-      using (var host = new PeReader.DefaultHost()) {
+      bool noIL = args.Length >= 2;
+      bool noStack = args.Length >= 3;
+      using (var host = new PeReader.DefaultHost())
+      {
         IModule/*?*/ module = host.LoadUnitFrom(args[0]) as IModule;
         if (module == null || module == Dummy.Module || module == Dummy.Assembly) {
           Console.WriteLine(args[0] + " is not a PE file containing a CLR module or assembly.");
@@ -37,7 +39,7 @@ namespace PeToText {
         }
         using (pdbReader) {
           SourceEmitterOutputString sourceEmitterOutput = new SourceEmitterOutputString();
-          SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, pdbReader, noIL, true);
+          SourceEmitter csSourceEmitter = new SourceEmitter(sourceEmitterOutput, host, pdbReader, noIL, true, noStack);
           csSourceEmitter.Traverse((INamespaceDefinition)module.UnitNamespaceRoot);
           string txtFile = Path.ChangeExtension(pdbFile, "txt");
           File.WriteAllText(txtFile, sourceEmitterOutput.Data);

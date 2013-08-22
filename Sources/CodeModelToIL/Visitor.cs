@@ -995,6 +995,7 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="boundExpression"></param>
     public override void TraverseChildren(IBoundExpression boundExpression) {
+      //this.EmitSourceLocation(boundExpression);
       object/*?*/ container = boundExpression.Definition;
       ILocalDefinition/*?*/ local = container as ILocalDefinition;
       if (local != null) {

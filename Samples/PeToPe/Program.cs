@@ -19,9 +19,10 @@ namespace PeToPe {
   class Program {
     static void Main(string[] args) {
       if (args == null || args.Length == 0) {
-        Console.WriteLine("usage: PeToPe [path]fileName.ext [decompile]");
+        Console.WriteLine("usage: PeToPe [path]fileName.ext [noStack]");
         return;
       }
+      bool noStack = args.Length == 2;
       using (var host = new PeReader.DefaultHost()) {
 
         //Read the Metadata Model from the PE file
@@ -40,7 +41,9 @@ namespace PeToPe {
         }
         using (pdbReader) {
           //Construct a Code Model from the Metadata model via decompilation
-          var decompiledModule = Decompiler.GetCodeModelFromMetadataModel(host, module, pdbReader);
+            var options = DecompilerOptions.None;
+            if (noStack) options |= DecompilerOptions.Unstack;
+            var decompiledModule = Decompiler.GetCodeModelFromMetadataModel(host, module, pdbReader, options);
           ISourceLocationProvider sourceLocationProvider = pdbReader; //The decompiler preserves the Locations from the IOperation values, so the PdbReader still works.
           //Recompiling the CodeModel to IL might change the IL offsets, so a new provider is needed.
           ILocalScopeProvider localScopeProvider = new Decompiler.LocalScopeProvider(pdbReader);
