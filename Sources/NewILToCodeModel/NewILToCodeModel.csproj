@@ -97,7 +97,6 @@
     <Compile Include="SwitchReplacer.cs" />
     <Compile Include="TryCatchReplacer.cs" />
     <Compile Include="TypeInferencer.cs" />
-    <Compile Include="Unstacker.cs" />
     <Compile Include="WhileLoopReplacer.cs" />
   </ItemGroup>
   <ItemGroup>
