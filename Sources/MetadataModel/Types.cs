@@ -200,7 +200,7 @@ namespace Microsoft.Cci {
 
     public IEnumerable<ulong> Sizes {
       get {
-        Contract.Ensures(Contract.Result<IEnumerable<int>>() != null);
+        Contract.Ensures(Contract.Result<IEnumerable<ulong>>() != null);
         //Contract.Ensures(IteratorHelper.EnumerableCount(Contract.Result<IEnumerable<int>>()) <= this.Rank);
         throw new NotImplementedException();
       }

@@ -1341,7 +1341,6 @@ namespace Microsoft.Cci.MetadataReader {
           if (!(typeDef is Dummy)) {
             if (typeDef.IsEnum)
               return new ConstantExpression(type, this.GetPrimitiveValue(typeDef.UnderlyingType));
-            type = typeDef;
           }
           if (TypeHelper.TypesAreEquivalent(type, this.PEFileToObjectModel.PlatformType.SystemObject)) {
             ITypeReference/*?*/ underlyingType = this.GetFieldOrPropType();

@@ -1502,7 +1502,7 @@ namespace Microsoft.Cci {
       Contract.Requires(type2 != null);
       Contract.Ensures(Contract.Result<ITypeDefinition>() == null || Contract.Result<ITypeDefinition>().IsClass);
 
-      if (!type1.IsInterface || !type2.IsInterface) return null;
+      if (type1.IsInterface || type2.IsInterface) return null;
       if (type1.IsClass && TypeHelper.TypesAreEquivalent(type1, type2, true)) return type1;
 
       ITypeDefinition/*?*/ typeIter = TypeHelper.BaseClass(type1);
