@@ -8,15 +8,14 @@
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
 //-----------------------------------------------------------------------------
-using System.Diagnostics.Contracts;
-using Microsoft.Cci.MutableCodeModel;
-using Microsoft.Cci.UtilityDataStructures;
 using System.Collections.Generic;
+using Microsoft.Cci.MutableCodeModel;
+using System.Diagnostics.Contracts;
+using Microsoft.Cci.UtilityDataStructures;
 using System;
 
 namespace Microsoft.Cci.ILToCodeModel
 {
-
     internal class Unstacker : CodeRewriter
     {
         private ISourceLocationProvider sourceLocationProvider;
@@ -128,7 +127,7 @@ namespace Microsoft.Cci.ILToCodeModel
             var assignment = new Assignment()
             {
                 Source = pushStatement.ValueToPush,
-                Target = new TargetExpression() { Definition = local, Instance = null, Type = t, },
+                Target = new TargetExpression(){ Definition = local, Instance = null, Type = t, },
                 Type = t,
             };
             if (this.inThenBranch)
@@ -150,7 +149,7 @@ namespace Microsoft.Cci.ILToCodeModel
                         {
                             // then this should be a push of a boolean, not an int
                             Contract.Assume(pushStatement.ValueToPush is ICompileTimeConstant);
-                            var ctc = (ICompileTimeConstant)pushStatement.ValueToPush;
+                            var ctc = (ICompileTimeConstant) pushStatement.ValueToPush;
                             var boolLocal = a.Target.Definition as ILocalDefinition;
                             assignment.Target = new TargetExpression() { Definition = boolLocal, Instance = null, Type = this.systemBool, };
                             assignment.Source = new CompileTimeConstant() { Type = this.systemBool, Value = ((int)ctc.Value) == 0 ? false : true, };
@@ -248,7 +247,7 @@ namespace Microsoft.Cci.ILToCodeModel
         {
             var a = stack.ToArray();
             var newStack = new Stack<ILocalDefinition>();
-            for (int i = a.Length - 1; 0 <= i; i--)
+            for (int i = a.Length-1; 0 <= i; i--)
             {
                 var l = a[i];
                 newStack.Push(l);
@@ -308,5 +307,4 @@ namespace Microsoft.Cci.ILToCodeModel
             }
         }
     }
-
 }

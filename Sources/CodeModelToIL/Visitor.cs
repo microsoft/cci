@@ -2185,7 +2185,7 @@ namespace Microsoft.Cci {
       this.EmitSequencePoint(resourceUseStatement.Locations);
       var systemIDisposable = new NamespaceTypeReference(this.host, this.host.PlatformType.SystemObject.ContainingUnitNamespace,
         this.host.NameTable.GetNameFor("IDisposable"), 0, isEnum: false, isValueType: false, typeCode: PrimitiveTypeCode.NotPrimitive);
-      var dispose = new MethodReference(this.host, systemIDisposable, CallingConvention.Default, this.host.PlatformType.SystemVoid,
+      var dispose = new MethodReference(this.host, systemIDisposable, CallingConvention.HasThis, this.host.PlatformType.SystemVoid,
         this.host.NameTable.GetNameFor("Dispose"), 0, Enumerable<IParameterTypeInformation>.Empty);
 
       //Get resource into a local

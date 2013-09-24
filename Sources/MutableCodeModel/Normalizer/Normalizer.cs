@@ -51,6 +51,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// The given block of statements is mutated in place.
     /// </summary>
     public SourceMethodBody GetNormalizedSourceMethodBodyFor(IMethodDefinition method, IBlockStatement body) {
+
       var finder = new ClosureFinder(method, this.host);
       finder.Traverse(body);
 
@@ -59,6 +60,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.isIteratorBody = true;
         body = this.GetNormalizedIteratorBody(body, method, privateHelperTypes);
       }
+
       SourceMethodBody result = new SourceMethodBody(this.host, this.sourceLocationProvider);
       result.Block = body;
       result.MethodDefinition = method;
@@ -128,17 +130,30 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     internal bool foundYield;
 
+    /// <summary>
+    /// The traversal encountered a foreach statement.
+    /// </summary>
+    internal bool foundForEach;
+
     public override void TraverseChildren(IAnonymousDelegate anonymousDelegate) {
       this.foundAnonymousDelegate = true;
-      if (this.foundYield)
+      if (this.foundYield && this.foundForEach)
         this.StopTraversal = true;
       else
         base.TraverseChildren(anonymousDelegate);
     }
 
+    public override void TraverseChildren(IForEachStatement forEachStatement) {
+      this.foundForEach = true;
+      if (this.foundAnonymousDelegate && this.foundYield)
+        this.StopTraversal = true;
+      else
+        base.TraverseChildren(forEachStatement);
+    }
+
     public override void TraverseChildren(IYieldBreakStatement yieldBreakStatement) {
       this.foundYield = true;
-      if (this.foundAnonymousDelegate)
+      if (this.foundAnonymousDelegate && this.foundForEach)
         this.StopTraversal = true;
       else
         base.TraverseChildren(yieldBreakStatement);
@@ -146,7 +161,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     public override void TraverseChildren(IYieldReturnStatement yieldReturnStatement) {
       this.foundYield = true;
-      if (this.foundAnonymousDelegate)
+      if (this.foundAnonymousDelegate && this.foundForEach)
         this.StopTraversal = true;
       else
         base.TraverseChildren(yieldReturnStatement);

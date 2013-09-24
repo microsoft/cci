@@ -12,7 +12,6 @@ using System.Diagnostics.Contracts;
 using Microsoft.Cci.MutableCodeModel;
 using Microsoft.Cci.UtilityDataStructures;
 using System.Collections.Generic;
-using System;
 
 namespace Microsoft.Cci.ILToCodeModel {
 

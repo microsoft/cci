@@ -2494,8 +2494,15 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Ensures(Contract.Result<ForEachStatement>() != null);
 
       var mutableCopy = this.shallowCopier.Copy(forEachStatement);
-      mutableCopy.Variable = this.Copy(mutableCopy.Variable);
-      this.LocalsInsideCone.Add(forEachStatement.Variable, mutableCopy.Variable);
+      if (!(mutableCopy.Variable is Dummy)) {
+        var copy = this.GetExistingCopyIfInsideCone(mutableCopy.Variable); // allow foreach loops to share the same local
+        if (copy == mutableCopy.Variable) {
+          mutableCopy.Variable = this.Copy(mutableCopy.Variable);
+          this.LocalsInsideCone.Add(forEachStatement.Variable, mutableCopy.Variable);
+        } else {
+          mutableCopy.Variable = copy;
+        }
+      }
       mutableCopy.Collection = this.Copy(mutableCopy.Collection);
       mutableCopy.Body = this.Copy(mutableCopy.Body);
       return mutableCopy;

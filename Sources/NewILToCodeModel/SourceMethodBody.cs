@@ -120,10 +120,12 @@ namespace Microsoft.Cci.ILToCodeModel {
       new TryCatchReplacer(this, block).Traverse(block);
       new RemoveNonLexicalBlocks().Traverse(block);
       new DeclarationUnifier(this).Traverse(block);
+	  new ResourceUseReplacer(this).Traverse(block);
       new IfThenElseReplacer(this).Traverse(block);
       if ((this.options & DecompilerOptions.Loops) != 0) {
-        new WhileLoopReplacer(this).Traverse(block);
-        new ForLoopReplacer(this).Traverse(block);
+          new WhileLoopReplacer(this).Traverse(block);
+          new ForLoopReplacer(this).Traverse(block);
+          new ForEachLoopReplacer(this).Traverse(block);
       }
       new UnreferencedLabelRemover(this).Traverse(block);
       new LockReplacer(this).Traverse(block);

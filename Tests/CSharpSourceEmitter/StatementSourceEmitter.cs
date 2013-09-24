@@ -16,6 +16,8 @@ using Microsoft.Cci;
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
 
+	private bool insideResourceUse;
+
     public override void TraverseChildren(IBlockStatement block) {
       PrintToken(CSharpToken.LeftCurly);
       base.TraverseChildren(block);
@@ -123,7 +125,12 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(IForEachStatement forEachStatement) {
-      base.TraverseChildren(forEachStatement);
+		this.sourceEmitterOutput.Write("foreach (", true);
+		this.PrintLocalDefinition(forEachStatement.Variable);
+		this.sourceEmitterOutput.Write(" in ");
+		this.Traverse(forEachStatement.Collection);
+		this.sourceEmitterOutput.WriteLine(")");
+		this.Traverse(forEachStatement.Body);
     }
 
     public override void TraverseChildren(IForStatement forStatement) {
@@ -204,34 +211,61 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(ILocalDefinition localDefinition) {
-      base.TraverseChildren(localDefinition);
+		if (localDefinition.IsConstant)
+			this.sourceEmitterOutput.Write("const ");
+
+		string type = TypeHelper.GetTypeName(localDefinition.Type, NameFormattingOptions.ContractNullable | NameFormattingOptions.UseTypeKeywords);
+		this.sourceEmitterOutput.Write(type);
+		if (localDefinition.IsReference)
+		{
+			if (localDefinition.IsPinned)
+				this.sourceEmitterOutput.Write("*");
+			else
+				this.sourceEmitterOutput.Write("&");
+		}
+		this.sourceEmitterOutput.Write(" ");
+		this.PrintLocalName(localDefinition);
     }
 
-    public override void TraverseChildren(ILocalDeclarationStatement localDeclarationStatement) {
-      if (localDeclarationStatement.LocalVariable.IsConstant)
-        this.sourceEmitterOutput.Write("const ", true);
-      else
-        this.sourceEmitterOutput.Write("", true);
-      string type = TypeHelper.GetTypeName(localDeclarationStatement.LocalVariable.Type, NameFormattingOptions.ContractNullable|NameFormattingOptions.UseTypeKeywords);
-      this.sourceEmitterOutput.Write(type);
-      if (localDeclarationStatement.LocalVariable.IsReference) {
-        if (localDeclarationStatement.LocalVariable.IsPinned)
-          this.sourceEmitterOutput.Write("*");
-        else
-          this.sourceEmitterOutput.Write("&");
-      }
-      this.sourceEmitterOutput.Write(" ");
-      this.PrintLocalName(localDeclarationStatement.LocalVariable);
-      if (localDeclarationStatement.InitialValue != null) {
-        this.sourceEmitterOutput.Write(" = ");
-        this.Traverse(localDeclarationStatement.InitialValue);
-      } else if (localDeclarationStatement.LocalVariable.IsConstant) {
-        this.sourceEmitterOutput.Write(" = ");
-        this.Traverse(localDeclarationStatement.LocalVariable.CompileTimeValue);
-      }
+	public void PrintLocalDefinition(ILocalDefinition localDefinition)
+	{
+		if (localDefinition.IsConstant)
+			this.sourceEmitterOutput.Write("const ");
 
-      this.sourceEmitterOutput.WriteLine(";");
-    }
+		string type = TypeHelper.GetTypeName(localDefinition.Type, NameFormattingOptions.ContractNullable | NameFormattingOptions.UseTypeKeywords);
+		this.sourceEmitterOutput.Write(type);
+		if (localDefinition.IsReference)
+		{
+			if (localDefinition.IsPinned)
+				this.sourceEmitterOutput.Write("*");
+			else
+				this.sourceEmitterOutput.Write("&");
+		}
+		this.sourceEmitterOutput.Write(" ");
+		this.PrintLocalName(localDefinition);
+	}
+
+	public override void TraverseChildren(ILocalDeclarationStatement localDeclarationStatement)
+	{
+		if (!insideResourceUse)
+			this.sourceEmitterOutput.Write("", true);
+
+		this.PrintLocalDefinition(localDeclarationStatement.LocalVariable);
+
+		if (localDeclarationStatement.InitialValue != null)
+		{
+			this.sourceEmitterOutput.Write(" = ");
+			this.Traverse(localDeclarationStatement.InitialValue);
+		}
+		else if (localDeclarationStatement.LocalVariable.IsConstant)
+		{
+			this.sourceEmitterOutput.Write(" = ");
+			this.Traverse(localDeclarationStatement.LocalVariable.CompileTimeValue);
+		}
+
+		if (!insideResourceUse)
+			this.sourceEmitterOutput.WriteLine(";");
+	}
 
     public override void TraverseChildren(ILockStatement lockStatement) {
       this.sourceEmitterOutput.Write("lock(", true);
@@ -247,7 +281,12 @@ namespace CSharpSourceEmitter {
     }
 
     public override void TraverseChildren(IResourceUseStatement resourceUseStatement) {
-      base.TraverseChildren(resourceUseStatement);
+		this.sourceEmitterOutput.Write("using(", true);
+		insideResourceUse = true;
+		this.Traverse(resourceUseStatement.ResourceAcquisitions);
+		insideResourceUse = false;
+		this.sourceEmitterOutput.WriteLine(")");
+		this.Traverse(resourceUseStatement.Body);
     }
 
     public override void TraverseChildren(IRethrowStatement rethrowStatement) {

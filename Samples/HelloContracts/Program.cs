@@ -157,7 +157,8 @@ namespace HelloContracts {
       }
       this.Indent();
       Console.WriteLine(methodContract.IsPure ? "pure" : "not pure");
-      if (IteratorHelper.EnumerableIsEmpty(methodContract.Preconditions) && IteratorHelper.EnumerableIsEmpty(methodContract.Postconditions))
+      if (IteratorHelper.EnumerableIsEmpty(methodContract.Preconditions) && IteratorHelper.EnumerableIsEmpty(methodContract.Postconditions)
+          && IteratorHelper.EnumerableIsEmpty(methodContract.ThrownExceptions))
         return;
       foreach (var p in methodContract.Preconditions) {
         this.Indent();
@@ -176,6 +177,18 @@ namespace HelloContracts {
           Console.Write(p.OriginalSource);
         } else {
           Console.Write(PrintExpression(p.Condition));
+        }
+        Console.WriteLine();
+      }
+      foreach (var p in methodContract.ThrownExceptions) {
+        Indent();
+        Console.Write("throws ");
+        Console.Write(TypeHelper.GetTypeName(p.ExceptionType, NameFormattingOptions.OmitContainingNamespace));
+        Console.Write(" when ");
+        if (!String.IsNullOrEmpty(p.Postcondition.OriginalSource)) {
+          Console.Write(p.Postcondition.OriginalSource);
+        } else {
+          Console.Write(PrintExpression(p.Postcondition.Condition));
         }
         Console.WriteLine();
       }

@@ -141,6 +141,7 @@
     <Compile Include="Normalizer\AnonymousDelegateRemover.cs" />
     <Compile Include="Normalizer\CapturedLocalOrArgumentFinder.cs" />
     <Compile Include="Normalizer\Duplicator.cs" />
+    <Compile Include="Normalizer\ForEachRemover.cs" />
     <Compile Include="Normalizer\Helpers.cs" />
     <Compile Include="Normalizer\Normalizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

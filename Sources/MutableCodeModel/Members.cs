@@ -95,10 +95,11 @@ namespace Microsoft.Cci.MutableCodeModel {
       var isNormalized = this.isNormalized;
       NormalizationChecker checker = null;
       if (!isNormalized) {
-        //Assuming that most methods are not iterators and do not contain anonymous delegates, it is worth our while to check if this is really the case.
+        //Assuming that most methods are not iterators and do not contain anonymous delegates and do not contain foreach statements,
+        //it is worth our while to check if this is really the case.
         checker = new NormalizationChecker();
         checker.TraverseChildren(this.Block);
-        isNormalized = !checker.foundAnonymousDelegate && !checker.foundYield;
+        isNormalized = !checker.foundAnonymousDelegate && !checker.foundYield && !checker.foundForEach;
       }
 
       if (isNormalized) {
@@ -126,6 +127,10 @@ namespace Microsoft.Cci.MutableCodeModel {
           var remover = new AnonymousDelegateRemover(this.host, this.sourceLocationProvider);
           remover.RemoveAnonymousDelegates(this.MethodDefinition, mutableBlock);
           privateHelperTypes = remover.closureClasses;
+        }
+        if (checker.foundForEach) {
+          var remover = new ForEachRemover(this.host, this.sourceLocationProvider);
+          remover.RemoveForEachStatements(this.MethodDefinition, mutableBlock);
         }
         var normalizer = new MethodBodyNormalizer(this.host, this.sourceLocationProvider);
         var normalizedBody = (SourceMethodBody)normalizer.GetNormalizedSourceMethodBodyFor(this.MethodDefinition, mutableBlock);
