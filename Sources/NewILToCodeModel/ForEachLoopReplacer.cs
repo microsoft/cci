@@ -34,6 +34,19 @@ namespace Microsoft.Cci.ILToCodeModel
 			Contract.Invariant(this.host != null);
 		}
 
+        private bool SupportsIEnumerator(ITypeDefinition typeDefinition)
+        {
+            if (TypeHelper.Type1ImplementsType2(typeDefinition, this.host.PlatformType.SystemCollectionsGenericIEnumerator))
+                return true;
+            if (TypeHelper.Type1ImplementsType2(typeDefinition, this.host.PlatformType.SystemCollectionsIEnumerator))
+                return true;
+            if (TypeHelper.TypesAreEquivalent(this.host.PlatformType.SystemCollectionsGenericIEnumerator, typeDefinition))
+                return true;
+            if (TypeHelper.TypesAreEquivalent(this.host.PlatformType.SystemCollectionsIEnumerator, typeDefinition))
+                return true;
+            return false;
+        }
+
 		public override void TraverseChildren(IBlockStatement block)
 		{
 			Contract.Assume(block is BlockStatement);
@@ -74,7 +87,7 @@ namespace Microsoft.Cci.ILToCodeModel
 				var collection = this.MatchMethodCall(initialValue, "GetEnumerator");
 				if (collection == null) continue;
 
-                var isEnumerator = this.MatchInterface(resourceVar, "System.Collections.IEnumerator");
+                var isEnumerator = TypeHelper.TypesAreEquivalent(resourceVar.Type, this.host.PlatformType.SystemCollectionsIEnumerator) || this.MatchInterface(resourceVar, "System.Collections.IEnumerator");
 				if (!isEnumerator) continue;
 
 				var loop = resourceUseStatements.Last() as IWhileDoStatement;
@@ -83,13 +96,22 @@ namespace Microsoft.Cci.ILToCodeModel
                 var methodCall = loop.Condition as IMethodCall;
                 if (methodCall == null) continue;
                 var be = methodCall.ThisArgument as IBoundExpression;
-                if (be == null) continue;
-                if (be.Instance != null) continue;
-                if (be.Definition != resourceVar) continue;
-                var ct = methodCall.MethodToCall.ContainingType;
-                if (!TypeHelper.TypesAreEquivalent(this.host.PlatformType.SystemCollectionsGenericIEnumerator, ct)
-                    && !TypeHelper.TypesAreEquivalent(this.host.PlatformType.SystemCollectionsIEnumerator, ct))
-                    continue;
+                if (be != null)
+                {
+                    if (be.Instance != null) continue;
+                    if (be.Definition != resourceVar) continue;
+                }
+                else
+                {
+                    var addrOf = methodCall.ThisArgument as IAddressOf;
+                    if (addrOf == null) continue;
+                    var ae = addrOf.Expression as IAddressableExpression;
+                    if (ae == null) continue;
+                    if (ae.Instance != null) continue;
+                    if (ae.Definition != resourceVar) continue;
+                }
+                var ct = methodCall.MethodToCall.ContainingType.ResolvedType;
+                if (!SupportsIEnumerator(ct)) continue;
                 if (methodCall.MethodToCall.Name.Value != "MoveNext") continue;
 
 				var loopBody = loop.Body as BlockStatement;
@@ -119,13 +141,23 @@ namespace Microsoft.Cci.ILToCodeModel
                     loopBody.Statements.RemoveAt(k);
                 }
                 be = methodCall.ThisArgument as IBoundExpression;
-                if (be == null) continue;
-                if (be.Instance != null) continue;
+                if (be != null)
+                {
+                    if (be.Instance != null) continue;
+                    if (be.Definition != resourceVar) continue;
+                }
+                else
+                {
+                    var addrOf = methodCall.ThisArgument as IAddressOf;
+                    if (addrOf == null) continue;
+                    var ae = addrOf.Expression as IAddressableExpression;
+                    if (ae == null) continue;
+                    if (ae.Instance != null) continue;
+                    if (ae.Definition != resourceVar) continue;
+                }
                 var enumerator = lds.LocalVariable;
-                ct = TypeHelper.UninstantiateAndUnspecialize(methodCall.MethodToCall.ContainingType);
-                if (!TypeHelper.TypesAreEquivalent(this.host.PlatformType.SystemCollectionsGenericIEnumerator, ct)
-                    && !TypeHelper.TypesAreEquivalent(this.host.PlatformType.SystemCollectionsIEnumerator, ct))
-                    continue;
+                ct = TypeHelper.UninstantiateAndUnspecialize(methodCall.MethodToCall.ContainingType).ResolvedType;
+                if (!SupportsIEnumerator(ct)) continue;
                 if (methodCall.MethodToCall.Name.Value != "get_Current") continue;
 
 				var body = loopBody;

@@ -102,26 +102,55 @@ namespace Microsoft.Cci.ILToCodeModel
                     variable = variableDeclaration.LocalVariable;
                     resourceAcquisition = variableDeclaration;
                 }
-				var isDisposable = this.ImplementsIDisposable(variable, "System.IDisposable");
-				if (!isDisposable) continue;
 
-                // finally block might look like "if (variable != null) variable.Dispose();"
+                // finally block either looks like:
+                //    variable.Dispose();
+                // or
+                //    if (variable != null) variable.Dispose();
+                // or
+                //    iDisposableLocalVar := variable as IDisposable;
+                //    if (iDisposableLocalVar != null) iDisposableLocalVar.Dispose();
                 var c = finallyStatements.Count();
-                if (c == 3)
+                if (c == 1)
                 {
-                    var conditional = finallyStatements.ElementAt(0) as IConditionalStatement;
+                    var expression = finallyStatements.Single() as IExpressionStatement;
+                    var isDispose = this.MatchMethodCall(expression.Expression, variable, "Dispose");
+                    if (!isDispose) continue;
+                } else if (c == 3 || c == 4)
+                {
+                    IBoundExpression be;
+                    ILocalDefinition iDisposableVariable = variable;
+                    var index = 0;
+                    if (c == 4)
+                    {
+                        var es = finallyStatements.ElementAt(index++) as IExpressionStatement;
+                        if (es == null) continue;
+                        var assignment = es.Expression as IAssignment;
+                        if (assignment == null) continue;
+                        var castIfPossible = assignment.Source as ICastIfPossible;
+                        if (castIfPossible == null) continue;
+                        if (!TypeHelper.TypesAreEquivalent(castIfPossible.TargetType, this.IDisposable)) continue;
+                        be = castIfPossible.ValueToCast as IBoundExpression;
+                        if (be == null) continue;
+                        if (be.Instance != null) continue;
+                        if (be.Definition != variable) continue;
+                        if (assignment.Target.Instance != null) continue;
+                        iDisposableVariable = assignment.Target.Definition as ILocalDefinition;
+                        if (iDisposableVariable == null) continue;
+                    }
+                    var conditional = finallyStatements.ElementAt(index++) as IConditionalStatement;
                     if (conditional == null) continue;
-                    var expressionStatement = finallyStatements.ElementAt(1) as IExpressionStatement;
+                    var expressionStatement = finallyStatements.ElementAt(index++) as IExpressionStatement;
                     if (expressionStatement == null) continue;
-                    var lableledStatement = finallyStatements.ElementAt(2) as ILabeledStatement;
+                    var lableledStatement = finallyStatements.ElementAt(index++) as ILabeledStatement;
                     if (lableledStatement == null) continue;
 
                     var equality = conditional.Condition as IEquality;
                     if (equality == null) continue;
-                    var be = equality.LeftOperand as IBoundExpression;
+                    be = equality.LeftOperand as IBoundExpression;
                     if (be == null) continue;
                     if (be.Instance != null) continue;
-                    if (be.Definition != variable) continue;
+                    if (be.Definition != iDisposableVariable) continue;
                     if (!(conditional.FalseBranch is IEmptyStatement)) continue;
                     var gotoStatement = conditional.TrueBranch as IGotoStatement;
                     if (gotoStatement == null) continue;
@@ -130,12 +159,6 @@ namespace Microsoft.Cci.ILToCodeModel
                     if (methodCall == null) continue;
                     var ct = methodCall.MethodToCall.ContainingType;
                     if (!TypeHelper.TypesAreEquivalent(ct, this.IDisposable)) continue;
-                }
-                else if (c == 1)
-                {
-                    var expression = finallyStatements.Single() as IExpressionStatement;
-                    var isDispose = this.MatchMethodCall(expression.Expression, variable, "Dispose");
-                    if (!isDispose) continue;
                 }
                 else
                 {
