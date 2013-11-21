@@ -9,6 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics.Contracts;
@@ -315,8 +316,8 @@ namespace Microsoft.Cci {
     /// it is public, special name, and its name is "get_P" for any string P
     /// </summary>
     [Pure]
-    public static bool IsGetter(IMethodDefinition method) {
-      if (method.Visibility != TypeMemberVisibility.Public || !method.IsSpecialName) return false;
+    public static bool IsGetter(IMethodDefinition method, bool ignoreVisibility = false) {
+      if (!ignoreVisibility && method.Visibility != TypeMemberVisibility.Public || !method.IsSpecialName) return false;
       return QualifiedMethodNameBeginsWith(method.Name.Value, "get_");
     }
 
@@ -325,8 +326,8 @@ namespace Microsoft.Cci {
     /// it is public, special name, and its name is "set_P" for any string P
     /// </summary>
     [Pure]
-    public static bool IsSetter(IMethodDefinition method) {
-      if (method.Visibility != TypeMemberVisibility.Public || !method.IsSpecialName) return false;
+    public static bool IsSetter(IMethodDefinition method, bool ignoreVisibility = false) {
+      if (!ignoreVisibility && method.Visibility != TypeMemberVisibility.Public || !method.IsSpecialName) return false;
       return QualifiedMethodNameBeginsWith(method.Name.Value, "set_");
     }
 
@@ -335,8 +336,8 @@ namespace Microsoft.Cci {
     /// it is public, special name, and its name is "add_E" for any string E
     /// </summary>
     [Pure]
-    public static bool IsAdder(IMethodDefinition method) {
-      if (method.Visibility != TypeMemberVisibility.Public || !method.IsSpecialName) return false;
+    public static bool IsAdder(IMethodDefinition method, bool ignoreVisibility = false) {
+      if (!ignoreVisibility && method.Visibility != TypeMemberVisibility.Public || !method.IsSpecialName) return false;
       return QualifiedMethodNameBeginsWith(method.Name.Value, "add_");
     }
 
@@ -345,8 +346,8 @@ namespace Microsoft.Cci {
     /// it is public, special name, and its name is "add_E" for any string E
     /// </summary>
     [Pure]
-    public static bool IsRemover(IMethodDefinition method) {
-      if (method.Visibility != TypeMemberVisibility.Public || !method.IsSpecialName) return false;
+    public static bool IsRemover(IMethodDefinition method, bool ignoreVisibility = false) {
+      if (!ignoreVisibility && method.Visibility != TypeMemberVisibility.Public || !method.IsSpecialName) return false;
       return QualifiedMethodNameBeginsWith(method.Name.Value, "remove_");
     }
 
@@ -1383,8 +1384,9 @@ namespace Microsoft.Cci {
       Contract.Ensures(Contract.Result<string>() != null);
 
       StringBuilder sb = new StringBuilder();
+      this.AppendReturnTypeSignature(property, formattingOptions, sb);
       this.AppendPropertyName(property, formattingOptions, sb);
-      this.AppendPropertyParameters(property.Parameters, formattingOptions, sb);
+      this.AppendPropertyParameters(property, formattingOptions, sb);
       return sb.ToString();
     }
 
@@ -1598,14 +1600,19 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Appends a formatted string of parameters. Enclosed in square brackets and comma-delimited.
     /// </summary>
-    protected virtual void AppendPropertyParameters(IEnumerable<IParameterDefinition> parameters, NameFormattingOptions formattingOptions, StringBuilder sb) {
-      Contract.Requires(parameters != null);
-      Contract.Requires(Contract.ForAll(parameters, x => x != null));
+    protected virtual void AppendPropertyParameters(IPropertyDefinition property, NameFormattingOptions formattingOptions, StringBuilder sb) {
+      Contract.Requires(property != null);
       Contract.Requires(sb != null);
 
+      // [MaF: property parameters are sort of dummies as they contain only the type, not the name. In order to properly format signatures
+      //       we have to grab the getter or setter parameters instead.]
       if ((formattingOptions & NameFormattingOptions.Signature) == 0) return;
+      var parameters = property.Parameters;
       bool isNotEmpty = IteratorHelper.EnumerableIsNotEmpty(parameters);
       if (isNotEmpty) sb.Append((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0 ? '(' : '[');
+
+      if (property.Getter != null) { parameters = property.Getter.ResolvedMethod.Parameters; }
+      else if (property.Setter != null) { parameters = property.Setter.ResolvedMethod.Parameters.Take(parameters.Count()); }
       bool first = true;
       foreach (IParameterTypeInformation param in parameters) {
         if (first) first = false; else sb.Append(',');

@@ -174,7 +174,7 @@ namespace Microsoft.Cci.Analysis {
     private BasicBlock CreateBlock(uint targetAddress) {
       var result = this.cdfg.BlockFor[targetAddress];
       if (result == null) {
-        result = new BasicBlock();
+        result = new BasicBlock() { Offset = targetAddress };
         this.cdfg.BlockFor[targetAddress] = result;
       }
       return result;

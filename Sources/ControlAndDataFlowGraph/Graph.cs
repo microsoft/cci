@@ -179,12 +179,26 @@ namespace Microsoft.Cci.Analysis {
     /// </summary>
     public Sublist<Instruction> Instructions;
 
+    private uint offset;
+
     /// <summary>
     /// The IL offset of the first instruction in this basic block. If the block is empty, it is the same as the Offset of the following block. If there is no following block, 
     /// it is the offset where the next instruction would have appeared.
     /// </summary>
-    public uint Offset {
-      get { if (this.Instructions.Count == 0) return 0; else return this.Instructions[0].Operation.Offset; }
+    public uint Offset 
+    {
+        get
+        {
+            if (this.offset == 0)
+            {
+                if (this.Instructions.Count == 0) return 0; else return this.Instructions[0].Operation.Offset;
+            }
+            return this.offset;
+        }
+        set
+        {
+            this.offset = value;
+        }
     }
 
     /// <summary>

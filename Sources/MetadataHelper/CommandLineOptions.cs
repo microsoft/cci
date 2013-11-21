@@ -30,6 +30,14 @@ namespace Microsoft.Cci
       this.requiredOptions = GatherRequiredOptions();
     }
 
+    [ContractInvariantMethod]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Justification = "Required for code contracts.")]
+    private void ObjectInvariant()
+    {
+      Contract.Invariant(this.generalArguments != null);
+      Contract.Invariant(this.errorMessages != null);
+    }
+
     /// <summary>
     /// The number of errors discovered during command-line option parsing.
     /// </summary>
@@ -74,7 +82,14 @@ namespace Microsoft.Cci
     /// <summary>
     /// The list of errors or other messages produced during parsing
     /// </summary>
-    protected IEnumerable<string> Messages { get { return this.errorMessages; } }
+    protected IEnumerable<string> Messages
+    {
+      get
+      {
+        Contract.Ensures(Contract.Result<IEnumerable<string>>() != null);
+        return this.errorMessages;
+      }
+    }
 
     /// <summary>
     /// Put this on fields if you want a more verbose help description
@@ -143,7 +158,15 @@ namespace Microsoft.Cci
     /// <summary>
     /// The non-option arguments provided on the command line.
     /// </summary>
-    public List<string> GeneralArguments { get { return this.generalArguments; } }
+    public List<string> GeneralArguments
+    {
+      get
+      {
+        Contract.Ensures(Contract.Result<List<string>>() != null);
+
+        return this.generalArguments;
+      }
+    }
 
     #region Parsing and Reflection
 
