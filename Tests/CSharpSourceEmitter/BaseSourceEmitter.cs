@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
 using System.Globalization;
+using System.Diagnostics.Contracts;
 
 namespace CSharpSourceEmitter {
   public enum CSharpToken {
@@ -95,24 +96,38 @@ namespace CSharpSourceEmitter {
   /// running a very simple visitor that prints it out as text.
   /// </remarks>
   public partial class SourceEmitter : ICSharpSourceEmitter {
-    protected ISourceEmitterOutput sourceEmitterOutput;
+    readonly protected ISourceEmitterOutput sourceEmitterOutput;
     protected bool printCompilerGeneratedMembers;
 
+    [ContractInvariantMethod]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Justification = "Required for code contracts.")]
+    private void ObjectInvariant()
+    {
+      Contract.Invariant(this.sourceEmitterOutput != null);
+    }
+
     public SourceEmitter(ISourceEmitterOutput sourceEmitterOutput, IMetadataHost hostEnvironment) {
+      Contract.Requires(sourceEmitterOutput != null);
+
       this.sourceEmitterOutput = sourceEmitterOutput;
       this.LeftCurlyOnNewLine = true;
     }
 
     public SourceEmitter(ISourceEmitterOutput sourceEmitterOutput) : this(sourceEmitterOutput, null) {
+      Contract.Requires(sourceEmitterOutput != null);
     }
 
     public bool LeftCurlyOnNewLine { get; set; }
 
     public virtual void PrintString(string str) {
+      Contract.Requires(str != null);
+
       this.sourceEmitterOutput.Write(QuoteString(str));
     }
 
     public static string QuoteString(string str) {
+      Contract.Requires(str != null);
+
       StringBuilder sb = new StringBuilder(str.Length + 4);
       sb.Append("\"");
       foreach (char ch in str) {
@@ -150,6 +165,8 @@ namespace CSharpSourceEmitter {
 
 
     public virtual void PrintIdentifier(IName name) {
+      Contract.Requires(name != null);
+
       sourceEmitterOutput.Write(EscapeIdentifier(name.Value));
     }
 

@@ -12,10 +12,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
+using System.Diagnostics.Contracts;
 
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
     public virtual void PrintTypeDefinition(ITypeDefinition typeDefinition) {
+      Contract.Requires(typeDefinition != null);
+
       if (typeDefinition.IsDelegate) {
         PrintDelegateDefinition(typeDefinition);
         return;
@@ -51,6 +54,8 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintDelegateDefinition(ITypeDefinition delegateDefinition) {
+      Contract.Requires(delegateDefinition != null);
+
       PrintTypeDefinitionAttributes(delegateDefinition);
       PrintToken(CSharpToken.Indent);
 
@@ -78,6 +83,7 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintTypeDefinitionAttributes(ITypeDefinition typeDefinition) {
+      Contract.Requires(typeDefinition != null);
 
       foreach (var attribute in SortAttributes(typeDefinition.Attributes)) {
         // Skip DefaultMemberAttribute on a class that has an indexer
@@ -112,6 +118,8 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintTypeDefinitionModifiers(ITypeDefinition typeDefinition) {
+      Contract.Requires(typeDefinition != null);
+
       // If it's abstract and sealed and has no ctors, then it's a static class
       if (typeDefinition.IsStatic) {
         PrintKeywordStatic();
@@ -126,6 +134,8 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintTypeDefinitionKeywordType(ITypeDefinition typeDefinition) {
+      Contract.Requires(typeDefinition != null);
+
       if (typeDefinition.IsInterface)
         PrintKeywordInterface();
       else if (typeDefinition.IsEnum)
@@ -178,6 +188,8 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintTypeDefinitionBaseTypesAndInterfaces(ITypeDefinition typeDefinition) {
+      Contract.Requires(typeDefinition != null);
+
       PrintBaseTypesAndInterfacesList(typeDefinition);
     }
 
@@ -190,6 +202,7 @@ namespace CSharpSourceEmitter {
     }
 
     public new void Traverse(IEnumerable<ITypeDefinitionMember> typeMembers) {
+      Contract.Requires(typeMembers != null);
 
       if (IteratorHelper.EnumerableIsNotEmpty(typeMembers) && IteratorHelper.First(typeMembers).ContainingTypeDefinition.IsEnum) {
         // Enums don't get intervening blank lines

@@ -12,10 +12,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
+using System.Diagnostics.Contracts;
 
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
     public new void Traverse(IEnumerable<IParameterDefinition> parameters) {
+      Contract.Requires(parameters != null);
+
       PrintToken(CSharpToken.LeftParenthesis);
 
       bool fFirstParameter = true;

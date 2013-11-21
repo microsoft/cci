@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
+using System.Diagnostics.Contracts;
 
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
@@ -61,6 +62,8 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintFieldDefinitionValue(IFieldDefinition fieldDefinition) {
+      Contract.Requires(fieldDefinition != null);
+
       // We've got context here about the field that can be used to provide a better value.
       // For enums, the IMetadataConstant is just the primitive value
       var fieldType = fieldDefinition.Type.ResolvedType;
@@ -101,10 +104,13 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintFieldDefinitionVisibility(IFieldDefinition fieldDefinition) {
+      Contract.Requires(fieldDefinition != null);
+
       PrintTypeMemberVisibility(fieldDefinition.Visibility);
     }
 
     public virtual void PrintFieldDefinitionModifiers(IFieldDefinition fieldDefinition) {
+      Contract.Requires(fieldDefinition != null);
 
       if (!(Utils.GetHiddenField(fieldDefinition) is Dummy))
         PrintKeywordNew();
@@ -129,14 +135,21 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintFieldDefinitionType(IFieldDefinition fieldDefinition) {
+      Contract.Requires(fieldDefinition != null);
+
       PrintTypeReference(fieldDefinition.Type);
     }
 
     public virtual void PrintFieldDefinitionName(IFieldDefinition fieldDefinition) {
+      Contract.Requires(fieldDefinition != null);
+
       PrintIdentifier(fieldDefinition.Name);
     }
 
     public virtual void PrintFieldDefinitionFixedBuffer(IFieldDefinition fieldDefinition, ICustomAttribute fixedBufferAttribute) {
+      Contract.Requires(fixedBufferAttribute != null);
+      Contract.Requires(fieldDefinition != null);
+
       PrintKeywordUnsafe();
       PrintKeywordFixed();
       var args = new List<IMetadataExpression>(fixedBufferAttribute.Arguments);
@@ -150,6 +163,8 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintFieldDefinitionEnumValue(IFieldDefinition fieldDefinition) {
+      Contract.Requires(fieldDefinition != null);
+
       PrintFieldDefinitionName(fieldDefinition);
       sourceEmitterOutput.Write(" = ");
       var val = fieldDefinition.CompileTimeValue.Value;

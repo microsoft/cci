@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
+using System.Diagnostics.Contracts;
 
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
@@ -145,6 +146,8 @@ namespace CSharpSourceEmitter {
     }
 
     private void TraverseInitializersOrIncrementers(IEnumerable<IStatement> statements) {
+      Contract.Requires(statements != null);
+
       bool first = true;
       foreach (var statement in statements) {
         if (!first) this.sourceEmitterOutput.Write(", ");

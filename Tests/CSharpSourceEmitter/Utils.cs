@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
+using System.Diagnostics.Contracts;
 
 namespace CSharpSourceEmitter {
 
@@ -12,6 +13,8 @@ namespace CSharpSourceEmitter {
     /// True if the specified type is defined in mscorlib and has the specified name
     /// </summary>
     public static bool IsMscorlibTypeNamed(ITypeReference type, string name) {
+      Contract.Requires(type != null);
+
       return (TypeHelper.GetTypeName(type) == name &&
           UnitHelper.UnitsAreEquivalent(TypeHelper.GetDefiningUnitReference(type), TypeHelper.GetDefiningUnitReference(type.PlatformType.SystemObject)));
     }
@@ -22,6 +25,8 @@ namespace CSharpSourceEmitter {
     /// If no such method exists, Dummy.MethodDefinition is returned.
     /// </summary>
     public static IMethodDefinition GetHiddenBaseClassMethod(IMethodDefinition derivedClassMethod) {
+      Contract.Requires(derivedClassMethod != null);
+
       if (derivedClassMethod.IsConstructor) return Dummy.MethodDefinition;
       if (derivedClassMethod.IsVirtual && !derivedClassMethod.IsNewSlot) return Dummy.MethodDefinition;   // an override
       var typeDef = derivedClassMethod.ContainingTypeDefinition;
@@ -33,6 +38,9 @@ namespace CSharpSourceEmitter {
       return Dummy.MethodDefinition;
     }
     private static IMethodDefinition GetHiddenBaseClassMethod(IMethodDefinition derivedClassMethod, ITypeDefinition baseClass) {
+      Contract.Requires(derivedClassMethod != null);
+      Contract.Requires(baseClass != null);
+
       foreach (ITypeDefinitionMember baseMember in baseClass.GetMembersNamed(derivedClassMethod.Name, false)) {
         IMethodDefinition/*?*/ baseMethod = baseMember as IMethodDefinition;
         if (baseMethod == null) continue;
@@ -60,6 +68,8 @@ namespace CSharpSourceEmitter {
     /// Returns the field from the closest base class that is hidden by the given field according to C# rules.
     /// </summary>
     public static IFieldDefinition GetHiddenField(IFieldDefinition derivedClassField) {
+      Contract.Requires(derivedClassField != null);
+
       var typeDef = derivedClassField.ContainingTypeDefinition;
       foreach (ITypeReference baseClassReference in typeDef.BaseClasses) {
         IFieldDefinition hiddenField = GetHiddenField(derivedClassField, baseClassReference.ResolvedType);
@@ -68,6 +78,9 @@ namespace CSharpSourceEmitter {
       return Dummy.FieldDefinition;
     }
     private static IFieldDefinition GetHiddenField(IFieldDefinition derivedClassField, ITypeDefinition baseClass) {
+      Contract.Requires(baseClass != null);
+      Contract.Requires(derivedClassField != null);
+
       foreach (ITypeDefinitionMember baseMember in baseClass.GetMembersNamed(derivedClassField.Name, false)) {
         IFieldDefinition/*?*/ baseField = baseMember as IFieldDefinition;
         if (baseField == null) continue;
@@ -87,6 +100,8 @@ namespace CSharpSourceEmitter {
     /// This is usefull for types not alread in IPlatformType
     /// </summary>
     public static SpecialAttribute GetAttributeType(ICustomAttribute attr) {
+      Contract.Requires(attr != null);
+
       // This seems like a big hack
       // Perhaps I should add this as a PlatformType and use AttributeHelper.Contains instead?
       // There's got to be a cleaner way to do this?
@@ -118,6 +133,8 @@ namespace CSharpSourceEmitter {
     /// IF an attribute of the specified special type exists in the sequence, return it.  Otherwise return null.
     /// </summary>
     public static ICustomAttribute FindAttribute(IEnumerable<ICustomAttribute> attrs, SpecialAttribute sa) {
+      Contract.Requires(attrs != null);
+
       foreach (var a in attrs)
         if (GetAttributeType(a) == sa)
           return a;

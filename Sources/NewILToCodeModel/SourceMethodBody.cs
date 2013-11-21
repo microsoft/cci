@@ -20,7 +20,7 @@ namespace Microsoft.Cci.ILToCodeModel {
   /// <summary>
   /// A metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
   /// </summary>
-  public class SourceMethodBody : Microsoft.Cci.MutableCodeModel.SourceMethodBody {
+  public class SourceMethodBody : Microsoft.Cci.MutableCodeModel.SourceMethodBody, IMethodBody {
 
     /// <summary>
     /// Allocates a metadata (IL) representation along with a source level representation of the body of a method or of a property/event accessor.
@@ -470,5 +470,75 @@ namespace Microsoft.Cci.ILToCodeModel {
       return false;
     }
 
+
+
+
+    #region IMethodBody Members
+    private bool IsReadOnly { get { return (this.options & DecompilerOptions.ReadOnly) != 0; } }
+
+    IEnumerable<IOperationExceptionInformation> IMethodBody.OperationExceptionInformation
+    {
+      get
+      {
+        if (IsReadOnly) return this.ilMethodBody.OperationExceptionInformation;
+        return this.OperationExceptionInformation;
+      }
+    }
+
+    IEnumerable<ILocalDefinition> IMethodBody.LocalVariables
+    {
+      get
+      {
+        if (IsReadOnly) return this.ilMethodBody.LocalVariables;
+        return this.LocalVariables;
+      }
+    }
+
+    IMethodDefinition IMethodBody.MethodDefinition
+    {
+      get
+      {
+        if (IsReadOnly) return this.ilMethodBody.MethodDefinition;
+        return this.MethodDefinition;
+      }
+    }
+
+    IEnumerable<IOperation> IMethodBody.Operations
+    {
+      get
+      {
+        if (IsReadOnly) return this.ilMethodBody.Operations;
+        return this.Operations;
+      }
+    }
+
+    ushort IMethodBody.MaxStack
+    {
+      get
+      {
+        if (IsReadOnly) return this.ilMethodBody.MaxStack;
+        return this.MaxStack;
+      }
+    }
+
+    IEnumerable<ITypeDefinition> IMethodBody.PrivateHelperTypes
+    {
+      get
+      {
+        if (IsReadOnly) return this.ilMethodBody.PrivateHelperTypes;
+        return this.PrivateHelperTypesImplementation;
+      }
+    }
+
+    uint IMethodBody.Size
+    {
+      get
+      {
+        if (IsReadOnly) return this.ilMethodBody.Size;
+        return this.Size;
+      }
+    }
+
+    #endregion
   }
 }

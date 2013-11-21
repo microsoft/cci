@@ -349,7 +349,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     #region IMethodBody Members
 
     IEnumerable<ITypeDefinition> IMethodBody.PrivateHelperTypes {
-      get {
+      get
+      {
+        return this.PrivateHelperTypesImplementation; 
+      }
+    }
+
+    protected IEnumerable<ITypeDefinition> PrivateHelperTypesImplementation
+    {
+      get
+      {
         if (this.PrivateHelperTypes == null)
           return Enumerable<ITypeDefinition>.Empty;
         else

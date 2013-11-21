@@ -12,10 +12,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
+using System.Diagnostics.Contracts;
 
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
     public virtual void PrintBaseTypesAndInterfacesList(ITypeDefinition typeDefinition) {
+      Contract.Requires(typeDefinition != null);
+
       IEnumerable<ITypeReference> basesList = typeDefinition.BaseClasses;
       IEnumerable<ITypeReference> interfacesList = typeDefinition.Interfaces;
 
@@ -68,6 +71,8 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintBaseTypeOrInterface(ITypeReference baseTypeReference) {
+      Contract.Requires(baseTypeReference != null);
+
       PrintBaseTypeOrInterfaceName(baseTypeReference);
     }
 

@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
+using System.Diagnostics.Contracts;
 
 namespace CSharpSourceEmitter
 {
@@ -36,14 +37,20 @@ namespace CSharpSourceEmitter
     }
 
     public virtual void PrintEventDefinitionVisibility(IEventDefinition eventDefinition) {
+      Contract.Requires(eventDefinition != null);
+
       PrintTypeMemberVisibility(eventDefinition.Visibility);
     }
 
     public virtual void PrintEventDefinitionDelegateType(IEventDefinition eventDefinition) {
+      Contract.Requires(eventDefinition != null);
+
       PrintTypeReference(eventDefinition.Type);
     }
 
     public virtual void PrintEventDefinitionName(IEventDefinition eventDefinition) {
+      Contract.Requires(eventDefinition != null);
+
       PrintIdentifier(eventDefinition.Name);
     }
 

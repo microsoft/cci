@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
+using System.Diagnostics.Contracts;
 
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
@@ -100,18 +101,26 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintPropertyDefinitionVisibility(IPropertyDefinition propertyDefinition) {
+      Contract.Requires(propertyDefinition != null);
+
       PrintTypeMemberVisibility(propertyDefinition.Visibility);
     }
 
     public virtual void PrintPropertyDefinitionReturnType(IPropertyDefinition propertyDefinition) {
+      Contract.Requires(propertyDefinition != null);
+
       PrintTypeReference(propertyDefinition.Type);
     }
 
     public virtual void PrintPropertyDefinitionName(IPropertyDefinition propertyDefinition) {
+      Contract.Requires(propertyDefinition != null);
+
       PrintIdentifier(propertyDefinition.Name);
     }
 
     public virtual void PrintPropertyDefinitionModifiers(IPropertyDefinition propertyDefinition) {
+      Contract.Requires(propertyDefinition != null);
+
       PrintMethodDefinitionModifiers(propertyDefinition.Getter == null ?
         propertyDefinition.Setter.ResolvedMethod :
         propertyDefinition.Getter.ResolvedMethod);

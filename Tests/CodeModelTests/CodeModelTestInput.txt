@@ -454,17 +454,16 @@ namespace CodeModelTestInput
 
         private void Method41(CodeModelTestInput.Class1 c, System.Action foo)
         {
-            string stack_0_System_String;
             string someString;
             if (c == default(CodeModelTestInput.Class1))
             {
-                stack_0_System_String = "";
+                push "";
             }
             else
             {
-                stack_0_System_String = c.Method42((object part) => part);
+                push c.Method42((object part) => part);
             }
-            someString = stack_0_System_String;
+            someString = pop;
             foo = () => someString = (string)null;
         }
 
@@ -1603,20 +1602,18 @@ namespace CodeModelTestInput
         {
             string msg = "If the decompiler gets better and this lambda gets decompiled into an expression without pops, then this test is meaningless.";
             this.TakeLambdaAsArg(delegate (string s) {
-                bool stack_0_System_Boolean;
-                int stack_0_System_Int32;
                 if (s.Contains("foo"))
                 {
                     if (s.Contains("bar"))
                     else                    goto IL_0027;
-                    stack_0_System_Boolean = s.Contains("baz");
+                    push s.Contains("baz");
                 }
                 else
                 {
                 IL_0027:
-                    stack_0_System_Boolean = false;
+                    push 0;
                 }
-                return stack_0_System_Boolean != false;
+                return pop != 0;
 
             });
             return msg;

@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
+using System.Diagnostics.Contracts;
 
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
@@ -20,6 +21,8 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintNamespaceDefinition(INamespaceDefinition namespaceDefinition) {
+      Contract.Requires(namespaceDefinition != null);
+
       PrintNamespaceDefinitionAttributes(namespaceDefinition);
       PrintToken(CSharpToken.Indent);
       PrintKeywordNamespace();
@@ -30,12 +33,16 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintNamespaceDefinitionAttributes(INamespaceDefinition namespaceDefinition) {
+      Contract.Requires(namespaceDefinition != null);
+
       foreach (var attribute in SortAttributes(namespaceDefinition.Attributes)) {
         PrintAttribute(namespaceDefinition, attribute, true, "assembly");
       }
     }
 
     public virtual void PrintNamespaceDefinitionName(INamespaceDefinition namespaceDefinition) {
+      Contract.Requires(namespaceDefinition != null);
+
       PrintIdentifier(namespaceDefinition.Name);
     }
 
@@ -73,6 +80,8 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void VisitWithInterveningBlankLines<T>(IEnumerable<T> members, Action<T> onVisit) {
+      Contract.Requires(members != null);
+
       // Print the members with a blank line between any non-empty ones 
       // We go to some effort here to avoid blank lines at the start or end of a block,
       // and double blank lines.

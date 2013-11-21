@@ -42,6 +42,10 @@ namespace Microsoft.Cci.ILToCodeModel {
     /// True if all explicit mention of the stack should be decompiled into assignments/uses of locals.
     /// </summary>
     Unstack = Loops << 1,
+    /// <summary>
+    /// The final methods are not going to be modified, so provide original IL instructions and handler data.
+    /// </summary>
+    ReadOnly = Unstack << 1,
   }
 
   /// <summary>

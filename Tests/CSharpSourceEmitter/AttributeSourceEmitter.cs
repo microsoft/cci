@@ -12,11 +12,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
+using System.Diagnostics.Contracts;
 
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
 
     public virtual void PrintAttributes(IReference target) {
+      Contract.Requires(target != null);
+
       foreach (var attribute in SortAttributes(target.Attributes)) {
         this.PrintAttribute(target, attribute, true, null);
       }
@@ -34,6 +37,8 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintAttribute(IReference target, ICustomAttribute attribute, bool newLine, string targetType) {
+      Contract.Requires(attribute != null);
+
       this.sourceEmitterOutput.Write("[", newLine);
       if (targetType != null) {
         this.sourceEmitterOutput.Write(targetType);

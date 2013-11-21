@@ -108,9 +108,13 @@ namespace CSharpSourceEmitter {
     }
 
     private bool IsLogicalOr(IConditional conditional) {
+      Contract.Requires(conditional != null);
+
       return conditional.Type.TypeCode == PrimitiveTypeCode.Boolean && ExpressionHelper.IsIntegralOne(conditional.ResultIfTrue);
     }
     private bool IsLogicalAnd(IConditional conditional) {
+      Contract.Requires(conditional != null);
+
       if (conditional.Type.TypeCode == PrimitiveTypeCode.Boolean) {
         if (ExpressionHelper.IsIntegralZero(conditional.ResultIfFalse)) return true; // A ? B : false is code-model for conjunction
         if (ExpressionHelper.IsIntegralZero(conditional.ResultIfTrue)) return true; // A ? false : B is handled as !(A) && B in the traverser for conditionals
@@ -118,9 +122,13 @@ namespace CSharpSourceEmitter {
       return false;
     }
     private bool IsPrefix(IBinaryOperation binaryOperation) {
+      Contract.Requires(binaryOperation != null);
+
       return binaryOperation.LeftOperand is ITargetExpression && ExpressionHelper.IsIntegralOne(binaryOperation.RightOperand) && !binaryOperation.ResultIsUnmodifiedLeftOperand;
     }
     private bool IsPostfix(IBinaryOperation binaryOperation) {
+      Contract.Requires(binaryOperation != null);
+
       return binaryOperation.LeftOperand is ITargetExpression && ExpressionHelper.IsIntegralOne(binaryOperation.RightOperand) && binaryOperation.ResultIsUnmodifiedLeftOperand;
     }
 
@@ -498,6 +506,7 @@ namespace CSharpSourceEmitter {
     }
 
     private void PrintNewExpressionWithInitializers(IBlockExpression blockExpression) {
+      Contract.Requires(blockExpression != null);
 
       var i = 0;
       foreach (var s in blockExpression.BlockStatement.Statements) {
@@ -735,6 +744,8 @@ namespace CSharpSourceEmitter {
     }
 
     private void TraverseChildren(IEnumerable<ulong> sizes) {
+      Contract.Requires(sizes != null);
+
       bool emitComma = false;
       foreach (ulong size in sizes) {
         if (emitComma) this.sourceEmitterOutput.Write(", ");
@@ -832,6 +843,8 @@ namespace CSharpSourceEmitter {
     }
 
     public new void Traverse(IEnumerable<IExpression> arguments) {
+      Contract.Requires(arguments != null);
+
       bool needComma = false;
       foreach (IExpression argument in arguments) {
         if (needComma) {
@@ -1160,6 +1173,9 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintEnumValue(ITypeDefinition enumType, object valObj) {
+      Contract.Requires(enumType != null);
+      Contract.Requires(valObj != null);
+
       bool flags = (Utils.FindAttribute(enumType.Attributes, SpecialAttribute.Flags) != null);
 
       // Loop through all the enum constants looking for a match
@@ -1213,6 +1229,8 @@ namespace CSharpSourceEmitter {
     }
 
     private static ulong UnboxToULong(object obj) {
+      Contract.Requires(obj != null);
+
       // Can't just cast - must unbox to specific type.
       // Can't use Convert.ToUInt64 - it'll throw for negative numbers
       switch (Convert.GetTypeCode(obj)) {
@@ -1313,6 +1331,9 @@ namespace CSharpSourceEmitter {
     }
 
     private void PrintArgumentList(IEnumerable<IExpression> arguments, IEnumerable<IParameterTypeInformation> parameters) {
+      Contract.Requires(arguments != null);
+      Contract.Requires(parameters != null);
+
       this.sourceEmitterOutput.Write("(");
       var paramEnum = parameters.GetEnumerator();
       bool paramIsValid = true;
@@ -1605,6 +1626,8 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintLocalName(ILocalDefinition local) {
+      Contract.Requires(local != null);
+
       this.sourceEmitterOutput.Write(local.Name.Value);
     }
 

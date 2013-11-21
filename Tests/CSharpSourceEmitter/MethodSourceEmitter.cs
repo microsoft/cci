@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
+using System.Diagnostics.Contracts;
 
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
@@ -73,6 +74,8 @@ namespace CSharpSourceEmitter {
     }
 
     private void PrintConstraints(IEnumerable<IGenericMethodParameter> genericParameters) {
+      Contract.Requires(genericParameters != null);
+
       this.sourceEmitterOutput.IncreaseIndent();
       foreach (var genpar in genericParameters) {
         bool first = true;
@@ -115,6 +118,8 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintMethodDefinitionVisibility(IMethodDefinition methodDefinition) {
+      Contract.Requires(methodDefinition != null);
+
       if (!IsDestructor(methodDefinition) &&
         !methodDefinition.ContainingTypeDefinition.IsInterface &&
         IteratorHelper.EnumerableIsEmpty(MemberHelper.GetExplicitlyOverriddenMethods(methodDefinition)))
@@ -133,15 +138,21 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual bool IsOperator(IMethodDefinition methodDefinition) {
+      Contract.Requires(methodDefinition != null);
+
       return (methodDefinition.IsSpecialName && methodDefinition.Name.Value.StartsWith("op_"));
     }
 
     public virtual bool IsConversionOperator(IMethodDefinition methodDefinition) {
+      Contract.Requires(methodDefinition != null);
+
       return (methodDefinition.IsSpecialName && (
         methodDefinition.Name.Value == "op_Explicit" || methodDefinition.Name.Value == "op_Implicit"));
     }
 
     public virtual bool IsDestructor(IMethodDefinition methodDefinition) {
+      Contract.Requires(methodDefinition != null);
+
       if (methodDefinition.ContainingTypeDefinition.IsValueType) return false; //only classes can have destructors
       if (methodDefinition.ParameterCount == 0 &&   methodDefinition.IsVirtual && !methodDefinition.IsNewSlot && 
         methodDefinition.Visibility == TypeMemberVisibility.Family && methodDefinition.Name.Value == "Finalize") {
@@ -152,6 +163,8 @@ namespace CSharpSourceEmitter {
     }
 
     private bool IsDestructor(IMethodDefinition methodDefinition, ITypeReference baseClassReference) {
+      Contract.Requires(baseClassReference != null);
+
       var baseClass = baseClassReference.ResolvedType;
       if (baseClass is Dummy) return true; //It might not be true, but it LOOKS true and we can't tell for sure. So give up and pretend it is true.
       var baseFinalize = TypeHelper.GetMethod(baseClass.GetMembersNamed(methodDefinition.Name, false), methodDefinition);
@@ -162,6 +175,7 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintMethodDefinitionModifiers(IMethodDefinition methodDefinition) {
+      Contract.Requires(methodDefinition != null);
 
       // This algorithm is probably not exactly right yet.
       // TODO: Compare to FrameworkDesignStudio rules (see CCIModifiers project, and AssemblyDocumentWriter.WriteMemberStart)
@@ -223,6 +237,8 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintMethodDefinitionName(IMethodDefinition methodDefinition) {
+      Contract.Requires(methodDefinition != null);
+
       bool isDestructor = IsDestructor(methodDefinition);
       if (isDestructor)
         PrintToken(CSharpToken.Tilde);
@@ -235,6 +251,7 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual string MapOperatorNameToCSharp(IMethodDefinition methodDefinition) {
+      Contract.Requires(methodDefinition != null);
       // ^ requires IsOperator(methodDefinition)
       switch (methodDefinition.Name.Value) {
         case "op_Decrement": return "operator --";
@@ -267,6 +284,8 @@ namespace CSharpSourceEmitter {
       }
     }
     public virtual void PrintMethodReferenceName(IMethodReference methodReference, NameFormattingOptions options) {
+      Contract.Requires(methodReference != null);
+
       string signature = MemberHelper.GetMethodSignature(methodReference, options|NameFormattingOptions.ContractNullable|NameFormattingOptions.UseTypeKeywords);
       if (signature.EndsWith(".get") || signature.EndsWith(".set"))
         signature = signature.Substring(0, signature.Length-4);

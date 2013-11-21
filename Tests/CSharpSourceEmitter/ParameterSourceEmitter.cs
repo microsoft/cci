@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Cci;
+using System.Diagnostics.Contracts;
 
 namespace CSharpSourceEmitter {
   public partial class SourceEmitter : CodeTraverser, ICSharpSourceEmitter {
@@ -23,6 +24,7 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintParameterDefinitionModifiers(IParameterDefinition parameterDefinition) {
+      Contract.Requires(parameterDefinition != null);
 
       if (parameterDefinition.Index == 0) {
         var meth = parameterDefinition.ContainingSignature as IMethodDefinition;
@@ -56,10 +58,14 @@ namespace CSharpSourceEmitter {
     }
 
     public virtual void PrintParameterDefinitionType(IParameterDefinition parameterDefinition) {
+      Contract.Requires(parameterDefinition != null);
+
       PrintTypeReference(parameterDefinition.Type);
     }
 
     public virtual void PrintParameterDefinitionName(IParameterDefinition parameterDefinition) {
+      Contract.Requires(parameterDefinition != null);
+
       PrintIdentifier(parameterDefinition.Name);
     }
 
