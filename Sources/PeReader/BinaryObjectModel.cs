@@ -1854,8 +1854,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get {
         unsafe {
           var size = this.sectionHeaders[this.index].SizeOfRawData;
-          var virtSize = this.sectionHeaders[this.index].VirtualSize;
-          if (virtSize < size) size = virtSize;
           MemoryBlock block =
             new MemoryBlock(
               this.peFileToObjectModel.PEFileReader.BinaryDocumentMemoryBlock.Pointer + this.sectionHeaders[this.index].OffsetToRawData + 0, size);

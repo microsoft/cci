@@ -106,6 +106,9 @@ namespace Microsoft.Cci {
     SectionHeader sdataSection = new SectionHeader();
     SectionHeader[] customSectionHeaders;
     SectionHeader[] uninterpretedSectionHeaders;
+    private uint customSectionsSizeOfRawData;
+    private uint uninterpretedSectionsSizeOfRawData;
+    private uint finalRVA;
     HashtableForUintValues<ISignature> signatureIndex = new HashtableForUintValues<ISignature>();
     Hashtable signatureStructuralIndex = new Hashtable();
     uint sizeOfImportAddressTable;
@@ -699,9 +702,9 @@ namespace Microsoft.Cci {
       ntHeader.BaseOfData = this.rdataSection.RelativeVirtualAddress;
       ntHeader.PointerToSymbolTable = 0;
       ntHeader.SizeOfCode = this.textSection.SizeOfRawData;
-      ntHeader.SizeOfInitializedData = this.rdataSection.SizeOfRawData + this.coverSection.SizeOfRawData + this.extendedDataSection.SizeOfRawData + this.sdataSection.SizeOfRawData + this.tlsSection.SizeOfRawData + this.resourceSection.SizeOfRawData + this.relocSection.SizeOfRawData;
+      ntHeader.SizeOfInitializedData = this.rdataSection.SizeOfRawData + this.coverSection.SizeOfRawData + this.extendedDataSection.SizeOfRawData + this.sdataSection.SizeOfRawData + this.tlsSection.SizeOfRawData + this.resourceSection.SizeOfRawData + this.relocSection.SizeOfRawData + this.customSectionsSizeOfRawData + this.uninterpretedSectionsSizeOfRawData;
       ntHeader.SizeOfHeaders = Aligned(this.ComputeSizeOfPeHeaders(numberOfSections), this.module.FileAlignment);
-      ntHeader.SizeOfImage = Aligned(this.relocSection.RelativeVirtualAddress+this.relocSection.VirtualSize, 0x2000);
+      ntHeader.SizeOfImage = this.finalRVA;
       ntHeader.SizeOfUninitializedData = 0;
 
       ntHeader.ImportAddressTable.RelativeVirtualAddress = this.textSection.RelativeVirtualAddress;
@@ -860,16 +863,17 @@ namespace Microsoft.Cci {
       this.relocSection.PointerToRelocations = 0;
       this.relocSection.RelativeVirtualAddress = Aligned(this.resourceSection.RelativeVirtualAddress+this.resourceSection.VirtualSize, 0x2000);
       if (!this.emitRuntimeStartupStub) {
-        this.relocSection.SizeOfRawData = 0;
-        this.relocSection.VirtualSize = 0;
+          this.relocSection.SizeOfRawData = 0;
+          this.relocSection.VirtualSize = 0;
       } else {
-        this.relocSection.SizeOfRawData = this.module.FileAlignment;
-        this.relocSection.VirtualSize = this.module.Requires64bits && !this.module.RequiresAmdInstructionSet ? 14u : 12u;
+          this.relocSection.SizeOfRawData = this.module.FileAlignment;
+          this.relocSection.VirtualSize = this.module.Requires64bits && !this.module.RequiresAmdInstructionSet ? 14u : 12u;
       }
 
       uint pointerToRawData = this.relocSection.PointerToRawData+this.relocSection.SizeOfRawData;
       uint rva = Aligned(this.relocSection.RelativeVirtualAddress+this.relocSection.VirtualSize, 0x2000);
 
+      this.customSectionsSizeOfRawData = 0;
       if (customSections != null) {
         var n = customSections.Count;
         this.customSectionHeaders = new SectionHeader[n];
@@ -888,11 +892,13 @@ namespace Microsoft.Cci {
             SizeOfRawData = (uint)peSection.SizeOfRawData,
             VirtualSize = (uint)peSection.VirtualSize
           };
+          this.customSectionsSizeOfRawData += Aligned((uint)peSection.SizeOfRawData, this.module.FileAlignment);
           pointerToRawData += (uint)peSection.SizeOfRawData;
           rva = Aligned(rva+(uint)peSection.VirtualSize, 0x2000);
         }
       }
 
+      this.uninterpretedSectionsSizeOfRawData = 0;
       if (uninterpretedSections != null) {
         var n = uninterpretedSections.Count;
         this.uninterpretedSectionHeaders = new SectionHeader[n];
@@ -911,10 +917,12 @@ namespace Microsoft.Cci {
             SizeOfRawData = (uint)peSection.SizeOfRawData,
             VirtualSize = (uint)peSection.VirtualSize
           };
+          this.uninterpretedSectionsSizeOfRawData += Aligned((uint)peSection.SizeOfRawData, this.module.FileAlignment);
           pointerToRawData += (uint)peSection.SizeOfRawData;
           rva = Aligned(rva+(uint)peSection.VirtualSize, 0x2000);
         }
       }
+      this.finalRVA = rva;
     }
 
     private PEFileData GetPEFileData() {
