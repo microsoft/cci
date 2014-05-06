@@ -951,7 +951,9 @@ namespace Microsoft.Cci.ReflectionEmitter {
         this.CreateLabelsForBranchTargets();
         this.CreateLocalBuilders();
         this.EmitNamespaceScopes();
+        uint lastOffset = 0;
         foreach (IOperation operation in methodBody.Operations) {
+          lastOffset = operation.Offset;
           this.CallAppropriateBeginsAndEnds(operation.Offset);
           this.EmitPdbInformationFor(operation);
           Label label;
@@ -1138,7 +1140,11 @@ namespace Microsoft.Cci.ReflectionEmitter {
               break;
           }
         }
-        this.CallAppropriateBeginsAndEnds((uint)ilGenerator.ILOffset);
+        // can't use ilGenerator.ILOffset because any calls to 
+        // BeginCatchBlock or BeginFinallyBlock (at least, maybe others too?)
+        // increment its offset by 5 which then doesn't match any of the
+        // end of method offsets used in scopes gotten from the PDB.
+        this.CallAppropriateBeginsAndEnds(lastOffset + 1);
         this.ilGenerator = null;
         this.methodBody = null;
         this.labelFor = null;
