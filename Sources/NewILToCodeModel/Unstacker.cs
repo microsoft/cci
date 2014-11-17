@@ -183,10 +183,14 @@ namespace Microsoft.Cci.ILToCodeModel
 
         public override IExpression Rewrite(IPopValue popValue)
         {
-            var depth = this.locals.Count;
             var t = popValue.Type;
             Contract.Assume(0 < this.locals.Count);
             var local = this.locals.Pop();
+            if (this.inThenBranch) {
+              var depth = this.locals.Count;
+              if (this.thenBranchPushes != null && this.thenBranchPushes.ContainsKey(depth) && local == this.thenBranchPushes[depth].Target.Definition)
+                this.thenBranchPushes.Remove(depth);
+            }
             var be = new BoundExpression() { Definition = local, Instance = null, Type = local.Type, };
             return be;
         }
