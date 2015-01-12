@@ -362,12 +362,12 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// For event/property accessors, the name mihgt be "T.U.get_P",
+    /// For event/property accessors, the name might be "T.U.get_P",
     /// i.e., the "get_" doesn't necessarily come at the beginning of the name,
     /// but it always comes before the event/property name.
     /// </summary>
     [ContractVerification(true)]
-    private static bool QualifiedMethodNameBeginsWith(string methodName, string prefix) {
+    public static bool QualifiedMethodNameBeginsWith(string methodName, string prefix) {
       Contract.Requires(methodName != null);
       Contract.Requires(prefix != null);
       var indexOfLastDot = methodName.LastIndexOf('.');

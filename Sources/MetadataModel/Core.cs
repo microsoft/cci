@@ -667,6 +667,18 @@ namespace Microsoft.Cci {
   #endregion
 
   /// <summary>
+  /// The metadata item has a unique key that identifies it and is to be used in lookups and equality tests
+  /// </summary>
+  public interface IInternedKey
+  {
+    /// <summary>
+    /// Returns a key that is computed from the information in this reference and that distinguishes
+    /// this object from all other objects of the same kind obtained from the same metadata host.
+    /// </summary>
+    uint InternedKey { get; }
+  }
+
+  /// <summary>
   /// An object that represents a document. This can be either source or binary or designer surface etc
   /// </summary>
   [ContractClass(typeof(IDocumentContract))]

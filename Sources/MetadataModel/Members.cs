@@ -383,7 +383,7 @@ namespace Microsoft.Cci {
   /// A reference to a field.
   /// </summary>
   [ContractClass(typeof(IFieldReferenceContract))]
-  public interface IFieldReference : ITypeMemberReference {
+  public interface IFieldReference : ITypeMemberReference, IInternedKey {
 
     /// <summary>
     /// Custom modifiers associated with the referenced field.
@@ -392,12 +392,6 @@ namespace Microsoft.Cci {
       get;
       //^ requires this.IsModified;
     }
-
-    /// <summary>
-    /// Returns a key that is computed from the information in this reference and that distinguishes
-    /// this.ResolvedField from all other fields obtained from the same metadata host.
-    /// </summary>
-    uint InternedKey { get; }
 
     /// <summary>
     /// The referenced field has custom modifiers.
@@ -2441,7 +2435,7 @@ namespace Microsoft.Cci {
   /// A reference to a method.
   /// </summary>
   [ContractClass(typeof(IMethodReferenceContract))]
-  public interface IMethodReference : ISignature, ITypeMemberReference {
+  public interface IMethodReference : ISignature, ITypeMemberReference, IInternedKey {
 
     /// <summary>
     /// True if the call sites that references the method with this object supply extra arguments.
@@ -2456,12 +2450,6 @@ namespace Microsoft.Cci {
       //^ ensures !this.IsGeneric ==> result == 0;
       //^ ensures this.IsGeneric ==> result > 0;
     }
-
-    /// <summary>
-    /// Returns a key that is computed from the information in this reference and that distinguishes
-    /// this.ResolvedMethod from all other methods obtained from the same metadata host.
-    /// </summary>
-    uint InternedKey { get; }
 
     /// <summary>
     /// True if the method has generic parameters;

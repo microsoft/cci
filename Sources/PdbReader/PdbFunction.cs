@@ -338,25 +338,28 @@ namespace Microsoft.Cci.Pdb {
       }
     }
 
-    private void ReadCustomMetadata(BitAccess bits) {
-      int savedPosition = bits.Position;
-      byte version;
-      bits.ReadUInt8(out version);
-      byte kind;
-      bits.ReadUInt8(out kind);
-      bits.Align(4);
-      uint numberOfBytesInItem;
-      bits.ReadUInt32(out numberOfBytesInItem);
-      if (version == 4) {
-        switch (kind) {
-          case 0: this.ReadUsingInfo(bits); break;
-          case 1: this.ReadForwardInfo(bits); break;
-          case 2: break; // this.ReadForwardedToModuleInfo(bits); break;
-          case 3: this.ReadIteratorLocals(bits); break;
-          case 4: this.ReadForwardIterator(bits); break;
+    private void ReadCustomMetadata(BitAccess bits)
+    {
+        int savedPosition = bits.Position;
+        byte version;
+        bits.ReadUInt8(out version);
+        byte kind;
+        bits.ReadUInt8(out kind);
+        bits.Align(4);
+        uint numberOfBytesInItem;
+        bits.ReadUInt32(out numberOfBytesInItem);
+        if (version == 4)
+        {
+            switch (kind)
+            {
+                case 0: this.ReadUsingInfo(bits); break;
+                case 1: this.ReadForwardInfo(bits); break;
+                case 2: break; // this.ReadForwardedToModuleInfo(bits); break;
+                case 3: this.ReadIteratorLocals(bits); break;
+                case 4: this.ReadForwardIterator(bits); break;
+            }
         }
-      }
-      bits.Position = savedPosition + (int)numberOfBytesInItem;
+        bits.Position = savedPosition + (int)numberOfBytesInItem;
     }
 
     private void ReadForwardIterator(BitAccess bits) {

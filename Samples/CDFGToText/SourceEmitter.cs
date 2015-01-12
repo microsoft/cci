@@ -80,6 +80,12 @@ namespace CdfgToText {
 
     private void PrintBlock(BasicBlock<Instruction> block) {
       sourceEmitterOutput.WriteLine("start of basic block "+block.Instructions[0].Operation.Offset.ToString("x4"));
+
+      sourceEmitterOutput.WriteLine("  Handlers:");
+      foreach (var handler in block.Handlers.GetEnumerable())
+        sourceEmitterOutput.WriteLine("    " + handler.HandlerKind + " " + (handler.ExceptionType!=null?TypeHelper.GetTypeName(handler.ExceptionType):"") + " at: " + handler.HandlerStartOffset.ToString("x4"));
+      sourceEmitterOutput.WriteLine();
+
       sourceEmitterOutput.WriteLine("  Initial stack:");
       foreach (var instruction in block.OperandStack)
         sourceEmitterOutput.WriteLine("    "+TypeHelper.GetTypeName(instruction.Type));

@@ -88,17 +88,17 @@ namespace Microsoft.Cci.Analysis {
     /// lead to the second block only via the first block.
     /// </summary>
     public bool Dominates(BasicBlock block1, BasicBlock block2) {
-      Contract.Requires(block1 != null);
-      Contract.Requires(block2 != null);
+        Contract.Requires(block1 != null);
+        Contract.Requires(block2 != null);
 
-      if (block1 == block2) return true;
-      var block2dominator = ImmediateDominator(block2);
-      while (true) {
-        if (block1 == block2dominator) return true;
-        if (block2 == block2dominator) return false;
-        block2 = block2dominator;
-        block2dominator = ImmediateDominator(block2);
-      }
+        if (block1 == block2) return true;
+        var block2dominator = ImmediateDominator(block2);
+        while (true) {
+            if (block1 == block2dominator) return true;
+            if (block2 == block2dominator) return false;
+            block2 = block2dominator;
+            block2dominator = ImmediateDominator(block2);
+        }
     }
 
     /// <summary>
@@ -200,17 +200,26 @@ namespace Microsoft.Cci.Analysis {
           }
           Contract.Assume(b.firstPredecessorEdge >= 0);
           Contract.Assume(b.firstPredecessorEdge < predecessorEdges.Count);
-          var newIDom = predecessorEdges[b.firstPredecessorEdge];
+          var predecessors = new HashSet<BasicBlock>();
+          for (int j = 0, m = b.predeccessorCount; j < m; j++) {
+              predecessors.Add(predecessorEdges[b.firstPredecessorEdge + j]);
+          }
+          // newIDom <- first (processed) predecessor of b
+          BasicBlock newIDom = null;
+          foreach (var p in predecessors) {
+            if (p.immediateDominator != null) {
+              newIDom = p;
+              break;
+            }
+	      }
           Contract.Assume(newIDom != null);
-          for (int j = 1, m = b.predeccessorCount; j < m; j++) {
-            Contract.Assume(b.firstPredecessorEdge+j < predecessorEdges.Count);
-            var predecessor = predecessorEdges[b.firstPredecessorEdge+j];
+          predecessors.Remove(newIDom);
+          foreach (var predecessor in predecessors) {
             Contract.Assume(predecessor != null);
             if (predecessor.immediateDominator != null) {
               var intersection = Intersect(predecessor, newIDom);
               if (intersection != null) {
-                if (intersection.postOrderNumber > newIDom.postOrderNumber)
-                  newIDom = intersection;
+                newIDom = intersection;
               } else {
                 //This can happen when predecessor and newIDom are only reachable via distinct roots.
                 //We now have two distinct paths from a root to b. This means b is its own dominator.

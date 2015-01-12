@@ -91,7 +91,7 @@ namespace Microsoft.Cci.Analysis {
       Contract.Requires(methodBody != null);
 
       foreach (var exinfo in methodBody.OperationExceptionInformation) {
-        Contract.Assume(exinfo != null); //The checker can't work out that all collection elements are non null, even though there is a contract to that effect
+        Contract.Assert(exinfo != null); //The checker can't work out that all collection elements are non null, even though there is a contract to that effect
         if (exinfo.HandlerKind == HandlerKind.Filter) {
           var block = this.cdfg.BlockFor[exinfo.FilterDecisionStartOffset];
           Contract.Assume(block != null); //All branch targets must have blocks, but we can't put that in a contract that satisfies the checker.

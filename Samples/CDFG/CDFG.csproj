@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{3D132B88-ED8C-49A3-A393-BBA447C3D121}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CDFG</RootNamespace>
+    <AssemblyName>CDFG</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CloseOrDisposeAnalysis.cs" />
+    <Compile Include="FindReachingMayDefinitions.cs" />
+    <Compile Include="LoopAnalysis.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Sources\ControlAndDataFlowGraph\ControlAndDataFlowGraph.csproj">
+      <Project>{2596efb0-87ae-42ce-89eb-84f35d6350d2}</Project>
+      <Name>ControlAndDataFlowGraph</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\MetadataHelper\MetadataHelper.csproj">
+      <Project>{4a34a3c5-6176-49d7-a4c5-b2b671247f8f}</Project>
+      <Name>MetadataHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\MetadataModel\MetadataModel.csproj">
+      <Project>{33cab640-0d03-43df-81bd-22cdc6c0a597}</Project>
+      <Name>MetadataModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\PdbReader\PdbReader.csproj">
+      <Project>{a6a31b03-7c3d-4de6-aa73-be88116bc40a}</Project>
+      <Name>PdbReader</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\PeReader\PeReader.csproj">
+      <Project>{34b9a0ce-df18-4cbc-8f7a-90c2b74338d5}</Project>
+      <Name>PeReader</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\SourceModel\SourceModel.csproj">
+      <Project>{4b0054fd-124a-4037-9965-bdb55e6bf389}</Project>
+      <Name>SourceModel</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

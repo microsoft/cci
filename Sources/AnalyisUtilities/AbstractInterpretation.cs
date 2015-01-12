@@ -261,11 +261,13 @@ namespace Microsoft.Cci.Analysis {
         var stackSetupInstruction = block.OperandStack[i];
         if (stackSetupInstruction.Operation.Value == null)
           stackSetupInstruction.Operation = new Operation() { Value = Dummy.LocalVariable, Offset = (uint)i };
-        Contract.Assume(stackSetupInstruction.Operand1 is Instruction);
-        var canon = this.expressionCanonicalizer.GetCanonicalExpression(stackSetupInstruction, (Instruction)stackSetupInstruction.Operand1,
-          stackSetupInstruction.Operand2 as Instruction, stackSetupInstruction.Operand2 as Instruction[]);
-        stackSetupInstruction.Operand1 = canon.Operand1;
-        stackSetupInstruction.Operand2 = canon.Operand2;
+        if (stackSetupInstruction.Operand1 != null)
+        {
+          var canon = this.expressionCanonicalizer.GetCanonicalExpression(stackSetupInstruction, (Instruction)stackSetupInstruction.Operand1,
+            stackSetupInstruction.Operand2 as Instruction, stackSetupInstruction.Operand2 as Instruction[]);
+          stackSetupInstruction.Operand1 = canon.Operand1;
+          stackSetupInstruction.Operand2 = canon.Operand2;
+        }
         this.mappings.SetCanonicalExpressionFor(stackSetupInstruction, this.expressionCanonicalizer.GetCanonicalExpression(stackSetupInstruction));
         this.mappings.SetDefininingBlockFor(stackSetupInstruction, block);
       }
@@ -746,25 +748,35 @@ namespace Microsoft.Cci.Analysis {
         case OperationCode.Stloc_2:
         case OperationCode.Stloc_3:
         case OperationCode.Stloc_S:
-          var variable = operation.Value as INamedEntity;
-          if (variable != null) {
-            var cv1 = this.TryToGetCompileTimeConstantValueFor(operand1);
-            if (cv1 != null) {
-              var canon = this.GetCanonicalizedLoadInstruction(variable);
-              canon = this.expressionCanonicalizer.GetAsCanonicalizedLoadConstant(cv1, canon);
-              this.mappings.SetDefininingExpressionFor(variable, canon);
-              this.mappings.SetCompileTimeConstantValueFor(variable, cv1);
-              this.mappings.SetCompileTimeConstantValueFor(canon, cv1);
-            } else {
-              var canon = this.mappings.GetCanonicalExpressionFor(operand1);
-              if (canon != null) {
-                var oldExpr = this.mappings.GetDefiningExpressionFor(variable);
-                if (oldExpr == null || !this.mappings.IsRecursive(oldExpr)) {
-                  this.mappings.SetDefininingExpressionFor(variable, canon);
-                  if (oldExpr != null && Evaluator.Contains(canon, oldExpr)) {
-                    this.mappings.SetIsRecursive(canon);
-                    if (this.constraints.Count > 0 && this.constraints[0] != null) {
-                      this.constraints[0] = Purger.Purge(this.constraints[0], variable, this.expressionCanonicalizer);
+          {
+            var variable = operation.Value as INamedEntity;
+            if (variable != null)
+            {
+              var cv1 = this.TryToGetCompileTimeConstantValueFor(operand1);
+              if (cv1 != null)
+              {
+                var canon = this.GetCanonicalizedLoadInstruction(variable);
+                canon = this.expressionCanonicalizer.GetAsCanonicalizedLoadConstant(cv1, canon);
+                this.mappings.SetDefininingExpressionFor(variable, canon);
+                this.mappings.SetCompileTimeConstantValueFor(variable, cv1);
+                this.mappings.SetCompileTimeConstantValueFor(canon, cv1);
+              }
+              else
+              {
+                var canon = this.mappings.GetCanonicalExpressionFor(operand1);
+                if (canon != null)
+                {
+                  var oldExpr = this.mappings.GetDefiningExpressionFor(variable);
+                  if (oldExpr == null || !this.mappings.IsRecursive(oldExpr))
+                  {
+                    this.mappings.SetDefininingExpressionFor(variable, canon);
+                    if (oldExpr != null && Evaluator.Contains(canon, oldExpr))
+                    {
+                      this.mappings.SetIsRecursive(canon);
+                      if (this.constraints.Count > 0 && this.constraints[0] != null)
+                      {
+                        this.constraints[0] = Purger.Purge(this.constraints[0], variable, this.expressionCanonicalizer);
+                      }
                     }
                   }
                 }
@@ -777,6 +789,44 @@ namespace Microsoft.Cci.Analysis {
         case OperationCode.Ret:
         case OperationCode.Throw:
           this.lastStatementWasUnconditionalTransfer = true;
+          break;
+
+        //Instructions that are side-effect free and that *could* result in compile time constant values.
+        //We attempt to compute the compile time values.
+        case OperationCode.Ldarg:
+        case OperationCode.Ldarg_0:
+        case OperationCode.Ldarg_1:
+        case OperationCode.Ldarg_2:
+        case OperationCode.Ldarg_3:
+        case OperationCode.Ldarg_S:
+        case OperationCode.Ldloc:
+        case OperationCode.Ldloc_0:
+        case OperationCode.Ldloc_1:
+        case OperationCode.Ldloc_2:
+        case OperationCode.Ldloc_3:
+        case OperationCode.Ldloc_S:
+          {
+            var variable = operation.Value as INamedEntity;
+            var constantValue = variable == null ? null : this.mappings.GetCompileTimeConstantValueFor(variable);
+            if (constantValue != null)
+            {
+              this.mappings.SetCompileTimeConstantValueFor(unaryInstruction, constantValue);
+              var constLoad = this.expressionCanonicalizer.GetAsCanonicalizedLoadConstant(constantValue, unaryInstruction);
+              this.mappings.SetCanonicalExpressionFor(unaryInstruction, constLoad);
+              this.mappings.SetCompileTimeConstantValueFor(constLoad, constantValue);
+            }
+            else
+            {
+              var definingExpression = variable == null ? null : this.mappings.GetDefiningExpressionFor(variable);
+              if (definingExpression != null)
+                this.mappings.SetCanonicalExpressionFor(unaryInstruction, definingExpression);
+              else
+              {
+                var canonicalExpr = this.GetCanonicalizedLoadInstruction(operation.Value ?? Dummy.ParameterDefinition);
+                this.mappings.SetCanonicalExpressionFor(unaryInstruction, canonicalExpr);
+              }
+            }
+          }
           break;
 
         default:

@@ -188,7 +188,7 @@ namespace Microsoft.Cci.Analysis {
       int startingInstruction = 0;
       bool lastInstructionWasUnconditionalTransfer = false;
       foreach (var ilOperation in this.methodBody.Operations) {
-        Contract.Assume(ilOperation != null); //This is formally specified in the Metadata model, but the checker does not yet understand it well enough to prove this.
+        Contract.Assert(ilOperation != null); //This is formally specified in the Metadata model, but the checker does not yet understand it well enough to prove this.
         Contract.Assume(startingInstruction <= instructions.Count); //due to the limitations of the contract language and checker
         Contract.Assume(startingEdge <= successorEdges.Count); //due to the limitations of the contract language and checker
         var newBlock = this.cdfg.BlockFor.Find(ilOperation.Offset);

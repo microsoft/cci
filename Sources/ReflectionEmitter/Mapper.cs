@@ -98,13 +98,16 @@ namespace Microsoft.Cci.ReflectionEmitter {
         if (containingType == null) return null;
         var fieldType = this.GetType(fieldReference.Type);
         if (fieldType == null) return null;
-        foreach (var member in containingType.GetMember(fieldReference.Name.Value, BindingFlags.NonPublic|BindingFlags.DeclaredOnly)) {
+        foreach (var member in containingType.GetMember(fieldReference.Name.Value, BindingFlags.NonPublic|BindingFlags.DeclaredOnly|BindingFlags.Static|BindingFlags.Public|BindingFlags.Instance))
+        {
           var field = (FieldInfo)member as FieldInfo;
           if (field == null) continue;
           if (field.FieldType != fieldType) continue;
           if (fieldReference.IsModified) {
             if (!this.ModifiersMatch(field.GetOptionalCustomModifiers(), field.GetRequiredCustomModifiers(), fieldReference.CustomModifiers)) continue;
           }
+          result = field;
+          break;
         }
         this.fieldMap.Add(fieldReference.ContainingType.InternedKey, (uint)fieldReference.Name.UniqueKey, result);
       }

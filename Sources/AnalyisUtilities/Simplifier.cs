@@ -492,11 +492,12 @@ namespace Microsoft.Cci.Analysis {
                 return new Instruction() {
                   Operation = new Operation() { OperationCode = newOpcode, Offset = operation.Offset, Location = operation.Location },
                   Operand1 = operand1.Operand1,
-                  Operand2 = operand1.Operand2
+                  Operand2 = operand1.Operand2,
+                  Type = instruction.Type
                 };
             }
           }
-          return new Instruction() { Operation = operation, Operand1 = operand };
+          return new Instruction() { Operation = operation, Operand1 = operand, Type = instruction.Type };
       }
       return instruction;
     }

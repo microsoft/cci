@@ -4947,7 +4947,7 @@ namespace Microsoft.Cci {
   /// A reference to a type.
   /// </summary>
   [ContractClass(typeof(ITypeReferenceContract))]
-  public interface ITypeReference : IReference {
+  public interface ITypeReference : IReference, IInternedKey {
 
     /// <summary>
     /// If this type reference can be resolved and it resolves to a type alias, the resolution continues on
@@ -4956,12 +4956,6 @@ namespace Microsoft.Cci {
     /// traverse aliases.
     /// </summary>
     IAliasForType AliasForType { get; }
-
-    /// <summary>
-    /// Returns a key that is computed from the information in this reference and that distinguishes
-    /// this.ResolvedType from all other types obtained from the same metadata host.
-    /// </summary>
-    uint InternedKey { get; }
 
     /// <summary>
     /// True if this reference can be resolved and it resolves to a type alias. The type alias can be retrieved
