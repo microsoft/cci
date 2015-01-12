@@ -232,6 +232,7 @@ namespace CSharpSourceEmitter {
 
 	public void PrintLocalDefinition(ILocalDefinition localDefinition)
 	{
+    Contract.Requires(localDefinition != null);
 		if (localDefinition.IsConstant)
 			this.sourceEmitterOutput.Write("const ");
 

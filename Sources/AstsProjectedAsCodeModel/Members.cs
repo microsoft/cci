@@ -304,7 +304,7 @@ namespace Microsoft.Cci.Ast {
 
     #region IMethodReference Members
 
-    uint IMethodReference.InternedKey {
+    uint IInternedKey.InternedKey {
       get { return 0; }
     }
 
@@ -2150,7 +2150,7 @@ namespace Microsoft.Cci.Ast {
     /// Returns a key that is computed from the information in this reference and that uniquely identifies
     /// this.ResolvedMethod.
     /// </summary>
-    uint IMethodReference.InternedKey {
+    uint IInternedKey.InternedKey {
       get { return 0; }
     }
 

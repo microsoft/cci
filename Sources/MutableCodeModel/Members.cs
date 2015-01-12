@@ -355,6 +355,10 @@ namespace Microsoft.Cci.MutableCodeModel {
       }
     }
 
+    /// <summary>
+    /// Implementation of IMethodBody.PrivateHelperTypes. Exposed here so that sub types can implement
+    /// IMethodBody interface, while calling the base implementation if necessary
+    /// </summary>
     protected IEnumerable<ITypeDefinition> PrivateHelperTypesImplementation
     {
       get
