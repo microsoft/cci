@@ -119,7 +119,7 @@ namespace Microsoft.Cci {
       byte[] pKey = new List<byte>(publicKey).ToArray();
       if (pKey.Length == 0)
         return pKey;
-      System.Security.Cryptography.SHA1Managed sha1Algo = new System.Security.Cryptography.SHA1Managed();
+      System.Security.Cryptography.SHA1 sha1Algo = System.Security.Cryptography.SHA1.Create("SHA1");
       byte[] hash = sha1Algo.ComputeHash(pKey);
       byte[] publicKeyToken = new byte[8];
       int startIndex = hash.Length - 8;
