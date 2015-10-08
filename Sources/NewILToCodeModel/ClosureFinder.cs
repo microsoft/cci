@@ -83,6 +83,7 @@ namespace Microsoft.Cci.ILToCodeModel {
         var ft = field.Type.ResolvedType;
         if (!TypeHelper.IsCompilerGenerated(ft)) continue;
         if (TypeHelper.IsEmbeddedInteropType(ft)) continue;
+        if (this.closures.Find(ft.InternedKey) != null) continue;
         this.closures.Add(ft.InternedKey, ft);
         this.AddOuterClosures(ft);
       }
