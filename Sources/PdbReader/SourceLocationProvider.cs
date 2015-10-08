@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.SymbolStore;
 using System.IO;
+using System.Linq;
 using Microsoft.Cci.MetadataReader;
 
 namespace Microsoft.Cci {
@@ -72,6 +73,25 @@ namespace Microsoft.Cci {
     private void Close() {
       foreach (var source in this.sourceFilesOpenedByReader)
         source.Dispose();
+    }
+
+    /// <summary>
+    /// Gets all source files that this pdb file is referencing.
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerable<string> GetSourceFiles() {
+      Contract.Ensures(Contract.Result<IEnumerable<string>>() != null);
+      Contract.Ensures(Contract.ForAll(Contract.Result<IEnumerable<string>>(), item => item != null));
+      return pdbFunctionMap.Values
+        .Select(pdbFunc => pdbFunc.lines)
+        .Where(lines => lines != null)
+        .SelectMany(lines => lines)
+        .Where(lines => lines != null)
+        .Select(lines => lines.file)
+        .Where(file => file != null)
+        .Select(file => file.name)
+        .Where(fileName => fileName != null)
+        .Distinct();
     }
 
     /// <summary>
