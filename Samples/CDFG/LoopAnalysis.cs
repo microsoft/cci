@@ -42,6 +42,18 @@ namespace CDFG
                 Console.WriteLine("{0:X}, Successors: {1}", block.Offset, Offsets(cdfg.SuccessorsFor(block)));
             }
 
+            Dictionary<EnhancedBasicBlock<Instruction>, List<EnhancedBasicBlock<Instruction>>> dominators = new Dictionary<EnhancedBasicBlock<Instruction>,List<EnhancedBasicBlock<Instruction>>>();
+            foreach (var b in cdfg.AllBlocks)
+            {
+                var dom = new List<EnhancedBasicBlock<Instruction>>();
+                foreach (var c in cdfg.AllBlocks)
+                {
+                    if (cfgQueries.Dominates(c, b))
+                        dom.Add(c);
+                }
+                dominators.Add(b, dom);
+            }
+
             var surroundingLoops = LoopFinder.GetLoopInformation(cdfg, cfgQueries, methodBody);
 
             Console.WriteLine("\nLoop information");
@@ -82,6 +94,11 @@ namespace CDFG
 
     }
 
+    internal class NotReducibleFlowGraph : Exception
+    {
+
+    }
+
     internal class LoopFinder
     {
         /// <summary>
@@ -101,11 +118,16 @@ namespace CDFG
             IMethodBody methodBody)
         {
             var surroundingLoops = new Dictionary<EnhancedBasicBlock<Instruction>, List<EnhancedBasicBlock<Instruction>>>();
-            ForwardDFS(cdfg, cfgQueries, new HashSet<EnhancedBasicBlock<Instruction>>(), new HashSet<EnhancedBasicBlock<Instruction>>(), surroundingLoops, cdfg.RootBlocks.First());
+            try
+            {
+                ForwardDFS(cdfg, cfgQueries, new HashSet<EnhancedBasicBlock<Instruction>>(), new HashSet<EnhancedBasicBlock<Instruction>>(), surroundingLoops, cdfg.RootBlocks.First());
+            }
+            catch (NotReducibleFlowGraph)
+            {
+                return new Dictionary<EnhancedBasicBlock<Instruction>, List<EnhancedBasicBlock<Instruction>>>();
+            }
             return surroundingLoops;
         }
-
-
 
         private static void ForwardDFS(CFG cdfg,
             ControlGraphQueries<EnhancedBasicBlock<Instruction>, Instruction> cfgQueries,
@@ -125,7 +147,10 @@ namespace CDFG
                 {
                     // backedge from block to s
                     //WriteBlockOffset(s, 1);
-                    Contract.Assume(cfgQueries.Dominates(s, block), "CFG must be reducible");
+                    if (!cfgQueries.Dominates(s, block))
+                    {
+                        throw new NotReducibleFlowGraph();
+                    }
                     BackwardDFS(cdfg, cfgQueries, surroundingLoops, new HashSet<EnhancedBasicBlock<Instruction>>(), block, s);
                 }
                 else
