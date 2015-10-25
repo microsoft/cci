@@ -66,6 +66,10 @@
       <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
       <Name>SourceModel</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Sources\CSharpSourceEmitter\CSharpSourceEmitter.csproj">
+      <Project>{a9103dda-3a93-441a-8326-6eb20518c251}</Project>
+      <Name>CSharpSourceEmitter</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Sources\MutableCodeModel\MutableCodeModel.csproj">
       <Project>{319E150C-8F33-49E7-81CA-30F02F9BA90A}</Project>
       <Name>MutableCodeModel</Name>
@@ -73,10 +77,6 @@
     <ProjectReference Include="..\..\Sources\NewILToCodeModel\NewILToCodeModel.csproj">
       <Project>{A555D4CB-F16F-4049-A8CF-180B8A05C755}</Project>
       <Name>NewILToCodeModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Tests\CSharpSourceEmitter\CSharpSourceEmitter.csproj">
-      <Project>{A9103DDA-3A93-441A-8326-6EB20518C251}</Project>
-      <Name>CSharpSourceEmitter</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Sources\CodeModel\CodeModel.csproj">
       <Project>{035FEA7F-0D36-4AE4-B694-EC45191B9AF2}</Project>

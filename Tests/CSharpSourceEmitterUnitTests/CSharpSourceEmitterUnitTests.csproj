@@ -13,10 +13,6 @@
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
@@ -75,27 +71,27 @@
     <Compile Include="CSharpSourceRoundTrip.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\CoreObjectModel\CodeModel\CodeModel.csproj">
+    <ProjectReference Include="..\..\Sources\CodeModel\CodeModel.csproj">
       <Project>{035FEA7F-0D36-4AE4-B694-EC45191B9AF2}</Project>
       <Name>CodeModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\CoreObjectModel\MetadataHelper\MetadataHelper.csproj">
+    <ProjectReference Include="..\..\Metadata\Sources\MetadataHelper\MetadataHelper.csproj">
       <Project>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</Project>
       <Name>MetadataHelper</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\CoreObjectModel\MetadataModel\MetadataModel.csproj">
+    <ProjectReference Include="..\..\Metadata\Sources\MetadataModel\MetadataModel.csproj">
       <Project>{33CAB640-0D03-43DF-81BD-22CDC6C0A597}</Project>
       <Name>MetadataModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\CoreObjectModel\SourceModel\SourceModel.csproj">
+    <ProjectReference Include="..\..\Metadata\Sources\SourceModel\SourceModel.csproj">
       <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
       <Name>SourceModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\PDBReaderAndWriter\PdbReader\PdbReader.csproj">
+    <ProjectReference Include="..\..\Metadata\Sources\PdbReader\PdbReader.csproj">
       <Project>{A6A31B03-7C3D-4DE6-AA73-BE88116BC40A}</Project>
       <Name>PdbReader</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\PEReaderAndWriter\PEReader\PeReader.csproj">
+    <ProjectReference Include="..\..\Metadata\Sources\PeReader\PeReader.csproj">
       <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
       <Name>PeReader</Name>
     </ProjectReference>
@@ -103,7 +99,7 @@
       <Project>{B5C9D624-F8FB-4E28-8F88-D687340B4234}</Project>
       <Name>CSharpSourceEmitterUnitTestInput</Name>
     </ProjectReference>
-    <ProjectReference Include="..\CSharpSourceEmitter\CSharpSourceEmitter.csproj">
+    <ProjectReference Include="..\..\Sources\CSharpSourceEmitter\CSharpSourceEmitter.csproj">
       <Project>{A9103DDA-3A93-441A-8326-6EB20518C251}</Project>
       <Name>CSharpSourceEmitter</Name>
     </ProjectReference>

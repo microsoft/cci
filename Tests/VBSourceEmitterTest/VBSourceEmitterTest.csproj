@@ -12,10 +12,6 @@
     <AssemblyName>VBSourceEmitterTest</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -51,39 +47,39 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Converters\NewILToCodeModel\NewILToCodeModel.csproj">
+    <ProjectReference Include="..\..\Sources\NewILToCodeModel\NewILToCodeModel.csproj">
       <Project>{A555D4CB-F16F-4049-A8CF-180B8A05C755}</Project>
       <Name>NewILToCodeModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\CoreObjectModel\CodeModel\CodeModel.csproj">
+    <ProjectReference Include="..\..\Sources\CodeModel\CodeModel.csproj">
       <Project>{035FEA7F-0D36-4AE4-B694-EC45191B9AF2}</Project>
       <Name>CodeModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\CoreObjectModel\MetadataHelper\MetadataHelper.csproj">
+    <ProjectReference Include="..\..\Metadata\Sources\MetadataHelper\MetadataHelper.csproj">
       <Project>{4A34A3C5-6176-49D7-A4C5-B2B671247F8F}</Project>
       <Name>MetadataHelper</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\CoreObjectModel\MetadataModel\MetadataModel.csproj">
+    <ProjectReference Include="..\..\Metadata\Sources\MetadataModel\MetadataModel.csproj">
       <Project>{33CAB640-0D03-43DF-81BD-22CDC6C0A597}</Project>
       <Name>MetadataModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\CoreObjectModel\MutableMetadataModel\MutableMetadataModel.csproj">
+    <ProjectReference Include="..\..\Metadata\Sources\MutableMetadataModel\MutableMetadataModel.csproj">
       <Project>{319E151C-8F33-49E7-81C9-30F02F9BA90A}</Project>
       <Name>MutableMetadataModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\CoreObjectModel\SourceModel\SourceModel.csproj">
+    <ProjectReference Include="..\..\Metadata\Sources\SourceModel\SourceModel.csproj">
       <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
       <Name>SourceModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\PDBReaderAndWriter\PdbReader\PdbReader.csproj">
+    <ProjectReference Include="..\..\Metadata\Sources\PdbReader\PdbReader.csproj">
       <Project>{A6A31B03-7C3D-4DE6-AA73-BE88116BC40A}</Project>
       <Name>PdbReader</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\PEReaderAndWriter\PEReader\PeReader.csproj">
+    <ProjectReference Include="..\..\Metadata\Sources\PeReader\PeReader.csproj">
       <Project>{34B9A0CE-DF18-4CBC-8F7A-90C2B74338D5}</Project>
       <Name>PeReader</Name>
     </ProjectReference>
-    <ProjectReference Include="..\VBSourceEmitter\VBSourceEmitter.csproj">
+    <ProjectReference Include="..\..\Sources\VBSourceEmitter\VBSourceEmitter.csproj">
       <Project>{FC046A88-7F85-4028-A3D2-4986F4C3B73D}</Project>
       <Name>VBSourceEmitter</Name>
     </ProjectReference>

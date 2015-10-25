@@ -79,6 +79,10 @@
       <Project>{0703D916-A881-45E6-A5CD-6BC50E2E30E2}</Project>
       <Name>ContractExtractor</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Sources\CSharpSourceEmitter\CSharpSourceEmitter.csproj">
+      <Project>{a9103dda-3a93-441a-8326-6eb20518c251}</Project>
+      <Name>CSharpSourceEmitter</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Sources\MutableCodeModel\MutableCodeModel.csproj">
       <Project>{319E150C-8F33-49E7-81CA-30F02F9BA90A}</Project>
       <Name>MutableCodeModel</Name>
@@ -86,10 +90,6 @@
     <ProjectReference Include="..\..\Sources\NewILToCodeModel\NewILToCodeModel.csproj">
       <Project>{A555D4CB-F16F-4049-A8CF-180B8A05C755}</Project>
       <Name>NewILToCodeModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Tests\CSharpSourceEmitter\CSharpSourceEmitter.csproj">
-      <Project>{A9103DDA-3A93-441A-8326-6EB20518C251}</Project>
-      <Name>CSharpSourceEmitter</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

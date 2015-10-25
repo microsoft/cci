@@ -91,6 +91,14 @@
       <Project>{4B0054FD-124A-4037-9965-BDB55E6BF389}</Project>
       <Name>SourceModel</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Samples\PeToText\PeToTextViaCodeModel.csproj">
+      <Project>{ddb020b7-6b28-40e8-b3d6-fd998ebdd552}</Project>
+      <Name>PeToTextViaCodeModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Sources\CSharpSourceEmitter\CSharpSourceEmitter.csproj">
+      <Project>{a9103dda-3a93-441a-8326-6eb20518c251}</Project>
+      <Name>CSharpSourceEmitter</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Sources\MutableCodeModel\MutableCodeModel.csproj">
       <Project>{319E150C-8F33-49E7-81CA-30F02F9BA90A}</Project>
       <Name>MutableCodeModel</Name>
@@ -106,14 +114,6 @@
     <ProjectReference Include="..\..\Sources\CodeModelToIL\CodeModelToIL.csproj">
       <Project>{CEB76EA1-A168-49B0-A410-2C4195FEE86F}</Project>
       <Name>CodeModelToIL</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Samples\PeToText\PeToTextViaCodeModel.csproj">
-      <Project>{DDB020B7-6B28-40E8-B3D6-FD998EBDD552}</Project>
-      <Name>PeToTextViaCodeModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\CSharpSourceEmitter\CSharpSourceEmitter.csproj">
-      <Project>{A9103DDA-3A93-441A-8326-6EB20518C251}</Project>
-      <Name>CSharpSourceEmitter</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Sources\CodeModel\CodeModel.csproj">
       <Project>{035FEA7F-0D36-4AE4-B694-EC45191B9AF2}</Project>
