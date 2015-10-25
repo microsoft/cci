@@ -107,10 +107,6 @@
       <Project>{584898C1-C197-4D9A-8231-90B41C2793C9}</Project>
       <Name>SourceEmitter</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Tests\CSharpSourceEmitter\CSharpSourceEmitter.csproj">
-      <Project>{A9103DDA-3A93-441A-8326-6EB20518C251}</Project>
-      <Name>CSharpSourceEmitter</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="CCIAll.nuspec">
