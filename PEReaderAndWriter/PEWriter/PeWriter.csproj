@@ -20,7 +20,7 @@
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <SignAssembly>true</SignAssembly>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -104,6 +104,9 @@
     <Compile Include="..\..\common\include\Version.cs">
       <Link>Build\Version.cs</Link>
     </Compile>
+    <Compile Include="..\..\common\include\PortingHelpers.cs" />
+    <Compile Include="..\..\common\include\CciEventSource.cs" />
+    <Compile Include="..\..\common\include\DietCollection.cs" />
     <Compile Include="BinaryWriter.cs" />
     <Compile Include="IMetadata.cs" />
     <Compile Include="MemoryStream.cs" />

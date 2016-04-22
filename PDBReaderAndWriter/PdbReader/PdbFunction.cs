@@ -12,8 +12,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+#pragma warning disable 1591 // TODO: doc comments
+
 namespace Microsoft.Cci.Pdb {
-  internal class PdbFunction {
+  public class PdbFunction {
     static internal readonly Guid msilMetaData = new Guid(0xc6ea3fc9, 0x59b3, 0x49d6, 0xbc, 0x25,
                                                         0x09, 0x02, 0xbb, 0xab, 0xb4, 0x60);
     static internal readonly IComparer byAddress = new PdbFunctionsByAddress();
@@ -231,10 +233,10 @@ namespace Microsoft.Cci.Pdb {
       int slot = 0;
       int constant = 0;
       int usedNs = 0;
-      scopes = new PdbScope[scopeCount+scope];
-      slots = new PdbSlot[slotCount];
-      constants = new PdbConstant[constantCount];
-      usedNamespaces = new string[usedNamespacesCount];
+      scopes = ArrayT<PdbScope>.Create(scopeCount+scope);
+      slots = ArrayT<PdbSlot>.Create(slotCount);
+      constants = ArrayT<PdbConstant>.Create(constantCount);
+      usedNamespaces = ArrayT<string>.Create(usedNamespacesCount);
 
       if (scope > 0)
         scopes[0] = new PdbScope(this.address, proc.len, slots, constants, usedNamespaces);
@@ -345,7 +347,7 @@ namespace Microsoft.Cci.Pdb {
         bits.ReadUInt8(out version);
         byte kind;
         bits.ReadUInt8(out kind);
-        bits.Align(4);
+        bits.Position += 2;   // 2-bytes padding
         uint numberOfBytesInItem;
         bits.ReadUInt32(out numberOfBytesInItem);
         if (version == 4)
@@ -357,8 +359,14 @@ namespace Microsoft.Cci.Pdb {
                 case 2: break; // this.ReadForwardedToModuleInfo(bits); break;
                 case 3: this.ReadIteratorLocals(bits); break;
                 case 4: this.ReadForwardIterator(bits); break;
+                case 5: break; // dynamic locals - see http://index/#Microsoft.VisualStudio.LanguageServices/Shared/CustomDebugInfoReader.cs,a3031f7681d76e93
+                case 6: break; // EnC data
+                case 7: break; // EnC data for lambdas and closures
+                // ignore any other unknown record types that may be added in future, instead of throwing an exception
+                // see more details here: https://github.com/tmat/roslyn/blob/portable-pdb/docs/specs/PortablePdb-Metadata.md
+                default: break; // throw new PdbDebugException("Unknown custom metadata item kind: {0}", kind);
             }
-        }
+		}
         bits.Position = savedPosition + (int)numberOfBytesInItem;
     }
 
@@ -455,7 +463,7 @@ namespace Microsoft.Cci.Pdb {
     //}
   }
 
-  internal class PdbSynchronizationInformation : ISynchronizationInformation {
+  public class PdbSynchronizationInformation : ISynchronizationInformation {
     internal uint kickoffMethodToken;
     internal IMethodDefinition asyncMethod;
     internal IMethodDefinition moveNextMethod;
@@ -492,7 +500,7 @@ namespace Microsoft.Cci.Pdb {
     }
   }
 
-  internal class PdbSynchronizationPoint : ISynchronizationPoint {
+  public class PdbSynchronizationPoint : ISynchronizationPoint {
     internal uint synchronizeOffset;
     internal uint continuationMethodToken;
     internal IMethodDefinition/*?*/ continuationMethod;

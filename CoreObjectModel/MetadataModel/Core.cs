@@ -720,6 +720,14 @@ namespace Microsoft.Cci {
   }
   #endregion
 
+  /// <summary />
+  public interface IMethodBodyDocument : IDocument {
+    /// <summary />
+    uint MethodToken { get; }
+    /// <summary />
+    ITokenDecoder TokenDecoder { get; }
+  }
+
   /// <summary>
   /// Error information relating to a portion of a document.
   /// </summary>
@@ -1316,6 +1324,22 @@ namespace Microsoft.Cci {
     #endregion
   }
   #endregion
+
+  /// <summary>
+  /// A collection of methods for caching metadata model entities.
+  /// </summary>
+  public interface ICachingFactory
+  {
+      /// <summary>
+      /// Create a new instance, or get a cache instance of a generic type instance reference object
+      /// </summary>
+      IGenericTypeInstanceReference GetOrMakeGenericTypeInstanceReference(INamedTypeReference genericTypeReference, IEnumerable<ITypeReference> genericArguments);
+
+      /// <summary>
+      /// Flush the cache.
+      /// </summary>
+      void FlushCache();
+  }
 
   /// <summary>
   /// Implemented by classes that visit nodes of object graphs via a double dispatch mechanism, usually performing some computation of a subset of the nodes in the graph.

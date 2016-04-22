@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Diagnostics.Contracts;
+using System.Threading;
 
 #pragma warning disable 1591
 
@@ -58,16 +59,13 @@ namespace Microsoft.Cci.Immutable {
     protected virtual IEnumerable<ITypeReference> GetInterfaceList() {
       var coreAssembly = TypeHelper.GetDefiningUnitReference(this.PlatformType.SystemArray) as IAssemblyReference;
       var version = coreAssembly == null ? new Version(4, 0) : coreAssembly.AssemblyIdentity.Version;
-      List<ITypeReference> interfaces = new List<ITypeReference>(6);
-      interfaces.Add(this.PlatformType.SystemICloneable);
-      interfaces.Add(this.PlatformType.SystemCollectionsIEnumerable);
-      interfaces.Add(this.PlatformType.SystemCollectionsICollection);
-      interfaces.Add(this.PlatformType.SystemCollectionsIList);
-      if (version.Major >= 2) {
-        interfaces.Add(this.PlatformType.SystemCollectionsIStructuralComparable);
-        interfaces.Add(this.PlatformType.SystemCollectionsIStructuralEquatable);
-      }
-      return interfaces.AsReadOnly();
+
+      ITypeDefinition systemArrayType = this.PlatformType.SystemArray.ResolvedType;
+      Debug.Assert(!(systemArrayType is Dummy));
+
+      // Use SystemArray.Interfaces to avoid hard coding list of interfaces here and pulling in System.ICloneable which doesn't always
+      // exist in every profile
+      return systemArrayType.Interfaces; 
     }
 
     public override IEnumerable<ITypeDefinitionMember> GetMatchingMembersNamed(IName name, bool ignoreCase, Function<ITypeDefinitionMember, bool> predicate) {
@@ -390,9 +388,25 @@ namespace Microsoft.Cci.Immutable {
       Contract.Requires(internFactory != null);
       Contract.Requires(!(genericType is Dummy));
       Contract.Requires(genericType.IsGeneric);
-
       this.genericType = genericType;
-      this.genericArguments = genericArguments;
+      
+      // Try to resolve genericArgument
+      List<ITypeReference> arguments = new List<ITypeReference>();      
+      foreach (ITypeReference genericArgRef in genericArguments)
+      {
+          var genericArgDef = genericArgRef.ResolvedType;
+          if (genericArgDef == null || genericArgDef is Dummy)
+          {
+              // If couldn't resolve this type, use original TypeRef instead
+              arguments.Add(genericArgRef);
+          }
+          else
+          {
+              // If could resolve this type, use resolved Type Definition
+              arguments.Add(genericArgDef);
+          }
+      }
+      this.genericArguments = arguments.AsReadOnly();
       this.internFactory = internFactory;
     }
 
@@ -469,71 +483,47 @@ namespace Microsoft.Cci.Immutable {
       lock (GlobalLock.LockingObject) {
         if (this.initialized) return;
         var template = this.GenericType.ResolvedType;
-        List<IEventDefinition> eventList = null;
+        
+        ReadOnlyList<IEventDefinition> eventList = ReadOnlyList<IEventDefinition>.Create(template.Events);
         foreach (var unspecializedEvent in template.Events) {
           var specializedEvent = (IEventDefinition)this.SpecializeMember(unspecializedEvent, this.InternFactory);
           this.AddMemberToCache(specializedEvent);
-          if (eventList == null) eventList = new List<IEventDefinition>();
           eventList.Add(specializedEvent);
         }
-        if (eventList != null) {
-          eventList.TrimExcess();
-          this.events = eventList.AsReadOnly();
-        } else {
-          this.events = Enumerable<IEventDefinition>.Empty;
-        }
-        List<IFieldDefinition> fieldList = null;
+        this.events = ReadOnlyList<IEventDefinition>.Freeze(eventList);
+
+        ReadOnlyList<IFieldDefinition> fieldList = ReadOnlyList<IFieldDefinition>.Create(template.Fields);
         foreach (var unspecializedField in template.Fields) {
           var specializedField = (IFieldDefinition)this.SpecializeMember(unspecializedField, this.InternFactory);
           this.AddMemberToCache(specializedField);
-          if (fieldList == null) fieldList = new List<IFieldDefinition>();
           fieldList.Add(specializedField);
         }
-        if (fieldList != null) {
-          fieldList.TrimExcess();
-          this.fields = fieldList.AsReadOnly();
-        } else {
-          this.fields = Enumerable<IFieldDefinition>.Empty;
-        }
-        List<IMethodDefinition> methodList = null;
+        this.fields = ReadOnlyList<IFieldDefinition>.Freeze(fieldList);
+
+        ReadOnlyList<IMethodDefinition> methodList = ReadOnlyList<IMethodDefinition>.Create(template.Methods);
         foreach (var unspecializedMethod in template.Methods) {
           var specializedMethod = (IMethodDefinition)this.SpecializeMember(unspecializedMethod, this.InternFactory);
           this.AddMemberToCache(specializedMethod);
-          if (methodList == null) methodList = new List<IMethodDefinition>();
           methodList.Add(specializedMethod);
         }
-        if (methodList != null) {
-          methodList.TrimExcess();
-          this.methods = methodList.AsReadOnly();
-        } else {
-          this.methods = Enumerable<IMethodDefinition>.Empty;
-        }
-        List<INestedTypeDefinition> nestedTypeList = null;
+        this.methods = ReadOnlyList<IMethodDefinition>.Freeze(methodList);
+
+        ReadOnlyList<INestedTypeDefinition> nestedTypeList = ReadOnlyList<INestedTypeDefinition>.Create(template.NestedTypes);
         foreach (var unspecializedNestedType in template.NestedTypes) {
           var specializedNestedType = (INestedTypeDefinition)this.SpecializeMember(unspecializedNestedType, this.InternFactory);
           this.AddMemberToCache(specializedNestedType);
-          if (nestedTypeList == null) nestedTypeList = new List<INestedTypeDefinition>();
           nestedTypeList.Add(specializedNestedType);
         }
-        if (nestedTypeList != null) {
-          nestedTypeList.TrimExcess();
-          this.nestedTypes = nestedTypeList.AsReadOnly();
-        } else {
-          this.nestedTypes = Enumerable<INestedTypeDefinition>.Empty;
-        }
-        List<IPropertyDefinition> propertyList = null;
+        this.nestedTypes = ReadOnlyList<INestedTypeDefinition>.Freeze(nestedTypeList);
+
+        ReadOnlyList<IPropertyDefinition> propertyList = ReadOnlyList<IPropertyDefinition>.Create(template.Properties);
         foreach (var unspecializedProperty in template.Properties) {
           var specializedProperty = (IPropertyDefinition)this.SpecializeMember(unspecializedProperty, this.InternFactory);
           this.AddMemberToCache(specializedProperty);
-          if (propertyList == null) propertyList = new List<IPropertyDefinition>();
           propertyList.Add(specializedProperty);
         }
-        if (propertyList != null) {
-          propertyList.TrimExcess();
-          this.properties = propertyList.AsReadOnly();
-        } else {
-          this.properties = Enumerable<IPropertyDefinition>.Empty;
-        }
+        this.properties = ReadOnlyList<IPropertyDefinition>.Freeze(propertyList);
+        
         this.initialized = true;
       }
     }
@@ -671,7 +661,7 @@ namespace Microsoft.Cci.Immutable {
       foreach (ITypeReference argType in genericTypeInstance.GenericArguments) {
         ITypeReference copiedArgType = TypeHelper.SpecializeTypeReference(argType, targetContainer, internFactory);
         if (argType != copiedArgType) {
-          if (copiedArguments == null) copiedArguments = new List<ITypeReference>(genericTypeInstance.GenericArguments);
+          if (copiedArguments == null) copiedArguments = IteratorHelper.CopyToList<ITypeReference>(genericTypeInstance.GenericArguments);
           //^ assume 0 <= i && i < specializedArguments.Count;  //Since genericTypeInstance.GenericArguments is immutable
           copiedArguments[i] = copiedArgType;
         }
@@ -679,9 +669,9 @@ namespace Microsoft.Cci.Immutable {
       }
       if (copiedArguments == null) {
         if (copiedGenericType == genericTypeInstance.GenericType) return genericTypeInstance;
-        return new GenericTypeInstanceReference(copiedGenericType, genericTypeInstance.GenericArguments, internFactory);
+        return GenericTypeInstanceReference.GetOrMake(copiedGenericType, genericTypeInstance.GenericArguments, internFactory);
       }
-      return new GenericTypeInstanceReference(copiedGenericType, copiedArguments, internFactory);
+      return GenericTypeInstanceReference.GetOrMake(copiedGenericType, copiedArguments, internFactory);
     }
 
     internal static ITypeReference SpecializeTypeReference(IGenericTypeInstanceReference genericTypeInstance, IMethodReference targetContainer, IInternFactory internFactory) {
@@ -691,7 +681,7 @@ namespace Microsoft.Cci.Immutable {
       foreach (ITypeReference argType in genericTypeInstance.GenericArguments) {
         ITypeReference copiedArgType = TypeHelper.SpecializeTypeReference(argType, targetContainer, internFactory);
         if (argType != copiedArgType) {
-          if (copiedArguments == null) copiedArguments = new List<ITypeReference>(genericTypeInstance.GenericArguments);
+          if (copiedArguments == null) copiedArguments = IteratorHelper.CopyToList<ITypeReference>(genericTypeInstance.GenericArguments);
           //^ assume 0 <= i && i < specializedArguments.Count;  //Since genericTypeInstance.GenericArguments is immutable
           copiedArguments[i] = copiedArgType;
         }
@@ -699,9 +689,9 @@ namespace Microsoft.Cci.Immutable {
       }
       if (copiedArguments == null) {
         if (copiedGenericType == genericTypeInstance.GenericType) return genericTypeInstance;
-        return new GenericTypeInstanceReference(copiedGenericType, genericTypeInstance.GenericArguments, internFactory);
+        return GenericTypeInstanceReference.GetOrMake(copiedGenericType, genericTypeInstance.GenericArguments, internFactory);
       }
-      return new GenericTypeInstanceReference(copiedGenericType, copiedArguments, internFactory);
+      return GenericTypeInstanceReference.GetOrMake(copiedGenericType, copiedArguments, internFactory);
     }
 
     /// <summary>
@@ -717,7 +707,7 @@ namespace Microsoft.Cci.Immutable {
       foreach (ITypeReference argType in genericTypeInstance.GenericArguments) {
         ITypeReference specializedArgType = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(argType, containingMethodInstance, internFactory);
         if (argType != specializedArgType) {
-          if (specializedArguments == null) specializedArguments = new List<ITypeReference>(genericTypeInstance.GenericArguments);
+          if (specializedArguments == null) specializedArguments = IteratorHelper.CopyToList<ITypeReference>(genericTypeInstance.GenericArguments);
           //^ assume 0 <= i && i < specializedArguments.Count; //Since genericTypeInstance.GenericArguments is immutable
           specializedArguments[i] = specializedArgType;
         }
@@ -725,9 +715,9 @@ namespace Microsoft.Cci.Immutable {
       }
       if (specializedArguments == null) {
         if (specializedGenericType == genericTypeInstance.GenericType) return genericTypeInstance;
-        else return new GenericTypeInstanceReference(specializedGenericType, genericTypeInstance.GenericArguments, internFactory);
+        else return GenericTypeInstanceReference.GetOrMake(specializedGenericType, genericTypeInstance.GenericArguments, internFactory);
       }
-      return new GenericTypeInstanceReference(specializedGenericType, specializedArguments, internFactory);
+      return GenericTypeInstanceReference.GetOrMake(specializedGenericType, specializedArguments, internFactory);
     }
 
     /// <summary>
@@ -742,7 +732,7 @@ namespace Microsoft.Cci.Immutable {
       foreach (ITypeReference argType in genericTypeInstance.GenericArguments) {
         ITypeReference specializedArgType = TypeDefinition.SpecializeIfConstructedFromApplicableTypeParameter(argType, containingTypeInstance, internFactory);
         if (argType != specializedArgType) {
-          if (specializedArguments == null) specializedArguments = new List<ITypeReference>(genericTypeInstance.GenericArguments);
+          if (specializedArguments == null) specializedArguments = IteratorHelper.CopyToList<ITypeReference>(genericTypeInstance.GenericArguments);
           //^ assume 0 <= i && i < specializedArguments.Count;  //Since genericTypeInstance.GenericArguments is immutable
           specializedArguments[i] = specializedArgType;
         }
@@ -750,9 +740,9 @@ namespace Microsoft.Cci.Immutable {
       }
       if (specializedArguments == null) {
         if (specializedGenericType == genericTypeInstance.GenericType) return genericTypeInstance;
-        else return new GenericTypeInstanceReference(specializedGenericType, genericTypeInstance.GenericArguments, internFactory);
+        else return GenericTypeInstanceReference.GetOrMake(specializedGenericType, genericTypeInstance.GenericArguments, internFactory);
       }
-      return new GenericTypeInstanceReference(specializedGenericType, specializedArguments, internFactory);
+      return GenericTypeInstanceReference.GetOrMake(specializedGenericType, specializedArguments, internFactory);
     }
 
     /// <summary>
@@ -767,7 +757,7 @@ namespace Microsoft.Cci.Immutable {
       foreach (ITypeReference argType in genericTypeInstance.GenericArguments) {
         ITypeReference specializedArgType = TypeDefinition.DeepCopyTypeReferenceWRTSpecializedMethod(argType, specializedMethodReference, internFactory);
         if (argType != specializedArgType) {
-          if (specializedArguments == null) specializedArguments = new List<ITypeReference>(genericTypeInstance.GenericArguments);
+          if (specializedArguments == null) specializedArguments = IteratorHelper.CopyToList<ITypeReference>(genericTypeInstance.GenericArguments);
           //^ assume 0 <= i && i < specializedArguments.Count;  //Since genericTypeInstance.GenericArguments is immutable
           specializedArguments[i] = specializedArgType;
         }
@@ -951,6 +941,34 @@ namespace Microsoft.Cci.Immutable {
 
   public class GenericTypeInstanceReference : IGenericTypeInstanceReference {
 
+    /// <summary>
+    /// Create GenericTypeInstanceReference with caching, if InternFactory supports ICachingFactory
+    /// </summary>
+    public static IGenericTypeInstanceReference GetOrMake(INamedTypeReference genericType, IEnumerable<ITypeReference> arguments, IInternFactory internFactory)
+    {
+        ICachingFactory cache = internFactory as ICachingFactory;
+
+        if (cache != null)
+        {
+            return cache.GetOrMakeGenericTypeInstanceReference(genericType, arguments);
+        }
+        else
+        {
+            return new GenericTypeInstanceReference(genericType, arguments, internFactory, true);
+        }
+    }
+
+    public GenericTypeInstanceReference(INamedTypeReference genericType, IEnumerable<ITypeReference> genericArguments, IInternFactory internFactory, bool cached)
+    {
+        Contract.Requires(genericType != null);
+        Contract.Requires(genericArguments != null);
+        Contract.Requires(internFactory != null);
+
+        this.genericType = genericType;
+        this.genericArguments = genericArguments;
+        this.internFactory = internFactory;
+    }
+         
     public GenericTypeInstanceReference(INamedTypeReference genericType, IEnumerable<ITypeReference> genericArguments, IInternFactory internFactory) {
       Contract.Requires(genericType != null);
       Contract.Requires(genericArguments != null);
@@ -1122,7 +1140,7 @@ namespace Microsoft.Cci.Immutable {
           targetContainer = genericTypeInstance.GenericType; continue;
         }
         var i = 0;
-        foreach (var typeRef in genericTypeInstance.GenericArguments) if (index == i++) return typeRef;
+        foreach (var typeRef in genericTypeInstance.GenericArguments.Adapter()) if (index == i++) return typeRef;
         Contract.Assume(false); //The type parameter claims it is defined by genericTypeInstance.GenericType, so we should never get here legitimately.
         return Dummy.TypeReference;
       }
@@ -1148,7 +1166,7 @@ namespace Microsoft.Cci.Immutable {
     public static ITypeReference SpecializeIfConstructedFromApplicableTypeParameter(IGenericMethodParameterReference genericMethodParameter, IGenericMethodInstanceReference containingMethodInstance) {
       var methodReference = containingMethodInstance.GenericMethod;
       var specializedMethod = methodReference as ISpecializedMethodReference;
-      if (genericMethodParameter.DefiningMethod.InternedKey == methodReference.InternedKey || (specializedMethod != null && genericMethodParameter.DefiningMethod.InternedKey == specializedMethod.UnspecializedVersion.InternedKey)) {
+      if (genericMethodParameter.DefiningMethod.InternedKey == methodReference.InternedKey || (specializedMethod != null && genericMethodParameter.DefiningMethod.ResolvedMethod.InternedKey == specializedMethod.UnspecializedVersion.InternedKey)) {
         ushort i = 0;
         ushort n = genericMethodParameter.Index;
         IEnumerator<ITypeReference> genericArguments = containingMethodInstance.GenericArguments.GetEnumerator();
@@ -1938,9 +1956,15 @@ namespace Microsoft.Cci.Immutable {
   public abstract class Scope<MemberType> : IScope<MemberType>
     where MemberType : class, INamedEntity {
 
-    private Dictionary<int, List<MemberType>> caseSensitiveMemberNameToMemberListMap = new Dictionary<int, List<MemberType>>();
-    private Dictionary<int, List<MemberType>> caseInsensitiveMemberNameToMemberListMap = new Dictionary<int, List<MemberType>>();
-    //TODO: replace BCL Dictionary with a private implementation that is thread safe and does not need a new list to be allocated for each name
+    // Space optimization: was Dictionary<int, List<MemberType>>.
+    // There could be huge number of such List<MemberType> which contains just a single member.
+    // To save space as much as possible, we store either MemberType or MemberType[]
+    private NameScope<int, MemberType> caseSensitiveMemberNameToMemberListMap;
+
+    // Created only when really needed
+    private NameScope<int, MemberType> caseInsensitiveMemberNameToMemberListMap;
+    
+    //TODO: replace BCL Dictionary with a private implementation that is thread safe
 
     /// <summary>
     /// Adds a member to the scope. Does nothing if the member is already in the scope.
@@ -1949,22 +1973,9 @@ namespace Microsoft.Cci.Immutable {
     protected void AddMemberToCache(MemberType/*!*/ member)
       //^ ensures this.Contains(member);
     {
-      List<MemberType>/*?*/ members;
-      if (this.caseInsensitiveMemberNameToMemberListMap.TryGetValue(member.Name.UniqueKeyIgnoringCase, out members)) {
-        //^ assume members != null; //Follows from the way Dictionary is instantiated, but the verifier is ignorant of this.
-        if (!members.Contains(member)) members.Add(member);
-      } else {
-        this.caseInsensitiveMemberNameToMemberListMap[member.Name.UniqueKeyIgnoringCase] = members = new List<MemberType>();
-        members.Add(member);
-      }
-      if (this.caseSensitiveMemberNameToMemberListMap.TryGetValue(member.Name.UniqueKey, out members)) {
-        //^ assume members != null; //Follows from the way Dictionary is instantiated, but the verifier is ignorant of this.
-        if (!members.Contains(member)) members.Add(member);
-      } else {
-        this.caseSensitiveMemberNameToMemberListMap[member.Name.UniqueKey] = members = new List<MemberType>();
-        members.Add(member);
-      }
-      //^ assume this.Contains(member);
+      if (caseSensitiveMemberNameToMemberListMap == null)   caseSensitiveMemberNameToMemberListMap = new NameScope<int, MemberType>();
+
+      caseSensitiveMemberNameToMemberListMap.Add(member.Name.UniqueKey, member);
     }
 
     /// <summary>
@@ -2001,6 +2012,22 @@ namespace Microsoft.Cci.Immutable {
         if (predicate(member)) yield return member;
     }
 
+    // Create case insensitive map from case sensitive map
+    private void GenerateCaseSensitiveMap()
+    {
+        NameScope<int, MemberType> map = new NameScope<int, MemberType>(this.caseSensitiveMemberNameToMemberListMap.Count);
+
+        foreach (IEnumerable<MemberType> members in this.caseSensitiveMemberNameToMemberListMap)
+        {
+            foreach (MemberType member in members)
+            {
+                map.Add(member.Name.UniqueKeyIgnoringCase, member);
+            }
+        }
+
+        Interlocked.CompareExchange<NameScope<int, MemberType>>(ref this.caseInsensitiveMemberNameToMemberListMap, map, null);
+    }
+
     /// <summary>
     /// Returns the list of members with the given name.
     /// </summary>
@@ -2013,13 +2040,22 @@ namespace Microsoft.Cci.Immutable {
       // ^                                                            exists{INamespaceMember mem in result; mem == member}};
     {
       this.InitializeIfNecessary();
-      Dictionary<int, List<MemberType>> nameToMemberListMap = ignoreCase ? this.caseInsensitiveMemberNameToMemberListMap : this.caseSensitiveMemberNameToMemberListMap;
+
+      // Create case insensitive map from case sensitive map only when it's really needed
+      if (ignoreCase && (this.caseSensitiveMemberNameToMemberListMap != null) && (this.caseInsensitiveMemberNameToMemberListMap == null))
+      {
+          GenerateCaseSensitiveMap();
+      }
+
+      NameScope<int, MemberType> nameToMemberListMap = ignoreCase ? this.caseInsensitiveMemberNameToMemberListMap : this.caseSensitiveMemberNameToMemberListMap;
+
+      if (nameToMemberListMap == null) return emptyList;
+      
       int key = ignoreCase ? name.UniqueKeyIgnoringCase : name.UniqueKey;
-      List<MemberType>/*?*/ members;
-      if (!nameToMemberListMap.TryGetValue(key, out members)) return emptyList;
-      //^ assume members != null; //Follows from the way Dictionary is instantiated, but the verifier is ignorant of this.
-      return members.AsReadOnly();
+      
+      return nameToMemberListMap.GetValues(key);
     }
+
     private static readonly IEnumerable<MemberType> emptyList = (new List<MemberType>(0)).AsReadOnly();
 
     /// <summary>
@@ -2033,9 +2069,12 @@ namespace Microsoft.Cci.Immutable {
     public virtual IEnumerable<MemberType> Members {
       get {
         this.InitializeIfNecessary();
-        foreach (IEnumerable<MemberType> namedMemberList in this.caseSensitiveMemberNameToMemberListMap.Values)
-          foreach (MemberType member in namedMemberList)
-            yield return member;
+        if (caseSensitiveMemberNameToMemberListMap != null)
+        {
+            foreach (IEnumerable<MemberType> namedMemberList in this.caseSensitiveMemberNameToMemberListMap)
+                foreach (MemberType member in namedMemberList)
+                    yield return member;
+        }
       }
     }
 
@@ -2755,11 +2794,10 @@ namespace Microsoft.Cci.Immutable {
     public IEnumerable<ITypeReference> BaseClasses {
       get {
         if (this.baseClasses == null) {
-          var bclasses = new List<ITypeReference>(1);
+          var bclasses = ReadOnlyList<ITypeReference>.Create(this.partiallySpecializedVersion.BaseClasses);
           foreach (var partiallySpecializedBaseClassRef in this.partiallySpecializedVersion.BaseClasses)
             bclasses.Add(this.CopyAndSpecialize(partiallySpecializedBaseClassRef));
-          bclasses.TrimExcess();
-          this.baseClasses = bclasses.AsReadOnly();
+          this.baseClasses = ReadOnlyList<ITypeReference>.Freeze(bclasses);
         }
         return this.baseClasses;
       }
@@ -2871,11 +2909,10 @@ namespace Microsoft.Cci.Immutable {
     public IEnumerable<ITypeReference> Interfaces {
       get {
         if (this.interfaces == null) {
-          var ifaces = new List<ITypeReference>();
+          var ifaces = ReadOnlyList<ITypeReference>.Create(this.partiallySpecializedVersion.Interfaces);
           foreach (ITypeReference partiallySpecializedInterfaceRef in this.partiallySpecializedVersion.Interfaces)
             ifaces.Add(this.CopyAndSpecialize(partiallySpecializedInterfaceRef));
-          ifaces.TrimExcess();
-          this.interfaces = ifaces.AsReadOnly();
+          this.interfaces = ReadOnlyList<ITypeReference>.Freeze(ifaces);
         }
         return this.interfaces;
       }
@@ -4005,15 +4042,13 @@ namespace Microsoft.Cci.Immutable {
     protected override IEnumerable<ITypeReference> GetInterfaceList() {
       var coreAssembly = TypeHelper.GetDefiningUnitReference(this.PlatformType.SystemArray) as IAssemblyReference;
       var version = coreAssembly == null ? new Version(4, 0) : coreAssembly.AssemblyIdentity.Version;
-      List<ITypeReference> interfaces = new List<ITypeReference>(9);
-      interfaces.Add(this.PlatformType.SystemICloneable);
-      interfaces.Add(this.PlatformType.SystemCollectionsIEnumerable);
-      interfaces.Add(this.PlatformType.SystemCollectionsICollection);
-      interfaces.Add(this.PlatformType.SystemCollectionsIList);
-      if (version.Major >= 4) {
-        interfaces.Add(this.PlatformType.SystemCollectionsIStructuralComparable);
-        interfaces.Add(this.PlatformType.SystemCollectionsIStructuralEquatable);
-      }
+      List<ITypeReference> interfaces = new List<ITypeReference>();
+      ITypeDefinition systemArrayType = this.PlatformType.SystemArray.ResolvedType;
+      Debug.Assert(!(systemArrayType is Dummy));
+
+      // Use SystemArray.Interfaces to avoid hard coding list of interfaces here and pulling in System.ICloneable which doesn't always
+      // exist in every profile
+      interfaces.AddRange(systemArrayType.Interfaces);
       if (version.Major >= 2) {
         var argTypes = IteratorHelper.GetSingletonEnumerable<ITypeReference>(this.ElementType);
         interfaces.Add(new GenericTypeInstanceReference(this.PlatformType.SystemCollectionsGenericIList, argTypes, this.InternFactory));

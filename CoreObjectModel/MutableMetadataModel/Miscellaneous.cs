@@ -38,15 +38,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="customAttribute"></param>
     /// <param name="internFactory"></param>
     public void Copy(ICustomAttribute customAttribute, IInternFactory internFactory) {
-      if (IteratorHelper.EnumerableIsNotEmpty(customAttribute.Arguments))
-        this.arguments = new List<IMetadataExpression>(customAttribute.Arguments);
-      else
-        this.arguments = null;
+      this.arguments = IteratorHelper.CopyToList<IMetadataExpression>(customAttribute.Arguments);
       this.constructor = customAttribute.Constructor;
-      if (customAttribute.NumberOfNamedArguments > 0)
-        this.namedArguments = new List<IMetadataNamedArgument>(customAttribute.NamedArguments);
-      else
-        this.namedArguments = null;
+      this.namedArguments = IteratorHelper.CopyToList<IMetadataNamedArgument>(customAttribute.NamedArguments, customAttribute.NumberOfNamedArguments);
     }
 
     /// <summary>
@@ -102,15 +96,13 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IEnumerable<IMetadataExpression> ICustomAttribute.Arguments {
       get {
-        if (this.Arguments == null) return Enumerable<IMetadataExpression>.Empty;
-        return this.Arguments.AsReadOnly(); 
+        return this.Arguments.ToReadOnly(); 
       }
     }
 
     IEnumerable<IMetadataNamedArgument> ICustomAttribute.NamedArguments {
       get {
-        if (this.namedArguments == null) return Enumerable<IMetadataNamedArgument>.Empty;
-        return this.NamedArguments.AsReadOnly(); 
+        return this.NamedArguments.ToReadOnly(); 
       }
     }
 
@@ -237,11 +229,11 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="marshallingInformation"></param>
     /// <param name="internFactory"></param>
     public void Copy(IMarshallingInformation marshallingInformation, IInternFactory internFactory) {
-      if (marshallingInformation.UnmanagedType == UnmanagedType.CustomMarshaler)
+      if (marshallingInformation.UnmanagedType == UnmanagedTypeEx.CustomMarshaler)
         this.customMarshaller = marshallingInformation.CustomMarshaller;
       else
         this.customMarshaller = Dummy.TypeReference;
-      if (marshallingInformation.UnmanagedType == UnmanagedType.CustomMarshaler)
+      if (marshallingInformation.UnmanagedType == UnmanagedTypeEx.CustomMarshaler)
         this.customMarshallerRuntimeArgument = marshallingInformation.CustomMarshallerRuntimeArgument;
       else
         this.customMarshallerRuntimeArgument = "";
@@ -375,7 +367,11 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// A single CLR IL operation.
   /// </summary>
-  public sealed class Operation : IOperation, ICopyFrom<IOperation> {
+  public sealed class Operation :
+#if MERGED_DLL
+        IILLocation,
+#endif
+        IOperation, ICopyFrom<IOperation> {
 
     /// <summary>
     /// Allocates a single CLR IL operation.
@@ -387,6 +383,18 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.value = null;
     }
 
+#if MERGED_DLL
+    /// <summary>
+    /// Allocates a single CLR IL operation from ILReader
+    /// </summary>
+    internal Operation(MetadataReader.MethodBodyDocument doc, uint offset, OperationCode opCode, object value) {
+      this.document = doc;
+      this.offset = offset;
+      this.operationCode = opCode;
+      this.value = value;
+    }
+#endif
+    
     /// <summary>
     /// 
     /// </summary>
@@ -404,7 +412,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public ILocation Location {
-      get { return this.location; }
+      get 
+      { 
+#if MERGED_DLL
+        if ((this.location == null) && (this.document != null)) 
+          return this; 
+#endif
+        return this.location;
+      }
       set { this.location = value; }
     }
     ILocation location;
@@ -439,6 +454,32 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     object value;
 
+#if MERGED_DLL
+    MetadataReader.MethodBodyDocument document;
+
+    #region IILLocation Members
+
+    public IMethodDefinition MethodDefinition
+    {
+        get { return this.document.method; }
+    }
+
+    uint IILLocation.Offset
+    {
+        get { return this.offset; }
+    }
+
+    #endregion
+
+    #region ILocation Members
+
+    public IDocument Document
+    {
+        get { return this.document; }
+    }
+
+    #endregion
+#endif
   }
 
   /// <summary>
@@ -1234,5 +1275,95 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     #endregion
+  }
+
+  /// <summary>
+  /// Mutable equivalent to Microsoft.Cci.MetadataReader.MethodBodyDocument.  The main difference is that the 
+  /// MethodToken does not necessarily correspond to the mutable model (as tokens are not available yet).  Instead, it
+  /// is something that should be understood by the PdbReader that is carried along with this MethodBodyDocument.  
+  /// </summary>
+  public sealed class MethodBodyDocument : IMethodBodyDocument {
+    /// <summary>
+    /// The location where this document was found, or where it should be stored.
+    /// This will also uniquely identify the source document within an instance of compilation host.
+    /// </summary>
+    public string Location { get; set; }
+
+    /// <summary>
+    /// The name of the document. For example the name of the file if the document corresponds to a file.
+    /// </summary>
+    public IName Name { get; set; }
+
+    /// <summary>
+    /// Token used to find information about the method in the PDB.
+    /// </summary>
+    public uint MethodToken { get; set; }
+
+#if MERGED_DLL
+    /// <summary>
+    /// This is the PdbReader that understands the MethodToken
+    /// </summary>
+    public PdbReader PdbReader { get; set;}
+#endif
+
+    /// <summary>
+    /// Returns a token decoder for the method associated with this document.
+    /// </summary>
+    public ITokenDecoder TokenDecoder { get; set; }
+  }
+    
+  /// <summary>
+  /// Represents a location in IL operation stream.
+  /// </summary>
+  public sealed class MethodBodyLocation : IILLocation {
+
+    /// <summary>
+    /// Allocates an object that represents a location in IL operation stream.
+    /// </summary>
+    /// <param name="document">The document containing this method whose body contains this location.</param>
+    /// <param name="offset">Offset into the IL Stream.</param>
+    /// <param name="methodDef">Method definition.</param>
+    public MethodBodyLocation(
+        IMethodBodyDocument document, uint offset,
+        IMethodDefinition methodDef
+        ) {
+      this.method = methodDef;
+      this.document = document;
+      this.offset = offset;
+    }
+
+    /// <summary>
+    /// The document containing this method whose body contains this location.
+    /// </summary>
+    public IMethodBodyDocument Document {
+      get { return this.document; }
+    }
+    readonly IMethodBodyDocument document;
+
+    /// <summary>
+    /// The method whose body contains this IL operation whose location this is.
+    /// </summary>
+    /// <value></value>
+    public IMethodDefinition MethodDefinition {
+      get { return this.method; }
+    }
+    readonly IMethodDefinition method;
+
+    /// <summary>
+    /// Offset into the IL Stream.
+    /// </summary>
+    public uint Offset {
+      get { return this.offset; }
+    }
+    readonly uint offset;
+
+    #region ILocation Members
+
+    IDocument ILocation.Document {
+      get { return this.Document; }
+    }
+
+    #endregion
+
   }
 }

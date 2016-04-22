@@ -130,17 +130,17 @@ namespace Microsoft.Cci {
       ISourceLocationProvider provider = null;
       var definingUnit = TypeHelper.GetDefiningUnit(methodDefinition.ContainingTypeDefinition);
       this.unit2Provider.TryGetValue(definingUnit, out provider);
-      if (provider != null) {
-        this.lastUsedMethod = methodDefinition;
-        this.lastUsedProvider = provider;
-        return provider;
+      if (provider == null) {
+        foreach (var location in methodDefinition.Locations) {
+          var ilLocation = location as IILLocation;
+          if (ilLocation == null || ilLocation.MethodDefinition == methodDefinition) continue;
+          provider = this.GetProvider(ilLocation.MethodDefinition);
+          break;
+        }
       }
-      foreach (var location in methodDefinition.Locations) {
-        var ilLocation = location as IILLocation;
-        if (ilLocation == null || ilLocation.MethodDefinition == methodDefinition) continue;
-        return this.GetProvider(ilLocation.MethodDefinition);
-      }
-      return null;
+      this.lastUsedMethod = methodDefinition;
+      this.lastUsedProvider = provider;
+      return provider;
     }
 
     private ISourceLocationProvider/*?*/ GetProvider(IILLocation/*?*/ mbLocation) {
@@ -156,8 +156,9 @@ namespace Microsoft.Cci {
       IILLocation/*?*/ mbLocation = location as IILLocation;
       ISourceLocationProvider provider = this.GetProvider(mbLocation);
       if (provider != null)
-        foreach (var psloc in provider.GetPrimarySourceLocationsFor(location))
-          yield return psloc;
+        return provider.GetPrimarySourceLocationsFor(location);
+
+      return Enumerable<IPrimarySourceLocation>.Empty;
     }
 
     #endregion
@@ -330,11 +331,13 @@ namespace Microsoft.Cci {
         this.lastUsedProvider = provider;
         return provider;
       }
-      foreach (var location in methodDefinition.Locations) {
+      foreach (var location in methodDefinition.Locations.Adapter()) {
         var ilLocation = location as IILLocation;
         if (ilLocation == null || ilLocation.MethodDefinition == methodDefinition) continue;
         return this.GetProvider(ilLocation.MethodDefinition);
       }
+      this.lastUsedMethod = methodDefinition;
+      this.lastUsedProvider = null;
       return null;
     }
 

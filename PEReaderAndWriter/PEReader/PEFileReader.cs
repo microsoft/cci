@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.IO;
 
@@ -671,21 +672,21 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
           this.RowSize,
           this.ClassOffset,
           typeDefRowId,
-          this.IsTypeDefOrRefRefSizeSmall
+          this.IsTypeDefTableRowRefSizeSmall
         );
       if (foundRowNumber == -1)
         return 0;
       int startRowNumber = foundRowNumber;
       while (
         startRowNumber > 0
-        && this.InterfaceImplTableMemoryReader.PeekReference((startRowNumber - 1) * this.RowSize + this.ClassOffset, this.IsTypeDefOrRefRefSizeSmall) == typeDefRowId
+        && this.InterfaceImplTableMemoryReader.PeekReference((startRowNumber - 1) * this.RowSize + this.ClassOffset, this.IsTypeDefTableRowRefSizeSmall) == typeDefRowId
       ) {
         startRowNumber--;
       }
       int endRowNumber = foundRowNumber;
       while (
         endRowNumber + 1 < this.NumberOfRows
-        && this.InterfaceImplTableMemoryReader.PeekReference((endRowNumber + 1) * this.RowSize + this.ClassOffset, this.IsTypeDefOrRefRefSizeSmall) == typeDefRowId
+        && this.InterfaceImplTableMemoryReader.PeekReference((endRowNumber + 1) * this.RowSize + this.ClassOffset, this.IsTypeDefTableRowRefSizeSmall) == typeDefRowId
       ) {
         endRowNumber++;
       }
@@ -2723,7 +2724,7 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
       string fileName = debugDataReader.ReadASCIINullTerminated();
 
       var guidHex = guid.ToString("N");
-      string ageHex = age.ToString("X");
+      string ageHex = age.ToString("X", CultureInfo.InvariantCulture);
       string version = guidHex + ageHex;
 
       PEFileDebugInformation information = new PEFileDebugInformation();
@@ -3035,8 +3036,10 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
         if (sectionHeaderIter.VirtualAddress <= directory.RelativeVirtualAddress && directory.RelativeVirtualAddress < sectionHeaderIter.VirtualAddress + sectionHeaderIter.VirtualSize) {
           int relativeOffset = directory.RelativeVirtualAddress - sectionHeaderIter.VirtualAddress;
           if (directory.Size > sectionHeaderIter.VirtualSize - relativeOffset) {
-            //  PEFile Error.
+              throw new BadImageFormatException();
           }
+          if (checked(sectionHeaderIter.OffsetToRawData + relativeOffset + directory.Size) > this.BinaryDocumentMemoryBlock.Length)
+              throw new BadImageFormatException();
           MemoryBlock retMemBlock =
             new MemoryBlock(
               this.BinaryDocumentMemoryBlock.Pointer + sectionHeaderIter.OffsetToRawData + relativeOffset,
@@ -3058,8 +3061,10 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
         if (sectionHeaderIter.VirtualAddress <= RVA && RVA < sectionHeaderIter.VirtualAddress + sectionHeaderIter.VirtualSize) {
           int relativeOffset = RVA - sectionHeaderIter.VirtualAddress;
           if (size > sectionHeaderIter.VirtualSize - relativeOffset) {
-            //  PEFile Error.
+              throw new BadImageFormatException();
           }
+          if (checked(sectionHeaderIter.OffsetToRawData + relativeOffset + size) > this.BinaryDocumentMemoryBlock.Length)
+              throw new BadImageFormatException();
           MemoryBlock retMemBlock =
             new MemoryBlock(
               this.BinaryDocumentMemoryBlock.Pointer + sectionHeaderIter.OffsetToRawData + relativeOffset,
@@ -3079,6 +3084,8 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
       foreach (SectionHeader sectionHeaderIter in this.SectionHeaders) {
         if (sectionHeaderIter.VirtualAddress <= RVA && RVA < sectionHeaderIter.VirtualAddress + sectionHeaderIter.VirtualSize) {
           int relativeOffset = RVA - sectionHeaderIter.VirtualAddress;
+          if (checked(sectionHeaderIter.OffsetToRawData + sectionHeaderIter.VirtualSize) > this.BinaryDocumentMemoryBlock.Length)
+              throw new BadImageFormatException();
           MemoryBlock retMemBlock =
             new MemoryBlock(
               this.BinaryDocumentMemoryBlock.Pointer + sectionHeaderIter.OffsetToRawData + relativeOffset,
@@ -3113,6 +3120,8 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
       foreach (SectionHeader sectionHeaderIter in this.SectionHeaders) {
         if (sectionHeaderIter.VirtualAddress <= RVA && RVA + size <= sectionHeaderIter.VirtualAddress + sectionHeaderIter.VirtualSize) {
           int relativeOffset = RVA - sectionHeaderIter.VirtualAddress;
+          if (checked(sectionHeaderIter.OffsetToRawData + relativeOffset + size) > this.BinaryDocumentMemoryBlock.Length)
+              throw new BadImageFormatException();
           MemoryBlock memBlock =
             new MemoryBlock(
               this.BinaryDocumentMemoryBlock.Pointer + sectionHeaderIter.OffsetToRawData + relativeOffset,
@@ -3937,6 +3946,15 @@ namespace Microsoft.Cci.MetadataReader.PEFile {
         retSEHEntries[i] = new SEHTableEntry(sehFlags, tryOffset, tryLength, handlerOffset, handlerLength, classTokenOrFilterOffset);
       }
       return retSEHEntries;
+    }
+
+    internal bool IsMethodILNull(uint methodDefRowId) {
+      MethodRow methodRow = this.MethodTable[methodDefRowId];
+      if ((methodRow.ImplFlags & MethodImplFlags.CodeTypeMask) != MethodImplFlags.ILCodeType || methodRow.RVA == 0) {
+        return true;
+      }
+      
+      return (this.SectionHeaders.Length == 0); //reading a snapshot
     }
 
     internal MethodIL/*?*/ GetMethodIL(uint methodDefRowId) {

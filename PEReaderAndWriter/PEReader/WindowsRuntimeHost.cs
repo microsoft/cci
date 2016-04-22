@@ -17,6 +17,7 @@ using Microsoft.Cci.Immutable;
 using System.IO;
 using Microsoft.Cci.MetadataReader.ObjectModelImplementation;
 using Microsoft.Cci.MetadataReader.PEFileFlags;
+using Microsoft.Cci.MetadataReader.PEFile;
 
 namespace Microsoft.Cci.MetadataReader {
 
@@ -67,12 +68,60 @@ namespace Microsoft.Cci.MetadataReader {
   }
 
   /// <summary>
+  /// This interface defines the contract between metadata reader and windows runtime host.
+  /// Certain projection related fix ups (type and method renaming operations) within winmds
+  /// can't be handled via the metadata reader host interface's Redirect() / Rewrite() functionality.
+  /// This interace basically defines the functions that the metadata reader can invoke to perform
+  /// these fix ups as the metadata is being read off the disk (if and only if projection suport is
+  /// enabled in the host).
+  /// </summary>
+  internal interface IWindowsRuntimeMetadataReaderHost {
+    /// <summary>
+    /// Returns true if projection support is enabled in the host, false otherwise.
+    /// </summary>
+    bool ProjectToCLRTypes { get; }
+
+    /// <summary>
+    /// Fixes up names and flags for managed winmd classes if projection support is enabled in the host.
+    /// - CLR view classes and enums in managed winmds lose the '&lt;CLR&gt;' prefix in their name and become public.
+    /// - WinRT view classes and enums in managed winmds get a '&lt;WINRT&gt;' prefix in their name and become private.
+    /// </summary>
+    /// <remarks>
+    /// This is identical to the behavior one sees when one uses ildasm's "/project" option to view the contents
+    /// of a managed winmd.
+    /// </remarks>
+    void FixUpNameAndFlagsForManagedWinMDClassOrEnum(
+      PEFileToObjectModel peFileToObjectModel,
+      uint typeDefRowId,
+      IUnit containingUnit,
+      ref IName typeName,
+      ref TypeDefFlags flags
+    );
+    
+    /// <summary>
+    /// Changes the name of any method that's defined in a winmd that implements IClosable.Close() to 'Dispose'
+    /// so that managed consumers can call type.Dispose() directly (without casting to IDisposable).
+    /// </summary>
+    /// <remarks>
+    /// This is identical to the behavior one sees when one uses ildasm's "/project" option to view the contents
+    /// of a winmd.
+    /// </remarks>
+    void FixUpNameForMethodThatImplementsIClosable(
+      PEFileToObjectModel peFileToObjectModel,
+      uint methodDefRowId,
+      MethodFlags flags,
+      TypeBase parentModuleType,
+      ref IName methodName
+    );
+  }
+
+  /// <summary>
   /// A base class for an object provided by the application hosting the metadata reader. The object allows the host application
   /// to control how assembly references are unified, where files are found, how Windows Runtime types and methods are projected to CLR types and methods
   /// and so on. The object also controls the lifetime of things such as memory mapped files and blocks of unmanaged memory. Be sure to call Dispose on the object when
   /// it is no longer needed and the associated locks and/or memory must be released immediately.
   /// </summary>
-  public abstract class WindowsRuntimeMetadataReaderHost : MetadataReaderHost {
+  public abstract class WindowsRuntimeMetadataReaderHost : MetadataReaderHost, IWindowsRuntimeMetadataReaderHost {
 
     /// <summary>
     /// A base class for an object provided by the application hosting the metadata reader. The object allows the host application
@@ -144,6 +193,14 @@ namespace Microsoft.Cci.MetadataReader {
       this.UI = nameTable.GetNameFor("UI");
       this.Windows = nameTable.GetNameFor("Windows");
       this.Xaml = nameTable.GetNameFor("Xaml");
+      this.Numerics = nameTable.GetNameFor("Numerics");
+      this.Vector2 = nameTable.GetNameFor("Vector2");
+      this.Vector3 = nameTable.GetNameFor("Vector3");
+      this.Vector4 = nameTable.GetNameFor("Vector4");
+      this.Matrix3x2 = nameTable.GetNameFor("Matrix3x2");
+      this.Matrix4x4 = nameTable.GetNameFor("Matrix4x4");
+      this.Plane = nameTable.GetNameFor("Plane");
+      this.Quaternion = nameTable.GetNameFor("Quaternion");
     }
 
     bool projectToCLRTypes;
@@ -182,7 +239,15 @@ namespace Microsoft.Cci.MetadataReader {
     IName UI;
     IName Windows;
     IName Xaml;
-    WindowsRuntimePlatform platformType;
+    IName Numerics;
+    IName Vector2;
+    IName Vector3;
+    IName Vector4;
+    IName Matrix3x2;
+    IName Matrix4x4;
+    IName Plane;
+    IName Quaternion;
+    new WindowsRuntimePlatform platformType;
 
     /// <summary>
     /// Returns an object that provides a collection of references to types from the core platform, such as System.Object and System.String.
@@ -202,6 +267,7 @@ namespace Microsoft.Cci.MetadataReader {
     /// Usually the value in methodDefinition, but occassionally something else.
     /// </returns>
     public override IMethodDefinition Rewrite(IUnit containingUnit, IMethodDefinition methodDefinition) {
+      if (!this.projectToCLRTypes) return methodDefinition;
       var methodDef = methodDefinition as MethodDefinition;
       if (methodDef == null) return methodDefinition;
       var containingType = methodDefinition.ContainingTypeDefinition as INamespaceTypeDefinition;
@@ -229,26 +295,24 @@ namespace Microsoft.Cci.MetadataReader {
       if (referringModule == null || referringModule.ContainingAssembly == null || !(referringModule.ContainingAssembly.ContainsForeignTypes)) return assemblyReferences;
       var platformType = (WindowsRuntimePlatform)this.PlatformType;
       var standardRefs = new SetOfObjects();
-      if (string.Equals(this.CoreAssemblySymbolicIdentity.Name.Value, "System.Runtime", StringComparison.OrdinalIgnoreCase)) {
-        standardRefs.Add(platformType.SystemObjectModel.AssemblyIdentity);
-      } else {
-        standardRefs.Add(platformType.System.AssemblyIdentity);
-      }
-      standardRefs.Add(platformType.CoreAssemblyRef.AssemblyIdentity);
+      standardRefs.Add(platformType.SystemRuntime.AssemblyIdentity);
+      standardRefs.Add(platformType.SystemObjectModel.AssemblyIdentity);
+      standardRefs.Add(platformType.SystemRuntimeInteropServicesWindowsRuntime.AssemblyIdentity);
       standardRefs.Add(platformType.SystemRuntimeWindowsRuntime.AssemblyIdentity);
       standardRefs.Add(platformType.SystemRuntimeWindowsRuntimeUIXaml.AssemblyIdentity);
+      standardRefs.Add(platformType.SystemNumericsVectors.AssemblyIdentity);
       var result = new List<IAssemblyReference>();
       foreach (var aref in assemblyReferences) {
         if (string.Equals(aref.Name.Value, "mscorlib", StringComparison.OrdinalIgnoreCase)) continue;
         result.Add(aref);
         standardRefs.Remove(aref.AssemblyIdentity);
       }
-      if (standardRefs.Contains(platformType.CoreAssemblyRef.AssemblyIdentity)) result.Add(platformType.CoreAssemblyRef);
+      if (standardRefs.Contains(platformType.SystemRuntime.AssemblyIdentity)) result.Add(platformType.SystemRuntime);
+      if (standardRefs.Contains(platformType.SystemObjectModel.AssemblyIdentity)) result.Add(platformType.SystemObjectModel);
       if (standardRefs.Contains(platformType.SystemRuntimeInteropServicesWindowsRuntime.AssemblyIdentity)) result.Add(platformType.SystemRuntimeInteropServicesWindowsRuntime);
       if (standardRefs.Contains(platformType.SystemRuntimeWindowsRuntime.AssemblyIdentity)) result.Add(platformType.SystemRuntimeWindowsRuntime);
       if (standardRefs.Contains(platformType.SystemRuntimeWindowsRuntimeUIXaml.AssemblyIdentity)) result.Add(platformType.SystemRuntimeWindowsRuntimeUIXaml);
-      if (standardRefs.Contains(platformType.SystemObjectModel.AssemblyIdentity)) result.Add(platformType.SystemObjectModel);
-      if (standardRefs.Contains(platformType.System.AssemblyIdentity)) result.Add(platformType.System);
+      if (standardRefs.Contains(platformType.SystemNumericsVectors.AssemblyIdentity)) result.Add(platformType.SystemNumericsVectors);
       return IteratorHelper.GetReadonly(result.ToArray());
     }
 
@@ -262,7 +326,8 @@ namespace Microsoft.Cci.MetadataReader {
     /// Usually the value in typeReference, but occassionally something else.
     /// </returns>
     public override INamedTypeReference Redirect(IUnit referringUnit, INamedTypeReference typeReference) {
-      if (!this.projectToCLRTypes) return typeReference;
+      // Redirect type references but not type defintions.
+      if (!this.projectToCLRTypes || (typeReference is ITypeDefinition)) return typeReference;
       var referringModule = referringUnit as IModule;
       if (referringModule == null || referringModule.ContainingAssembly == null || !(referringModule.ContainingAssembly.ContainsForeignTypes)) return typeReference;
       var platformType = (WindowsRuntimePlatform)this.PlatformType;
@@ -293,16 +358,16 @@ namespace Microsoft.Cci.MetadataReader {
       } else if (this.IsWindowsFoundationCollections(namespaceReference)) {
         if (namespaceTypeReference.Name == this.IIterable) return platformType.SystemCollectionsGenericIEnumerable;
         if (namespaceTypeReference.Name == this.IVector) return platformType.SystemCollectionsGenericIList;
-        if (namespaceTypeReference.Name == this.IVectorView) return platformType.SystemCollectionsGenericReadOnlyList;
+        if (namespaceTypeReference.Name == this.IVectorView) return platformType.SystemCollectionsGenericIReadOnlyList;
         if (namespaceTypeReference.Name == this.IMap) return platformType.SystemCollectionsGenericIDictionary;
-        if (namespaceTypeReference.Name == this.IMapView) return platformType.SystemCollectionsGenericReadOnlyDictionary;
+        if (namespaceTypeReference.Name == this.IMapView) return platformType.SystemCollectionsGenericIReadOnlyDictionary;
         if (namespaceTypeReference.Name == this.IKeyValuePair) return platformType.SystemCollectionsGenericKeyValuePair;
       } else if (this.IsWindowsUIXamlInput(namespaceReference)) {
         if (namespaceTypeReference.Name == platformType.SystemWindowsInputICommand.Name) return platformType.SystemWindowsInputICommand;
       } else if (this.IsWindowsUIXamlInterop(namespaceReference)) {
         if (namespaceTypeReference.Name == this.IBindableIterable) return platformType.SystemCollectionsIEnumerable;
         if (namespaceTypeReference.Name == this.IBindableVector) return platformType.SystemCollectionsIList;
-        if (namespaceTypeReference.Name == this.INotifyCollectionChanged) return platformType.SystemCollectionsSpecializedINotifyColletionChanged;
+        if (namespaceTypeReference.Name == this.INotifyCollectionChanged) return platformType.SystemCollectionsSpecializedINotifyCollectionChanged;
         if (namespaceTypeReference.Name == this.NotifyCollectionChangedEventHandler) return platformType.SystemCollectionsSpecializedNotifyCollectionChangedEventHandler;
         if (namespaceTypeReference.Name == this.NotifyCollectionChangedEventArgs) return platformType.SystemCollectionsSpecializedNotifyCollectionChangedEventArgs;
         if (namespaceTypeReference.Name == this.NotifyCollectionChangedAction) return platformType.SystemCollectionsSpecializedNotifyCollectionChangedAction;
@@ -334,7 +399,244 @@ namespace Microsoft.Cci.MetadataReader {
         if (namespaceTypeReference.Name == platformType.WindowsUIXamlMediaMedia3DMatrix3D.Name)
           return platformType.WindowsUIXamlMediaMedia3DMatrix3D;
       }
+      else if (this.IsWindowsFoundationNumerics(namespaceReference)) {
+        if (namespaceTypeReference.Name == this.Vector2) return platformType.SystemNumericsVector2;
+        if (namespaceTypeReference.Name == this.Vector3) return platformType.SystemNumericsVector3;
+        if (namespaceTypeReference.Name == this.Vector4) return platformType.SystemNumericsVector4;
+        if (namespaceTypeReference.Name == this.Matrix3x2) return platformType.SystemNumericsMatrix3x2;
+        if (namespaceTypeReference.Name == this.Matrix4x4) return platformType.SystemNumericsMatrix4x4;
+        if (namespaceTypeReference.Name == this.Plane) return platformType.SystemNumericsPlane;
+        if (namespaceTypeReference.Name == this.Quaternion) return platformType.SystemNumericsQuaternion;
+      }
+
       return typeReference;
+    }
+    
+    /// <summary />
+    public const string PREFIX_CLR = "<CLR>";
+    /// <summary />
+    public const int PREFIX_CLR_LENGTH = 5;
+    /// <summary />
+    public const string PREFIX_WINRT = "<WinRT>";
+    /// <summary />
+    public const int PREFIX_WINRT_LENGTH = 7;
+
+    bool IWindowsRuntimeMetadataReaderHost.ProjectToCLRTypes { 
+      get {
+        return this.projectToCLRTypes;
+      }
+    }
+
+    // Fixes up names and flags for managed winmd classes if projection support is enabled in the host.
+    // - CLR view classes and enums in managed winmds lose the '<CLR>' prefix in their name and become public.
+    // - WinRT view classes and enums in managed winmds get a '<WinRT>' prefix in their name and become private.
+    // This is identical to the behavior one sees when one uses ildasm's "/project" option to view the contents
+    // of a managed winmd.
+    void IWindowsRuntimeMetadataReaderHost.FixUpNameAndFlagsForManagedWinMDClassOrEnum(
+      PEFileToObjectModel peFileToObjectModel,
+      uint typeDefRowId,
+      IUnit containingUnit,
+      ref IName typeName,
+      ref TypeDefFlags flags
+    ) {
+      IWindowsRuntimeMetadataReaderHost host = peFileToObjectModel.ModuleReader.metadataReaderHost as WindowsRuntimeMetadataReaderHost;
+      if (this.projectToCLRTypes) {
+        IName baseTypeNamespaceName = null;
+        IName baseTypeName = null;
+        uint baseTypeToken = peFileToObjectModel.PEFileReader.TypeDefTable.GetExtends(typeDefRowId);
+        uint baseTypeRowId = baseTypeToken & TokenTypeIds.RIDMask;
+        if (baseTypeRowId != 0) {
+          uint tokenType = baseTypeToken & TokenTypeIds.TokenTypeMask;
+          switch(tokenType) {
+            case TokenTypeIds.TypeDef:
+              TypeDefRow baseTypeDefRow = peFileToObjectModel.PEFileReader.TypeDefTable[baseTypeRowId];
+              baseTypeNamespaceName = peFileToObjectModel.GetNameFromOffset(baseTypeDefRow.Namespace);
+              baseTypeName = peFileToObjectModel.GetNameFromOffset(baseTypeDefRow.Name);
+              break;
+            case TokenTypeIds.TypeRef:
+              TypeRefRow baseTypeRefRow = peFileToObjectModel.PEFileReader.TypeRefTable[baseTypeRowId];
+              baseTypeNamespaceName = peFileToObjectModel.GetNameFromOffset(baseTypeRefRow.Namespace);
+              baseTypeName = peFileToObjectModel.GetNameFromOffset(baseTypeRefRow.Name);
+              break;
+            case TokenTypeIds.TypeSpec:
+              // We don't care about TypeSpecs because managed winmd types can never inherit generic types.
+            default:
+              break;
+          }
+          if (baseTypeName != null) {
+            IAssemblyReference containingUnitMscorlibReference = peFileToObjectModel.GetMscorlibReference();
+            this.FixUpNameAndFlagsForManagedWinMDClassOrEnum(containingUnit, containingUnitMscorlibReference, baseTypeNamespaceName, baseTypeName, ref typeName, ref flags);
+          }
+        }
+      }
+    }
+
+    private void FixUpNameAndFlagsForManagedWinMDClassOrEnum(
+      IUnit containingUnit,
+      IAssemblyReference containingUnitMscorlibReference,
+      IName baseTypeNamespaceName,
+      IName baseTypeName,
+      ref IName typeName,
+      ref TypeDefFlags typeDefFlags
+    ) {
+      if (this.projectToCLRTypes && IsManagedWinMD(containingUnit)) {
+        if (ShouldFixUpWinRTViewClassOrEnum(containingUnitMscorlibReference, baseTypeNamespaceName, baseTypeName, typeDefFlags)) {
+          typeName = NameTable.GetNameFor(PREFIX_WINRT + typeName.Value);
+          typeDefFlags = (typeDefFlags & ~TypeDefFlags.AccessMask) | TypeDefFlags.PrivateAccess;
+          // NOTE: Ildasm /project also adds the following "import" flag on <WinRT> types - however, we omit this since
+          // this is not required so far as .net native toolchain and mcg goes. This also avoids having to add special
+          // case code to avoid treating this type as a real COM type in the reduced copy transform (see isComImport
+          // check in ReducedCopyReferenceEngine.cs).
+          // typeDefFlags = typeDefFlags | TypeDefFlags.ImportImplementation;
+        } else if (ShouldFixUpCLRViewClassOrEnum(typeName, typeDefFlags)) {
+          typeName = NameTable.GetNameFor(typeName.Value.Substring(PREFIX_CLR_LENGTH));
+          typeDefFlags = (typeDefFlags & ~TypeDefFlags.AccessMask) | TypeDefFlags.PublicAccess;
+          typeDefFlags = typeDefFlags & ~TypeDefFlags.SpecialNameSemantics;
+        }
+      }
+    }
+    
+    private bool ShouldFixUpWinRTViewClassOrEnum(
+      IAssemblyReference containingUnitMscorlibReference,
+      IName baseTypeNamespaceName,
+      IName baseTypeName,
+      TypeDefFlags typeDefFlags
+    ) {
+      if ((typeDefFlags & TypeDefFlags.PublicAccess) == TypeDefFlags.PublicAccess &&
+          // By design, managed winmd classes should always be sealed - however, a bug in winmdexp.exe allows non-sealed
+          // managed winmd classes to be created if the class does not have a public constructor - see bug 188518. So we
+          // skip the check for the sealed flag here in order to avoid breaking any apps that already depend on this
+          // winmdexp.exe bug. This matches the CLR which also doesn't check for the sealed flag when fixing up
+          // managed winmd types (see ndp\clr\src\md\winmd\adapter.cpp).
+          // (typeDefFlags & TypeDefFlags.SealedSemantics) == TypeDefFlags.SealedSemantics &&
+          (typeDefFlags & TypeDefFlags.IsForeign) == TypeDefFlags.IsForeign &&
+          (typeDefFlags & TypeDefFlags.InterfaceSemantics) != TypeDefFlags.InterfaceSemantics && // Not an interface
+          !(baseTypeNamespaceName.Value == "System" && baseTypeName.Value == "ValueType") && // Not a struct
+          !(baseTypeNamespaceName.Value == "System" && baseTypeName.Value == "MulticastDelegate") && // Not a delegate
+          !(baseTypeNamespaceName.Value == "System" && baseTypeName.Value == "Attribute")) { // Not an attribute
+
+        // We have a managed winmd class or an enum in WinRT view.
+        bool isEnum = baseTypeNamespaceName.Value == "System" && baseTypeName.Value == "Enum";
+        bool referencesMscorlibv4 = 
+                    containingUnitMscorlibReference != null && !(containingUnitMscorlibReference is Dummy) &&
+                    containingUnitMscorlibReference.Version.Major == 4;
+        bool isSpecialName = (typeDefFlags & TypeDefFlags.SpecialNameSemantics) == TypeDefFlags.SpecialNameSemantics;
+
+        if (isEnum && referencesMscorlibv4 && !isSpecialName) {
+          // This is a back-compat quirk. Managed winmd enums exported with an older WinMDExp.exe have only one view (i.e. no
+          // corresponding <CLR> enum). These enums should *not* be mangled with a <WinRT> prefix and flipped to private.
+          // The only way to check whether the older WinMDExp was used is to check the version of the mscorlib referenced
+          // by the managed winmd (if referenced mscorlib has version 4.0 then the winmd was produced using the older WinMDExp -
+          // otherwise (if the referenced mscorlib has version 255.255.255.255) then the winmd was produced using newer WinMDExp).
+          // These checks are basically a copy of the checks in the CLR (see ndp\clr\src\md\winmd\adapter.cpp).
+          return false;
+        }
+
+        return true;
+      }
+
+      return false;
+    }
+    
+    private static bool ShouldFixUpCLRViewClassOrEnum(
+      IName typeName,
+      TypeDefFlags typeDefFlags
+    ) {
+      return (typeDefFlags & TypeDefFlags.PrivateAccess) == TypeDefFlags.PrivateAccess &&
+             // By design, managed winmd classes should always be sealed - however, a bug in winmdexp.exe allows non-sealed
+             // managed winmd classes to be created if the class does not have a public constructor - see bug 188518. So we
+             // skip the check for the sealed flag here in order to avoid breaking any apps that already depend on this
+             // winmdexp.exe bug. This matches the CLR which also doesn't check for the sealed flag when fixing up
+             // managed winmd types (see ndp\clr\src\md\winmd\adapter.cpp).
+             // (typeDefFlags & TypeDefFlags.SealedSemantics) == TypeDefFlags.SealedSemantics &&
+             (typeDefFlags & TypeDefFlags.SpecialNameSemantics) == TypeDefFlags.SpecialNameSemantics &&
+             typeName.Value.StartsWith(PREFIX_CLR, StringComparison.Ordinal);
+    }
+
+    // Changes the name of any method that's defined in a winmd that implements IClosable.Close() to 'Dispose'
+    // so that managed consumers can call type.Dispose() directly (without casting to IDisposable).
+    // This is identical to the behavior one sees when one uses ildasm's "/project" option to view the contents
+    // of a winmd.
+    void IWindowsRuntimeMetadataReaderHost.FixUpNameForMethodThatImplementsIClosable(
+      PEFileToObjectModel peFileToObjectModel,
+      uint methodDefRowId,
+      MethodFlags flags,
+      TypeBase parentModuleType,
+      ref IName methodName
+    ) {
+      if (projectToCLRTypes) {
+        INamespaceTypeDefinition parentNamespaceType = parentModuleType as INamespaceTypeDefinition;
+        if (parentNamespaceType != null && IsWinMD(parentNamespaceType.ContainingUnitNamespace.Unit) && parentNamespaceType.IsClass) {
+          // Is the method part of a class that is defined in a winmd?
+          // Note: We don't care about structs since WinRT structs can't implement interfaces.
+          uint paramCount;
+          peFileToObjectModel.PEFileReader.GetParamInformation(methodDefRowId, out paramCount);
+          if (paramCount == 0) {
+            // Is this a method that takes 0 parameters?
+            // Note: Desktop CLR doesn't check whether the method is public (or whether it is named Close) - so we don't either.
+            uint methodImplStart, methodImplEnd;
+            peFileToObjectModel.GetMethodImplInfoForType(parentModuleType, out methodImplStart, out methodImplEnd);
+            // Does this method implement IClosable.Close()?
+            for (uint methodImplIter = methodImplStart; methodImplIter < methodImplEnd; ++methodImplIter) {
+              MethodImplRow methodImplRow = peFileToObjectModel.PEFileReader.MethodImplTable[methodImplIter];
+              uint tokenKind = methodImplRow.MethodBody & TokenTypeIds.TokenTypeMask;
+              uint rowId = methodImplRow.MethodBody & TokenTypeIds.RIDMask;
+              IMethodReference implementedMethod = peFileToObjectModel.GetMethodReferenceForToken(parentModuleType, methodImplRow.MethodDeclaration);
+              INamespaceTypeReference implementedInterface = implementedMethod.ContainingType as INamespaceTypeReference;
+              if (implementedInterface != null &&
+                  tokenKind == TokenTypeIds.MethodDef && rowId == methodDefRowId) {
+                string implementedInterfaceName = TypeHelper.GetTypeName(implementedInterface);
+                // Note: We will see redirected type IDisposable here (instead of IClosable) since projection support is enabled.
+                if (implementedInterfaceName == "System.IDisposable") {
+                  // Note: We have a bug here. We should be checking whether the class (or one of its base classes) already has a method
+                  // named Dispose before we introduce a new one with the same signature. However, CLR has the same bug - in this case,
+                  // the class ends up with two methods named Dispose with the same signature. If someone were to try calling class.Dispose()
+                  // in this case, they would see an error from the C# compiler (i.e. C# cannot resolve the ambiguity between the two identical
+                  // methods) - but calling either of the Dispose() methods via their respective interfaces (e.g. ((IDisposable)class).Dispose())
+                  // should work. The case where we would end up with two Dispose() methods as described above should be very rare for a winmd
+                  // class. For now, we replicate the buggy CLR behavior since we want to avoid looking at all methods in the class / in all its
+                  // base classes (some of which may be in a different assembly) here.
+                  methodName = NameTable.GetNameFor("Dispose");
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    /// <summary />
+    public const string VERSION_PREFIX_CLR = "CLR";
+    /// <summary />
+    public const string VERSION_PREFIX_WINRT = "WindowsRuntime";
+
+    private static bool IsManagedWinMD(IUnitReference unitRef) {
+      IAssembly assembly = unitRef.ResolvedUnit as IAssembly;
+      if (assembly == null || assembly is Dummy || !assembly.ContainsForeignTypes)
+        return false;
+
+      foreach (string version in assembly.TargetRuntimeVersion.Split(';')) {
+        if (version.StartsWith(VERSION_PREFIX_CLR, StringComparison.OrdinalIgnoreCase)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+        
+    private static bool IsWinMD(IUnitReference unitRef) {
+      IAssembly assembly = unitRef.ResolvedUnit as IAssembly;
+      if (assembly == null || assembly is Dummy || !assembly.ContainsForeignTypes)
+        return false;
+
+      foreach (string version in assembly.TargetRuntimeVersion.Split(';')) {
+        if (version.StartsWith(VERSION_PREFIX_WINRT, StringComparison.OrdinalIgnoreCase)) {
+          return true;
+        }
+      }
+
+      return false;
     }
 
     /// <summary>
@@ -347,6 +649,7 @@ namespace Microsoft.Cci.MetadataReader {
     /// Usually the value in customAttribute, but occassionally another custom attribute.
     /// </returns>
     public override ICustomAttribute Rewrite(IUnit referringUnit, ICustomAttribute customAttribute) {
+      if (!this.projectToCLRTypes) return customAttribute;
       CustomAttribute customAttr = customAttribute as CustomAttribute;
       if (customAttr == null) return customAttribute;
       var referringModule = referringUnit as IModule;
@@ -398,9 +701,10 @@ namespace Microsoft.Cci.MetadataReader {
     /// Default implementation of UnifyAssembly. Override this method to change the behavior.
     /// </summary>
     public override AssemblyIdentity UnifyAssembly(AssemblyIdentity assemblyIdentity) {
+      if (!this.projectToCLRTypes) return assemblyIdentity;
       if (assemblyIdentity.Name.UniqueKeyIgnoringCase == this.CoreAssemblySymbolicIdentity.Name.UniqueKeyIgnoringCase &&
-        assemblyIdentity.Culture == this.CoreAssemblySymbolicIdentity.Culture && 
-        IteratorHelper.EnumerablesAreEqual(assemblyIdentity.PublicKeyToken, this.CoreAssemblySymbolicIdentity.PublicKeyToken))
+        assemblyIdentity.Culture == this.CoreAssemblySymbolicIdentity.Culture &&
+        IteratorHelper.IEquatableEnumerablesAreEqual(assemblyIdentity.PublicKeyToken, this.CoreAssemblySymbolicIdentity.PublicKeyToken))
         return this.CoreAssemblySymbolicIdentity;
       if (this.CoreIdentities.Contains(assemblyIdentity)) return this.CoreAssemblySymbolicIdentity;
       if (string.Equals(assemblyIdentity.Name.Value, "mscorlib", StringComparison.OrdinalIgnoreCase) && assemblyIdentity.Version == new Version(255, 255, 255, 255))
@@ -478,6 +782,10 @@ namespace Microsoft.Cci.MetadataReader {
       return IsWindowsUIXamlMedia(namespaceReference.ContainingUnitNamespace as INestedUnitNamespaceReference);
     }
 
+    private bool IsWindowsFoundationNumerics(INestedUnitNamespaceReference/*?*/ namespaceReference) {
+      if (namespaceReference == null || namespaceReference.Name != this.Numerics) return false;
+      return IsWindowsFoundation(namespaceReference.ContainingUnitNamespace as INestedUnitNamespaceReference);
+    }
   }
 
   class WindowsRuntimePlatform : PlatformType {
@@ -493,26 +801,26 @@ namespace Microsoft.Cci.MetadataReader {
     }
 
     /// <summary>
-    /// A reference to the CLR System assembly
+    /// A reference to the CLR System.Runtime contract assembly
     /// </summary>
-    internal IAssemblyReference System {
+    internal IAssemblyReference SystemRuntime {
       get {
-        if (this.system == null)
-          this.system = new Microsoft.Cci.Immutable.AssemblyReference(this.host, this.GetSystemSymbolicIdentity());
-        return this.system;
+        if (this.systemRuntime == null)
+          this.systemRuntime = new Microsoft.Cci.Immutable.AssemblyReference(this.host, this.GetSystemRuntimeSymbolicIdentity());
+        return this.systemRuntime;
       }
     }
-    private IAssemblyReference/*?*/ system;
+    private IAssemblyReference/*?*/ systemRuntime;
 
     /// <summary>
-    /// Returns an identity that is the same as CoreAssemblyIdentity, except that the name is "System".
+    /// Returns an identity that is the same as CoreAssemblyIdentity, except that the name is "System.Runtime".
     /// </summary>
-    private AssemblyIdentity GetSystemSymbolicIdentity() {
+    private AssemblyIdentity GetSystemRuntimeSymbolicIdentity() {
       var core = this.host.CoreAssemblySymbolicIdentity;
-      var name = this.host.NameTable.System;
+      var name = this.host.NameTable.GetNameFor("System.Runtime");
       var location = "";
       if (core.Location.Length > 0)
-        location = Path.Combine(Path.GetDirectoryName(core.Location)??"", "System.dll");
+        location = Path.Combine(Path.GetDirectoryName(core.Location)??"", "System.Runtime.dll");
       return new AssemblyIdentity(name, core.Culture, core.Version, core.PublicKeyToken, location);
     }
 
@@ -529,11 +837,11 @@ namespace Microsoft.Cci.MetadataReader {
     private IAssemblyReference/*?*/ systemObjectModel;
 
     /// <summary>
-    /// Returns an identity that is the same as CoreAssemblyIdentity, except that the name is "System".
+    /// Returns an identity that is the same as CoreAssemblyIdentity, except that the name is "System.ObjectModel".
     /// </summary>
     private AssemblyIdentity GetSystemObjectModelSymbolicIdentity() {
       var core = this.host.CoreAssemblySymbolicIdentity;
-      var name = this.host.NameTable.System;
+      var name = this.host.NameTable.GetNameFor("System.ObjectModel");
       var location = "";
       if (core.Location.Length > 0)
         location = Path.Combine(Path.GetDirectoryName(core.Location)??"", "System.ObjectModel.dll");
@@ -619,12 +927,36 @@ namespace Microsoft.Cci.MetadataReader {
     }
 
     /// <summary>
+    /// A reference to the assembly that contains CLR numeric types (like System.Numerics.Matrix3x2) to substitute for corresponding Windows Runtime types.
+    /// </summary>
+    internal IAssemblyReference SystemNumericsVectors {
+      get {
+        if (this.systemNumericsVectors == null)
+          this.systemNumericsVectors = new Microsoft.Cci.Immutable.AssemblyReference(this.host, this.GetSystemNumericsVectorsSymbolicIdentity());
+        return this.systemNumericsVectors;
+      }
+    }
+    private IAssemblyReference/*?*/ systemNumericsVectors;
+
+    /// <summary>
+    /// Returns an identity that is the same as CoreAssemblyIdentity, except that the name is "System.Numerics.Vectors".
+    /// </summary>
+    private AssemblyIdentity GetSystemNumericsVectorsSymbolicIdentity() {
+      var core = this.host.CoreAssemblySymbolicIdentity;
+      var name = this.host.NameTable.GetNameFor("System.Numerics.Vectors");
+      var location = "";
+      if (core.Location.Length > 0)
+        location = Path.Combine(Path.GetDirectoryName(core.Location)??"", "System.Numerics.Vectors.dll");
+      return new AssemblyIdentity(name, core.Culture, core.Version, core.PublicKeyToken, location);
+    }
+
+    /// <summary>
     /// System.AttributeTargets
     /// </summary>
     internal INamespaceTypeReference SystemAttributeTargets {
       get {
         if (this.systemAttributeTargets == null) {
-          this.systemAttributeTargets = this.CreateReference(this.CoreAssemblyRef, true, "System", "AttributeTargets");
+          this.systemAttributeTargets = this.CreateReference(this.SystemRuntime, true, "System", "AttributeTargets");
         }
         return this.systemAttributeTargets;
       }
@@ -637,7 +969,7 @@ namespace Microsoft.Cci.MetadataReader {
     internal INamespaceTypeReference SystemCollectionsGenericIDictionary {
       get {
         if (this.systemCollectionsGenericIDictionary == null) {
-          this.systemCollectionsGenericIDictionary = this.CreateReference(this.CoreAssemblyRef, 2, "System", "Collections", "Generic", "IDictionary");
+          this.systemCollectionsGenericIDictionary = this.CreateReference(this.SystemRuntime, 2, "System", "Collections", "Generic", "IDictionary");
         }
         return this.systemCollectionsGenericIDictionary;
       }
@@ -651,7 +983,7 @@ namespace Microsoft.Cci.MetadataReader {
       get {
         if (this.systemCollectionsGenericKeyValuePair == null) {
           this.systemCollectionsGenericKeyValuePair = 
-            this.CreateReference(this.CoreAssemblyRef, true, 2, PrimitiveTypeCode.NotPrimitive, "System", "Collections", "Generic", "KeyValuePair");
+            this.CreateReference(this.SystemRuntime, true, 2, PrimitiveTypeCode.NotPrimitive, "System", "Collections", "Generic", "KeyValuePair");
         }
         return this.systemCollectionsGenericKeyValuePair;
       }
@@ -659,46 +991,43 @@ namespace Microsoft.Cci.MetadataReader {
     INamespaceTypeReference/*?*/ systemCollectionsGenericKeyValuePair;
 
     /// <summary>
-    /// System.Collections.Generic.ReadOnlyDictionary
+    /// System.Collections.Generic.IReadOnlyDictionary
     /// </summary>
-    internal INamespaceTypeReference SystemCollectionsGenericReadOnlyDictionary {
+    internal INamespaceTypeReference SystemCollectionsGenericIReadOnlyDictionary {
       get {
-        if (this.systemCollectionsGenericReadOnlyDictionary == null) {
-          this.systemCollectionsGenericReadOnlyDictionary = this.CreateReference(this.CoreAssemblyRef, 2, "System", "Collections", "Generic", "ReadOnlyDictionary");
+        if (this.systemCollectionsGenericIReadOnlyDictionary == null) {
+          this.systemCollectionsGenericIReadOnlyDictionary = this.CreateReference(this.SystemRuntime, 2, "System", "Collections", "Generic", "IReadOnlyDictionary");
         }
-        return this.systemCollectionsGenericReadOnlyDictionary;
+        return this.systemCollectionsGenericIReadOnlyDictionary;
       }
     }
-    INamespaceTypeReference/*?*/ systemCollectionsGenericReadOnlyDictionary;
+    INamespaceTypeReference/*?*/ systemCollectionsGenericIReadOnlyDictionary;
 
     /// <summary>
     /// System.Collections.Generic.ReadOnlyList
     /// </summary>
-    public INamespaceTypeReference SystemCollectionsGenericReadOnlyList {
+    public INamespaceTypeReference SystemCollectionsGenericIReadOnlyList {
       get {
-        if (this.systemCollectionsGenericReadOnlyList == null) {
-          this.systemCollectionsGenericReadOnlyList = this.CreateReference(this.CoreAssemblyRef, 1, "System", "Collections", "Generic", "ReadOnlyList");
+        if (this.systemCollectionsGenericIReadOnlyList == null) {
+          this.systemCollectionsGenericIReadOnlyList = this.CreateReference(this.SystemRuntime, 1, "System", "Collections", "Generic", "IReadOnlyList");
         }
-        return this.systemCollectionsGenericReadOnlyList;
+        return this.systemCollectionsGenericIReadOnlyList;
       }
     }
-    INamespaceTypeReference/*?*/ systemCollectionsGenericReadOnlyList;
+    INamespaceTypeReference/*?*/ systemCollectionsGenericIReadOnlyList;
 
     /// <summary>
     /// System.Collections.Specialized.INotifyCollectionChanged
     /// </summary>
-    public INamespaceTypeReference SystemCollectionsSpecializedINotifyColletionChanged {
+    public INamespaceTypeReference SystemCollectionsSpecializedINotifyCollectionChanged {
       get {
-        if (this.systemCollectionsSpecializedINotifyColletionChanged == null) {
-          if (string.Equals(this.CoreAssemblyRef.Name.Value, "System.Runtime", StringComparison.OrdinalIgnoreCase))
-            this.systemWindowsInputICommand = this.CreateReference(this.SystemObjectModel, "System", "Collections", "Specialized", "INotifyCollectionChanged");
-          else
-            this.systemCollectionsSpecializedINotifyColletionChanged = this.CreateReference(this.System, 1, "System", "Collections", "Specialized", "INotifyCollectionChanged");
+        if (this.systemCollectionsSpecializedINotifyCollectionChanged == null) {
+          this.systemCollectionsSpecializedINotifyCollectionChanged = this.CreateReference(this.SystemObjectModel, "System", "Collections", "Specialized", "INotifyCollectionChanged");
         }
-        return this.systemCollectionsSpecializedINotifyColletionChanged;
+        return this.systemCollectionsSpecializedINotifyCollectionChanged;
       }
     }
-    INamespaceTypeReference/*?*/ systemCollectionsSpecializedINotifyColletionChanged;
+    INamespaceTypeReference/*?*/ systemCollectionsSpecializedINotifyCollectionChanged;
 
     /// <summary>
     /// System.Collections.Specialized.NotifyCollectionChangedAction
@@ -706,10 +1035,7 @@ namespace Microsoft.Cci.MetadataReader {
     public INamespaceTypeReference SystemCollectionsSpecializedNotifyCollectionChangedAction {
       get {
         if (this.systemCollectionsSpecializedNotifyCollectionChangedAction == null) {
-          if (string.Equals(this.CoreAssemblyRef.Name.Value, "System.Runtime", StringComparison.OrdinalIgnoreCase))
-            this.systemWindowsInputICommand = this.CreateReference(this.SystemObjectModel, "System", "Collections", "Specialized", "NotifyCollectionChangedAction");
-          else
-            this.systemCollectionsSpecializedNotifyCollectionChangedAction = this.CreateReference(this.System, 1, "System", "Collections", "Specialized", "NotifyCollectionChangedAction");
+          this.systemCollectionsSpecializedNotifyCollectionChangedAction = this.CreateReference(this.SystemObjectModel, "System", "Collections", "Specialized", "NotifyCollectionChangedAction");
         }
         return this.systemCollectionsSpecializedNotifyCollectionChangedAction;
       }
@@ -722,10 +1048,7 @@ namespace Microsoft.Cci.MetadataReader {
     public INamespaceTypeReference SystemCollectionsSpecializedNotifyCollectionChangedEventArgs {
       get {
         if (this.systemCollectionsSpecializedNotifyCollectionChangedEventArgs == null) {
-          if (string.Equals(this.CoreAssemblyRef.Name.Value, "System.Runtime", StringComparison.OrdinalIgnoreCase))
-            this.systemWindowsInputICommand = this.CreateReference(this.SystemObjectModel, "System", "Collections", "Specialized", "NotifyCollectionChangedEventArgs");
-          else
-            this.systemCollectionsSpecializedNotifyCollectionChangedEventArgs = this.CreateReference(this.System, 1, "System", "Collections", "Specialized", "NotifyCollectionChangedEventArgs");
+          this.systemCollectionsSpecializedNotifyCollectionChangedEventArgs = this.CreateReference(this.SystemObjectModel, "System", "Collections", "Specialized", "NotifyCollectionChangedEventArgs");
         }
         return this.systemCollectionsSpecializedNotifyCollectionChangedEventArgs;
       }
@@ -738,10 +1061,7 @@ namespace Microsoft.Cci.MetadataReader {
     public INamespaceTypeReference SystemCollectionsSpecializedNotifyCollectionChangedEventHandler {
       get {
         if (this.systemCollectionsSpecializedNotifyCollectionChangedEventHandler == null) {
-          if (string.Equals(this.CoreAssemblyRef.Name.Value, "System.Runtime", StringComparison.OrdinalIgnoreCase))
-            this.systemWindowsInputICommand = this.CreateReference(this.SystemObjectModel, "System", "ComponentModel", "INotifyPropertyChanged");
-          else
-            this.systemCollectionsSpecializedNotifyCollectionChangedEventHandler = this.CreateReference(this.System, 1, "System", "Collections", "Specialized", "NotifyCollectionChangedEventHandler");
+          this.systemCollectionsSpecializedNotifyCollectionChangedEventHandler = this.CreateReference(this.SystemObjectModel, "System", "Collections", "Specialized", "NotifyCollectionChangedEventHandler");
         }
         return this.systemCollectionsSpecializedNotifyCollectionChangedEventHandler;
       }
@@ -754,10 +1074,7 @@ namespace Microsoft.Cci.MetadataReader {
     public INamespaceTypeReference SystemComponentModelINotifyPropertyChanged {
       get {
         if (this.systemComponentModelINotifyPropertyChanged == null) {
-          if (string.Equals(this.CoreAssemblyRef.Name.Value, "System.Runtime", StringComparison.OrdinalIgnoreCase))
-            this.systemWindowsInputICommand = this.CreateReference(this.SystemObjectModel, "System", "ComponentModel", "INotifyPropertyChanged");
-          else
-            this.systemComponentModelINotifyPropertyChanged = this.CreateReference(this.System, "System", "ComponentModel", "INotifyPropertyChanged");
+          this.systemComponentModelINotifyPropertyChanged = this.CreateReference(this.SystemObjectModel, "System", "ComponentModel", "INotifyPropertyChanged");
         }
         return this.systemComponentModelINotifyPropertyChanged;
       }
@@ -770,10 +1087,7 @@ namespace Microsoft.Cci.MetadataReader {
     public INamespaceTypeReference SystemComponentModelPropertyChangedEventArgs {
       get {
         if (this.systemComponentModelPropertyChangedEventArgs == null) {
-          if (string.Equals(this.CoreAssemblyRef.Name.Value, "System.Runtime", StringComparison.OrdinalIgnoreCase))
-            this.systemWindowsInputICommand = this.CreateReference(this.SystemObjectModel, "System", "ComponentModel", "PropertyChangedEventArgs");
-          else
-            this.systemComponentModelPropertyChangedEventArgs = this.CreateReference(this.System, "System", "ComponentModel", "PropertyChangedEventArgs");
+          this.systemComponentModelPropertyChangedEventArgs = this.CreateReference(this.SystemObjectModel, "System", "ComponentModel", "PropertyChangedEventArgs");
         }
         return this.systemComponentModelPropertyChangedEventArgs;
       }
@@ -786,10 +1100,7 @@ namespace Microsoft.Cci.MetadataReader {
     public INamespaceTypeReference SystemComponentModelPropertyChangedEventHandler {
       get {
         if (this.systemComponentModelPropertyChangedEventHandler == null) {
-          if (string.Equals(this.CoreAssemblyRef.Name.Value, "System.Runtime", StringComparison.OrdinalIgnoreCase))
-            this.systemWindowsInputICommand = this.CreateReference(this.SystemObjectModel, "System", "ComponentModel", "PropertyChangedEventHandler");
-          else
-            this.systemComponentModelPropertyChangedEventHandler = this.CreateReference(this.System, "System", "ComponentModel", "PropertyChangedEventHandler");
+          this.systemComponentModelPropertyChangedEventHandler = this.CreateReference(this.SystemObjectModel, "System", "ComponentModel", "PropertyChangedEventHandler");
         }
         return this.systemComponentModelPropertyChangedEventHandler;
       }
@@ -802,7 +1113,7 @@ namespace Microsoft.Cci.MetadataReader {
     public INamespaceTypeReference SystemEventHandler1 {
       get {
         if (this.systemEventHandler1 == null) {
-          this.systemEventHandler1 = this.CreateReference(this.CoreAssemblyRef, true, 1, PrimitiveTypeCode.NotPrimitive, "System", "EventHandler");
+          this.systemEventHandler1 = this.CreateReference(this.SystemRuntime, true, 1, PrimitiveTypeCode.NotPrimitive, "System", "EventHandler");
         }
         return this.systemEventHandler1;
       }
@@ -815,7 +1126,7 @@ namespace Microsoft.Cci.MetadataReader {
     internal INamespaceTypeReference SystemIDisposable {
       get {
         if (this.systemIDisposable == null) {
-          this.systemIDisposable = this.CreateReference(this.CoreAssemblyRef, "System", "IDisposable");
+          this.systemIDisposable = this.CreateReference(this.SystemRuntime, "System", "IDisposable");
         }
         return this.systemIDisposable;
       }
@@ -828,7 +1139,7 @@ namespace Microsoft.Cci.MetadataReader {
     internal INamespaceTypeReference SystemNullable1 {
       get {
         if (this.systemNullable1 == null) {
-          this.systemNullable1 = this.CreateReference(this.CoreAssemblyRef, true, 1, PrimitiveTypeCode.NotPrimitive, "System", "Nullable");
+          this.systemNullable1 = this.CreateReference(this.SystemRuntime, true, 1, PrimitiveTypeCode.NotPrimitive, "System", "Nullable");
         }
         return this.systemNullable1;
       }
@@ -841,12 +1152,8 @@ namespace Microsoft.Cci.MetadataReader {
     internal INamespaceTypeReference SystemRuntimeInteropServicesWindowsRuntimeEventRegistrationToken {
       get {
         if (this.systemRuntimeInteropServicesWindowsRuntimeEventRegistrationToken == null) {
-          if (string.Equals(this.CoreAssemblyRef.Name.Value, "System.Runtime", StringComparison.OrdinalIgnoreCase))
-            this.systemRuntimeInteropServicesWindowsRuntimeEventRegistrationToken = 
-              this.CreateReference(this.SystemRuntimeInteropServicesWindowsRuntime, true, "System", "Runtime", "InteropServices", "WindowsRuntime", "EventRegistrationToken");
-          else
-            this.systemRuntimeInteropServicesWindowsRuntimeEventRegistrationToken = 
-              this.CreateReference(this.CoreAssemblyRef, true, "System", "Runtime", "InteropServices", "WindowsRuntime", "EventRegistrationToken");
+          this.systemRuntimeInteropServicesWindowsRuntimeEventRegistrationToken =
+            this.CreateReference(this.SystemRuntimeInteropServicesWindowsRuntime, true, "System", "Runtime", "InteropServices", "WindowsRuntime", "EventRegistrationToken");
         }
         return this.systemRuntimeInteropServicesWindowsRuntimeEventRegistrationToken;
       }
@@ -859,7 +1166,7 @@ namespace Microsoft.Cci.MetadataReader {
     internal INamespaceTypeReference SystemTimeSpan {
       get {
         if (this.systemTimeSpan == null) {
-          this.systemTimeSpan = this.CreateReference(this.CoreAssemblyRef, true, "System", "TimeSpan");
+          this.systemTimeSpan = this.CreateReference(this.SystemRuntime, true, "System", "TimeSpan");
         }
         return this.systemTimeSpan;
       }
@@ -872,10 +1179,7 @@ namespace Microsoft.Cci.MetadataReader {
     internal INamespaceTypeReference SystemUri {
       get {
         if (this.systemUri == null) {
-          if (string.Equals(this.CoreAssemblyRef.Name.Value, "System.Runtime", StringComparison.OrdinalIgnoreCase))
-            this.systemUri = this.CreateReference(this.CoreAssemblyRef, "System", "Uri");
-          else
-            this.systemUri = this.CreateReference(this.System, "System", "Uri");
+          this.systemUri = this.CreateReference(this.SystemRuntime, "System", "Uri");
         }
         return this.systemUri;
       }
@@ -888,10 +1192,7 @@ namespace Microsoft.Cci.MetadataReader {
     internal INamespaceTypeReference SystemWindowsInputICommand {
       get {
         if (this.systemWindowsInputICommand == null) {
-          if (string.Equals(this.CoreAssemblyRef.Name.Value, "System.Runtime", StringComparison.OrdinalIgnoreCase))
-            this.systemWindowsInputICommand = this.CreateReference(this.SystemObjectModel, "System", "Windows", "Input", "ICommand");
-          else
-            this.systemWindowsInputICommand = this.CreateReference(this.System, "System", "Windows", "Input", "ICommand");
+          this.systemWindowsInputICommand = this.CreateReference(this.SystemObjectModel, "System", "Windows", "Input", "ICommand");
         }
         return this.systemWindowsInputICommand;
       }
@@ -1111,6 +1412,110 @@ namespace Microsoft.Cci.MetadataReader {
     }
     INamespaceTypeReference/*?*/ windowsUIXamlMediaMedia3DMatrix3D;
 
+    /// <summary>
+    /// System.Numerics.Vector2
+    /// </summary>
+    public INamespaceTypeReference SystemNumericsVector2
+    {
+      get {
+        if (this.systemNumericsVector2 == null) {
+          this.systemNumericsVector2 =
+            this.CreateReference(this.SystemNumericsVectors, true, "System", "Numerics", "Vector2");
+        }
+        return this.systemNumericsVector2;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemNumericsVector2;
+
+    /// <summary>
+    /// System.Numerics.Vector3
+    /// </summary>
+    public INamespaceTypeReference SystemNumericsVector3
+    {
+      get {
+        if (this.systemNumericsVector3 == null) {
+          this.systemNumericsVector3 =
+            this.CreateReference(this.SystemNumericsVectors, true, "System", "Numerics", "Vector3");
+        }
+        return this.systemNumericsVector3;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemNumericsVector3;
+
+    /// <summary>
+    /// System.Numerics.Vector4
+    /// </summary>
+    public INamespaceTypeReference SystemNumericsVector4
+    {
+      get {
+        if (this.systemNumericsVector4 == null) {
+          this.systemNumericsVector4 =
+            this.CreateReference(this.SystemNumericsVectors, true, "System", "Numerics", "Vector4");
+        }
+        return this.systemNumericsVector4;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemNumericsVector4;
+
+    /// <summary>
+    /// System.Numerics.Matrix3x2
+    /// </summary>
+    public INamespaceTypeReference SystemNumericsMatrix3x2
+    {
+      get {
+        if (this.systemNumericsMatrix3x2 == null) {
+          this.systemNumericsMatrix3x2 =
+            this.CreateReference(this.SystemNumericsVectors, true, "System", "Numerics", "Matrix3x2");
+        }
+        return this.systemNumericsMatrix3x2;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemNumericsMatrix3x2;
+
+    /// <summary>
+    /// System.Numerics.Matrix4x4
+    /// </summary>
+    public INamespaceTypeReference SystemNumericsMatrix4x4
+    {
+      get {
+        if (this.systemNumericsMatrix4x4 == null) {
+          this.systemNumericsMatrix4x4 =
+            this.CreateReference(this.SystemNumericsVectors, true, "System", "Numerics", "Matrix4x4");
+        }
+        return this.systemNumericsMatrix4x4;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemNumericsMatrix4x4;
+
+    /// <summary>
+    /// System.Numerics.Plane
+    /// </summary>
+    public INamespaceTypeReference SystemNumericsPlane
+    {
+      get {
+        if (this.systemNumericsPlane == null) {
+          this.systemNumericsPlane =
+            this.CreateReference(this.SystemNumericsVectors, true, "System", "Numerics", "Plane");
+        }
+        return this.systemNumericsPlane;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemNumericsPlane;
+
+    /// <summary>
+    /// System.Numerics.Quaternion
+    /// </summary>
+    public INamespaceTypeReference SystemNumericsQuaternion
+    {
+      get {
+        if (this.systemNumericsQuaternion == null) {
+          this.systemNumericsQuaternion =
+            this.CreateReference(this.SystemNumericsVectors, true, "System", "Numerics", "Quaternion");
+        }
+        return this.systemNumericsQuaternion;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemNumericsQuaternion;
   }
 
   internal sealed partial class PEFileToObjectModel {
@@ -1130,6 +1535,29 @@ namespace Microsoft.Cci.MetadataReader {
         yield return this.GetCustomAttributeAtRow(this.currentOwningObject, parent, i);
         i++;
       }
+    }
+
+    private IAssemblyReference mscorlibReference;
+    internal IAssemblyReference GetMscorlibReference() {
+      if (mscorlibReference == null) {
+        lock (GlobalLock.LockingObject) {
+          if (mscorlibReference == null) {
+            for (int i = 0; i < this.AssemblyReferenceArray.Length; ++i) {
+              IAssemblyReference reference = this.AssemblyReferenceArray[i];
+              if (reference != null && reference.Name.UniqueKey == this.ModuleReader.Mscorlib.UniqueKey) {
+                mscorlibReference = this.AssemblyReferenceArray[i];
+                break;
+              }
+            }
+    
+            if (mscorlibReference == null) {
+              mscorlibReference = Dummy.AssemblyReference;
+            }
+          }
+        }
+      }
+      
+      return mscorlibReference;
     }
   }
 

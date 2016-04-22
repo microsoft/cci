@@ -609,6 +609,19 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
 
     /// <summary>
+    /// Returns a shallow copy of the given method body without operations
+    /// </summary>
+    internal MethodBody PartialCopy(IMethodBody methodBody)
+    {
+        Contract.Requires(methodBody != null);
+        Contract.Ensures(Contract.Result<MethodBody>() != null);
+
+        var copy = new MethodBody();
+        copy.PartialCopy(methodBody, this.internFactory);
+        return copy;
+    }
+
+    /// <summary>
     /// Returns a shallow copy of the given method definition.
     /// </summary>
     public MethodDefinition Copy(IMethodDefinition method) {
@@ -1173,7 +1186,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// <summary>
   /// 
   /// </summary>
-  public class MetadataDeepCopier {
+  public class MetadataDeepCopier : IDisposable {
 
     /// <summary>
     /// </summary>
@@ -1264,6 +1277,24 @@ namespace Microsoft.Cci.MutableCodeModel {
     }
     MetadataTraverser traverseAndPopulateDefinitionCacheWithCopies;
 
+    /// <summary />
+    public void Dispose()
+    {
+        if (traverseAndPopulateDefinitionCacheWithCopies != null)
+        {
+            traverseAndPopulateDefinitionCacheWithCopies.Dispose();
+
+            traverseAndPopulateDefinitionCacheWithCopies = null;
+        }
+
+        if (substituteCopiesForOriginals != null)
+        {
+            substituteCopiesForOriginals.Dispose();
+
+            substituteCopiesForOriginals = null;
+        }
+    }
+        
     MetadataDispatcher Dispatcher {
       get {
         Contract.Ensures(Contract.Result<MetadataDispatcher>() != null);
@@ -1725,7 +1756,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <summary>
     /// 
     /// </summary>
-    class Substitutor {
+    class Substitutor : IDisposable {
 
       internal Substitutor(IMetadataHost host, MetadataShallowCopier shallowCopier, MetadataDeepCopier deepCopier) {
         this.host = host;
@@ -1743,12 +1774,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       /// </summary>
       internal Hashtable<object, object> DefinitionCache {
         get {
-          if (this.definitionCache == null)
-            this.definitionCache = new Hashtable<object, object>();
+          if (this.definitionCache == null) {
+              this.definitionCache = ContainerCache.AcquireHashtable(1024);
+          }
           return this.definitionCache;
         }
       }
       Hashtable<object, object> definitionCache;
+
+      public void Dispose()
+      {
+        ContainerCache.ReleaseHashtable(ref this.definitionCache);
+        ContainerCache.ReleaseHashtable(ref this.referenceCache);
+        GC.SuppressFinalize(this);
+      }
 
       /// <summary>
       /// A cache of references that have already been encountered and copied. Once in the cache, the cached value is just returned unchanged.
@@ -1756,7 +1795,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       Hashtable<object, object> ReferenceCache {
         get {
           if (this.referenceCache == null)
-            this.referenceCache = new Hashtable<object, object>();
+            this.referenceCache = ContainerCache.AcquireHashtable(1024);
           return this.referenceCache;
         }
       }
@@ -2194,7 +2233,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       internal IMarshallingInformation Substitute(IMarshallingInformation marshallingInformation) {
         if (marshallingInformation is Dummy) return marshallingInformation;
         var mutableCopy = this.shallowCopier.Copy(marshallingInformation);
-        if (mutableCopy.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.CustomMarshaler)
+        if (mutableCopy.UnmanagedType == System.Runtime.InteropServices.UnmanagedTypeEx.CustomMarshaler)
           mutableCopy.CustomMarshaller = this.SubstituteViaDispatcher(mutableCopy.CustomMarshaller);
         if (mutableCopy.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.SafeArray && 
         (mutableCopy.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_DISPATCH ||
@@ -2242,7 +2281,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         return this.deepCopier.CopyMethodBody(methodBody, method);
       }
 
-      internal IMethodBody Substitute(MethodBody mutableCopy) {
+      internal void Substitute(MethodBody mutableCopy) {
         this.SubstituteElements(mutableCopy.LocalVariables);
         object copy;
         if (this.DefinitionCache.TryGetValue(mutableCopy.MethodDefinition, out copy))
@@ -2251,7 +2290,6 @@ namespace Microsoft.Cci.MutableCodeModel {
           this.SubstituteElements(mutableCopy.Operations);
           this.SubstituteElements(mutableCopy.OperationExceptionInformation);
         }
-        return mutableCopy;
       }
 
       internal IMethodDefinition Substitute(IMethodDefinition method) {
@@ -2335,7 +2373,17 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (namespaceTypeReference is Dummy) return namespaceTypeReference;
         object copy;
         if (keepAsDefinition && this.DefinitionCache.TryGetValue(namespaceTypeReference, out copy)) return (INamespaceTypeReference)copy;
-        if (this.ReferenceCache.TryGetValue(namespaceTypeReference, out copy)) return (NamespaceTypeReference)copy;
+        if (this.ReferenceCache.TryGetValue(namespaceTypeReference, out copy))
+        {
+            NamespaceTypeReference cachedCopy = (NamespaceTypeReference)copy;
+            // There are cases where the IsValueType flag changes on the same object reference
+            // and if that happens it means we have a reference that requires that bit and
+            // so we need to update our cached value to reflect that
+            // See PEFileToObjectModel.GetTypeRefReferenceAtRow for reference at:
+            // Line: if (mustBeStruct && typeRefReference != null) typeRefReference.isValueType = true;
+            if (namespaceTypeReference.IsValueType) cachedCopy.IsValueType = true;
+            return cachedCopy;
+        }
         var mutableCopy = this.shallowCopier.Copy(namespaceTypeReference);
         this.ReferenceCache.Add(namespaceTypeReference, mutableCopy);
         this.Substitute(mutableCopy);
@@ -2392,9 +2440,24 @@ namespace Microsoft.Cci.MutableCodeModel {
         return mutableCopy;
       }
 
-      internal IOperation Substitute(IOperation operation) {
+      internal IOperation Substitute(
+        IOperation operation
+#if MERGED_DLL
+          ,MetadataReader.MethodBody.ILOperationList opList = null
+          ,int index = 0
+#endif
+          )
+      {
         if (operation is Dummy) return Dummy.Operation;
-        var mutableCopy = this.shallowCopier.Copy(operation);
+        Operation mutableCopy;
+
+#if MERGED_DLL
+        if (opList != null)
+          mutableCopy = opList.GetOperation(index);
+        else
+#endif
+          mutableCopy = this.shallowCopier.Copy(operation);
+
         if (mutableCopy.Value == null) return mutableCopy;
         var typeReference = mutableCopy.Value as ITypeReference;
         if (typeReference != null)
@@ -2777,6 +2840,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         object copy;
         if (this.DefinitionCache.TryGetValue(mutableCopy.ContainingUnitNamespace, out copy))
           mutableCopy.ContainingUnitNamespace = (IUnitNamespace)copy;
+        this.SubstituteElements(mutableCopy.AttributesFor);
       }
 
       private void Substitute(NamespaceTypeReference namespaceTypeReference) {
@@ -2885,7 +2949,7 @@ namespace Microsoft.Cci.MutableCodeModel {
           assemblyReferences[i] = this.Substitute(assemblyReferences[i]);
       }
 
-      private void SubstituteElements(List<ICustomAttribute>/*?*/ customAttributes) {
+      private void SubstituteElements(IList<ICustomAttribute>/*?*/ customAttributes) {
         if (customAttributes == null) return;
         for (int i = 0, n = customAttributes.Count; i < n; i++)
           customAttributes[i] = this.Substitute(customAttributes[i]);
@@ -2993,6 +3057,22 @@ namespace Microsoft.Cci.MutableCodeModel {
           operations[i] = this.Substitute(operations[i]);
       }
 
+#if MERGED_DLL
+      internal List<IOperation> GenerateOperations(MetadataReader.MethodBody.ILOperationList opList)
+      {
+          int count = opList.Count;
+
+          List<IOperation> operations = new List<IOperation>(count);
+
+          for (int i = 0, n = count; i < n; i++)
+              operations.Add(this.Substitute(null, opList, i));
+
+          opList.FreeOffsets();
+
+          return operations;
+      }
+#endif
+
       private void SubstituteElements(List<IOperationExceptionInformation>/*?*/ operationExceptionInformations) {
         if (operationExceptionInformations == null) return;
         for (int i = 0, n = operationExceptionInformations.Count; i < n; i++)
@@ -3045,6 +3125,21 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (win32Resources == null) return;
         for (int i = 0, n = win32Resources.Count; i < n; i++)
           win32Resources[i] = this.Substitute(win32Resources[i]);
+      }
+      
+      private void SubstituteElements(Dictionary<ITypeReference, IEnumerable<ICustomAttribute>> attributesFor)
+      {
+        if (attributesFor == null)
+          return;
+
+        var pairsToSubstitute = IteratorHelper.CopyToList(attributesFor);
+        foreach (var pair in pairsToSubstitute)
+        {
+          attributesFor.Remove(pair.Key);
+          var attributesList = IteratorHelper.CopyToList(pair.Value);
+          SubstituteElements(attributesList);
+          attributesFor.Add(SubstituteViaDispatcher(pair.Key), attributesList);
+        }
       }
 
       internal IEventDefinition SubstituteReference(IEventDefinition eventDefinition) {
@@ -3296,7 +3391,27 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Requires(!(methodBody is Dummy));
       Contract.Ensures(Contract.Result<IMethodBody>() != null);
 
-      return this.SubstituteCopiesForOriginals.Substitute(this.SubstituteCopiesForOriginals.shallowCopier.Copy(methodBody));
+      MethodBody mutableCopy;
+
+#if MERGED_DLL
+      // Optimization for on-demand load operation list, do not copy operation list now
+      MetadataReader.MethodBody.ILOperationList operationList = MetadataReader.MethodBody.ILOperationList.RetrieveFrom(methodBody);
+
+      if (operationList != null)
+        mutableCopy = this.SubstituteCopiesForOriginals.shallowCopier.PartialCopy(methodBody);
+      else
+#endif
+        mutableCopy = this.SubstituteCopiesForOriginals.shallowCopier.Copy(methodBody);
+
+      this.SubstituteCopiesForOriginals.Substitute(mutableCopy);
+
+#if MERGED_DLL
+      // Optimization for on-demand load operation list, generate operation list from ILOperationList without creating individual object for original list
+      if (operationList != null)
+        mutableCopy.Operations = this.SubstituteCopiesForOriginals.GenerateOperations(operationList);
+#endif
+
+      return mutableCopy;
     }
 
     /// <summary>
@@ -4262,7 +4377,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// for the computation of all the types in the module. </param>
     public void AddDefinition(IDefinition rootOfCone, out List<INamedTypeDefinition> newTypes) {
       if (this.coneAlreadyFixed)
-        throw new ApplicationException("cone is fixed.");
+        throw new Exception("cone is fixed.");
       newTypes = new List<INamedTypeDefinition>();
       if (this.definitionCollector == null) {
         this.definitionCollector = new MetadataTraverser();
@@ -6172,7 +6287,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="marshallingInformation">The marshalling information.</param>
     /// <returns></returns>
     protected virtual MarshallingInformation DeepCopy(MarshallingInformation marshallingInformation) {
-      if (marshallingInformation.UnmanagedType == UnmanagedType.CustomMarshaler)
+      if (marshallingInformation.UnmanagedType == UnmanagedTypeEx.CustomMarshaler)
         marshallingInformation.CustomMarshaller = this.DeepCopy(marshallingInformation.CustomMarshaller);
       if (marshallingInformation.UnmanagedType == UnmanagedType.SafeArray &&
       (marshallingInformation.SafeArrayElementSubtype == VarEnum.VT_DISPATCH ||
@@ -7334,7 +7449,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="assembly"></param>
     private void AddDefinition(IAssembly assembly) {
       if (this.coneAlreadyFixed) {
-        throw new ApplicationException("Cone already fixed.");
+        throw new Exception("Cone already fixed.");
       }
       var copy = new Assembly();
       this.cache.Add(assembly, copy);
@@ -7653,7 +7768,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="module"></param>
     private void AddDefinition(IModule module) {
       if (this.coneAlreadyFixed) {
-        throw new ApplicationException("cone has already fixed.");
+        throw new Exception("cone has already fixed.");
       }
       IAssembly assembly = module as IAssembly;
       if (assembly != null) {

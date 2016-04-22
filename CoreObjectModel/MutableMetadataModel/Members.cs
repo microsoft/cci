@@ -511,21 +511,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="fieldReference"></param>
     /// <param name="internFactory"></param>
     public void Copy(IFieldReference fieldReference, IInternFactory internFactory) {
-      if (IteratorHelper.EnumerableIsNotEmpty(fieldReference.Attributes))
-        this.attributes = new List<ICustomAttribute>(fieldReference.Attributes);
-      else
-        this.attributes = null;
+      this.attributes = IteratorHelper.CopyToList<ICustomAttribute>(fieldReference.Attributes);
       this.containingType = fieldReference.ContainingType;
       if (fieldReference.IsModified)
-        this.customModifiers = new List<ICustomModifier>(fieldReference.CustomModifiers);
+        this.customModifiers = IteratorHelper.CopyToList<ICustomModifier>(fieldReference.CustomModifiers);
       else
         this.customModifiers = null;
       this.isStatic = fieldReference.IsStatic;
       this.internFactory = internFactory;
-      if (IteratorHelper.EnumerableIsNotEmpty(fieldReference.Locations))
-        this.locations = new List<ILocation>(fieldReference.Locations);
-      else
-        this.locations = null;
+      this.locations = IteratorHelper.CopyToList<ILocation>(fieldReference.Locations);
       this.name = fieldReference.Name;
       this.type = fieldReference.Type;
     }
@@ -729,14 +723,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<ICustomAttribute> IReference.Attributes {
       get {
         if (this.attributes == null) return Enumerable<ICustomAttribute>.Empty;
-        return this.attributes.AsReadOnly();
+        return this.attributes;
       }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
       get {
         if (this.locations == null) return Enumerable<ILocation>.Empty;
-        return this.locations.AsReadOnly();
+        return this.locations;
       }
     }
 
@@ -928,8 +922,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IEnumerable<ITypeReference> IGenericMethodInstanceReference.GenericArguments {
       get {
-        if (this.genericArguments == null) return Enumerable<ITypeReference>.Empty;
-        return this.genericArguments.AsReadOnly();
+        return this.genericArguments.ToReadOnly();
       }
     }
 
@@ -1040,17 +1033,14 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.compileTimeValue = localVariableDefinition.CompileTimeValue;
       else
         this.compileTimeValue = Dummy.Constant;
-      if (localVariableDefinition.IsModified && IteratorHelper.EnumerableIsNotEmpty(localVariableDefinition.CustomModifiers))
-        this.customModifiers = new List<ICustomModifier>(localVariableDefinition.CustomModifiers);
+      if (localVariableDefinition.IsModified)
+        this.customModifiers = IteratorHelper.CopyToList<ICustomModifier>(localVariableDefinition.CustomModifiers);
       else
         this.customModifiers = null;
       this.isModified = localVariableDefinition.IsModified;
       this.isPinned = localVariableDefinition.IsPinned;
       this.isReference = localVariableDefinition.IsReference;
-      if (IteratorHelper.EnumerableIsNotEmpty(localVariableDefinition.Locations))
-        this.locations = new List<ILocation>(localVariableDefinition.Locations);
-      else
-        this.locations = null;
+      this.locations = IteratorHelper.CopyToList<ILocation>(localVariableDefinition.Locations);
       this.methodDefinition = localVariableDefinition.MethodDefinition;
       this.name = localVariableDefinition.Name;
       this.type = localVariableDefinition.Type;
@@ -1215,25 +1205,38 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="internFactory"></param>
     public void Copy(IMethodBody methodBody, IInternFactory internFactory) {
       this.localsAreZeroed = methodBody.LocalsAreZeroed;
-      if (IteratorHelper.EnumerableIsNotEmpty(methodBody.LocalVariables))
-        this.localVariables = new List<ILocalDefinition>(methodBody.LocalVariables);
-      else
-        this.localVariables = null;
+      this.localVariables = IteratorHelper.CopyToList<ILocalDefinition>(methodBody.LocalVariables);
       this.maxStack = methodBody.MaxStack;
       this.methodDefinition = methodBody.MethodDefinition;
       if (!methodBody.MethodDefinition.IsAbstract && !methodBody.MethodDefinition.IsExternal && methodBody.MethodDefinition.IsCil)
-        this.operationExceptionInformation = new List<IOperationExceptionInformation>(methodBody.OperationExceptionInformation);
+        this.operationExceptionInformation = IteratorHelper.CopyToList<IOperationExceptionInformation>(methodBody.OperationExceptionInformation);
       else
         this.operationExceptionInformation = null;
       if (!methodBody.MethodDefinition.IsAbstract && !methodBody.MethodDefinition.IsExternal && methodBody.MethodDefinition.IsCil)
-        this.operations = new List<IOperation>(methodBody.Operations);
+        this.operations = IteratorHelper.CopyToList<IOperation>(methodBody.Operations);
       else
         this.operations = null;
-      if (IteratorHelper.EnumerableIsNotEmpty(methodBody.PrivateHelperTypes))
-        this.privateHelperTypes = new List<ITypeDefinition>(methodBody.PrivateHelperTypes);
-      else
-        this.privateHelperTypes = null;
+      this.privateHelperTypes = IteratorHelper.CopyToList<ITypeDefinition>(methodBody.PrivateHelperTypes);
       this.size = methodBody.Size;
+    }
+
+    /// <summary>
+    /// Makes a shallow copy of a metadata (IL) level represetation of the body of a method or of a property/event accessor, without copying operations
+    /// </summary>
+    /// <param name="methodBody"></param>
+    /// <param name="internFactory"></param>
+    internal void PartialCopy(IMethodBody methodBody, IInternFactory internFactory)
+    {
+        this.localsAreZeroed = methodBody.LocalsAreZeroed;
+        this.localVariables = IteratorHelper.CopyToList<ILocalDefinition>(methodBody.LocalVariables);
+        this.maxStack = methodBody.MaxStack;
+        this.methodDefinition = methodBody.MethodDefinition;
+        if (!methodBody.MethodDefinition.IsAbstract && !methodBody.MethodDefinition.IsExternal && methodBody.MethodDefinition.IsCil)
+            this.operationExceptionInformation = IteratorHelper.CopyToList<IOperationExceptionInformation>(methodBody.OperationExceptionInformation);
+        else
+            this.operationExceptionInformation = null;
+        this.privateHelperTypes = IteratorHelper.CopyToList<ITypeDefinition>(methodBody.PrivateHelperTypes);
+        this.size = methodBody.Size;
     }
 
     /// <summary>
@@ -1326,28 +1329,28 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<IOperationExceptionInformation> IMethodBody.OperationExceptionInformation {
       get {
         if (this.operationExceptionInformation == null) return Enumerable<IOperationExceptionInformation>.Empty;
-        return this.operationExceptionInformation.AsReadOnly();
+        return this.operationExceptionInformation;
       }
     }
 
     IEnumerable<ILocalDefinition> IMethodBody.LocalVariables {
       get {
         if (this.localVariables == null) return Enumerable<ILocalDefinition>.Empty;
-        return this.localVariables.AsReadOnly();
+        return this.localVariables;
       }
     }
 
     IEnumerable<IOperation> IMethodBody.Operations {
       get {
         if (this.operations == null) return Enumerable<IOperation>.Empty;
-        return this.operations.AsReadOnly();
+        return this.operations;
       }
     }
 
     IEnumerable<ITypeDefinition> IMethodBody.PrivateHelperTypes {
       get {
         if (this.privateHelperTypes == null) return Enumerable<ITypeDefinition>.Empty;
-        return this.privateHelperTypes.AsReadOnly();
+        return this.privateHelperTypes;
       }
     }
 
@@ -1369,8 +1372,8 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.internFactory = Dummy.InternFactory;
       this.parameters = null;
       this.platformInvokeData = Dummy.PlatformInvokeInformation;
-      this.returnValueAttributes = new List<ICustomAttribute>();
-      this.returnValueCustomModifiers = new List<ICustomModifier>();
+      this.returnValueAttributes = null;
+      this.returnValueCustomModifiers = null;
       this.returnValueMarshallingInformation = Dummy.MarshallingInformation;
       this.returnValueName = Dummy.Name;
       this.securityAttributes = null;
@@ -1390,29 +1393,29 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.body = Dummy.MethodBody;
       this.callingConvention = methodDefinition.CallingConvention;
       if (methodDefinition.IsGeneric)
-        this.genericParameters = new List<IGenericMethodParameter>(methodDefinition.GenericParameters);
+        this.genericParameters = IteratorHelper.CopyToList<IGenericMethodParameter>(methodDefinition.GenericParameters);
       else
         this.genericParameters = null;
       this.internFactory = internFactory;
       if (methodDefinition.ParameterCount > 0)
-        this.parameters = new List<IParameterDefinition>(methodDefinition.Parameters);
+        this.parameters = IteratorHelper.CopyToList<IParameterDefinition>(methodDefinition.Parameters);
       else
         this.parameters = null;
       if (methodDefinition.IsPlatformInvoke)
         this.platformInvokeData = methodDefinition.PlatformInvokeData;
       else
         this.platformInvokeData = Dummy.PlatformInvokeInformation;
-      this.returnValueAttributes = new List<ICustomAttribute>(methodDefinition.ReturnValueAttributes);
+      this.returnValueAttributes = IteratorHelper.CopyToList<ICustomAttribute>(methodDefinition.ReturnValueAttributes);
       if (methodDefinition.ReturnValueIsModified)
-        this.returnValueCustomModifiers = new List<ICustomModifier>(methodDefinition.ReturnValueCustomModifiers);
+        this.returnValueCustomModifiers = IteratorHelper.CopyToList<ICustomModifier>(methodDefinition.ReturnValueCustomModifiers);
       else
-        this.returnValueCustomModifiers = new List<ICustomModifier>(0);
+        this.returnValueCustomModifiers = null;
       if (methodDefinition.ReturnValueIsMarshalledExplicitly)
         this.returnValueMarshallingInformation = methodDefinition.ReturnValueMarshallingInformation;
       else
         this.returnValueMarshallingInformation = Dummy.MarshallingInformation;
-      if (methodDefinition.HasDeclarativeSecurity && IteratorHelper.EnumerableIsNotEmpty(methodDefinition.SecurityAttributes))
-        this.securityAttributes = new List<ISecurityAttribute>(methodDefinition.SecurityAttributes);
+      if (methodDefinition.HasDeclarativeSecurity)
+        this.securityAttributes = IteratorHelper.CopyToList<ISecurityAttribute>(methodDefinition.SecurityAttributes);
       else
         this.securityAttributes = null;
       this.type = methodDefinition.Type;
@@ -1970,13 +1973,14 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     /// <summary>
     /// Returns the list of custom modifiers, if any, associated with the returned value. Evaluate this property only if ReturnValueIsModified is true.
+    /// May be null.
     /// </summary>
     /// <value></value>
-    public List<ICustomModifier> ReturnValueCustomModifiers {
-      get { return this.returnValueCustomModifiers; }
-      set { this.returnValueCustomModifiers = value; }
+    public List<ICustomModifier>/*?*/ ReturnValueCustomModifiers {
+        get { return this.returnValueCustomModifiers; }
+        set { this.returnValueCustomModifiers = value; }
     }
-    List<ICustomModifier> returnValueCustomModifiers;
+    List<ICustomModifier>/*?*/ returnValueCustomModifiers;
 
     /// <summary>
     /// True if the return value is passed by reference (using a managed pointer).
@@ -2011,7 +2015,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </summary>
     /// <value></value>
     public bool ReturnValueIsModified {
-      get { return this.returnValueCustomModifiers.Count > 0; }
+        get { return this.returnValueCustomModifiers != null && this.returnValueCustomModifiers.Count > 0; }
     }
 
     /// <summary>
@@ -2077,12 +2081,15 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
       get {
         if (this.parameters == null) return Enumerable<IParameterTypeInformation>.Empty;
-        return IteratorHelper.GetConversionEnumerable<IParameterDefinition, IParameterTypeInformation>(this.parameters);
+        return this.parameters;
       }
     }
 
     IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
-      get { return this.returnValueCustomModifiers.AsReadOnly(); }
+      get {
+        if (this.returnValueCustomModifiers == null) return Enumerable<ICustomModifier>.Empty;
+        return this.returnValueCustomModifiers; 
+      }
     }
 
     #endregion
@@ -2092,12 +2099,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<IParameterDefinition> IMethodDefinition.Parameters {
       get {
         if (this.parameters == null) return Enumerable<IParameterDefinition>.Empty;
-        return this.parameters.AsReadOnly();
+        return this.parameters;
       }
     }
 
     IEnumerable<ICustomAttribute> IMethodDefinition.ReturnValueAttributes {
-      get { return this.returnValueAttributes.AsReadOnly(); }
+      get { 
+        if (this.returnValueAttributes == null) return Enumerable<ICustomAttribute>.Empty;
+        return this.returnValueAttributes; }
     }
 
     #endregion
@@ -2155,29 +2164,23 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="methodReference"></param>
     /// <param name="internFactory"></param>
     public void Copy(IMethodReference methodReference, IInternFactory internFactory) {
-      if (IteratorHelper.EnumerableIsNotEmpty(methodReference.Attributes))
-        this.attributes = new List<ICustomAttribute>(methodReference.Attributes);
-      else
-        this.attributes = null;
+      this.attributes = IteratorHelper.CopyToList<ICustomAttribute>(methodReference.Attributes);
       this.callingConvention = methodReference.CallingConvention;
       this.containingType = methodReference.ContainingType;
       if (methodReference.AcceptsExtraArguments)
-        this.extraParameters = new List<IParameterTypeInformation>(methodReference.ExtraParameters);
+        this.extraParameters = IteratorHelper.CopyToList<IParameterTypeInformation>(methodReference.ExtraParameters);
       else
         this.extraParameters = null;
       this.genericParameterCount = methodReference.GenericParameterCount;
       this.internFactory = internFactory;
-      if (IteratorHelper.EnumerableIsNotEmpty(methodReference.Locations))
-        this.locations = new List<ILocation>(methodReference.Locations);
-      else
-        this.locations = null;
+      this.locations = IteratorHelper.CopyToList<ILocation>(methodReference.Locations);
       this.name = methodReference.Name;
       if (methodReference.ParameterCount > 0)
-        this.parameters = new List<IParameterTypeInformation>(methodReference.Parameters);
+        this.parameters = IteratorHelper.CopyToList<IParameterTypeInformation>(methodReference.Parameters, methodReference.ParameterCount);
       else
         this.parameters = null;
       if (methodReference.ReturnValueIsModified)
-        this.returnValueCustomModifiers = new List<ICustomModifier>(methodReference.ReturnValueCustomModifiers);
+        this.returnValueCustomModifiers = IteratorHelper.CopyToList<ICustomModifier>(methodReference.ReturnValueCustomModifiers);
       else
         this.returnValueCustomModifiers = null;
       this.returnValueIsByRef = methodReference.ReturnValueIsByRef;
@@ -2492,14 +2495,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
       get {
         if (this.Parameters == null) return Enumerable<IParameterTypeInformation>.Empty;
-        return this.Parameters.AsReadOnly();
+        return this.Parameters;
       }
     }
 
     IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
       get {
         if (this.ReturnValueCustomModifiers == null) return Enumerable<ICustomModifier>.Empty;
-        return this.ReturnValueCustomModifiers.AsReadOnly();
+        return this.ReturnValueCustomModifiers;
       }
     }
 
@@ -2510,14 +2513,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<ICustomAttribute> IReference.Attributes {
       get {
         if (this.attributes == null) return Enumerable<ICustomAttribute>.Empty;
-        return this.attributes.AsReadOnly();
+        return this.attributes;
       }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
       get {
         if (this.locations == null) return Enumerable<ILocation>.Empty;
-        return this.locations.AsReadOnly();
+        return this.locations;
       }
     }
 
@@ -2551,13 +2554,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="parameterDefinition"></param>
     /// <param name="internFactory"></param>
     public void Copy(IParameterDefinition parameterDefinition, IInternFactory internFactory) {
-      if (IteratorHelper.EnumerableIsNotEmpty(parameterDefinition.Attributes))
-        this.attributes = new List<ICustomAttribute>(parameterDefinition.Attributes);
-      else
-        this.attributes = null;
+      this.attributes = IteratorHelper.CopyToList<ICustomAttribute>(parameterDefinition.Attributes);
       this.containingSignature = parameterDefinition.ContainingSignature;
       if (parameterDefinition.IsModified)
-        this.customModifiers = new List<ICustomModifier>(parameterDefinition.CustomModifiers);
+        this.customModifiers = IteratorHelper.CopyToList<ICustomModifier>(parameterDefinition.CustomModifiers);
       else
         this.customModifiers = null;
       if (parameterDefinition.HasDefaultValue)
@@ -2565,10 +2565,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       else
         this.defaultValue = Dummy.Constant;
       this.index = parameterDefinition.Index;
-      if (IteratorHelper.EnumerableIsNotEmpty(parameterDefinition.Locations))
-        this.locations = new List<ILocation>(parameterDefinition.Locations);
-      else
-        this.locations = null;
+      this.locations = IteratorHelper.CopyToList<ILocation>(parameterDefinition.Locations);
       if (parameterDefinition.IsMarshalledExplicitly)
         this.marshallingInformation = parameterDefinition.MarshallingInformation;
       else
@@ -2805,14 +2802,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<ICustomAttribute> IReference.Attributes {
       get {
         if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
-        return this.Attributes.AsReadOnly();
+        return this.Attributes;
       }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
       get {
         if (this.Locations == null) return Enumerable<ILocation>.Empty;
-        return this.Locations.AsReadOnly();
+        return this.Locations;
       }
     }
 
@@ -2859,7 +2856,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public void Copy(IParameterTypeInformation parameterTypeInformation, IInternFactory internFactory) {
       this.containingSignature = parameterTypeInformation.ContainingSignature;
       if (parameterTypeInformation.IsModified)
-        this.customModifiers = new List<ICustomModifier>(parameterTypeInformation.CustomModifiers);
+        this.customModifiers = IteratorHelper.CopyToList<ICustomModifier>(parameterTypeInformation.CustomModifiers);
       else
         this.customModifiers = null;
       this.index = parameterTypeInformation.Index;
@@ -2963,22 +2960,16 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="internFactory"></param>
     public void Copy(IPropertyDefinition propertyDefinition, IInternFactory internFactory) {
       ((ICopyFrom<ITypeDefinitionMember>)this).Copy(propertyDefinition, internFactory);
-      if (IteratorHelper.EnumerableIsNotEmpty(propertyDefinition.Accessors))
-        this.accessors = new List<IMethodReference>(propertyDefinition.Accessors);
-      else
-        this.accessors = null;
+      this.accessors = IteratorHelper.CopyToList<IMethodReference>(propertyDefinition.Accessors);
       this.callingConvention = propertyDefinition.CallingConvention;
       if (propertyDefinition.HasDefaultValue)
         this.defaultValue = propertyDefinition.DefaultValue;
       else
         this.defaultValue = Dummy.Constant;
       this.getter = propertyDefinition.Getter;
-      if (IteratorHelper.EnumerableIsNotEmpty(propertyDefinition.Parameters))
-        this.parameters = new List<IParameterDefinition>(propertyDefinition.Parameters);
-      else
-        this.parameters = null;
+      this.parameters = IteratorHelper.CopyToList<IParameterDefinition>(propertyDefinition.Parameters);
       if (propertyDefinition.ReturnValueIsModified)
-        this.returnValueCustomModifiers = new List<ICustomModifier>(propertyDefinition.ReturnValueCustomModifiers);
+        this.returnValueCustomModifiers = IteratorHelper.CopyToList<ICustomModifier>(propertyDefinition.ReturnValueCustomModifiers);
       else
         this.returnValueCustomModifiers = null;
       this.setter = propertyDefinition.Setter;
@@ -3153,14 +3144,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<IMethodReference> IPropertyDefinition.Accessors {
       get {
         if (this.Accessors == null) return Enumerable<IMethodReference>.Empty;
-        return this.Accessors.AsReadOnly();
+        return this.Accessors;
       }
     }
 
     IEnumerable<IParameterDefinition> IPropertyDefinition.Parameters {
       get {
         if (this.Parameters == null) return Enumerable<IParameterDefinition>.Empty;
-        return this.Parameters.AsReadOnly();
+        return this.Parameters;
       }
     }
 
@@ -3171,14 +3162,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
       get {
         if (this.Parameters == null) return Enumerable<IParameterTypeInformation>.Empty;
-        return IteratorHelper.GetConversionEnumerable<IParameterDefinition, IParameterTypeInformation>(this.Parameters);
+        return this.Parameters;
       }
     }
 
     IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
       get {
         if (this.ReturnValueCustomModifiers == null) return Enumerable<ICustomModifier>.Empty;
-        return this.ReturnValueCustomModifiers.AsReadOnly();
+        return this.ReturnValueCustomModifiers;
       }
     }
 
@@ -3216,12 +3207,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="internFactory"></param>
     public void Copy(ISignature signatureDefinition, IInternFactory internFactory) {
       this.callingConvention = signatureDefinition.CallingConvention;
-      if (IteratorHelper.EnumerableIsNotEmpty(signatureDefinition.Parameters))
-        this.parameters = new List<IParameterTypeInformation>(signatureDefinition.Parameters);
-      else
-        this.parameters = null;
+      this.parameters = IteratorHelper.CopyToList<IParameterTypeInformation>(signatureDefinition.Parameters);
       if (signatureDefinition.ReturnValueIsModified)
-        this.returnValueCustomModifiers = new List<ICustomModifier>(signatureDefinition.ReturnValueCustomModifiers);
+        this.returnValueCustomModifiers = IteratorHelper.CopyToList<ICustomModifier>(signatureDefinition.ReturnValueCustomModifiers);
       else
         this.returnValueCustomModifiers = null;
       this.returnValueIsByRef = signatureDefinition.ReturnValueIsByRef;
@@ -3299,14 +3287,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
       get {
         if (this.Parameters == null) return Enumerable<IParameterTypeInformation>.Empty;
-        return this.Parameters.AsReadOnly();
+        return this.Parameters;
       }
     }
 
     IEnumerable<ICustomModifier> ISignature.ReturnValueCustomModifiers {
       get {
         if (this.ReturnValueCustomModifiers == null) return Enumerable<ICustomModifier>.Empty;
-        return this.ReturnValueCustomModifiers.AsReadOnly();
+        return this.ReturnValueCustomModifiers;
       }
     }
 
@@ -3595,15 +3583,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="typeDefinitionMember"></param>
     /// <param name="internFactory"></param>
     public void Copy(ITypeDefinitionMember typeDefinitionMember, IInternFactory internFactory) {
-      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinitionMember.Attributes))
-        this.attributes = new List<ICustomAttribute>(typeDefinitionMember.Attributes);
-      else
-        this.attributes = null;
+      this.attributes = IteratorHelper.CopyToList<ICustomAttribute>(typeDefinitionMember.Attributes);
       this.containingTypeDefinition = typeDefinitionMember.ContainingTypeDefinition;
-      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinitionMember.Locations))
-        this.locations = new List<ILocation>(typeDefinitionMember.Locations);
-      else
-        this.locations = null;
+      this.locations = IteratorHelper.CopyToList<ILocation>(typeDefinitionMember.Locations);
       this.name = typeDefinitionMember.Name;
       this.flags = (int)typeDefinitionMember.Visibility;
     }
@@ -3715,14 +3697,14 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<ICustomAttribute> IReference.Attributes {
       get {
         if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
-        return this.Attributes.AsReadOnly();
+        return this.Attributes;
       }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
       get {
         if (this.Locations == null) return Enumerable<ILocation>.Empty;
-        return this.Locations.AsReadOnly();
+        return this.Locations;
       }
     }
 

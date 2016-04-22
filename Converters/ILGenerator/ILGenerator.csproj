@@ -21,7 +21,7 @@
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -101,10 +101,15 @@
     <Compile Include="..\..\common\include\Version.cs">
       <Link>Build\Version.cs</Link>
     </Compile>
+    <Compile Include="..\..\common\include\PortingHelpers.cs" />
+    <Compile Include="..\..\common\include\DietCollection.cs" />
     <Compile Include="ILGenerator.cs" />
     <Compile Include="ILRewriter.cs" />
     <Compile Include="MethodBody.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

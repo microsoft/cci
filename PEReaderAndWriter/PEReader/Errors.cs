@@ -14,6 +14,7 @@ using System.Text;
 using Microsoft.Cci.MetadataReader.PEFileFlags;
 using Microsoft.Cci.UtilityDataStructures;
 using System.Globalization;
+using System.Reflection;
 
 //^ using Microsoft.Contracts;
 
@@ -305,7 +306,7 @@ namespace Microsoft.Cci.MetadataReader.Errors {
 
     public string Message {
       get {
-        System.Resources.ResourceManager resourceManager = new System.Resources.ResourceManager("Microsoft.Cci.PeReaderErrorMessages", typeof(MetadataReaderErrorMessage).Assembly);
+        System.Resources.ResourceManager resourceManager = new System.Resources.ResourceManager("Microsoft.Cci.PeReaderErrorMessages", typeof(MetadataReaderErrorMessage).GetTypeInfo().Assembly);
         string messageKey = this.mrwErrorKind.ToString();
         string/*?*/ localizedString = null;
         try {

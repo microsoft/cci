@@ -372,7 +372,7 @@ namespace Microsoft.Cci {
       Contract.Requires(prefix != null);
       var indexOfLastDot = methodName.LastIndexOf('.');
       if (indexOfLastDot == -1) return methodName.StartsWith(prefix);
-      return String.Compare(methodName, indexOfLastDot + 1, prefix, 0, prefix.Length, false) == 0;
+      return String.Compare(methodName, indexOfLastDot + 1, prefix, 0, prefix.Length, StringComparison.CurrentCulture) == 0;
     }
 
     /// <summary>
@@ -488,7 +488,7 @@ namespace Microsoft.Cci {
       Contract.Requires(methodReference != null);
       Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
 
-      IMethodDefinition result = TypeHelper.GetMethod(declaringType.GetMembersNamed(methodReference.Name, false), methodReference, resolveTypes: true);
+      IMethodDefinition result = TypeHelper.GetNamedMethod(declaringType.Methods, methodReference.Name, methodReference, resolveTypes: true, requireMatchingSpecialization: true);
       if (result is Dummy) {
         foreach (ITypeDefinitionMember member in declaringType.PrivateHelperMembers) {
           IMethodDefinition/*?*/ meth = member as IMethodDefinition;
@@ -502,10 +502,14 @@ namespace Microsoft.Cci {
             if (MemberHelper.SignaturesAreEqual(meth, methodReference, resolveTypes: true)) return meth;
           }
         }
+
         //perhaps this is an inherited method?
         foreach (var baseTypeRef in declaringType.BaseClasses) {
           var meth = MemberHelper.ResolveMethod(baseTypeRef.ResolvedType, methodReference);
-          if (!(meth is Dummy)) return meth;
+          // If the reference got resolved to a constructor in one of the base classes,
+          // return dummy method definition to indicate that we have not resolved the reference 
+          // since constructors cannot be inherited.
+          if (!(meth is Dummy)) return meth.IsConstructor ? Dummy.MethodDefinition : meth;
         }
         if (declaringType.IsInterface) {
           foreach (ITypeReference baseInterfaceRef in declaringType.Interfaces) {
@@ -516,11 +520,11 @@ namespace Microsoft.Cci {
       }
       return result;
     }
-
+    
     /// <summary>
     /// Returns true if the two signatures match according to the criteria of the CLR loader.
     /// </summary>
-    public static bool SignaturesAreEqual(ISignature signature1, ISignature signature2, bool resolveTypes = false) {
+    public static bool SignaturesAreEqual(ISignature signature1, ISignature signature2, bool resolveTypes = true) {
       Contract.Requires(signature1 != null);
       Contract.Requires(signature2 != null);
 
@@ -535,7 +539,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// Returns true if the two generic method signatures match according to the criteria of the CLR loader.
     /// </summary>
-    public static bool GenericMethodSignaturesAreEqual(ISignature method1, ISignature method2, bool resolveTypes = false) {
+    public static bool GenericMethodSignaturesAreEqual(ISignature method1, ISignature method2, bool resolveTypes = true) {
       Contract.Requires(method1 != null);
       Contract.Requires(method2 != null);
 
@@ -1130,7 +1134,7 @@ namespace Microsoft.Cci {
     /// An object that compares to instances of IParameterTypeInformation for equality using the assumption
     /// that two generic method type parameters are equivalent if their parameter list indices are the same.
     /// </summary>
-    public GenericMethodParameterInformationComparer(bool resolveTypes = false) {
+    public GenericMethodParameterInformationComparer(bool resolveTypes = true) {
       this.resolveTypes = true;
     }
 
@@ -1167,7 +1171,7 @@ namespace Microsoft.Cci {
     /// An object that compares to instances of IParameterTypeInformation for equality.
     /// </summary>
     /// <param name="resolveTypes"></param>
-    public ParameterInformationComparer(bool resolveTypes = false) {
+    public ParameterInformationComparer(bool resolveTypes = true) {
       this.resolveTypes = resolveTypes;
     }
 
@@ -1270,7 +1274,7 @@ namespace Microsoft.Cci {
       Contract.Requires(field != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
-      StringBuilder sb = new StringBuilder();
+      StringBuilder sb = StringBuilderCache.Acquire();
       if ((formattingOptions & NameFormattingOptions.Visibility) != 0) {
         sb.Append(this.GetVisibility(field.ResolvedField));
         sb.Append(' ');
@@ -1295,7 +1299,7 @@ namespace Microsoft.Cci {
       }
       if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
         sb.Append(this.typeNameFormatter.GetTypeName(field.ContainingType, formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind)));
-        sb.Append(".");
+        sb.Append('.');
       }
       var fieldName = field.Name.Value;
       if ((formattingOptions & NameFormattingOptions.EscapeKeyword) != 0) fieldName = this.typeNameFormatter.EscapeKeyword(fieldName);
@@ -1308,7 +1312,7 @@ namespace Microsoft.Cci {
       } else {
         sb.Append(fieldName);
       }
-      return sb.ToString();
+      return StringBuilderCache.GetStringAndRelease(sb);
     }
 
     /// <summary>
@@ -1342,7 +1346,7 @@ namespace Microsoft.Cci {
       Contract.Requires(method != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
-      StringBuilder sb = new StringBuilder();
+      StringBuilder sb = StringBuilderCache.Acquire();
       if ((formattingOptions & NameFormattingOptions.Modifiers) != 0) {
         if (method.IsStatic) sb.Append("static ");
         if (method.ResolvedMethod.IsAbstract) sb.Append("abstract ");
@@ -1372,7 +1376,7 @@ namespace Microsoft.Cci {
         sb.Append('~');
         sb.Append(this.typeNameFormatter.GetTypeName(method.Type, formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind)));
       }
-      return sb.ToString();
+      return StringBuilderCache.GetStringAndRelease(sb);
     }
 
     /// <summary>
@@ -1495,8 +1499,8 @@ namespace Microsoft.Cci {
       Contract.Requires(sb != null);
 
       if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
-        sb.Append(this.typeNameFormatter.GetTypeName(method.ContainingType,
-          formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind|NameFormattingOptions.TypeConstraints)));
+        this.typeNameFormatter.AppendTypeName(sb, method.ContainingType,
+          formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind|NameFormattingOptions.TypeConstraints));
         sb.Append('.');
       }
       // Special name translation
@@ -1510,11 +1514,11 @@ namespace Microsoft.Cci {
       if (method.ResolvedMethod.IsSpecialName && (formattingOptions & NameFormattingOptions.PreserveSpecialNames) == 0) {
         if (methodName.StartsWith("get_", StringComparison.Ordinal)) {
           //^ assume methodName.Length >= 4;
-          sb.Append(methodName.Substring(4));
+          sb.Append(methodName, 4, methodName.Length - 4);
           sb.Append(".get");
         } else if (methodName.StartsWith("set_", StringComparison.Ordinal)) {
           //^ assume methodName.Length >= 4;
-          sb.Append(methodName.Substring(4));
+          sb.Append(methodName, 4, methodName.Length - 4);
           sb.Append(".set");
         } else {
           sb.Append(methodName);

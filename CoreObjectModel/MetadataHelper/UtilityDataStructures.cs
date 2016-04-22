@@ -114,8 +114,8 @@ namespace Microsoft.Cci.UtilityDataStructures {
     const int loadPercent = 60;
 
     static uint SizeFromExpectedEntries(uint expectedEntries) {
-      uint expectedSize = (expectedEntries * 10) / 6; ;
-      uint initialSize = 16;
+      uint expectedSize = (expectedEntries * 10) / 6;
+      uint initialSize = 4;
       while (initialSize < expectedSize && initialSize > 0) initialSize <<= 1;
       return initialSize;
     }
@@ -896,11 +896,11 @@ namespace Microsoft.Cci.UtilityDataStructures {
     uint size; //always a power of two
     uint resizeCount;
     uint count;
-    const int loadPercent = 60;
+    const int loadFactor = 8;
 
     static uint SizeFromExpectedEntries(uint expectedEntries) {
-      uint expectedSize = (expectedEntries * 10) / 6; ;
-      uint initialSize = 16;
+      uint expectedSize = (expectedEntries * 10) / loadFactor;
+      uint initialSize = 8;
       while (initialSize < expectedSize && initialSize > 0) initialSize <<= 1;
       return initialSize;
     }
@@ -917,7 +917,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
     /// </summary>
     public Hashtable(uint expectedEntries) {
       this.size = SizeFromExpectedEntries(expectedEntries);
-      this.resizeCount = this.size * 6 / 10;
+      this.resizeCount = this.size * loadFactor / 10;
       this.keyValueTable = new KeyValuePair[this.size];
       this.count = 0;
     }
@@ -966,7 +966,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
         this.size <<= 1;
       }
       this.count = 0;
-      this.resizeCount = this.size * 6 / 10;
+      this.resizeCount = this.size * loadFactor / 10;
       int len = oldKeyValueTable.Length;
       for (int i = 0; i < len; ++i) {
         var key = oldKeyValueTable[i].key;
@@ -2356,7 +2356,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
 
     static uint SizeFromExpectedEntries(uint expectedEntries) {
       uint expectedSize = (uint)(expectedEntries * 10) / 6; ;
-      uint initialSize = 16;
+      uint initialSize = 8;
       while (initialSize < expectedSize && initialSize > 0) initialSize <<= 1;
       return initialSize;
     }
@@ -2365,7 +2365,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
     /// Constructor for DoubleHashtable
     /// </summary>
     public DoubleHashtable()
-      : this(16) {
+      : this(4) {
     }
 
     /// <summary>
@@ -2474,7 +2474,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
 
     static uint SizeFromExpectedEntries(uint expectedEntries) {
       uint expectedSize = (uint)(expectedEntries * 10) / 6; ;
-      uint initialSize = 16;
+      uint initialSize = 8;
       while (initialSize < expectedSize && initialSize > 0) initialSize <<= 1;
       return initialSize;
     }
@@ -2483,7 +2483,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
     /// Constructor for DoubleHashtable
     /// </summary>
     public DoubleHashtable()
-      : this(16) {
+      : this(4) {
     }
 
     /// <summary>
@@ -2672,10 +2672,34 @@ namespace Microsoft.Cci.UtilityDataStructures {
       this.dummyCount = 0;
       this.resizeCount = this.size * 6 / 10;
       int len = oldElements.Length;
-      for (int i = 0; i < len; ++i) {
-        var element = oldElements[i];
-        if (element != null && element != dummyObject)
-          this.AddInternal(element);
+
+      uint mask = this.size - 1;
+      var elements = this.elements;
+      
+      unchecked
+      {
+        for (int i = 0; i < len; ++i) {
+          var element = oldElements[i];
+          if (element != null && element != dummyObject)
+          {
+            // When add during Expand call, skip checking for dummyObject and duplication
+
+            var hash = (uint)element.GetHashCode();
+            uint tableIndex = HashHelper.HashInt1(hash) & mask;
+            var elem = elements[tableIndex];
+            if (elem != null)
+            {
+              hash = HashHelper.HashInt2(hash);
+              tableIndex = (tableIndex + hash) & mask;
+              while ((elem = elements[tableIndex]) != null)
+              {
+                tableIndex = (tableIndex + hash) & mask;
+              }
+            }
+            elements[tableIndex] = element;
+            this.count++;
+          }
+        }
       }
     }
 

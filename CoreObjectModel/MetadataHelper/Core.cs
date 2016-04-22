@@ -15,6 +15,7 @@ using System.IO;
 using System.Threading;
 using Microsoft.Cci.Immutable;
 using Microsoft.Cci.UtilityDataStructures;
+using System.Reflection;
 
 namespace Microsoft.Cci {
 
@@ -190,11 +191,12 @@ namespace Microsoft.Cci {
           }
         }
       }
+
       if (result == null) {
         //If we get here, none of the assemblies in the unit cache has an opinion on the identity of the core assembly.
         //Usually this will be because this method was called before any assemblies have been loaded.
         //In this case, we have little option but to choose the identity of the core assembly of the platform we are running on.
-        var coreAssemblyName = typeof(object).Assembly.GetName();
+        var coreAssemblyName = typeof(object).GetTypeInfo().Assembly.GetName();
         var version = coreAssemblyName.Version;
         Contract.Assume(version != null);
         var publicKeyToken = coreAssemblyName.GetPublicKeyToken();
@@ -281,6 +283,7 @@ namespace Microsoft.Cci {
       return Dummy.Unit;
     }
 
+#if !COREFX_SUBSET
     /// <summary>
     /// Returns the CodeBase of the named assembly (which is a URL), except if the URL has the file scheme.
     /// In that case the URL is converted to a local file path that can be used by System.IO.Path methods.
@@ -297,6 +300,7 @@ namespace Microsoft.Cci {
       }
       return loc;
     }
+#endif
 
     /// <summary>
     /// A collection of methods that associate unique integers with metadata model entities.
@@ -393,7 +397,7 @@ namespace Microsoft.Cci {
     public IEnumerable<IUnit> LoadedUnits {
       get {
         lock (GlobalLock.LockingObject) {
-          return new List<IUnit>(this.unitCache.Values).AsReadOnly();
+          return this.unitCache.Values; // Dictionary.ValueCollection is read-only
         }
       }
     }
@@ -416,7 +420,8 @@ namespace Microsoft.Cci {
         return this.platformType;
       }
     }
-    IPlatformType/*?*/ platformType;
+    /// <summary />
+    protected IPlatformType/*?*/ platformType;
 
     /// <summary>
     /// Returns an object that provides a collection of references to types from the core platform, such as System.Object and System.String.
@@ -526,6 +531,7 @@ namespace Microsoft.Cci {
       }
 #endif
 
+#if !COREFX_SUBSET
       // Check platform location
       var platformDir = Path.GetDirectoryName(Path.GetFullPath(GetLocalPath(typeof(object).Assembly.GetName())))??"";
       var coreVersion = this.CoreAssemblySymbolicIdentity.Version;
@@ -548,6 +554,7 @@ namespace Microsoft.Cci {
 
       result = this.Probe(platformDir, referencedAssembly);
       if (result != null) return result;
+#endif
 
       // Give up
       return new AssemblyIdentity(referencedAssembly, "unknown://location");
@@ -600,8 +607,12 @@ namespace Microsoft.Cci {
     /// The event is raised on a separate thread.
     /// </summary>
     public virtual void ReportErrors(Microsoft.Cci.ErrorEventArgs errorEventArguments) {
+#if !COREFX_SUBSET
       if (this.Errors != null)
         ThreadPool.QueueUserWorkItem(this.SynchronousReportErrors, errorEventArguments);
+#else
+      throw new NotImplementedException();
+#endif
     }
 
     /// <summary>
@@ -644,7 +655,7 @@ namespace Microsoft.Cci {
     public virtual AssemblyIdentity UnifyAssembly(AssemblyIdentity assemblyIdentity) {
       if (assemblyIdentity.Name.UniqueKeyIgnoringCase == this.CoreAssemblySymbolicIdentity.Name.UniqueKeyIgnoringCase &&
         assemblyIdentity.Culture == this.CoreAssemblySymbolicIdentity.Culture && 
-        IteratorHelper.EnumerablesAreEqual(assemblyIdentity.PublicKeyToken, this.CoreAssemblySymbolicIdentity.PublicKeyToken))
+        IteratorHelper.IEquatableEnumerablesAreEqual(assemblyIdentity.PublicKeyToken, this.CoreAssemblySymbolicIdentity.PublicKeyToken))
         return this.CoreAssemblySymbolicIdentity;
       if (this.CoreIdentities.Contains(assemblyIdentity)) return this.CoreAssemblySymbolicIdentity;
       return assemblyIdentity;
@@ -1097,6 +1108,9 @@ namespace Microsoft.Cci {
     private void Close() {
       foreach (var disposable in this.disposableObjectAllocatedByThisHost)
         disposable.Dispose();
+
+      this.disposableObjectAllocatedByThisHost.Clear();
+      this.platformType = null;
     }
 
     /// <summary>
@@ -1115,7 +1129,7 @@ namespace Microsoft.Cci {
     /// <remarks>When overridding this method, be sure to add any disposable objects to this.disposableObjectAllocatedByThisHost.</remarks>
     public virtual IBinaryDocumentMemoryBlock/*?*/ OpenBinaryDocument(IBinaryDocument sourceDocument) {
       try {
-#if !COMPACTFX && !__MonoCS__
+#if !COMPACTFX && !__MonoCS__ 
         IBinaryDocumentMemoryBlock binDocMemoryBlock = MemoryMappedFile.CreateMemoryMappedFile(sourceDocument.Location, sourceDocument);
 #else
         IBinaryDocumentMemoryBlock binDocMemoryBlock = UnmanagedBinaryMemoryBlock.CreateUnmanagedBinaryMemoryBlock(sourceDocument.Location, sourceDocument);
@@ -1144,7 +1158,7 @@ namespace Microsoft.Cci {
         var directory = Path.GetDirectoryName(parentSourceDocument.Location)??"";
         var fullPath = Path.Combine(directory, childDocumentName);
         IBinaryDocument newBinaryDocument = BinaryDocument.GetBinaryDocumentForFile(fullPath, this);
-#if !COMPACTFX && !__MonoCS__
+#if !COMPACTFX && !__MonoCS__ 
         IBinaryDocumentMemoryBlock binDocMemoryBlock = MemoryMappedFile.CreateMemoryMappedFile(newBinaryDocument.Location, newBinaryDocument);
 #else
         IBinaryDocumentMemoryBlock binDocMemoryBlock = UnmanagedBinaryMemoryBlock.CreateUnmanagedBinaryMemoryBlock(newBinaryDocument.Location, newBinaryDocument);
@@ -1377,15 +1391,12 @@ namespace Microsoft.Cci {
     }
 
     sealed class NestedTypeStore {
-      internal readonly uint ContainingTypeInternedId;
       internal readonly uint GenericParameterCount;
       internal readonly uint InternedId;
       internal NestedTypeStore(
-        uint containingTypeInternedId,
         uint genericParameterCount,
         uint internedId
       ) {
-        this.ContainingTypeInternedId = containingTypeInternedId;
         this.GenericParameterCount = genericParameterCount;
         this.InternedId = internedId;
       }
@@ -1471,7 +1482,9 @@ namespace Microsoft.Cci {
     readonly MultiHashtable<ModuleStore> ModuleHashtable;
     readonly DoubleHashtable NestedNamespaceHashtable;
     readonly MultiHashtable<NamespaceTypeStore> NamespaceTypeHashtable;
-    readonly MultiHashtable<NestedTypeStore> NestedTypeHashtable;
+    // NestedTypeHashTable maps interned keys of type references of containing types to hash tables that
+    // map names of contained nested types to NestedTypeStores of contained nested type references.
+    readonly Hashtable<MultiHashtable<NestedTypeStore>> NestedTypeHashtable;
     readonly Hashtable VectorTypeHashTable;
     readonly Hashtable PointerTypeHashTable;
     readonly Hashtable ManagedPointerTypeHashTable;
@@ -1512,7 +1525,7 @@ namespace Microsoft.Cci {
       this.ModuleHashtable = new MultiHashtable<ModuleStore>();
       this.NestedNamespaceHashtable = new DoubleHashtable();
       this.NamespaceTypeHashtable = new MultiHashtable<NamespaceTypeStore>();
-      this.NestedTypeHashtable = new MultiHashtable<NestedTypeStore>();
+      this.NestedTypeHashtable = new Hashtable<MultiHashtable<NestedTypeStore>>();
       this.VectorTypeHashTable = new Hashtable();
       this.PointerTypeHashTable = new Hashtable();
       this.ManagedPointerTypeHashTable = new Hashtable();
@@ -1653,17 +1666,25 @@ namespace Microsoft.Cci {
       Contract.Requires(containingTypeReference != null);
       Contract.Requires(typeName != null);
 
-      uint containingTypeReferenceInteredId = this.GetTypeReferenceInternId(containingTypeReference);
-      foreach (NestedTypeStore nstTypeStore in this.NestedTypeHashtable.GetValuesFor((uint)typeName.UniqueKey)) {
-        if (
-          nstTypeStore.ContainingTypeInternedId == containingTypeReferenceInteredId
-          && nstTypeStore.GenericParameterCount == genericParameterCount
-        ) {
-          return nstTypeStore.InternedId;
+      uint containingTypeReferenceInternedId = this.GetTypeReferenceInternId(containingTypeReference);
+      // If there are a large number of specializations of a type nested within a generic type,
+      // enumerating through all specializations to find a particular one can take a long time. Therefore,
+      // first discriminate based on the containing type.
+      MultiHashtable<NestedTypeStore> nestedTypes = this.NestedTypeHashtable.Find(containingTypeReferenceInternedId);
+      if (nestedTypes == null) {
+        nestedTypes = new MultiHashtable<NestedTypeStore>(2);
+        this.NestedTypeHashtable.Add(containingTypeReferenceInternedId, nestedTypes);
+      }
+      else {
+        foreach (NestedTypeStore nstTypeStore in nestedTypes.GetValuesFor((uint)typeName.UniqueKey)) {
+          if (nstTypeStore.GenericParameterCount == genericParameterCount) {
+            return nstTypeStore.InternedId;
+          }
         }
       }
-      NestedTypeStore nstTypeStore1 = new NestedTypeStore(containingTypeReferenceInteredId, genericParameterCount, this.CurrentTypeInternValue++);
-      this.NestedTypeHashtable.Add((uint)typeName.UniqueKey, nstTypeStore1);
+
+      NestedTypeStore nstTypeStore1 = new NestedTypeStore(genericParameterCount, this.CurrentTypeInternValue++);
+      nestedTypes.Add((uint)typeName.UniqueKey, nstTypeStore1);
       return nstTypeStore1.InternedId;
     }
 
@@ -1694,6 +1715,15 @@ namespace Microsoft.Cci {
       return matrixTypeStore1.InternedId;
     }
 
+    uint GetTypeReferenceListInternedId(IEnumerable<ITypeReference> typeReferences) {
+      IReadOnlyList<ITypeReference> list = typeReferences as IReadOnlyList<ITypeReference>;
+
+      if (list != null)
+        return GetTypeReferenceListInternedId(list, 0, list.Count);
+      else
+        return GetTypeReferenceListInternedId(typeReferences.GetEnumerator());
+    }
+
     uint GetTypeReferenceListInternedId(IEnumerator<ITypeReference> typeReferences) {
       Contract.Requires(typeReferences != null);
 
@@ -1710,12 +1740,30 @@ namespace Microsoft.Cci {
       return value;
     }
 
+    uint GetTypeReferenceListInternedId(IReadOnlyList<ITypeReference> typeReferences, int i, int count)
+    {
+        Contract.Requires(typeReferences != null);
+
+        if (i >= count) return 0;
+        ITypeReference currentTypeRef = typeReferences[i];
+        Contract.Assume(currentTypeRef != null);
+        uint currentTypeRefInternedId = this.GetTypeReferenceInternId(currentTypeRef);
+        uint tailInternedId = this.GetTypeReferenceListInternedId(typeReferences, i + 1, count);
+        uint value = this.TypeListHashtable.Find(currentTypeRefInternedId, tailInternedId);
+        if (value == 0)
+        {
+            value = this.CurrentTypeListInternValue++;
+            this.TypeListHashtable.Add(currentTypeRefInternedId, tailInternedId, value);
+        }
+        return value;
+    }
+
     uint GetGenericTypeInstanceReferenceInternId(ITypeReference genericTypeReference, IEnumerable<ITypeReference> genericArguments) {
       Contract.Requires(genericTypeReference != null);
       Contract.Requires(genericArguments != null);
 
       uint genericTypeInternedId = this.GetTypeReferenceInternId(genericTypeReference);
-      uint genericArgumentsInternedId = this.GetTypeReferenceListInternedId(genericArguments.GetEnumerator());
+      uint genericArgumentsInternedId = this.GetTypeReferenceListInternedId(genericArguments);
       uint value = this.GenericTypeInstanceHashtable.Find(genericTypeInternedId, genericArgumentsInternedId);
       if (value == 0) {
         value = this.CurrentTypeInternValue++;
@@ -1823,19 +1871,46 @@ namespace Microsoft.Cci {
       return parameterTypeStore1.InternedId;
     }
 
-    uint GetParameterTypeListInternId(IEnumerator<IParameterTypeInformation> parameterTypeInformations) {
+
+    uint GetParameterTypeListInternId(IEnumerator<IParameterTypeInformation> parameterTypeInformations, uint pCount) {
       Contract.Requires(parameterTypeInformations != null);
 
-      if (!parameterTypeInformations.MoveNext()) return 0;
-      Contract.Assume(parameterTypeInformations.Current != null);
-      uint currentParameterInternedId = this.GetParameterTypeInternId(parameterTypeInformations.Current);
-      uint tailInternedId = this.GetParameterTypeListInternId(parameterTypeInformations);
-      uint value = this.ParameterTypeListHashtable.Find(currentParameterInternedId, tailInternedId);
-      if (value == 0) {
-        value = this.CurrentParameterTypeListInternValue++;
-        this.ParameterTypeListHashtable.Add(currentParameterInternedId, tailInternedId, value);
+      if (pCount == 0)
+        return 0;
+
+      IParameterTypeInformation[] paras = new IParameterTypeInformation[pCount];
+      
+      uint i = 0;
+
+      while (parameterTypeInformations.MoveNext())
+      {
+        Contract.Assume(parameterTypeInformations.Current != null);
+
+        paras[i ++] = parameterTypeInformations.Current;
       }
-      return value;
+
+      //Assert(i == pCount);
+
+      uint tailInternedId = 0;
+    
+      while (i > 0)
+      {
+        i --;
+
+        uint currentParameterInternedId = this.GetParameterTypeInternId(paras[i]);
+
+        uint value = this.ParameterTypeListHashtable.Find(currentParameterInternedId, tailInternedId);
+
+        if (value == 0)
+        {
+          value = this.CurrentParameterTypeListInternValue++;
+          this.ParameterTypeListHashtable.Add(currentParameterInternedId, tailInternedId, value);
+        }
+
+        tailInternedId = value;
+      }
+
+      return tailInternedId;
     }
 
     uint GetSignatureInternId(CallingConvention callingConvention, IEnumerable<IParameterTypeInformation> parameters, IEnumerable<IParameterTypeInformation> extraArgumentTypes,
@@ -1845,8 +1920,8 @@ namespace Microsoft.Cci {
       Contract.Requires(returnValueCustomModifiers != null);
       Contract.Requires(returnType != null);
 
-      uint requiredParameterTypesInternedId = this.GetParameterTypeListInternId(parameters.GetEnumerator());
-      uint extraArgumentTypesInteredId = this.GetParameterTypeListInternId(extraArgumentTypes.GetEnumerator());
+      uint requiredParameterTypesInternedId = this.GetParameterTypeListInternId(parameters.GetEnumerator(), IteratorHelper.EnumerableCount(parameters));
+      uint extraArgumentTypesInteredId = this.GetParameterTypeListInternId(extraArgumentTypes.GetEnumerator(), IteratorHelper.EnumerableCount(extraArgumentTypes));
       uint returnValueCustomModifiersInternedId = this.GetCustomModifierListInternId(returnValueCustomModifiers.GetEnumerator());
       uint returnTypeReferenceInternedId = this.GetTypeReferenceInternId(returnType);
       foreach (SignatureStore signatureStore in this.SignatureHashtable.GetValuesFor(requiredParameterTypesInternedId)) {
@@ -1866,13 +1941,35 @@ namespace Microsoft.Cci {
       return signatureStore1.InternedId;
     }
 
-    uint GetMethodReferenceInternedId(IMethodReference methodReference) {
-      Contract.Requires(methodReference != null);
+    uint GetMethodReferenceInternedId(IMethodReference potentiallySpecializedMethodReference) {
+      Contract.Requires(potentiallySpecializedMethodReference != null);
 
-      var genInstanceRef = methodReference as IGenericMethodInstanceReference;
+      var genInstanceRef = potentiallySpecializedMethodReference as IGenericMethodInstanceReference;
       if (genInstanceRef != null) return this.GetGenericMethodInstanceReferenceInternedKey(genInstanceRef);
-      uint containingTypeReferenceInternedId = this.GetTypeReferenceInternId(methodReference.ContainingType);
-      uint requiredParameterTypesInternedId = this.GetParameterTypeListInternId(methodReference.Parameters.GetEnumerator());
+      uint containingTypeReferenceInternedId = this.GetTypeReferenceInternId(potentiallySpecializedMethodReference.ContainingType);
+
+      // After constructing the containingTypeReferenceInternedId, perform the rest of the InternId
+      // calculation using the unspecialized version of the method reference. This allows
+      // the intern keys for methods which have overlapping type parameters to be distinguished
+      // if the method parameters are different on the open type. 
+      // For instance 
+      // interface I<T> {
+      //    void Print(T t)
+      //    void Print(int t)
+      // }
+      //
+      // We do not want the intern key for I<int>.Print(T) to match that of I<int>.Print(int)
+      //  (This is hard to see with ToString, as Cci reports both of these methods to be "I<int>.Print(int)")
+      IMethodReference methodReference;
+      if (potentiallySpecializedMethodReference is ISpecializedMethodReference)
+      {
+          methodReference = ((ISpecializedMethodReference)potentiallySpecializedMethodReference).UnspecializedVersion;
+      }
+      else
+      {
+          methodReference = potentiallySpecializedMethodReference;
+      }
+      uint requiredParameterTypesInternedId = this.GetParameterTypeListInternId(methodReference.Parameters.GetEnumerator(), methodReference.ParameterCount);
       uint returnValueCustomModifiersInternedId = 0;
       uint genericParameterCount = methodReference.GenericParameterCount;
       if (methodReference.ReturnValueIsModified)
@@ -1906,7 +2003,7 @@ namespace Microsoft.Cci {
       Contract.Requires(genericMethodInstanceReference != null);
 
       var genericMethodInternedId = genericMethodInstanceReference.GenericMethod.InternedKey;
-      uint genericArgumentsInternedId = this.GetTypeReferenceListInternedId(genericMethodInstanceReference.GenericArguments.GetEnumerator());
+      uint genericArgumentsInternedId = this.GetTypeReferenceListInternedId(genericMethodInstanceReference.GenericArguments);
       uint value = this.GenericMethodInstanceHashtable.Find(genericMethodInternedId, genericArgumentsInternedId);
       if (value == 0) {
         value = this.CurrentMethodReferenceInternValue++;
@@ -2082,6 +2179,16 @@ namespace Microsoft.Cci {
       if (modifiedTypeReference != null)
         return this.GetModifiedTypeReferenceInternId(modifiedTypeReference.UnmodifiedType, modifiedTypeReference.CustomModifiers);
       return this.GetTypeReferenceInterendIdIgnoringCustomModifiers(typeReference);
+    }
+
+    /// <summary />
+    public bool InternKeysAreReliablyUnique
+    {
+        // While computing an intern key within the signature of a generic method, the factory produces intern keys
+        // for the method's generic parameters that are unique only within the domain of the method. External code cannot rely
+        // on global uniqueness of intern keys in such cases. The factory tracks that it is in such a state
+        // by the setting of the CurrentMethodReference field.
+        get { return this.CurrentMethodReference is Dummy; }
     }
 
     #region IInternFactory Members

@@ -22,9 +22,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// </summary>
   public sealed class Assembly : Module, IAssembly, ICopyFrom<IAssembly> {
 
-    /// <summary>
-    /// 
-    /// </summary>
+    /// <summary />
     public Assembly() {
       this.assemblyAttributes = null;
       this.culture = "";
@@ -40,11 +38,12 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.version = new Version(0, 0);
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="assembly"></param>
-    /// <param name="internFactory"></param>
+    /// <summary />
+    public override string ToString() {
+      return string.Format("Mutable '{0}'", this.AssemblyIdentity.Name.ToString());
+    }
+
+    /// <summary />
     public void Copy(IAssembly assembly, IInternFactory internFactory) {
       ((ICopyFrom<IModule>)this).Copy(assembly, internFactory);
       if (IteratorHelper.EnumerableIsNotEmpty(assembly.AssemblyAttributes))
@@ -491,7 +490,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (result is Dummy) return Dummy.Module;
       return result;
     }
-
+    
     private IAssembly ResolveAssembly() {
       this.isFrozen = true;
       if (this.Host == null) return Dummy.Assembly;
@@ -642,7 +641,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       get {
         if (this.assemblyIdentity == null) {
           this.isFrozen = true;
-          this.assemblyIdentity = new AssemblyIdentity(this.Name, this.Culture, this.Version, ((IAssemblyReference)this).PublicKeyToken, this.Location);
+          this.assemblyIdentity = new AssemblyIdentity(this.Name, this.Culture, this.Version, ((IAssemblyReference)this).PublicKeyToken, this.Location, this.ContainsForeignTypes);
         }
         return this.assemblyIdentity;
       }

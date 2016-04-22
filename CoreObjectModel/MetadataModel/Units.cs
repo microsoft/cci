@@ -473,6 +473,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// True if the referenced assembly contains types that describe objects that are neither COM objects nor objects that are managed by the CLR.
     /// Instances of such types are created and managed by another runtime and are accessed by CLR objects via some form of interoperation mechanism.
+    /// Concretely, the referenced assembly is a .WinMD (with ContentType=WindowsRuntime).
     /// </summary>
     bool ContainsForeignTypes { get; }
 
@@ -1746,7 +1747,7 @@ namespace Microsoft.Cci {
   public sealed class AssemblyIdentity : ModuleIdentity {
 
     /// <summary>
-    /// Allocates an object that identifies a .NET assembly, using its name, culture, version, public key token, and location.
+    /// Allocates an object that identifies a .NET assembly, using its name, culture, version, public key token, location, and whether it is a .WinMD assembly.
     /// </summary>
     /// <param name="name">The name of the identified assembly.</param>
     /// <param name="culture">Identifies the culture associated with the identified assembly. Typically used to identify sattelite assemblies with localized resources. 
@@ -1754,7 +1755,8 @@ namespace Microsoft.Cci {
     /// <param name="version">The version of the identified assembly.</param>
     /// <param name="publicKeyToken">The public part of the key used to sign the referenced assembly. May be empty if the identified assembly is not signed.</param>
     /// <param name="location">The location where the assembly is stored. Can be the empty string if the location is not known. The location need not be a file path.</param>
-    public AssemblyIdentity(IName name, string culture, Version version, IEnumerable<byte> publicKeyToken, string location)
+    /// <param name="containsForeignTypes">Flag indicating whether the assembly is a .WinMD assembly (with ContentType=WindowsRuntime).</param>
+    public AssemblyIdentity(IName name, string culture, Version version, IEnumerable<byte> publicKeyToken, string location, bool containsForeignTypes)
       : base(name, location) {
       Contract.Requires(name != null);
       Contract.Requires(culture != null);
@@ -1764,10 +1766,25 @@ namespace Microsoft.Cci {
       this.culture = culture;
       this.version = version;
       this.publicKeyToken = publicKeyToken;
+      this.containsForeignTypes = containsForeignTypes;
     }
 
     /// <summary>
     /// Allocates an object that identifies a .NET assembly, using its name, culture, version, public key token, and location.
+    /// </summary>
+    /// <param name="name">The name of the identified assembly.</param>
+    /// <param name="culture">Identifies the culture associated with the identified assembly. Typically used to identify sattelite assemblies with localized resources. 
+    /// If the assembly is culture neutral, an empty string should be supplied as argument.</param>
+    /// <param name="version">The version of the identified assembly.</param>
+    /// <param name="publicKeyToken">The public part of the key used to sign the referenced assembly. May be empty if the identified assembly is not signed.</param>
+    /// <param name="location">The location where the assembly is stored. Can be the empty string if the location is not known. The location need not be a file path.</param>
+    public AssemblyIdentity(IName name, string culture, Version version, IEnumerable<byte> publicKeyToken, string location)
+        : this(name, culture, version, publicKeyToken,location, false)
+    {
+    }
+
+    /// <summary>
+    /// Allocates an object that identifies a .NET assembly, using its name, culture, version, public key token, location, and whether it is a .WinMD assembly.
     /// </summary>
     /// <param name="template">An assembly identity to use a template for the new identity.</param>
     /// <param name="location">A location that should replace the location from the template.</param>
@@ -1778,6 +1795,7 @@ namespace Microsoft.Cci {
       this.culture = template.Culture;
       this.version = template.Version;
       this.publicKeyToken = template.PublicKeyToken;
+      this.containsForeignTypes = template.ContainsForeignTypes;
     }
 
     [ContractInvariantMethod]
@@ -1810,6 +1828,16 @@ namespace Microsoft.Cci {
     readonly string culture;
 
     /// <summary>
+    /// True iff representing the identity of a WinMD assembly (with ContentType=WindowsRuntime).
+    /// </summary>
+    public bool ContainsForeignTypes {
+        get {
+            return this.containsForeignTypes;
+        }
+    }
+    readonly bool containsForeignTypes;
+
+    /// <summary>
     /// Returns true if the given object is an identifier that identifies the same object as this identifier.
     /// </summary>
     //^ [Confined]
@@ -1820,8 +1848,10 @@ namespace Microsoft.Cci {
       if (this.Name.UniqueKeyIgnoringCase != otherAssembly.Name.UniqueKeyIgnoringCase) return false;
       if (this.Version != otherAssembly.Version) return false;
       if (string.Compare(this.Culture, otherAssembly.Culture, StringComparison.OrdinalIgnoreCase) != 0) return false;
+      if (this.ContainsForeignTypes != otherAssembly.ContainsForeignTypes) return false;
+
       if (IteratorHelper.EnumerableIsNotEmpty(this.PublicKeyToken))
-        return IteratorHelper.EnumerablesAreEqual(this.PublicKeyToken, otherAssembly.PublicKeyToken);
+        return IteratorHelper.IEquatableEnumerablesAreEqual(this.PublicKeyToken, otherAssembly.PublicKeyToken);
       else {
         // This can be dangerous! Returning true here means that weakly named assemblies are assumed to be the
         // same just because their name is the same. So two assemblies from different locations but the same name
@@ -1883,6 +1913,9 @@ namespace Microsoft.Cci {
           sb.AppendFormat(CultureInfo.InvariantCulture, ", Location={0}", this.Location);
       } else
         sb.AppendFormat(CultureInfo.InvariantCulture, ", PublicKeyToken={0}", tokStr.ToString());
+      if (this.ContainsForeignTypes) {
+          sb.Append(", ContentType=WindowsRuntime");
+      }
       sb.Append(")");
       return sb.ToString();
     }

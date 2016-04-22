@@ -21,7 +21,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
   internal sealed class MethodBody : IMethodBody {
     internal readonly MethodDefinition MethodDefinition;
     internal ILocalDefinition[]/*?*/ LocalVariables;
-    IEnumerable<IOperation>/*?*/ cilInstructions;
+    internal IEnumerable<IOperation>/*?*/ cilInstructions;
     IEnumerable<IOperationExceptionInformation>/*?*/ cilExceptionInformation;
     internal readonly bool IsLocalsInited;
     internal readonly ushort StackSize;
@@ -39,8 +39,8 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
       this.LocalVariables = localVariables;
     }
 
-    internal void SetCilInstructions(IOperation[] cilInstructions) {
-      this.cilInstructions = IteratorHelper.GetReadonly(cilInstructions);
+    internal void SetCilInstructions(IEnumerable<IOperation> cilInstructions) {
+      this.cilInstructions = cilInstructions;
     }
 
     internal void SetExceptionInformation(IOperationExceptionInformation[] cilExceptionInformation) {
@@ -71,6 +71,16 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     public IEnumerable<IOperation> Operations {
       get {
         if (this.cilInstructions == null) return Enumerable<IOperation>.Empty;
+
+        ILOperationList opList = cilInstructions as ILOperationList;
+
+        // When Operations is first called on ILOperationList, convert to it normal IEnumerable<IOperation> and then throw away ILOperationList
+        // When copying directly to mutable object model, we have special path to generate List<Operation> directly (in CopyMethodBody)
+        if (opList != null)
+        {
+            cilInstructions = opList.GetAllOperations();
+        }
+
         return this.cilInstructions;
       }
     }
@@ -154,8 +164,8 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
 
     public IEnumerable<ILocation> Locations {
       get {
-        MethodBodyLocation mbLoc = new MethodBodyLocation(new MethodBodyDocument(this.methodBody.MethodDefinition), this.index);
-        return IteratorHelper.GetSingletonEnumerable<ILocation>(mbLoc);
+        MethodBodyLocation mbLoc = new MethodBodyLocation(methodBody.MethodDefinition.BodyDocument, this.index);
+        return new SingletonList<ILocation>(mbLoc);
       }
     }
 
@@ -176,7 +186,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     public IName Name {
       get {
         if (this.name == null)
-          this.name = this.methodBody.MethodDefinition.PEFileToObjectModel.NameTable.GetNameFor("local_" + this.index);
+            this.name = this.methodBody.MethodDefinition.PEFileToObjectModel.NameTable.GetNameFor(Toolbox.GetLocalName(this.index));
         return this.name;
       }
     }
@@ -386,6 +396,96 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     }
   }
 
+
+  /// <summary>
+  /// List of operations decoded on-demand
+  /// </summary>
+  /// <remarks>Offsets for each instruction is read first for IReadOnlyList implementation</remarks>
+  internal class ILOperationList : VirtualReadOnlyList<IOperation>
+  {
+    ILReader m_reader;
+    uint[]   m_offsets;
+
+    internal ILOperationList(ILReader reader, int count) : base(count)
+    {
+        m_reader = reader;
+    }
+
+    void LoadOffsets()
+    {
+        if (m_offsets == null)
+        {
+            MemoryReader memReader = new MemoryReader(m_reader.MethodIL.EncodedILMemoryBlock);
+
+            m_offsets = new uint[this.Count];
+
+            // Populate m_offsets array
+            ILReader.CountCilInstructions(memReader, m_offsets);
+        }
+    }
+
+    internal void FreeOffsets()
+    {
+        m_offsets = null;
+    }
+
+    /// <summary>
+    /// Read a single instruction for virtual read only list implementation
+    /// </summary>
+    /// <param name="index"></param>
+    /// <returns></returns>
+    public override IOperation GetItem(int index)
+    {
+        LoadOffsets();
+
+        return m_reader.GetIOperation(m_offsets[index]);
+    }
+
+#if MERGED_DLL
+    /// <summary>
+    /// Generate a single mutable Operation
+    /// </summary>
+    internal MutableCodeModel.Operation GetOperation(int index)
+    {
+        LoadOffsets();
+
+        return m_reader.GetOperation(m_offsets[index]);
+    }
+#endif
+
+    /// <summary>
+    /// Generate IEnumerable{IOperation}
+    /// </summary>
+    internal IEnumerable<IOperation> GetAllOperations()
+    {
+        LoadOffsets();
+
+        IOperation[] opers = new IOperation[this.Count];
+
+        for (int i = 0; i < this.Count; i ++)
+        {
+            opers[i] = m_reader.GetIOperation(m_offsets[i]);
+        }
+
+        return opers;
+    }
+
+    /// <summary>
+    /// Retrieve from MethodBody without trigger conversion
+    /// </summary>
+    internal static ILOperationList RetrieveFrom(IMethodBody body)
+    {
+        MethodBody readerBody = body as MethodBody;
+
+        if (readerBody != null)
+        {
+            return readerBody.cilInstructions as ILOperationList;
+        }
+
+        return null;
+    }
+  }
+
   internal sealed class ILReader {
     internal static readonly EnumerableArrayWrapper<LocalVariableDefinition, ILocalDefinition> EmptyLocalVariables = new EnumerableArrayWrapper<LocalVariableDefinition, ILocalDefinition>(new LocalVariableDefinition[0], Dummy.LocalVariable);
     static readonly HandlerKind[] HandlerKindMap =
@@ -400,7 +500,7 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
     internal readonly PEFileToObjectModel PEFileToObjectModel;
     internal readonly MethodDefinition MethodDefinition;
     internal readonly MethodBody MethodBody;
-    readonly MethodIL MethodIL;
+    internal readonly MethodIL MethodIL;
     internal readonly uint EndOfMethodOffset;
 
     internal ILReader(
@@ -514,17 +614,76 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
       return this.PEFileToObjectModel.GetReferenceForToken(this.MethodDefinition, token);
     }
 
+    static object c_I4_M1 = -1;
+    static object c_I4_0  = 0;
+    static object c_I4_1  = 1;
+    static object c_I4_2  = 2;
+    static object c_I4_3  = 3;
+    static object c_I4_4  = 4;
+    static object c_I4_5  = 5;
+    static object c_I4_6  = 6;
+    static object c_I4_7  = 7;
+    static object c_I4_8  = 8;
+
+    MethodBodyDocument m_document;
+
     bool PopulateCilInstructions() {
-      MethodBodyDocument document = new MethodBodyDocument(this.MethodDefinition);
       MemoryReader memReader = new MemoryReader(this.MethodIL.EncodedILMemoryBlock);
-      var numInstructions = CountCilInstructions(memReader);
-      if (numInstructions == 0) return true;
-      CilInstruction[] instrList = new CilInstruction[numInstructions];
-      int instructionNumber = 0;
-      while (memReader.NotEndOfBytes) {
+      var numInstructions = CountCilInstructions(memReader, null);
+      if (numInstructions != 0)
+        this.MethodBody.SetCilInstructions(new ILOperationList(this, numInstructions));
+      return true;
+    }
+
+    /// <summary>
+    /// Read single instruction on-demand, returning an new object, for IEnumerable{IOperation}
+    /// </summary>
+    internal IOperation GetIOperation(uint offset)
+    {
+        OperationCode cilOpCode;
+        object value = ReadInstruction(offset, out cilOpCode);
+
+        if (m_document == null)
+        {
+            m_document = this.MethodDefinition.BodyDocument;
+        }
+
+        return new CilInstruction(cilOpCode, m_document, offset, value);
+    }
+
+#if MERGED_DLL
+    /// <summary>
+    /// Read single instruction on-demand, returning an new object, for mutable object model
+    /// </summary>
+    internal MutableCodeModel.Operation GetOperation(uint offset)
+    {
+        OperationCode cilOpCode;
+        object value = ReadInstruction(offset, out cilOpCode);
+
+        if (m_document == null)
+        {
+            m_document = this.MethodDefinition.BodyDocument;
+        }
+
+        MutableCodeModel.Operation oper = new MutableCodeModel.Operation(m_document, offset, cilOpCode, value);
+
+        return oper;
+    }
+#endif
+
+    /// <summary>
+    /// Read single instruction on-demand
+    /// </summary>
+    private object ReadInstruction(uint offset, out OperationCode cilOpCode)
+    {
+        MemoryReader memReader = new MemoryReader(this.MethodIL.EncodedILMemoryBlock);
+
+        memReader.SeekOffset((int) offset);
+
+        cilOpCode = memReader.ReadOpcode();
+
         object/*?*/ value = null;
-        uint offset = (uint)memReader.Offset;
-        OperationCode cilOpCode = memReader.ReadOpcode();
+    
         switch (cilOpCode) {
           case OperationCode.Nop:
           case OperationCode.Break:
@@ -560,34 +719,34 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
           case OperationCode.Ldnull:
             break;
           case OperationCode.Ldc_I4_M1:
-            value = -1;
+            value = c_I4_M1;
             break;
           case OperationCode.Ldc_I4_0:
-            value = 0;
+            value = c_I4_0;
             break;
           case OperationCode.Ldc_I4_1:
-            value = 1;
+            value = c_I4_1;
             break;
           case OperationCode.Ldc_I4_2:
-            value = 2;
+            value = c_I4_2;
             break;
           case OperationCode.Ldc_I4_3:
-            value = 3;
+            value = c_I4_3;
             break;
           case OperationCode.Ldc_I4_4:
-            value = 4;
+            value = c_I4_4;
             break;
           case OperationCode.Ldc_I4_5:
-            value = 5;
+            value = c_I4_5;
             break;
           case OperationCode.Ldc_I4_6:
-            value = 6;
+            value = c_I4_6;
             break;
           case OperationCode.Ldc_I4_7:
-            value = 7;
+            value = c_I4_7;
             break;
           case OperationCode.Ldc_I4_8:
-            value = 8;
+            value = c_I4_8;
             break;
           case OperationCode.Ldc_I4_S:
             value = (int)memReader.ReadSByte();
@@ -969,15 +1128,15 @@ namespace Microsoft.Cci.MetadataReader.MethodBody {
             this.PEFileToObjectModel.PEFileReader.ErrorContainer.AddILError(this.MethodDefinition, offset, MetadataReaderErrorKind.UnknownILInstruction);
             break;
         }
-        instrList[instructionNumber++] = new CilInstruction(cilOpCode, document, offset, value);
-      }
-      this.MethodBody.SetCilInstructions(instrList);
-      return true;
+      
+        return value;
     }
 
-    static int CountCilInstructions(MemoryReader memReader) {
+    internal static int CountCilInstructions(MemoryReader memReader, uint[] offsets) {
       int count = 0;
       while (memReader.NotEndOfBytes) {
+        if (offsets != null)
+          offsets[count] = (uint)memReader.Offset;
         count++;
         OperationCode cilOpCode = memReader.ReadOpcode();
         switch (cilOpCode) {
@@ -1133,7 +1292,7 @@ namespace Microsoft.Cci.MetadataReader {
   /// <summary>
   /// 
   /// </summary>
-  public sealed class MethodBodyDocument : IDocument {
+  public sealed class MethodBodyDocument : IMethodBodyDocument {
 
     /// <summary>
     /// 

@@ -1,0 +1,130 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <CciSrc>$(MSBuildThisFileDirectory)</CciSrc>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(CciSrc)\CoreObjectModel\CodeModel\Contracts.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\CodeModel\DummyObjects.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\CodeModel\ExpressionHelper.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\CodeModel\Expressions.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\CodeModel\Members.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\CodeModel\Statements.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\CodeModel\Visitors.cs" />
+
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataModel\CachingInternFactory.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataModel\Core.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataModel\DummyObjects.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataModel\Expressions.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataModel\Members.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataModel\Miscellaneous.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataModel\NameScope.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataModel\Namespaces.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataModel\Types.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataModel\Units.cs" />
+
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataHelper\AttributeHelper.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataHelper\Core.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataHelper\ExpressionHelper.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataHelper\GlobalAssemblyCache.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataHelper\MemberHelper.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataHelper\Members.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataHelper\PlatformTypes.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataHelper\TypeHelper.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataHelper\Types.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataHelper\UnitHelper.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataHelper\UnmanagedFileIO.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataHelper\UtilityDataStructures.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataHelper\Validator.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MetadataHelper\Visitors.cs" />
+
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableCodeModel\Contracts.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableCodeModel\Copier.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableCodeModel\Expressions.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableCodeModel\Members.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableCodeModel\Mutator.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableCodeModel\Statements.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableCodeModel\Normalizer\AnonymousDelegateRemover.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableCodeModel\Normalizer\CapturedLocalOrArgumentFinder.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableCodeModel\Normalizer\Duplicator.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableCodeModel\Normalizer\ForEachRemover.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableCodeModel\Normalizer\Helpers.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableCodeModel\Normalizer\Normalizer.cs" />
+
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableMetadataModel\Copier.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableMetadataModel\Expressions.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableMetadataModel\Members.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableMetadataModel\Miscellaneous.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableMetadataModel\Mutator.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableMetadataModel\Namespaces.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableMetadataModel\Types.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\MutableMetadataModel\Units.cs" />
+
+    <Compile Include="$(CciSrc)\CoreObjectModel\SourceModel\DummyObjects.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\SourceModel\Implementations.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\SourceModel\Interfaces.cs" />
+    <Compile Include="$(CciSrc)\CoreObjectModel\SourceModel\SourceModelHelper.cs" />
+
+    <Compile Include="$(CciSrc)\Converters\CodeModelToIL\Helpers.cs" />
+    <Compile Include="$(CciSrc)\Converters\CodeModelToIL\Visitor.cs" />
+
+    <Compile Include="$(CciSrc)\Converters\ILGenerator\ILGenerator.cs" />
+    <Compile Include="$(CciSrc)\Converters\ILGenerator\ILRewriter.cs" />
+    <Compile Include="$(CciSrc)\Converters\ILGenerator\MethodBody.cs" />
+
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\BitAccess.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\BitSet.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\CvInfo.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\DataStream.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\DbiDbgHdr.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\DbiHeader.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\DbiModuleInfo.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\DbiSecCon.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\IntHashTable.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\MsfDirectory.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbConstant.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbDebugException.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbException.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbFile.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbFileHeader.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbFunction.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbLine.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbLines.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbReader.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbScope.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbSlot.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbSource.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbTokenLine.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\SourceLocationProvider.cs" />
+
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbWriter\ISymbolWriter.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbWriter\Writer.cs" />
+
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\Attributes.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\BinaryObjectModel.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\CoreTypes.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\Errors.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\ILReader.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\ModuleExtensions.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\ModuleReadWriteFactory.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\PEFileReader.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\PEFileStructures.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\PEFileToObjectModel.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\Types.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\UnmanagedReadWrite.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\UtilityDataStructures.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\WindowsRuntimeHost.cs" />
+
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEWriter\BinaryWriter.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEWriter\IMetadata.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEWriter\MemoryStream.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEWriter\PdbWriterInterface.cs" />
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEWriter\PeWriter.cs" />
+   
+    <Compile Include="$(CciSrc)\Common\Include\PortingHelpers.cs" />
+    <Compile Include="$(CciSrc)\Common\Include\CCIEventSource.cs" />
+    <Compile Include="$(CciSrc)\Common\Include\DietCollection.cs" />
+  </ItemGroup>
+</Project>

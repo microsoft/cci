@@ -36,18 +36,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <param name="internFactory"></param>
     public void Copy(IAliasForType aliasForType, IInternFactory internFactory) {
       this.aliasedType = aliasForType.AliasedType;
-      if (IteratorHelper.EnumerableIsNotEmpty(aliasForType.Attributes))
-        this.attributes = new List<ICustomAttribute>(aliasForType.Attributes);
-      else
-        this.attributes = null;
-      if (IteratorHelper.EnumerableIsNotEmpty(aliasForType.Locations))
-        this.locations = new List<ILocation>(aliasForType.Locations);
-      else
-        this.locations = null;
-      if (IteratorHelper.EnumerableIsNotEmpty(aliasForType.Members))
-        this.members = new List<IAliasMember>(aliasForType.Members);
-      else
-        this.members = null;
+      this.attributes = IteratorHelper.CopyToList<ICustomAttribute>(aliasForType.Attributes);
+      this.locations = IteratorHelper.CopyToList<ILocation>(aliasForType.Locations);
+      this.members = IteratorHelper.CopyToList<IAliasMember>(aliasForType.Members);
     }
 
     /// <summary>
@@ -191,15 +182,13 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
       get {
-        if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
-        return this.Attributes.AsReadOnly();
+        return this.Attributes.ToReadOnly();
       }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
       get {
-        if (this.Locations == null) return Enumerable<ILocation>.Empty;
-        return this.Locations.AsReadOnly();
+        return this.Locations.ToReadOnly();
       }
     }
 
@@ -237,6 +226,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Ensures(!this.IsFrozen);
 
       this.elementType = Dummy.TypeReference;
+      this.TypeCode = PrimitiveTypeCode.NotPrimitive;
     }
 
     [ContractInvariantMethod]
@@ -450,16 +440,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     public void Copy(IFunctionPointerTypeReference functionPointerTypeReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(functionPointerTypeReference, internFactory);
       this.callingConvention = functionPointerTypeReference.CallingConvention;
-      if (IteratorHelper.EnumerableIsNotEmpty(functionPointerTypeReference.ExtraArgumentTypes))
-        this.extraArgumentTypes = new List<IParameterTypeInformation>(functionPointerTypeReference.ExtraArgumentTypes);
-      else
-        this.extraArgumentTypes = null;
-      if (IteratorHelper.EnumerableIsNotEmpty(functionPointerTypeReference.Parameters))
-        this.parameters = new List<IParameterTypeInformation>(functionPointerTypeReference.Parameters);
-      else
-        this.parameters = null;
+      this.extraArgumentTypes = IteratorHelper.CopyToList<IParameterTypeInformation>(functionPointerTypeReference.ExtraArgumentTypes);
+      this.parameters = IteratorHelper.CopyToList<IParameterTypeInformation>(functionPointerTypeReference.Parameters);
       if (functionPointerTypeReference.ReturnValueIsModified)
-        this.returnValueCustomModifiers = new List<ICustomModifier>(functionPointerTypeReference.ReturnValueCustomModifiers);
+        this.returnValueCustomModifiers = IteratorHelper.CopyToList<ICustomModifier>(functionPointerTypeReference.ReturnValueCustomModifiers);
       else
         this.returnValueCustomModifiers = null;
       this.returnValueIsByRef = functionPointerTypeReference.ReturnValueIsByRef;
@@ -614,7 +598,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       [ContractVerification(false)]
       get {
         if (this.parameters == null) return Dummy.FunctionPointer.Parameters;
-        return this.parameters.AsReadOnly();
+        return this.parameters.ToReadOnly();
       }
     }
 
@@ -622,7 +606,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       [ContractVerification(false)]
       get {
         if (this.returnValueCustomModifiers == null) return Dummy.FunctionPointer.ReturnValueCustomModifiers;
-        return this.returnValueCustomModifiers.AsReadOnly();
+        return this.returnValueCustomModifiers.ToReadOnly();
       }
     }
 
@@ -786,10 +770,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </param>
     public void Copy(IGenericParameter genericParameter, IInternFactory internFactory) {
       ((ICopyFrom<INamedTypeDefinition>)this).Copy(genericParameter, internFactory);
-      if (IteratorHelper.EnumerableIsNotEmpty(genericParameter.Constraints))
-        this.constraints = new List<ITypeReference>(genericParameter.Constraints);
-      else
-        this.constraints = null;
+      this.constraints = IteratorHelper.CopyToList<ITypeReference>(genericParameter.Constraints);
       this.index = genericParameter.Index;
       this.MustBeReferenceType = genericParameter.MustBeReferenceType;
       this.MustBeValueType = genericParameter.MustBeValueType;
@@ -979,7 +960,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </param>
     public void Copy(IGenericTypeInstanceReference genericTypeInstanceReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(genericTypeInstanceReference, internFactory);
-      this.genericArguments = new List<ITypeReference>(genericTypeInstanceReference.GenericArguments);
+      this.genericArguments = IteratorHelper.CopyToList<ITypeReference>(genericTypeInstanceReference.GenericArguments);
       this.genericType = genericTypeInstanceReference.GenericType;
     }
 
@@ -1059,7 +1040,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       [ContractVerification(false)]
       get {
         if (this.genericArguments == null) return Enumerable<ITypeReference>.Empty;
-        return this.genericArguments.AsReadOnly();
+        return this.genericArguments;
       }
     }
 
@@ -1381,15 +1362,9 @@ namespace Microsoft.Cci.MutableCodeModel {
     public void Copy(IArrayTypeReference matrixTypeReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(matrixTypeReference, internFactory);
       this.ElementType = matrixTypeReference.ElementType;
-      if (IteratorHelper.EnumerableIsNotEmpty(matrixTypeReference.LowerBounds))
-        this.lowerBounds = new List<int>(matrixTypeReference.LowerBounds);
-      else
-        this.lowerBounds = null;
+      this.lowerBounds = IteratorHelper.CopyToList<int>(matrixTypeReference.LowerBounds);
       this.rank = matrixTypeReference.Rank;
-      if (IteratorHelper.EnumerableIsNotEmpty(matrixTypeReference.Sizes))
-        this.sizes = new List<ulong>(matrixTypeReference.Sizes);
-      else
-        this.sizes = null;
+      this.sizes = IteratorHelper.CopyToList<ulong>(matrixTypeReference.Sizes);
     }
 
     /// <summary>
@@ -1614,6 +1589,16 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.containingUnitNamespace = namespaceTypeDefinition.ContainingUnitNamespace;
       this.IsPublic = namespaceTypeDefinition.IsPublic;
       this.IsForeignObject = namespaceTypeDefinition.IsForeignObject;
+
+      this.AttributesFor = new Dictionary<ITypeReference, IEnumerable<ICustomAttribute>>();
+      foreach (var iface in namespaceTypeDefinition.Interfaces)
+      {
+        var attributesFor = namespaceTypeDefinition.AttributesFor(iface);
+        if (attributesFor != null && IteratorHelper.EnumerableIsNotEmpty(attributesFor))
+          this.AttributesFor.Add(iface, attributesFor);
+      }
+      if (this.AttributesFor.Count == 0)
+        this.AttributesFor = null;
     }
 
     /// <summary>
@@ -2593,57 +2578,27 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </param>
     public void Copy(INamedTypeDefinition typeDefinition, IInternFactory internFactory) {
       this.alignment = typeDefinition.Alignment;
-      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.Attributes))
-        this.attributes = new List<ICustomAttribute>(typeDefinition.Attributes);
-      else
-        this.attributes = null;
-      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.BaseClasses))
-        this.baseClasses = new List<ITypeReference>(typeDefinition.BaseClasses);
-      else
-        this.baseClasses = null;
-      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.Events))
-        this.events = new List<IEventDefinition>(typeDefinition.Events);
-      else
-        this.events = null;
-      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.ExplicitImplementationOverrides))
-        this.explicitImplementationOverrides = new List<IMethodImplementation>(typeDefinition.ExplicitImplementationOverrides);
-      else
-        this.explicitImplementationOverrides = null;
-      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.Fields))
-        this.fields = new List<IFieldDefinition>(typeDefinition.Fields);
-      else
-        this.fields = null;
+      this.attributes = IteratorHelper.CopyToList<ICustomAttribute>(typeDefinition.Attributes);
+      this.baseClasses = IteratorHelper.CopyToList<ITypeReference>(typeDefinition.BaseClasses);
+      this.events = IteratorHelper.CopyToList<IEventDefinition>(typeDefinition.Events);
+      this.explicitImplementationOverrides = IteratorHelper.CopyToList<IMethodImplementation>(typeDefinition.ExplicitImplementationOverrides);
+      this.fields = IteratorHelper.CopyToList<IFieldDefinition>(typeDefinition.Fields);
       if (typeDefinition.IsGeneric)
-        this.genericParameters = new List<IGenericTypeParameter>(typeDefinition.GenericParameters);
+        this.genericParameters = IteratorHelper.CopyToList<IGenericTypeParameter>(typeDefinition.GenericParameters);
       else
         this.genericParameters = null;
-      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.Interfaces))
-        this.interfaces = new List<ITypeReference>(typeDefinition.Interfaces);
-      else
-        this.interfaces = null;
+      this.interfaces = IteratorHelper.CopyToList<ITypeReference>(typeDefinition.Interfaces);
       this.internFactory = internFactory;
       this.layout = typeDefinition.Layout;
-      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.Locations))
-        this.locations = new List<ILocation>(typeDefinition.Locations);
-      else
-        this.locations = null;
-      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.Methods))
-        this.methods = new List<IMethodDefinition>(typeDefinition.Methods);
-      else
-        this.methods = null;
+      this.locations = IteratorHelper.CopyToList<ILocation>(typeDefinition.Locations);
+      this.methods = IteratorHelper.CopyToList<IMethodDefinition>(typeDefinition.Methods);
       this.name = typeDefinition.Name;
-      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.NestedTypes))
-        this.nestedTypes = new List<INestedTypeDefinition>(typeDefinition.NestedTypes);
-      else
-        this.nestedTypes = null;
+      this.nestedTypes = IteratorHelper.CopyToList<INestedTypeDefinition>(typeDefinition.NestedTypes);
       this.platformType = typeDefinition.PlatformType;
       this.privateHelperMembers = null;
-      if (IteratorHelper.EnumerableIsNotEmpty(typeDefinition.Properties))
-        this.properties = new List<IPropertyDefinition>(typeDefinition.Properties);
-      else
-        this.properties = null;
+      this.properties = IteratorHelper.CopyToList<IPropertyDefinition>(typeDefinition.Properties);
       if (typeDefinition.HasDeclarativeSecurity)
-        this.securityAttributes = new List<ISecurityAttribute>(typeDefinition.SecurityAttributes);
+        this.securityAttributes = IteratorHelper.CopyToList<ISecurityAttribute>(typeDefinition.SecurityAttributes);
       else
         this.securityAttributes = null;
       this.sizeOf = typeDefinition.SizeOf;
@@ -2892,6 +2847,64 @@ namespace Microsoft.Cci.MutableCodeModel {
           yield return tdmem;
         }
       }
+    }
+
+    /// <summary>
+    /// Find the next matching method, return -1 for missing
+    /// </summary>
+    private int FindMethod(IName name, bool ignoreCase, int index)
+    {
+        if (this.Methods != null)
+        {
+            while (index < this.Methods.Count)
+            {
+                IMethodDefinition method = this.Methods[index];
+
+                if (method.Name.UniqueKey == name.UniqueKey || ignoreCase && (name.UniqueKeyIgnoringCase == method.Name.UniqueKeyIgnoringCase))
+                {
+                    return index;
+                }
+
+                index ++;
+            }
+        }
+    
+        return -1;
+    }
+
+    /// <summary>
+    /// Return all matching methods as IEnumerable{IMethodDefinition}
+    /// </summary>
+    internal IEnumerable<IMethodDefinition> GetAllMethods(IName name, bool ignoreCase, int start)
+    {
+        do
+        {
+            yield return this.Methods[start];
+
+            start = FindMethod(name, ignoreCase, start + 1);
+        }
+        while (start >= 0);
+    }
+
+    /// <summary>
+    /// Return list of methods with the given name.
+    /// </summary>
+    /// <remarks>Optimized for method resolution
+    /// 1. Walking method list only
+    /// 2. Avoid allocating enumerator unless then is a positive match
+    /// </remarks>
+    internal IEnumerable<IMethodDefinition> GetMethodsNamed(IName name, bool ignoreCase)
+    {
+        int result = FindMethod(name, ignoreCase, 0);
+
+        if (result < 0)
+        {
+            return Enumerable<IMethodDefinition>.Empty;
+        }
+        else
+        {
+            return GetAllMethods(name, ignoreCase, result);
+        }
     }
 
     /// <summary>
@@ -3372,57 +3385,49 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IEnumerable<IGenericTypeParameter> ITypeDefinition.GenericParameters {
       get {
-        if (this.GenericParameters == null) return Enumerable<IGenericTypeParameter>.Empty;
-        return this.GenericParameters.AsReadOnly();
+        return this.GenericParameters.ToReadOnly();
       }
     }
 
     IEnumerable<ITypeReference> ITypeDefinition.BaseClasses {
       get {
-        if (this.BaseClasses == null) return Enumerable<ITypeReference>.Empty;
-        return this.BaseClasses.AsReadOnly();
+        return this.BaseClasses.ToReadOnly();
       }
     }
 
     IEnumerable<IEventDefinition> ITypeDefinition.Events {
       get {
-        if (this.Events == null) return Enumerable<IEventDefinition>.Empty;
-        return this.Events.AsReadOnly();
+        return this.Events.ToReadOnly();
       }
     }
 
     IEnumerable<IMethodImplementation> ITypeDefinition.ExplicitImplementationOverrides {
       get {
-        if (this.ExplicitImplementationOverrides == null) return Enumerable<IMethodImplementation>.Empty;
-        return this.ExplicitImplementationOverrides.AsReadOnly();
+        return this.ExplicitImplementationOverrides.ToReadOnly();
       }
     }
 
     IEnumerable<IFieldDefinition> ITypeDefinition.Fields {
       get {
-        if (this.Fields == null) return Enumerable<IFieldDefinition>.Empty;
-        return this.Fields.AsReadOnly();
+        return this.Fields.ToReadOnly();
       }
     }
 
     IEnumerable<ITypeReference> ITypeDefinition.Interfaces {
       get {
-        if (this.Interfaces == null) return Enumerable<ITypeReference>.Empty;
-        return this.Interfaces.AsReadOnly();
+        return this.Interfaces.ToReadOnly();
       }
     }
 
     IEnumerable<IMethodDefinition> ITypeDefinition.Methods {
       get {
-        if (this.Methods == null) return Enumerable<IMethodDefinition>.Empty;
-        return this.Methods.AsReadOnly();
+        return this.Methods.ToReadOnly();
       }
     }
 
     IEnumerable<INestedTypeDefinition> ITypeDefinition.NestedTypes {
       get {
-        if (this.NestedTypes == null) return Enumerable<INestedTypeDefinition>.Empty;
-        return this.NestedTypes.AsReadOnly();
+        return this.NestedTypes.ToReadOnly();
       }
     }
 
@@ -3439,15 +3444,13 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IEnumerable<IPropertyDefinition> ITypeDefinition.Properties {
       get {
-        if (this.Properties == null) return Enumerable<IPropertyDefinition>.Empty;
-        return this.Properties.AsReadOnly();
+        return this.Properties.ToReadOnly();
       }
     }
 
     IEnumerable<ISecurityAttribute> ITypeDefinition.SecurityAttributes {
       get {
-        if (this.SecurityAttributes == null) return Enumerable<ISecurityAttribute>.Empty;
-        return this.SecurityAttributes.AsReadOnly();
+        return this.SecurityAttributes.ToReadOnly();
       }
     }
     #endregion
@@ -3456,15 +3459,13 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IEnumerable<ICustomAttribute> IReference.Attributes {
       get {
-        if (this.Attributes == null) return Enumerable<ICustomAttribute>.Empty;
-        return this.Attributes.AsReadOnly();
+        return this.Attributes.ToReadOnly();
       }
     }
 
     IEnumerable<ILocation> IObjectWithLocations.Locations {
       get {
-        if (this.Locations == null) return Enumerable<ILocation>.Empty;
-        return this.Locations.AsReadOnly();
+        return this.Locations.ToReadOnly();
       }
     }
 
@@ -3567,7 +3568,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// </param>
     public void Copy(IModifiedTypeReference modifiedTypeReference, IInternFactory internFactory) {
       ((ICopyFrom<ITypeReference>)this).Copy(modifiedTypeReference, internFactory);
-      this.customModifiers = new List<ICustomModifier>(modifiedTypeReference.CustomModifiers);
+      this.customModifiers = IteratorHelper.CopyToList<ICustomModifier>(modifiedTypeReference.CustomModifiers);
       this.unmodifiedType = modifiedTypeReference.UnmodifiedType;
     }
 
@@ -3671,26 +3672,19 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// references to the given metadata model objects.   
     /// </param>
     public void Copy(ITypeReference typeReference, IInternFactory internFactory) {
-      if (typeReference is ITypeDefinition)
+      if (typeReference is ITypeDefinition) { 
         this.attributes = null; //the attributes of a type definition are not the same as the attributes of a type reference
       //so when a definition is being copied as a reference, it should get not attributes of its own.
-      else if (IteratorHelper.EnumerableIsNotEmpty(typeReference.Attributes))
-        this.attributes = new List<ICustomAttribute>(typeReference.Attributes);
-      else
-        this.attributes = null;
+      } else { 
+        this.attributes = IteratorHelper.CopyToList<ICustomAttribute>(typeReference.Attributes);
+      }
       this.internFactory = internFactory;
       this.isEnum = typeReference.IsEnum;
       this.isValueType = typeReference.IsValueType;
-      if (IteratorHelper.EnumerableIsNotEmpty(typeReference.Locations))
-        this.locations = new List<ILocation>(typeReference.Locations);
-      else
-        this.locations = null;
+      this.locations = IteratorHelper.CopyToList<ILocation>(typeReference.Locations);
       this.platformType = typeReference.PlatformType;
       this.typeCode = typeReference.TypeCode;
-      this.originalReference = typeReference;
     }
-
-    ITypeReference/*?*/ originalReference;
 
     /// <summary>
     /// If this type reference can be resolved and it resolves to a type alias, the resolution continues on
@@ -3824,12 +3818,10 @@ namespace Microsoft.Cci.MutableCodeModel {
     /// <value></value>
     public bool IsValueType {
       get {
-        if (this.originalReference != null) return this.originalReference.IsValueType;
         return this.isValueType;
       }
       set {
         Contract.Requires(!this.IsFrozen);
-        this.originalReference = null;
         this.isValueType = value;
       }
     }
@@ -3911,7 +3903,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     IEnumerable<ICustomAttribute> IReference.Attributes {
       get {
         if (this.Attributes == null) return Dummy.TypeReference.Attributes;
-        return this.Attributes.AsReadOnly();
+        return this.Attributes.ToReadOnly();
       }
     }
 
@@ -3919,7 +3911,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       [ContractVerification(false)]
       get {
         if (this.Locations == null) return Dummy.TypeReference.Locations;
-        return this.Locations.AsReadOnly();
+        return this.Locations.ToReadOnly();
       }
     }
 

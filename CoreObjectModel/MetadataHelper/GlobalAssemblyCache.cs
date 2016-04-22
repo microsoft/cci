@@ -25,7 +25,7 @@ namespace Microsoft.Cci {
   /// </summary>
   [ContractVerification(false)]
   public static class GlobalAssemblyCache {
-#if !COMPACTFX && !__MonoCS__
+#if !COMPACTFX && !__MonoCS__ && !COREFX_SUBSET
     private static bool FusionLoaded;
 #endif
 
@@ -49,6 +49,8 @@ namespace Microsoft.Cci {
           if (string.Equals(values[0], codeBase, StringComparison.OrdinalIgnoreCase)) return true;
           if (values.Length > 1 && string.Equals(values[1], codeBase, StringComparison.OrdinalIgnoreCase)) return true;
         }
+        return false;
+#elif COREFX_SUBSET
         return false;
 #else
 #if __MonoCS__
@@ -100,6 +102,8 @@ namespace Microsoft.Cci {
             return values[0];
           }
         }
+        return null;
+#elif COREFX_SUBSET
         return null;
 #else
 #if __MonoCS__
@@ -221,7 +225,7 @@ namespace Microsoft.Cci {
     }
 #endif
 
-#if !COMPACTFX && !__MonoCS__
+#if !COMPACTFX && !__MonoCS__ && !COREFX_SUBSET
     [DllImport("kernel32.dll", CharSet=CharSet.Ansi)]
     private static extern IntPtr LoadLibrary(string lpFileName);
     [DllImport("fusion.dll", CharSet=CharSet.Auto)]
@@ -235,7 +239,7 @@ namespace Microsoft.Cci {
 #endif
   }
 
-#if !COMPACTFX
+#if !COMPACTFX && !COREFX_SUBSET
 #pragma warning disable 1591
   public class AssemblyName {
     IAssemblyName assemblyName;

@@ -10,6 +10,7 @@
 //-----------------------------------------------------------------------------
 
 using System.Diagnostics.Contracts;
+using System.Collections.Generic;
 
 namespace Microsoft.Cci.WriterUtilities {
   public sealed class BinaryWriter {
@@ -24,7 +25,7 @@ namespace Microsoft.Cci.WriterUtilities {
       Contract.Requires(output != null);
 
       this.baseStream = output;
-      this.UTF8 = !unicode;
+      SetUnicode(unicode);
     }
 
     [ContractInvariantMethod]
@@ -38,10 +39,18 @@ namespace Microsoft.Cci.WriterUtilities {
         Contract.Ensures(Contract.Result<MemoryStream>() != null);
         return this.baseStream;
       }
+      internal set {
+        this.baseStream = value;
+      }
     }
     MemoryStream baseStream;
 
     private bool UTF8 = true;
+
+    internal void SetUnicode(bool unicode)
+    {
+        this.UTF8 = !unicode;
+    }
 
     public void Align(uint alignment) {
       MemoryStream m = this.BaseStream;
@@ -76,6 +85,20 @@ namespace Microsoft.Cci.WriterUtilities {
     public void WriteBytes(byte[] buffer) {
       if (buffer == null) return;
       this.BaseStream.Write(buffer, 0, (uint)buffer.Length);
+    }
+
+    internal void WriteBytes(IEnumerable<byte> buffer)
+    {
+        if (buffer == null) return;
+
+        MemoryStream m = this.BaseStream;
+
+        foreach (byte b in buffer)
+        {
+            uint i = m.Position;
+            m.Position = i + 1;
+            m.Buffer[i] = b;
+        }
     }
 
     //public void WriteChar(char ch) {

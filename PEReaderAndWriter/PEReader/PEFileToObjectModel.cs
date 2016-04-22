@@ -275,7 +275,7 @@ namespace Microsoft.Cci.MetadataReader {
         int mscorlibKey = peReader.Mscorlib.UniqueKey;
         int systemRuntimeKey = peReader.System_Runtime.UniqueKey;
         TypeRefTableReader trTable = this.PEFileReader.TypeRefTable;
-        var hitCounts = new uint[trTable.NumberOfRows];
+        var hitCounts = new uint[this.AssemblyReferenceArray.Length];
         for (uint i = 1; i <= trTable.NumberOfRows; i++) {
           TypeRefRow tr = trTable[i];
           IName nsName = this.GetNameFromOffset(tr.Namespace);
@@ -365,14 +365,21 @@ namespace Microsoft.Cci.MetadataReader {
 
     //  Caller should lock this.
     IName GetUnmangledNameFromOffset(
-      uint offset
+      uint offset,
+      int genericParameterCount = -1
     ) {
       IName/*?*/ name = this.StringIndexToUnmangledNameTable.Find(offset);
       if (name == null) {
         string nameStr = this.PEFileReader.StringStream[offset];
         int indx = nameStr.LastIndexOf('`');
         if (indx != -1) {
-          nameStr = nameStr.Substring(0, indx);
+          // If the name matches the pattern <Unmangled>`<ParameterCount>, then extract the unmangled name.
+          // If genericParameterCount < 0, trust that the pattern is satisfied.
+          string genericParameterCountSpelling = genericParameterCount.ToString();
+          if (genericParameterCount < 0 ||
+              ((indx + 1 + genericParameterCountSpelling.Length) == nameStr.Length &&
+               nameStr.EndsWith(genericParameterCountSpelling, StringComparison.Ordinal)))
+            nameStr = nameStr.Substring(0, indx);
         }
         name = this.NameTable.GetNameFor(nameStr);
         this.StringIndexToUnmangledNameTable.Add(offset, name);
@@ -504,7 +511,7 @@ namespace Microsoft.Cci.MetadataReader {
             //  Error
           }
         }
-        AssemblyIdentity assemblyIdentity = new AssemblyIdentity(assemblyRefName, cultureName.Value, version, publicKeyTokenArray, string.Empty);
+        AssemblyIdentity assemblyIdentity = new AssemblyIdentity(assemblyRefName, cultureName.Value, version, publicKeyTokenArray, string.Empty, assemblyRefRow.Flags.HasFlag(MetadataReader.PEFileFlags.AssemblyFlags.ContainsForeignTypes));
         AssemblyReference assemblyReference = new AssemblyReference(this, i, assemblyIdentity, assemblyRefRow.Flags);
         assemblyRefList[i] = assemblyReference;
       }
@@ -1049,6 +1056,7 @@ namespace Microsoft.Cci.MetadataReader {
         if (!typeDefRow.IsNested) {
           IName namespaceName = this.GetNameFromOffset(typeDefRow.Namespace);
           IName typeName = this.GetNameFromOffset(typeDefRow.Name);
+          this.FixUpNameForManagedWinMDClassOrEnum(i, typeDefRow, ref typeName);
           this.NamespaceTypeTokenTable.Add((uint)namespaceName.UniqueKey, (uint)typeName.UniqueKey, TokenTypeIds.TypeDef | i);
         }
       }
@@ -1057,6 +1065,11 @@ namespace Microsoft.Cci.MetadataReader {
         NestedClassRow nestedClassRow = this.PEFileReader.NestedClassTable[i];
         uint nameStrId = this.PEFileReader.TypeDefTable.GetName(nestedClassRow.NestedClass);
         IName typeName = this.GetNameFromOffset(nameStrId);
+        uint namespaceStrId = this.PEFileReader.TypeDefTable.GetNamespace(nestedClassRow.NestedClass);
+        if (namespaceStrId != 0) { 
+          IName namespaceName = this.GetNameFromOffset(namespaceStrId);
+          typeName = this.NameTable.GetNameFor(namespaceName.Value + "." + typeName.Value);
+        }
         this.NestedTypeTokenTable.Add(TokenTypeIds.TypeDef | nestedClassRow.EnclosingClass, (uint)typeName.UniqueKey, TokenTypeIds.TypeDef | nestedClassRow.NestedClass);
       }
       uint numberOfExportedTypes = this.PEFileReader.ExportedTypeTable.NumberOfRows;
@@ -1084,15 +1097,50 @@ namespace Microsoft.Cci.MetadataReader {
       this.GetGenericParamInfoForType(typeDefRowId, out genericParamRowIdStart, out genericParamRowIdEnd);
       NamespaceType type;
       if (genericParamRowIdStart == 0) {
-        if (signatureTypeCode == MetadataReaderSignatureTypeCode.NotModulePrimitive)
-          type = new NonGenericNamespaceTypeWithoutPrimitiveType(this, typeName, typeDefRowId, typeDefRow.Flags, moduleNamespace);
-        else
+        if (signatureTypeCode == MetadataReaderSignatureTypeCode.NotModulePrimitive) {
+          TypeDefFlags flags = typeDefRow.Flags;
+          this.FixUpNameAndFlagsForManagedWinMDClassOrEnum(typeDefRowId, moduleNamespace.Unit, ref typeName, ref flags);
+          type = new NonGenericNamespaceTypeWithoutPrimitiveType(this, typeName, typeDefRowId, flags, moduleNamespace);
+        }
+        else {
           type = new NonGenericNamespaceTypeWithPrimitiveType(this, typeName, typeDefRowId, typeDefRow.Flags, moduleNamespace, signatureTypeCode);
+        }
       } else {
-        IName unmangledTypeName = this.GetUnmangledNameFromOffset(typeDefRow.Name);
+        IName unmangledTypeName = this.GetUnmangledNameFromOffset(typeDefRow.Name, (int)(genericParamRowIdEnd - genericParamRowIdStart));
         type = new GenericNamespaceType(this, unmangledTypeName, typeDefRowId, typeDefRow.Flags, moduleNamespace, typeName, genericParamRowIdStart, genericParamRowIdEnd);
       }
       return type;
+    }
+    
+    // Fixes up names and flags for managed winmd classes if projection support is enabled in the host.
+    // - CLR view classes and enums in managed winmds lose the '<CLR>' prefix in their name and become public.
+    // - WinRT view classes and enums in managed winmds get a '<WinRT>' prefix in their name and become private.
+    // This is identical to the behavior one sees when one uses ildasm's "/project" option to view the contents
+    // of a managed winmd.
+    private void FixUpNameForManagedWinMDClassOrEnum(
+      uint typeDefRowId,
+      TypeDefRow typeDefRow,
+      ref IName typeName
+    ) {
+      IWindowsRuntimeMetadataReaderHost host = this.ModuleReader.metadataReaderHost as IWindowsRuntimeMetadataReaderHost;
+      if (host != null && host.ProjectToCLRTypes) {
+        Namespace parentNamespace = this.GetNamespaceForNameOffset(typeDefRow.Namespace);
+        Debug.Assert(parentNamespace != null);
+        TypeDefFlags typeDefFlags = typeDefRow.Flags;
+        this.FixUpNameAndFlagsForManagedWinMDClassOrEnum(typeDefRowId, parentNamespace.Unit, ref typeName, ref typeDefFlags);
+      }
+    }
+
+    private void FixUpNameAndFlagsForManagedWinMDClassOrEnum(
+      uint typeDefRowId,
+      IUnit containingUnit,
+      ref IName typeName,
+      ref TypeDefFlags flags
+    ) {
+      IWindowsRuntimeMetadataReaderHost host = this.ModuleReader.metadataReaderHost as WindowsRuntimeMetadataReaderHost;
+      if (host != null && host.ProjectToCLRTypes) {
+        host.FixUpNameAndFlagsForManagedWinMDClassOrEnum(this, typeDefRowId, containingUnit, ref typeName, ref flags);
+      }
     }
 
     NestedType CreateModuleNestedType(
@@ -1112,7 +1160,12 @@ namespace Microsoft.Cci.MetadataReader {
       if (genericParamRowIdStart == 0) {
         type = new NonGenericNestedType(this, typeName, typeDefRowId, typeDefRow.Flags, parentModuleType);
       } else {
-        IName unmangledTypeName = this.GetUnmangledNameFromOffset(typeDefRow.Name);
+        IName unmangledTypeName =
+          this.GetUnmangledNameFromOffset(
+            typeDefRow.Name,
+            // The encoded generic parameter count is the number of parameters introduced with this type:
+            // the total number of parameters minus the number of parameters of the enclosing type.
+            (int)((genericParamRowIdEnd - genericParamRowIdStart) - parentModuleType.GenericTypeParameterCardinality));
         if (typeDefRow.Namespace != 0) {
           IName namespaceName = this.GetNameFromOffset(typeDefRow.Namespace);
           unmangledTypeName = this.NameTable.GetNameFor(namespaceName.Value+"."+unmangledTypeName.Value);
@@ -1742,6 +1795,17 @@ namespace Microsoft.Cci.MetadataReader {
       }
     }
 
+    internal IEnumerable<ITypeMemberReference> GetStructuralMemberReferences()
+    {
+        for (uint i = 1; i <= this.PEFileReader.MemberRefTable.NumberOfRows; i++)
+        {
+            MemberRefRow mrr = this.PEFileReader.MemberRefTable[i];
+            if ((mrr.Class & TokenTypeIds.TokenTypeMask) != TokenTypeIds.TypeSpec) continue;
+            var mr = this.GetModuleMemberReferenceAtRow(this.Module, i);
+            if (mr != null) yield return mr;
+        }
+    }
+
     internal IEnumerable<ITypeReference> GetTypeReferences() {
       for (uint i = 1; i <= this.PEFileReader.TypeRefTable.NumberOfRows; i++) {
         var tr = this.GetTypeRefReferenceAtRow(i);
@@ -1966,6 +2030,14 @@ namespace Microsoft.Cci.MetadataReader {
                 if (modTypeRef != null)
                   return modTypeRef;
               }
+              NamespaceType/*?*/ nst = parentModuleType as NamespaceType;
+              if (nst != null)
+              {
+                NamespaceName nsName = new NamespaceName(this.NameTable, null, nst.NamespaceFullName);
+                NamespaceTypeName namespaceTypeName = new NamespaceTypeName(this.NameTable, nsName, nst.Name);
+                var nestedTypeName = new NestedTypeName(this.NameTable, namespaceTypeName, mangledTypeName);
+                return nestedTypeName.GetAsNamedTypeReference(this, (Module)nst.ContainingUnitNamespace.Unit);
+              }
             } else {
               NamespaceTypeNameTypeReference/*?*/ nstr = parentModuleType as NamespaceTypeNameTypeReference;
               if (nstr != null) {
@@ -2077,6 +2149,7 @@ namespace Microsoft.Cci.MetadataReader {
       this.GetGenericParamInfoForMethod(methodDefRowId, out genericParamRowIdStart, out genericParamRowIdEnd);
       IMethodDefinition moduleMethod;
       if (genericParamRowIdStart == 0) {
+        FixUpNameForIClosableCloseMethod(methodDefRowId, methodRow.Flags, parentModuleType, ref methodName);
         moduleMethod = new NonGenericMethod(this, methodName, parentModuleType, methodDefRowId, methodRow.Flags, methodRow.ImplFlags);
       } else {
         moduleMethod = new GenericMethod(this, methodName, parentModuleType, methodDefRowId, methodRow.Flags, methodRow.ImplFlags, genericParamRowIdStart, genericParamRowIdEnd);
@@ -2087,6 +2160,18 @@ namespace Microsoft.Cci.MetadataReader {
       }
       return moduleMethod;
     }
+    
+    // Changes the name of any method that's defined in a winmd that implements IClosable.Close() to 'Dispose'
+    // so that managed consumers can call type.Dispose() directly (without casting to IDisposable).
+    // This is identical to the behavior one sees when one uses ildasm's "/project" option to view the contents
+    // of a winmd.
+    private void FixUpNameForIClosableCloseMethod(uint methodDefRowId, MethodFlags flags, TypeBase parentModuleType, ref IName methodName) {
+      IWindowsRuntimeMetadataReaderHost host = this.ModuleReader.metadataReaderHost as IWindowsRuntimeMetadataReaderHost;
+      if (host != null && host.ProjectToCLRTypes) {
+        host.FixUpNameForMethodThatImplementsIClosable(this, methodDefRowId, flags, parentModuleType, ref methodName);
+      }
+    }
+
     EventDefinition CreateEvent(
       uint eventDefRowId,
       TypeBase parentModuleType
@@ -2832,11 +2917,11 @@ namespace Microsoft.Cci.MetadataReader {
       if (memoryReader.NotEndOfBytes) {
         if (unmanagedType == System.Runtime.InteropServices.UnmanagedType.ByValArray) {
           uint numElements = (uint)memoryReader.ReadCompressedUInt32();
-          System.Runtime.InteropServices.UnmanagedType elementType = System.Runtime.InteropServices.UnmanagedType.AsAny;
+          System.Runtime.InteropServices.UnmanagedType elementType = MarshallingInformationHelper.UnmanagedTypeDefaultValue;
           if (memoryReader.NotEndOfBytes)
             elementType = (System.Runtime.InteropServices.UnmanagedType)memoryReader.ReadByte();
           return new ByValArrayMarshallingInformation(elementType, numElements);
-        } else if (unmanagedType == System.Runtime.InteropServices.UnmanagedType.CustomMarshaler) {
+        } else if (unmanagedType == System.Runtime.InteropServices.UnmanagedTypeEx.CustomMarshaler) {
           string marshallerName;
           string marshallerArgument;
           memoryReader.ReadInt16(); //  Deliberate Skip...
@@ -3624,7 +3709,7 @@ namespace Microsoft.Cci.MetadataReader {
       if (typeSpecToken != 0xFFFFFFFF)
         return new GenericTypeInstanceReferenceWithToken(typeSpecToken, templateTypeReference, IteratorHelper.GetReadonly(genericArgumentArray), this.PEFileToObjectModel.InternFactory);
       else
-        return new GenericTypeInstanceReference(templateTypeReference, IteratorHelper.GetReadonly(genericArgumentArray), this.PEFileToObjectModel.InternFactory);
+        return GenericTypeInstanceReference.GetOrMake(templateTypeReference, IteratorHelper.GetReadonly(genericArgumentArray), this.PEFileToObjectModel.InternFactory);
     }
 
     protected ManagedPointerType/*?*/ GetModuleManagedPointerType(uint typeSpecToken) {

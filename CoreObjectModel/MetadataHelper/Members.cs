@@ -282,18 +282,13 @@ namespace Microsoft.Cci.Immutable {
     /// <value></value>
     public IMethodBody Body {
       get {
-        var result = this.body == null ? null : this.body.Target as IMethodBody;
-        if (result == null) {
-          result = new SpecializedMethodBody(this.genericMethod.Body, this, this.internFactory);
-          if (this.body == null)
-            this.body = new WeakReference(result);
-          else
-            this.body.Target = result;
+        if (body == null) {
+          body = new SpecializedMethodBody(this.genericMethod.Body, this, this.internFactory);
         }
-        return result;
+        return body;
       }
     }
-    WeakReference/*?*/ body;
+    IMethodBody/*?*/ body;
 
     /// <summary>
     /// Calling convention of the signature.
@@ -810,7 +805,7 @@ namespace Microsoft.Cci.Immutable {
     #region ISignature Members
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { return IteratorHelper.GetConversionEnumerable<IParameterDefinition, IParameterTypeInformation>(this.Parameters); }
+      get { return this.Parameters; }
     }
 
     #endregion
@@ -1390,7 +1385,7 @@ namespace Microsoft.Cci.Immutable {
               foreach (IMethodReference accessor in this.partiallySpecializedVersion.Accessors) {
                 var key = accessor.InternedKey;
                 if (key == akey || key == ckey || key == rkey) continue;
-                acc.Add((IMethodReference)this.ContainingGenericTypeInstance.SpecializeMember(accessor.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory));
+                acc.Add(this.SpecializeMethod(accessor));
               }
               acc.TrimExcess();
               this.accessors = acc.AsReadOnly();
@@ -1412,8 +1407,7 @@ namespace Microsoft.Cci.Immutable {
         if (this.adder == null) {
           lock (GlobalLock.LockingObject) {
             if (this.adder == null) {
-              var specialized = this.ContainingGenericTypeInstance.SpecializeMember(this.partiallySpecializedVersion.Adder.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
-              this.adder = (IMethodReference)specialized;
+              this.adder = this.SpecializeMethod(this.partiallySpecializedVersion.Adder);
             }
           }
         }
@@ -1433,8 +1427,7 @@ namespace Microsoft.Cci.Immutable {
           if (caller == null) return null;
           lock (GlobalLock.LockingObject) {
             if (this.caller == null) {
-              ITypeDefinitionMember specialized = this.ContainingGenericTypeInstance.SpecializeMember(caller.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
-              this.caller = (IMethodReference)specialized;
+              this.caller = this.SpecializeMethod(caller);
             }
           }
         }
@@ -1468,8 +1461,7 @@ namespace Microsoft.Cci.Immutable {
         if (this.remover == null) {
           lock (GlobalLock.LockingObject) {
             if (this.remover == null) {
-              var specialized = this.ContainingGenericTypeInstance.SpecializeMember(this.partiallySpecializedVersion.Remover.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
-              this.remover = (IMethodReference)specialized;
+              this.remover = this.SpecializeMethod(this.partiallySpecializedVersion.Remover);
             }
           }
         }
@@ -1583,6 +1575,14 @@ namespace Microsoft.Cci.Immutable {
       }
     }
     uint internedKey;
+
+    /// <summary>
+    /// Returns a field signature string for the field.
+    /// </summary>
+    public override string ToString()
+    {
+        return MemberHelper.GetMemberSignature(this);
+    }
 
     /// <summary>
     /// The type of value that is stored in this field.
@@ -2301,43 +2301,58 @@ namespace Microsoft.Cci.Immutable {
     private void MapBody() {
       lock (this) {
         if (this.localVariables != null) return;
-        var map = new Dictionary<object, object>();
-        var specializedParEnum = this.MethodDefinition.Parameters.GetEnumerator();
-        var unspecializedParEnum = this.unspecializedBody.MethodDefinition.Parameters.GetEnumerator();
-        while (specializedParEnum.MoveNext() && unspecializedParEnum.MoveNext())
-          map.Add(unspecializedParEnum.Current, specializedParEnum.Current);
+        var map = ContainerCache.AcquireObjectDictionary(); // Only needed within the method
 
-        var specializedLocals = new List<ILocalDefinition>(this.unspecializedBody.LocalVariables);
-        for (int i = 0, n = specializedLocals.Count; i < n; i++) {
-          var unspecializedLocal = specializedLocals[i];
+        if (this.MethodDefinition.ParameterCount != 0)
+        {
+          var specializedParEnum = this.MethodDefinition.Parameters.GetEnumerator();
+          var unspecializedParEnum = this.unspecializedBody.MethodDefinition.Parameters.GetEnumerator();
+          while (specializedParEnum.MoveNext() && unspecializedParEnum.MoveNext())
+            map.Add(unspecializedParEnum.Current, specializedParEnum.Current);
+        }
+
+        var specializedLocals = ReadOnlyList<ILocalDefinition>.Create(this.unspecializedBody.LocalVariables);
+        foreach(ILocalDefinition unspecializedLocal in this.unspecializedBody.LocalVariables) {
           var specializedType = this.Specialize(unspecializedLocal.Type, map);
           var specializedLocal = new SpecializedLocalDefinition(unspecializedLocal, this.containingMethod, specializedType);
-          specializedLocals[i] = specializedLocal;
+          specializedLocals.Add(specializedLocal);
           map.Add(unspecializedLocal, specializedLocal);
         }
-        this.localVariables = specializedLocals.AsReadOnly();
+        this.localVariables = ReadOnlyList<ILocalDefinition>.Freeze(specializedLocals);
 
-        var specializedOperations = new List<IOperation>(this.unspecializedBody.Operations);
-        for (int i = 0, n = specializedOperations.Count; i < n; i++) {
-          var unspecializedOperation = specializedOperations[i];
-          var specializedObject = this.Specialize(unspecializedOperation.Value, map);
-          if (specializedObject != unspecializedOperation.Value) {
-            var specializedOperation = new SpecializedOperation(unspecializedOperation, specializedObject);
-            specializedOperations[i] = specializedOperation;
+        bool diff = false;
+        var specializedOperations = ReadOnlyList<IOperation>.Create(this.unspecializedBody.Operations);
+        foreach (IOperation oper in this.unspecializedBody.Operations) {
+          var specializedObject = this.Specialize(oper.Value, map);
+          if (specializedObject != oper.Value) {
+            specializedOperations.Add(new SpecializedOperation(oper, specializedObject));
+            diff = true;
           }
+          else
+            specializedOperations.Add(oper);
         }
-        this.operations = specializedOperations.AsReadOnly();
+        if (diff)
+          this.operations = ReadOnlyList<IOperation>.Freeze(specializedOperations);
+        else
+          this.operations = this.unspecializedBody.Operations;
 
-        var specializedOperationExceptionInformation = new List<IOperationExceptionInformation>(this.unspecializedBody.OperationExceptionInformation);
-        for (int i = 0, n = specializedOperationExceptionInformation.Count; i < n; i++) {
-          var unspecializedOperationException = specializedOperationExceptionInformation[i];
+        var specializedOperationExceptionInformation = ReadOnlyList<IOperationExceptionInformation>.Create(this.unspecializedBody.OperationExceptionInformation);
+        diff = false;
+        foreach (IOperationExceptionInformation unspecializedOperationException in this.unspecializedBody.OperationExceptionInformation) {
           var specializedType = this.Specialize(unspecializedOperationException.ExceptionType, map);
           if (specializedType != unspecializedOperationException.ExceptionType) {
-            var specializedOperationException = new SpecializedOperationExceptionInformation(unspecializedOperationException, specializedType);
-            specializedOperationExceptionInformation[i] = specializedOperationException;
+            specializedOperationExceptionInformation.Add(new SpecializedOperationExceptionInformation(unspecializedOperationException, specializedType));
+            diff = true;
           }
+          else
+            specializedOperationExceptionInformation.Add(unspecializedOperationException);
         }
-        this.operationExceptionInformation = specializedOperationExceptionInformation.AsReadOnly();
+        if (diff)
+          this.operationExceptionInformation = ReadOnlyList<IOperationExceptionInformation>.Freeze(specializedOperationExceptionInformation);
+        else
+          this.operationExceptionInformation = this.unspecializedBody.OperationExceptionInformation;
+
+        ContainerCache.Release(map);
       }
     }
 
@@ -2363,7 +2378,7 @@ namespace Microsoft.Cci.Immutable {
           if (specializedFieldReference == null)
             specialized = unspecialized;
           else {
-            var specializedContainingType = TypeHelper.SpecializeTypeReference(fieldReference.ContainingType, this.containingMethod, this.internFactory);
+            var specializedContainingType = Specialize(fieldReference.ContainingType, map);
             specialized = new SpecializedFieldReference(specializedContainingType, specializedFieldReference.UnspecializedVersion, this.internFactory);
           }
         } else {
@@ -2375,7 +2390,7 @@ namespace Microsoft.Cci.Immutable {
             if (specializedMethodReference == null)
               specialized = unspecialized;
             else {
-              var specializedContainingType = TypeHelper.SpecializeTypeReference(methodReference.ContainingType, this.containingMethod, this.internFactory);
+              var specializedContainingType = Specialize(methodReference.ContainingType, map);
               specialized = new SpecializedMethodReference(specializedContainingType, specializedMethodReference.UnspecializedVersion, this.internFactory);
             }
           } else
@@ -2460,18 +2475,13 @@ namespace Microsoft.Cci.Immutable {
     /// <value></value>
     public IMethodBody Body {
       get {
-        var result = this.body == null ? null : this.body.Target as IMethodBody;
-        if (result == null) {
-          result = new SpecializedMethodBody(this.UnspecializedVersion.Body, this, this.ContainingGenericTypeInstance.InternFactory);
-          if (this.body == null)
-            this.body = new WeakReference(result);
-          else
-            this.body.Target = result;
+        if (body == null) {
+          body = new SpecializedMethodBody(this.UnspecializedVersion.Body, this, this.ContainingGenericTypeInstance.InternFactory);
         }
-        return result;
+        return body;
       }
     }
-    WeakReference/*?*/ body;
+    IMethodBody/*?*/ body;
 
     /// <summary>
     /// Calling convention of the signature.
@@ -2504,10 +2514,10 @@ namespace Microsoft.Cci.Immutable {
         if (this.genericParameters == null) {
           lock (GlobalLock.LockingObject) {
             if (this.genericParameters == null) {
-              var gpars = new List<IGenericMethodParameter>(this.GenericParameterCount);
+              var gpars = ReadOnlyList<IGenericMethodParameter>.Create(this.GenericParameterCount);
               foreach (IGenericMethodParameter parameter in this.partiallySpecializedVersion.GenericParameters)
                 gpars.Add(new SpecializedGenericMethodParameter(parameter, this));
-              this.genericParameters = gpars.AsReadOnly();
+              this.genericParameters = ReadOnlyList<IGenericMethodParameter>.Freeze(gpars);
             }
           }
         }
@@ -2550,10 +2560,10 @@ namespace Microsoft.Cci.Immutable {
         if (this.parameters == null) {
           lock (GlobalLock.LockingObject) {
             if (this.parameters == null) {
-              var pars = new List<IParameterDefinition>(this.ParameterCount);
+              var pars = ReadOnlyList<IParameterDefinition>.Create(this.ParameterCount);
               foreach (IParameterDefinition parameter in this.partiallySpecializedVersion.Parameters)
                 pars.Add(new SpecializedParameterDefinition(parameter, this, this.ContainingGenericTypeInstance.InternFactory));
-              this.parameters = pars.AsReadOnly();
+              this.parameters = ReadOnlyList<IParameterDefinition>.Freeze(pars);
             }
           }
         }
@@ -2906,7 +2916,7 @@ namespace Microsoft.Cci.Immutable {
     #region ISignature Members
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { return IteratorHelper.GetConversionEnumerable<IParameterDefinition, IParameterTypeInformation>(this.Parameters); }
+      get { return this.Parameters; }
     }
 
     /// <summary>
@@ -3158,10 +3168,15 @@ namespace Microsoft.Cci.Immutable {
         if (this.extraParameters == null) {
           lock (GlobalLock.LockingObject) {
             if (this.extraParameters == null) {
-              var pars = new List<IParameterTypeInformation>();
-              foreach (var parameter in this.UnspecializedVersion.ExtraParameters)
-                pars.Add(new SpecializedMethodParameterTypeInformation(this, parameter, this.internFactory));
-              this.extraParameters = pars.AsReadOnly();
+              uint count = IteratorHelper.EnumerableCount(this.UnspecializedVersion.ExtraParameters);
+              if (count == 0)
+                this.extraParameters = Enumerable<IParameterTypeInformation>.Empty;
+              else {
+                var pars = new ReadOnlyList<IParameterTypeInformation>((int) count);
+                foreach (var parameter in this.UnspecializedVersion.ExtraParameters)
+                  pars.Add(new SpecializedMethodParameterTypeInformation(this, parameter, this.internFactory));
+                this.extraParameters = ReadOnlyList<IParameterTypeInformation>.Freeze(pars);
+              }
             }
           }
         }
@@ -3189,10 +3204,10 @@ namespace Microsoft.Cci.Immutable {
         if (this.parameters == null) {
           lock (GlobalLock.LockingObject) {
             if (this.parameters == null) {
-              var pars = new List<IParameterTypeInformation>(this.ParameterCount);
+              var pars = ReadOnlyList<IParameterTypeInformation>.Create(this.ParameterCount);
               foreach (var parameter in this.UnspecializedVersion.Parameters)
                 pars.Add(new SpecializedMethodParameterTypeInformation(this, parameter, this.internFactory));
-              this.parameters = pars.AsReadOnly();
+              this.parameters = ReadOnlyList<IParameterTypeInformation>.Freeze(pars);
             }
           }
         }
@@ -3918,7 +3933,7 @@ namespace Microsoft.Cci.Immutable {
               foreach (IMethodReference accessor in this.partiallySpecializedVersion.Accessors) {
                 var akey = accessor.InternedKey;
                 if (akey == gkey || akey == skey) continue;
-                acc.Add((IMethodReference)this.ContainingGenericTypeInstance.SpecializeMember(accessor.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory));
+                acc.Add(this.SpecializeMethod(accessor));
               }
               this.accessors = acc.AsReadOnly();
             }
@@ -3954,8 +3969,7 @@ namespace Microsoft.Cci.Immutable {
           if (getter == null) return null;
           lock (GlobalLock.LockingObject) {
             if (this.getter == null) {
-              ITypeDefinitionMember specialized = this.ContainingGenericTypeInstance.SpecializeMember(getter.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
-              this.getter = (IMethodReference)specialized;
+              this.getter = this.SpecializeMethod(getter);
             }
           }
         }
@@ -3998,8 +4012,7 @@ namespace Microsoft.Cci.Immutable {
           if (setter == null) return null;
           lock (GlobalLock.LockingObject) {
             if (this.setter == null) {
-              var specialized = this.ContainingGenericTypeInstance.SpecializeMember(setter.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
-              this.setter = (IMethodReference)specialized;
+              this.setter = this.SpecializeMethod(setter);
             }
           }
         }
@@ -4119,7 +4132,7 @@ namespace Microsoft.Cci.Immutable {
     #region ISignature Members
 
     IEnumerable<IParameterTypeInformation> ISignature.Parameters {
-      get { return IteratorHelper.GetConversionEnumerable<IParameterDefinition, IParameterTypeInformation>(this.Parameters); }
+      get { return this.Parameters; }
     }
 
     #endregion
@@ -4152,6 +4165,20 @@ namespace Microsoft.Cci.Immutable {
       this.unspecializedVersion = unspecializedVersion;
       this.containingGenericTypeInstance = containingGenericTypeInstance;
       this.containingTypeDefinition = containingTypeDefinition;
+    }
+
+    /// <summary>
+    /// Specialize an unspecialized method definition in the context of the containing type.
+    /// </summary>
+    protected SpecializedMethodDefinition SpecializeMethod(IMethodReference unspecializedMethod)
+    {
+        SpecializedNestedTypeDefinition containingSpecializedType = this.ContainingTypeDefinition as SpecializedNestedTypeDefinition;
+        if (containingSpecializedType != null)
+        {
+            return (SpecializedMethodDefinition)containingSpecializedType.SpecializeMember(unspecializedMethod.ResolvedMethod, containingSpecializedType.InternFactory);
+        }
+
+        return (SpecializedMethodDefinition)this.ContainingGenericTypeInstance.SpecializeMember(unspecializedMethod.ResolvedMethod, this.ContainingGenericTypeInstance.InternFactory);
     }
 
     /// <summary>

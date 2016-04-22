@@ -19,7 +19,7 @@ using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci {
 
-#if !COMPACTFX && !__MonoCS__
+#if !COMPACTFX && !__MonoCS__ 
   /// <summary>
   /// A managed wrapper for an unmanaged memory mapped file.
   /// Important: each instance of this class holds a read-lock on a file. Instances should be explicitly disposed as soon as they become inactive.
@@ -128,7 +128,7 @@ namespace Microsoft.Cci {
     private enum PageAccess : int { PAGE_READONLY = 0x02 };
     private enum FileMapAccess : int { FILE_MAP_READ = 0x0004 };
 
-    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "CreateFileMappingW")]
     private static extern IntPtr CreateFileMapping(
       IntPtr hFile,           // handle to file
       IntPtr lpAttributes,    // security
@@ -138,7 +138,7 @@ namespace Microsoft.Cci {
       string/*?*/ lpName           // object name
     );
 
-    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern void* MapViewOfFile(
       IntPtr hFileMappingObject,      // handle to file-mapping object
       FileMapAccess dwDesiredAccess,  // access mode
@@ -147,13 +147,13 @@ namespace Microsoft.Cci {
       IntPtr dwNumberOfBytesToMap        // number of bytes to map
     );
 
-    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool UnmapViewOfFile(
       void* lpBaseAddress // starting address
     );
 
-    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool CloseHandle(
       IntPtr hObject  // handle to object
@@ -252,7 +252,7 @@ namespace Microsoft.Cci {
       byte* pMainBuffer = (byte*)unmanagedBinaryMemoryBlock.Pointer;
       //Read a fixed length block at a time, so that the GC does not come under pressure from lots of large byte arrays.
       int remainingLength = (int)binaryDocument.Length;
-      int copyBufferLength = 8096;
+      int copyBufferLength = 32 * 1024;
       byte[] tempBuffer = new byte[copyBufferLength];
       fixed (byte* tempBufferPtr = tempBuffer) {
         while (remainingLength > 0) {

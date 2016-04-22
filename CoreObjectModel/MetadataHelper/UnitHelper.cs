@@ -14,8 +14,13 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Text;
 using System.Globalization;
+using System.Security.Cryptography;
 
 //^ using Microsoft.Contracts;
+
+#if HOST_CORERT
+using SHA1 = IL2IL.System.Security.Cryptography.SHA1;
+#endif
 
 namespace Microsoft.Cci {
   /// <summary>
@@ -70,7 +75,11 @@ namespace Microsoft.Cci {
       if (version == null) version = Dummy.Version;
       byte[] token = assemblyName.GetPublicKeyToken();
       if (token == null) token = new byte[0];
-      var codeBase = assemblyName.CodeBase;
+#if COREFX_SUBSET
+      string codeBase = null;
+#else
+      string codeBase = assemblyName.CodeBase;
+#endif
       if (codeBase == null) codeBase = string.Empty;
       return new AssemblyIdentity(metadataHost.NameTable.GetNameFor(name), culture, version, token, codeBase);
     }
@@ -85,9 +94,9 @@ namespace Microsoft.Cci {
 
       byte[] pKey = new List<byte>(assembly.PublicKey).ToArray();
       if (pKey.Length != 0) {
-        return new AssemblyIdentity(assembly.Name, assembly.Culture, assembly.Version, UnitHelper.ComputePublicKeyToken(pKey), assembly.Location);
+        return new AssemblyIdentity(assembly.Name, assembly.Culture, assembly.Version, UnitHelper.ComputePublicKeyToken(pKey), assembly.Location, assembly.ContainsForeignTypes);
       } else {
-        return new AssemblyIdentity(assembly.Name, assembly.Culture, assembly.Version, new byte[0], assembly.Location);
+        return new AssemblyIdentity(assembly.Name, assembly.Culture, assembly.Version, new byte[0], assembly.Location, assembly.ContainsForeignTypes);
       }
     }
 
@@ -112,6 +121,8 @@ namespace Microsoft.Cci {
     /// </summary>
     /// <param name="publicKey"></param>
     /// <returns></returns>
+    // Using SHA1 to compute the public key token is correct per ECMA II.6.3
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Cryptography", "CA5354:SHA1CannotBeUsed")]
     public static byte[] ComputePublicKeyToken(IEnumerable<byte> publicKey) {
       Contract.Requires(publicKey != null);
       Contract.Ensures(Contract.Result<byte[]>() != null);
@@ -119,8 +130,12 @@ namespace Microsoft.Cci {
       byte[] pKey = new List<byte>(publicKey).ToArray();
       if (pKey.Length == 0)
         return pKey;
-      System.Security.Cryptography.SHA1Managed sha1Algo = new System.Security.Cryptography.SHA1Managed();
-      byte[] hash = sha1Algo.ComputeHash(pKey);
+
+      byte[] hash;
+      using (SHA1 sha1Algo = SHA1.Create()) { 
+        hash = sha1Algo.ComputeHash(pKey);
+      }
+
       byte[] publicKeyToken = new byte[8];
       int startIndex = hash.Length - 8;
       Contract.Assume(0 <= startIndex && startIndex < hash.Length);
@@ -182,11 +197,13 @@ namespace Microsoft.Cci {
       Contract.Requires(assemblyReference != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
-      StringBuilder sb = new StringBuilder();
-      sb.Append(assemblyReference.Name.Value);
+      StringBuilder sb = StringBuilderCache.Acquire();
+      sb.AppendQuoted(assemblyReference.Name.Value);
       sb.AppendFormat(CultureInfo.InvariantCulture, ", Version={0}.{1}.{2}.{3}", assemblyReference.Version.Major, assemblyReference.Version.Minor, assemblyReference.Version.Build, assemblyReference.Version.Revision);
-      if (assemblyReference.Culture.Length > 0)
-        sb.AppendFormat(CultureInfo.InvariantCulture, ", Culture={0}", assemblyReference.Culture);
+      if (assemblyReference.Culture.Length > 0) {
+          sb.AppendFormat(CultureInfo.InvariantCulture, ", Culture=");
+          sb.AppendQuoted(assemblyReference.Culture);
+      }
       else
         sb.Append(", Culture=neutral");
       sb.AppendFormat(CultureInfo.InvariantCulture, ", PublicKeyToken=");
@@ -199,7 +216,7 @@ namespace Microsoft.Cci {
         sb.Append(", Retargetable=Yes");
       if (assemblyReference.ContainsForeignTypes)
         sb.Append(", ContentType=WindowsRuntime");
-      return sb.ToString();
+      return StringBuilderCache.GetStringAndRelease(sb);
     }
 
     /// <summary>
@@ -209,11 +226,13 @@ namespace Microsoft.Cci {
       Contract.Requires(assemblyIdentity != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
-      StringBuilder sb = new StringBuilder();
-      sb.Append(assemblyIdentity.Name.Value);
+      StringBuilder sb = StringBuilderCache.Acquire();
+      sb.AppendQuoted(assemblyIdentity.Name.Value);
       sb.AppendFormat(CultureInfo.InvariantCulture, ", Version={0}.{1}.{2}.{3}", assemblyIdentity.Version.Major, assemblyIdentity.Version.Minor, assemblyIdentity.Version.Build, assemblyIdentity.Version.Revision);
-      if (assemblyIdentity.Culture.Length > 0)
-        sb.AppendFormat(CultureInfo.InvariantCulture, ", Culture={0}", assemblyIdentity.Culture);
+      if (assemblyIdentity.Culture.Length > 0) {
+        sb.AppendFormat(CultureInfo.InvariantCulture, ", Culture=");
+        sb.AppendQuoted(assemblyIdentity.Culture);
+      }
       else
         sb.Append(", Culture=neutral");
       sb.AppendFormat(CultureInfo.InvariantCulture, ", PublicKeyToken=");
@@ -222,8 +241,60 @@ namespace Microsoft.Cci {
       } else {
         sb.Append("null");
       }
-      return sb.ToString();
+      if (assemblyIdentity.ContainsForeignTypes) {
+        sb.Append(", ContentType=WindowsRuntime");
+      }
+      return StringBuilderCache.GetStringAndRelease(sb);
     }
+
+    private static void AppendQuoted(this StringBuilder sb, String s) {
+        bool needsQuoting = false;
+        const char quoteChar = '\"';
+
+        // The space is the only special symbol which cannot be escaped, so we need to quote the whole string
+        if (s.Contains(" "))
+            needsQuoting = true;
+
+        if (needsQuoting)
+            sb.Append(quoteChar);
+
+        for (int i = 0; i < s.Length; i++) {
+            bool addedEscape = false;
+            foreach (KeyValuePair<char, String> kv in EscapeSequences) {
+                String escapeReplacement = kv.Value;
+                if (!(s[i] == escapeReplacement[0]))
+                    continue;
+                if ((s.Length - i) < escapeReplacement.Length)
+                    continue;
+                // If we decide to qoute the whole string quote char is the only symbol needeed to be escaped
+                if (needsQuoting && escapeReplacement[0] != quoteChar)
+                    continue;
+                String prefix = s.Substring(i, escapeReplacement.Length);
+                if (prefix == escapeReplacement) {
+                    sb.Append('\\');
+                    sb.Append(kv.Key);
+                    addedEscape = true;
+                }
+            }
+
+            if (!addedEscape)
+                sb.Append(s[i]);
+        }
+
+        if (needsQuoting)
+            sb.Append(quoteChar);
+    }
+
+    internal static KeyValuePair<char, String>[] EscapeSequences =
+        {
+            new KeyValuePair<char, String>('\\', "\\"),
+            new KeyValuePair<char, String>(',', ","),
+            new KeyValuePair<char, String>('=', "="),
+            new KeyValuePair<char, String>('\'', "'"),
+            new KeyValuePair<char, String>('\"', "\""),
+            new KeyValuePair<char, String>('n', Environment.NewLine),
+            new KeyValuePair<char, String>('t', "\t"),
+        };
 
     /// <summary>
     /// Finds a type in the given module using the given type name, expressed in C# notation with dots separating both namespaces and types.
@@ -386,7 +457,7 @@ namespace Microsoft.Cci {
         return false;
       if (!assembly1.Culture.Equals(assembly2.Culture))
         return false;
-      return IteratorHelper.EnumerablesAreEqual<byte>(assembly1.PublicKeyToken, assembly2.PublicKeyToken);
+      return IteratorHelper.IEquatableEnumerablesAreEqual(assembly1.PublicKeyToken, assembly2.PublicKeyToken);
     }
 
     /// <summary>
@@ -521,13 +592,13 @@ namespace Microsoft.Cci.Immutable {
     //^ invariant unitSetNamespaceRoot == null || unitSetNamespaceRoot.RootOwner == this;
     //^ invariant unitSetNamespaceRoot == null || unitSetNamespaceRoot.UnitSet == this;
 
-    #region INamespaceRootOwner Members
+#region INamespaceRootOwner Members
 
     INamespaceDefinition INamespaceRootOwner.NamespaceRoot {
       get { return this.UnitSetNamespaceRoot; }
     }
 
-    #endregion
+#endregion
   }
 
   /// <summary>
@@ -561,7 +632,7 @@ namespace Microsoft.Cci.Immutable {
     /// </summary>
     public abstract void DispatchAsReference(IMetadataVisitor visitor);
 
-    #region IContainer<ITypeDefinitionMember>
+#region IContainer<ITypeDefinitionMember>
 
     IEnumerable<INamespaceMember> IContainer<INamespaceMember>.Members {
       get {
@@ -569,9 +640,9 @@ namespace Microsoft.Cci.Immutable {
       }
     }
 
-    #endregion
+#endregion
 
-    #region INamespaceDefinition Members
+#region INamespaceDefinition Members
 
     IEnumerable<INamespaceMember> INamespaceDefinition.Members {
       get {
@@ -597,9 +668,9 @@ namespace Microsoft.Cci.Immutable {
       get;
     }
 
-    #endregion
+#endregion
 
-    #region IDefinition Members
+#region IDefinition Members
 
     /// <summary>
     /// A potentially empty collection of locations that correspond to this instance.
@@ -608,9 +679,9 @@ namespace Microsoft.Cci.Immutable {
       get;
     }
 
-    #endregion
+#endregion
 
-    #region IDefinition Members
+#region IDefinition Members
 
     /// <summary>
     /// A collection of metadata custom attributes that are associated with this definition.
@@ -619,7 +690,7 @@ namespace Microsoft.Cci.Immutable {
       get { return Enumerable<ICustomAttribute>.Empty; }
     }
 
-    #endregion
+#endregion
   }
 
 
@@ -855,15 +926,15 @@ namespace Microsoft.Cci.Immutable {
       return TypeHelper.GetNamespaceName(this, NameFormattingOptions.None);
     }
 
-    #region INamespaceMember Members
+#region INamespaceMember Members
 
     INamespaceDefinition INamespaceMember.ContainingNamespace {
       get { return this.ContainingNamespace; }
     }
 
-    #endregion
+#endregion
 
-    #region IScopeMember<IScope<INamespaceMember>> Members
+#region IScopeMember<IScope<INamespaceMember>> Members
 
     /// <summary>
     /// 
@@ -872,9 +943,9 @@ namespace Microsoft.Cci.Immutable {
       get { return this.ContainingNamespace; }
     }
 
-    #endregion
+#endregion
 
-    #region IContainerMember<INamespaceDefinition> Members
+#region IContainerMember<INamespaceDefinition> Members
 
     /// <summary>
     /// 
@@ -887,9 +958,9 @@ namespace Microsoft.Cci.Immutable {
       get { return this.Name; }
     }
 
-    #endregion
+#endregion
 
-    #region INestedUnitSetNamespace Members
+#region INestedUnitSetNamespace Members
 
     /// <summary>
     /// 
@@ -898,6 +969,6 @@ namespace Microsoft.Cci.Immutable {
       get { return this.containingNamespace; }
     }
 
-    #endregion
+#endregion
   }
 }

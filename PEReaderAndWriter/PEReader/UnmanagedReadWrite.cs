@@ -67,6 +67,8 @@ namespace Microsoft.Cci.UtilityDataStructures {
       //^ requires offset <= length;
       //^ requires length > 0;
     {
+      if (offset > length)
+        throw new ArgumentOutOfRangeException();
       this.Buffer = buffer;
       this.CurrentPointer = buffer + offset;
       this.Length = length;
@@ -102,17 +104,17 @@ namespace Microsoft.Cci.UtilityDataStructures {
     #region Offset, Skipping, Marking, Alignment
     internal uint Offset {
       get {
-        return (uint)(this.CurrentPointer - this.Buffer);
+        return (uint)checked(this.CurrentPointer - this.Buffer);
       }
     }
     internal uint RemainingBytes {
       get {
-        return (uint)(this.Length - (this.CurrentPointer - this.Buffer));
+        return (uint)checked(this.Length - (this.CurrentPointer - this.Buffer));
       }
     }
     internal bool NotEndOfBytes {
       get {
-        return this.Length > (int)(this.CurrentPointer - this.Buffer);
+        return this.Length > (int)checked(this.CurrentPointer - this.Buffer);
       }
     }
     internal bool SeekOffset(
@@ -134,7 +136,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     internal void SkipBytes(
       int count
     ) {
-      this.CurrentPointer += count;
+      if (checked(this.CurrentPointer - this.Buffer + count) > this.Length)
+        throw new ArgumentOutOfRangeException();
+      this.CurrentPointer = this.CurrentPointer + count;
     }
     internal void Align(
       uint alignment
@@ -143,7 +147,11 @@ namespace Microsoft.Cci.UtilityDataStructures {
     {
       uint remainder = this.Offset & (alignment - 1);
       if (remainder != 0)
+      {
+        if (checked(this.CurrentPointer - this.Buffer + alignment - remainder) > this.Length)
+          throw new ArgumentOutOfRangeException();
         this.CurrentPointer += alignment - remainder;
+      }
     }
     internal MemoryBlock RemainingMemoryBlock {
       get {
@@ -156,7 +164,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     )
       //^ requires this.CurrentPointer - this.Buffer + offset + length <= this.Length;
     {
-      return new MemoryBlock(this.CurrentPointer + offset, length);
+        if (checked(this.CurrentPointer - this.Buffer + offset + length) > this.Length)
+          throw new ArgumentOutOfRangeException();
+        return new MemoryBlock(this.CurrentPointer + offset, length);
     }
     internal MemoryBlock GetMemoryBlockAt(
       int offset,
@@ -164,7 +174,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     )
       //^ requires this.CurrentPointer - this.Buffer + offset + length <= this.Length;
     {
-      return new MemoryBlock(this.CurrentPointer + offset, length);
+        if (checked(this.CurrentPointer - this.Buffer + offset + length) > this.Length)
+          throw new ArgumentOutOfRangeException();
+        return new MemoryBlock(this.CurrentPointer + offset, length);
     }
     #endregion Offsets, Skipping, Marking, Alignment
 
@@ -176,6 +188,8 @@ namespace Microsoft.Cci.UtilityDataStructures {
 #if COMPACTFX
       if ((int)(this.CurrentPointer + offset) % 2 != 0) return UnalignedPeekInt16(offset);
 #endif
+      if (checked(this.CurrentPointer - this.Buffer + offset + sizeof(Int16)) > this.Length)
+        throw new ArgumentOutOfRangeException();
 #if LITTLEENDIAN
       return *(Int16*)(this.CurrentPointer + offset);
 #elif BIGENDIAN
@@ -190,6 +204,8 @@ namespace Microsoft.Cci.UtilityDataStructures {
 #if COMPACTFX
       if ((int)(this.CurrentPointer + offset) % 4 != 0) return UnalignedPeekInt32(offset);
 #endif
+      if (checked(this.CurrentPointer - this.Buffer + offset + sizeof(Int32)) > this.Length)
+        throw new ArgumentOutOfRangeException();
 #if LITTLEENDIAN
       return *(Int32*)(this.CurrentPointer + offset);
 #elif BIGENDIAN
@@ -203,7 +219,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     internal Byte PeekByte(
       int offset
     ) {
-      return *(Byte*)(this.CurrentPointer + offset);
+        if (checked(this.CurrentPointer - this.Buffer + offset) > this.Length)
+          throw new ArgumentOutOfRangeException();
+        return *(Byte*)(this.CurrentPointer + offset);
     }
 
     internal UInt16 PeekUInt16(
@@ -212,6 +230,8 @@ namespace Microsoft.Cci.UtilityDataStructures {
 #if COMPACTFX
       if ((int)(this.CurrentPointer + offset) % 2 != 0) return UnalignedPeekUInt16(offset);
 #endif
+      if (checked(this.CurrentPointer - this.Buffer + offset + sizeof(UInt16)) > this.Length)
+        throw new ArgumentOutOfRangeException();
 #if LITTLEENDIAN
       return *(UInt16*)(this.CurrentPointer + offset);
 #elif BIGENDIAN
@@ -226,6 +246,8 @@ namespace Microsoft.Cci.UtilityDataStructures {
 #if COMPACTFX
       if ((int)(this.CurrentPointer + offset) % 2 != 0) return UnalignedPeekUInt16(offset);
 #endif
+      if (checked(this.CurrentPointer - this.Buffer + offset + sizeof(UInt16)) > this.Length)
+        throw new ArgumentOutOfRangeException();
 #if LITTLEENDIAN
       return *(UInt16*)(this.CurrentPointer + offset);
 #elif BIGENDIAN
@@ -240,6 +262,8 @@ namespace Microsoft.Cci.UtilityDataStructures {
 #if COMPACTFX
       if ((int)(this.CurrentPointer + offset) % 4 != 0) return UnalignedPeekUInt32(offset);
 #endif
+      if (checked(this.CurrentPointer - this.Buffer + offset + sizeof(UInt32)) > this.Length)
+        throw new ArgumentOutOfRangeException();
 #if LITTLEENDIAN
       return *(UInt32*)(this.CurrentPointer + offset);
 #elif BIGENDIAN
@@ -256,6 +280,8 @@ namespace Microsoft.Cci.UtilityDataStructures {
 #if COMPACTFX
       if ((int)(this.CurrentPointer + offset) % 4 != 0) return UnalignedPeekUInt32(offset);
 #endif
+      if (checked(this.CurrentPointer - this.Buffer + offset + sizeof(UInt32)) > this.Length)
+        throw new ArgumentOutOfRangeException();
 #if LITTLEENDIAN
       return *(UInt32*)(this.CurrentPointer + offset);
 #elif BIGENDIAN
@@ -367,6 +393,8 @@ namespace Microsoft.Cci.UtilityDataStructures {
     internal Guid PeekGuid(
       int offset
     ) {
+      if (checked(this.CurrentPointer - this.Buffer + offset + sizeof(Guid)) > this.Length)
+        throw new ArgumentOutOfRangeException();
 #if LITTLEENDIAN && !COMPACTFX
       return *(Guid*)(this.CurrentPointer + offset);
 #else
@@ -382,6 +410,8 @@ namespace Microsoft.Cci.UtilityDataStructures {
       int offset,
       int byteCount
     ) {
+      if (checked(this.CurrentPointer - this.Buffer + offset + byteCount) > this.Length)
+        throw new ArgumentOutOfRangeException();
       byte[] result = new byte[byteCount];
       byte* pIter = this.CurrentPointer + offset;
       byte* pEnd = pIter + byteCount;
@@ -402,20 +432,21 @@ namespace Microsoft.Cci.UtilityDataStructures {
 #endif
       int charsToRead = byteCount / sizeof(Char);
       char* pc = (char*)bytePtr;
+#if LITTLEENDIAN
+      return new String(pc, 0, charsToRead);
+#else
       char[] buffer = new char[charsToRead];
       fixed (char* uBuffer = buffer) {
         char* iterBuffer = uBuffer;
         char* endBuffer = uBuffer + charsToRead;
         while (iterBuffer < endBuffer) {
-#if LITTLEENDIAN
           *iterBuffer++ = *pc++;
-#else
           ushort ush = (ushort)*pc++;
           *iterBuffer++ = (char)((ush >> 8) | (ush << 8));
-#endif
         }
       }
       return new String(buffer, 0, charsToRead);
+#endif
     }
 
 #if COMPACTFX
@@ -443,7 +474,10 @@ namespace Microsoft.Cci.UtilityDataStructures {
       int offset,
       int byteCount
     ) {
-      return MemoryReader.ScanUTF16WithSize(this.CurrentPointer + offset, byteCount);
+      if (checked(this.CurrentPointer - this.Buffer + offset + byteCount) > this.Length)
+        throw new ArgumentOutOfRangeException();
+
+        return MemoryReader.ScanUTF16WithSize(this.CurrentPointer + offset, byteCount);
     }
 
     internal int PeekCompressedInt32(
@@ -552,11 +586,12 @@ namespace Microsoft.Cci.UtilityDataStructures {
       int offset,
       out int numberOfBytesRead
     ) {
+      if (checked(this.CurrentPointer - this.Buffer + offset) >= this.Length)
+      { numberOfBytesRead = 0; return ""; }
       byte* pStart = this.CurrentPointer + offset;
       byte* pEnd = this.Buffer+this.Length;
-      if (pStart >= pEnd) { numberOfBytesRead = 0; return ""; }
       byte* pIter = pStart;
-      StringBuilder sb = new StringBuilder();
+      StringBuilder sb = StringBuilderCache.Acquire();
       byte b = 0;
       for (; ; ) {
         b = *pIter++;
@@ -601,7 +636,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
         sb.Append(ch);
       }
       numberOfBytesRead = (int)(pIter - pStart);
-      return sb.ToString();
+      return StringBuilderCache.GetStringAndRelease(sb);
     }
 
     internal string PeekUTF16WithShortSize(
@@ -609,6 +644,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
       out int numberOfBytesRead
     ) {
       int length = this.PeekUInt16(offset);
+      if (checked(this.CurrentPointer - this.Buffer + offset + sizeof(UInt16) + length * sizeof(Char)) > this.Length)
+        throw new ArgumentOutOfRangeException();
+
 #if !COMPACTFX && !__MonoCS__
 #if LITTLEENDIAN
       string result = new string((char*)(this.CurrentPointer + offset + sizeof(UInt16)), 0, length);
@@ -709,6 +747,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     }
 #else
     internal Char ReadChar() {
+      if (checked(this.CurrentPointer - this.Buffer + sizeof(Char)) > this.Length)
+        throw new ArgumentOutOfRangeException();
+
       byte* pb = this.CurrentPointer;
       Char v = *(Char*)pb;
       this.CurrentPointer = pb + sizeof(Char);
@@ -717,6 +758,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
 #endif
 
     internal SByte ReadSByte() {
+      if (checked(this.CurrentPointer - this.Buffer + sizeof(SByte)) > this.Length)
+        throw new ArgumentOutOfRangeException();
+
       byte* pb = this.CurrentPointer;
       SByte v = *(SByte*)pb;
       this.CurrentPointer = pb + sizeof(SByte);
@@ -731,6 +775,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     }
 #else
     internal Int16 ReadInt16() {
+      if (checked(this.CurrentPointer - this.Buffer + sizeof(Int16)) > this.Length)
+        throw new ArgumentOutOfRangeException();
+
       byte* pb = this.CurrentPointer;
       Int16 v = *(Int16*)pb;
       this.CurrentPointer = pb + sizeof(Int16);
@@ -746,6 +793,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     }
 #else
     internal Int32 ReadInt32() {
+      if (checked(this.CurrentPointer - this.Buffer + sizeof(Int32)) > this.Length)
+        throw new ArgumentOutOfRangeException();
+
       byte* pb = this.CurrentPointer;
       Int32 v = *(Int32*)pb;
       this.CurrentPointer = pb + sizeof(Int32);
@@ -767,6 +817,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
 #endif
 #else
     internal Int64 ReadInt64() {
+      if (checked(this.CurrentPointer - this.Buffer + sizeof(Int64)) > this.Length)
+        throw new ArgumentOutOfRangeException();
+
       byte* pb = this.CurrentPointer;
       Int64 v = *(Int64*)pb;
       this.CurrentPointer = pb + sizeof(Int64);
@@ -775,6 +828,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
 #endif
 
     internal Byte ReadByte() {
+      if (checked(this.CurrentPointer - this.Buffer + sizeof(Byte)) > this.Length)
+        throw new ArgumentOutOfRangeException();
+
       byte* pb = this.CurrentPointer;
       Byte v = *(Byte*)pb;
       this.CurrentPointer = pb + sizeof(Byte);
@@ -789,6 +845,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     }
 #else
     internal UInt16 ReadUInt16() {
+      if (checked(this.CurrentPointer - this.Buffer + sizeof(UInt16)) > this.Length)
+        throw new ArgumentOutOfRangeException();
+
       byte* pb = this.CurrentPointer;
       UInt16 v = *(UInt16*)pb;
       this.CurrentPointer = pb + sizeof(UInt16);
@@ -804,6 +863,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     }
 #else
     internal UInt32 ReadUInt32() {
+      if (checked(this.CurrentPointer - this.Buffer + sizeof(UInt32)) > this.Length)
+        throw new ArgumentOutOfRangeException();
+
       byte* pb = this.CurrentPointer;
       UInt32 v = *(UInt32*)pb;
       this.CurrentPointer = pb + sizeof(UInt32);
@@ -824,6 +886,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
 #endif
 #else
     internal UInt64 ReadUInt64() {
+      if (checked(this.CurrentPointer - this.Buffer + sizeof(UInt64)) > this.Length)
+        throw new ArgumentOutOfRangeException();
+
       byte* pb = this.CurrentPointer;
       UInt64 v = *(UInt64*)pb;
       this.CurrentPointer = pb + sizeof(UInt64);
@@ -838,6 +903,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     }
 #else
     internal Single ReadSingle() {
+      if (checked(this.CurrentPointer - this.Buffer + sizeof(Single)) > this.Length)
+        throw new ArgumentOutOfRangeException();
+
       byte* pb = this.CurrentPointer;
       Single v = *(Single*)pb;
       this.CurrentPointer = pb + sizeof(Single);
@@ -852,6 +920,9 @@ namespace Microsoft.Cci.UtilityDataStructures {
     }
 #else
     internal Double ReadDouble() {
+      if (checked(this.CurrentPointer - this.Buffer + sizeof(Double)) > this.Length)
+        throw new ArgumentOutOfRangeException();
+
       byte* pb = this.CurrentPointer;
       Double v = *(Double*)pb;
       this.CurrentPointer = pb + sizeof(Double);
@@ -867,16 +938,33 @@ namespace Microsoft.Cci.UtilityDataStructures {
       return (OperationCode)result;
     }
 
+    private string NewStringFromASCIIBytes(byte* pBytes, int byteCount) {
+#if HOST_CORERT
+      // @TODO: Switch to .NET 4.6 API: Encoding.ASCII.GetString(pBytes, byteCount);
+      byte[] byteArray = new byte[byteCount];
+      for (int i = 0; i < byteCount; i++)
+          byteArray[i] = pBytes[i];
+
+      return Encoding.ASCII.GetString(byteArray);
+#else
+      return new string((sbyte*)pBytes, 0, byteCount, Encoding.ASCII);
+#endif
+    }
+
     internal string ReadASCIIWithSize(
       int byteCount
     ) {
+      if (checked(this.CurrentPointer - this.Buffer + byteCount) > this.Length)
+        throw new ArgumentOutOfRangeException();
 #if !COMPACTFX && !__MonoCS__
       sbyte* pStart = (sbyte*)this.CurrentPointer;
       sbyte* pEnd = pStart + byteCount;
       sbyte* pIter = pStart;
       while (*pIter != '\0' && pIter < pEnd)
         pIter++;
-      string retStr = new string((sbyte*)pStart, 0, (int)(pIter - pStart), Encoding.ASCII);
+
+      int cbString = (int)(pIter - pStart);
+      string retStr = NewStringFromASCIIBytes((byte*)pStart, cbString);
       this.CurrentPointer += byteCount;
       return retStr;
 #else
@@ -902,14 +990,16 @@ namespace Microsoft.Cci.UtilityDataStructures {
     internal string ReadUTF8WithSize(
       int byteCount
     ) {
+      if (checked(this.CurrentPointer - this.Buffer + byteCount) > this.Length)
+        throw new ArgumentOutOfRangeException();
+
       int bytesToRead = byteCount;
-      char[] buffer = new char[bytesToRead];
+      StringBuilder buffer = StringBuilderCache.Acquire();
       byte* pb = this.CurrentPointer;
-      int j = 0;
       while (bytesToRead > 0) {
         byte b = *pb++; bytesToRead--;
         if ((b & 0x80) == 0 || bytesToRead == 0) {
-          buffer[j++] = (char)b;
+          buffer.Append((char)b);
           continue;
         }
         char ch;
@@ -918,7 +1008,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
           ch = (char)(((b & 0x1F) << 6) | (b1 & 0x3F));
         else {
           if (bytesToRead == 0) { //Dangling lead bytes, do not decompose
-            buffer[j++] = (char)((b << 8) | b1);
+            buffer.Append((char)((b << 8) | b1));
             break;
           }
           byte b2 = *pb++; bytesToRead--;
@@ -927,8 +1017,8 @@ namespace Microsoft.Cci.UtilityDataStructures {
             ch32 = (uint)(((b & 0x0F) << 12) | ((b1 & 0x3F) << 6) | (b2 & 0x3F));
           else {
             if (bytesToRead == 0) { //Dangling lead bytes, do not decompose
-              buffer[j++] = (char)((b << 8) | b1);
-              buffer[j++] = (char)b2;
+              buffer.Append((char)((b << 8) | b1));
+              buffer.Append((char)b2);
               break;
             }
             byte b3 = *pb++; bytesToRead--;
@@ -937,20 +1027,24 @@ namespace Microsoft.Cci.UtilityDataStructures {
           if ((ch32 & 0xFFFF0000) == 0)
             ch = (char)ch32;
           else { //break up into UTF16 surrogate pair
-            buffer[j++] = (char)((ch32 >> 10) | 0xD800);
+            buffer.Append((char)((ch32 >> 10) | 0xD800));
             ch = (char)((ch32 & 0x3FF) | 0xDC00);
           }
         }
-        buffer[j++] = ch;
+        buffer.Append(ch);
       }
-      while (j > 0 && buffer[j - 1] == 0) j--;
+      int j = buffer.Length;
+      while (j > 0 && buffer[j - 1] == (char)0) j--;
+      buffer.Length = j;
       this.CurrentPointer += byteCount;
-      return new String(buffer, 0, j);
+      return StringBuilderCache.GetStringAndRelease(buffer);
     }
 
     internal string ReadUTF16WithSize(
       int byteCount
     ) {
+      if (checked(this.CurrentPointer - this.Buffer + byteCount) > this.Length)
+        throw new ArgumentOutOfRangeException();
       string retString = MemoryReader.ScanUTF16WithSize(this.CurrentPointer, byteCount);
       this.CurrentPointer += byteCount;
       return retString;
@@ -1008,6 +1102,8 @@ namespace Microsoft.Cci.UtilityDataStructures {
       byte b = 0;
     Restart:
       while (j < count) {
+        if (checked(pb - this.Buffer + 1) > this.Length)
+          throw new ArgumentOutOfRangeException();
         b = *pb++;
         if (b == 0) break;
         buffer[j] = (char)b;
@@ -1025,6 +1121,6 @@ namespace Microsoft.Cci.UtilityDataStructures {
       return new String(buffer, 0, j);
     }
 
-    #endregion Read Methods
+#endregion Read Methods
   }
 }

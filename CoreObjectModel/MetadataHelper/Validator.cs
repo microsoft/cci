@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using Microsoft.Cci;
 using Microsoft.Cci.UtilityDataStructures;
 using System.Diagnostics.Contracts;
+using System.Reflection;
 
 namespace Microsoft.Cci {
 
@@ -520,7 +521,7 @@ namespace Microsoft.Cci {
       /// </summary>
       public void Visit(IMarshallingInformation marshallingInformation) {
         CheckUnmanagedType(marshallingInformation, (uint)marshallingInformation.UnmanagedType, "UnmanagedType");
-        if (marshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.CustomMarshaler) {
+        if (marshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedTypeEx.CustomMarshaler) {
           if (marshallingInformation.CustomMarshaller is Dummy)
             this.ReportError(MetadataError.IncompleteNode, marshallingInformation, "CustomMarshaller");
         }
@@ -2064,7 +2065,7 @@ namespace Microsoft.Cci {
       /// </summary>
       public string Message {
         get {
-          System.Resources.ResourceManager resourceManager = new System.Resources.ResourceManager("Microsoft.Cci.MetadataHelper.ErrorMessages", typeof(ErrorMessage).Assembly);
+          System.Resources.ResourceManager resourceManager = new System.Resources.ResourceManager("Microsoft.Cci.MetadataHelper.ErrorMessages", typeof(ErrorMessage).GetTypeInfo().Assembly);
           string messageKey = this.Error.ToString();
           string/*?*/ localizedString = null;
           try {

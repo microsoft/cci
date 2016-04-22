@@ -12,7 +12,8 @@ using System;
 using System.Runtime.InteropServices;
 
 namespace Microsoft.Cci.Pdb {
-  internal class PdbConstant {
+  /// <summary />
+  public class PdbConstant {
     internal string name;
     internal uint token;
     internal object value;

@@ -346,7 +346,7 @@ namespace Microsoft.Cci {
           this.Emit(opcode);
           return;
       }
-      switch (System.Convert.GetTypeCode(value)) {
+      switch (value.ConvertGetTypeCode()) {
         case TypeCode.Byte: this.Emit(opcode, (byte)value); break;
         case TypeCode.Double: this.Emit(opcode, (double)value); break;
         case TypeCode.Single: this.Emit(opcode, (float)value); break;

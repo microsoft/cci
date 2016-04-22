@@ -572,9 +572,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     INamedTypeDefinition/*?*/ Resolve() {
       if (this.Module != this.PEFileToObjectModel.Module) {
-        AssemblyReference assemRef = this.Module as AssemblyReference;
-        if (assemRef == null) return null;
-        var internalAssembly = assemRef.ResolvedAssembly as Assembly;
+        Assembly internalAssembly = this.Module as Assembly;
+        if (internalAssembly == null) {
+          AssemblyReference assemRef = this.Module as AssemblyReference;
+          if (assemRef == null) return null;
+          internalAssembly = assemRef.ResolvedAssembly as Assembly;
+        }
         if (internalAssembly == null) return null;
         PEFileToObjectModel assemblyPEFileToObjectModel = internalAssembly.PEFileToObjectModel;
         var retModuleType = 
@@ -1425,6 +1428,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     internal const byte EnumInited = 0x02;
     internal const byte InheritTypeParametersInited = 0x04;
 
+    // IsValueType is a very common operation. Cache the result of determining the answer
+    internal const byte IsValueTypeInitted = 0x08;
+    internal const byte IsValueTypeFlag = 0x10;
+
     protected TypeBase(
       PEFileToObjectModel peFileToObjectModel,
       IName typeName,
@@ -1555,7 +1562,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         if (baseType == null)
           return Enumerable<ITypeReference>.Empty;
         //^ assert baseType != null;
-        return IteratorHelper.GetSingletonEnumerable<ITypeReference>(baseType);
+        return new SingletonList<ITypeReference>(baseType);
       }
     }
 
@@ -1629,9 +1636,21 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     public bool IsValueType {
       get {
-        return (TypeHelper.TypesAreEquivalent(this.BaseTypeReference, this.PEFileToObjectModel.SystemValueType)
-            || TypeHelper.TypesAreEquivalent(this.BaseTypeReference, this.PEFileToObjectModel.SystemEnum))
-          && this.IsSealed;
+        if ((this.initFlags & TypeBase.IsValueTypeInitted) != TypeBase.IsValueTypeInitted)
+        {
+          if ((TypeHelper.TypesAreEquivalent(this.BaseTypeReference, this.PEFileToObjectModel.SystemValueType)
+              || TypeHelper.TypesAreEquivalent(this.BaseTypeReference, this.PEFileToObjectModel.SystemEnum))
+              && this.IsSealed)
+          {
+            this.initFlags |= TypeBase.IsValueTypeInitted | TypeBase.IsValueTypeFlag;
+          }
+          else 
+          {
+            this.initFlags |= TypeBase.IsValueTypeInitted;
+          }
+        }
+
+        return (this.initFlags & TypeBase.IsValueTypeFlag) == TypeBase.IsValueTypeFlag;
       }
     }
 
@@ -3560,7 +3579,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
   internal sealed class GenericTypeInstanceReferenceWithToken : GenericTypeInstanceReference, IMetadataObjectWithToken, ITypeReference {
 
     public GenericTypeInstanceReferenceWithToken(uint tokenValue, INamedTypeReference genericType, IEnumerable<ITypeReference> genericArguments, IInternFactory internFactory)
-      : base(genericType, genericArguments, internFactory) {
+      : base(genericType, genericArguments, internFactory, true) {
       Contract.Requires(!(genericType is Dummy));
       this.tokenValue = tokenValue;
     }

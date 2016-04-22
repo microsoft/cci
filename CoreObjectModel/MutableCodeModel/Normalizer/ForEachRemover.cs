@@ -92,6 +92,7 @@ namespace Microsoft.Cci.MutableCodeModel
           this.RewriteChildren(body);
         }
 
+        /// <summary />
         public override IStatement Rewrite(IForEachStatement forEachStatement)
         {
             ILocalDefinition foreachLocal;

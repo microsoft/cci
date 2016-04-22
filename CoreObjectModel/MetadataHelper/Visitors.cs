@@ -517,7 +517,7 @@ namespace Microsoft.Cci {
       if (this.stopTraversal) return;
       //^ int oldCount = this.path.Count;
       this.path.Push(marshallingInformation);
-      if (marshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.CustomMarshaler)
+      if (marshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedTypeEx.CustomMarshaler)
         this.Visit(marshallingInformation.CustomMarshaller);
       if (marshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.SafeArray && 
       (marshallingInformation.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_DISPATCH ||
@@ -2795,13 +2795,14 @@ namespace Microsoft.Cci {
   /// A class that traverses the metadata model in depth first, left to right order,
   /// calling visitors on each model instance in pre-order as well as post-order.
   /// </summary>
-  public class MetadataTraverser {
-
+  public class MetadataTraverser : IDisposable {
     /// <summary>
     /// A class that traverses the metadata model in depth first, left to right order,
     /// calling visitors on each model instance in pre-order as well as post-order.
     /// </summary>
     public MetadataTraverser() {
+      objectsThatHaveAlreadyBeenTraversed = ContainerCache.AcquireSetOfObjects(4 * 1024);
+
       this.dispatchingVisitor = new Dispatcher() { traverser = this };
     }
 
@@ -3095,7 +3096,14 @@ namespace Microsoft.Cci {
     /// A table in which we record the traversal of objects that can be reached several times (because they are references or can be referred to)
     /// so that we can avoid traversing them more than once.
     /// </summary>
-    protected SetOfObjects objectsThatHaveAlreadyBeenTraversed = new SetOfObjects(1024*4);
+    protected SetOfObjects objectsThatHaveAlreadyBeenTraversed;
+
+    /// <summary />
+    public void Dispose()
+    {
+        ContainerCache.ReleaseSetOfObjects(ref objectsThatHaveAlreadyBeenTraversed);
+        GC.SuppressFinalize(this);
+    }
 
     IMetadataVisitor/*?*/ preorderVisitor;
     IMetadataVisitor/*?*/ postorderVisitor;
@@ -4027,7 +4035,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public void Traverse(IEnumerable<ICustomAttribute> customAttributes) {
       Contract.Requires(customAttributes != null);
-      foreach (ICustomAttribute customAttribute in customAttributes) {
+      foreach (ICustomAttribute customAttribute in customAttributes.Adapter()) {
         this.Traverse(customAttribute);
         if (this.stopTraversal) return;
       }
@@ -4038,7 +4046,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public void Traverse(IEnumerable<ICustomModifier> customModifiers) {
       Contract.Requires(customModifiers != null);
-      foreach (ICustomModifier customModifier in customModifiers) {
+      foreach (ICustomModifier customModifier in customModifiers.Adapter()) {
         this.Traverse(customModifier);
         if (this.stopTraversal) break;
       }
@@ -4225,7 +4233,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public void Traverse(IEnumerable<IOperation> operations) {
       Contract.Requires(operations != null);
-      foreach (IOperation operation in operations) {
+      foreach (IOperation operation in operations.Adapter()) {
         this.Traverse(operation);
         if (this.stopTraversal) break;
       }
@@ -4247,7 +4255,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public void Traverse(IEnumerable<IParameterDefinition> parameters) {
       Contract.Requires(parameters != null);
-      foreach (IParameterDefinition parameter in parameters) {
+      foreach (IParameterDefinition parameter in parameters.Adapter()) {
         this.Traverse(parameter);
         if (this.stopTraversal) break;
       }
@@ -4258,7 +4266,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public void Traverse(IEnumerable<IParameterTypeInformation> parameterTypeInformations) {
       Contract.Requires(parameterTypeInformations != null);
-      foreach (IParameterTypeInformation parameterTypeInformation in parameterTypeInformations) {
+      foreach (IParameterTypeInformation parameterTypeInformation in parameterTypeInformations.Adapter()) {
         this.Traverse(parameterTypeInformation);
         if (this.stopTraversal) break;
       }
@@ -4337,7 +4345,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public void Traverse(IEnumerable<ITypeReference> typeReferences) {
       Contract.Requires(typeReferences != null);
-      foreach (ITypeReference typeReference in typeReferences) {
+      foreach (ITypeReference typeReference in typeReferences.Adapter()) {
         this.Traverse(typeReference);
         if (this.stopTraversal) break;
       }
@@ -4639,7 +4647,7 @@ namespace Microsoft.Cci {
     /// </summary>
     public virtual void TraverseChildren(IMarshallingInformation marshallingInformation) {
       Contract.Requires(marshallingInformation != null);
-      if (marshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.CustomMarshaler) {
+      if (marshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedTypeEx.CustomMarshaler) {
         this.Traverse(marshallingInformation.CustomMarshaller);
         if (this.stopTraversal) return;
       }
@@ -4911,28 +4919,58 @@ namespace Microsoft.Cci {
     /// </summary>
     public virtual void TraverseChildren(IOperation operation) {
       Contract.Requires(operation != null);
-      ITypeReference/*?*/ typeReference = operation.Value as ITypeReference;
-      if (typeReference != null)
-        this.Traverse(typeReference);
-      else {
-        IFieldReference/*?*/ fieldReference = operation.Value as IFieldReference;
-        if (fieldReference != null)
-          this.Traverse(fieldReference);
-        else {
-          IMethodReference/*?*/ methodReference = operation.Value as IMethodReference;
-          if (methodReference != null)
-            this.Traverse(methodReference);
-          else {
-            var parameter = operation.Value as IParameterDefinition;
-            if (parameter != null)
-              this.Traverse(parameter);
-            else {
-              var local = operation.Value as ILocalDefinition;
-              if (local != null)
-                this.Traverse(local);
-            }
-          }
+      object value = operation.Value;
+
+      if (value == null)
+        return;
+
+      OperationValueKind kind = operation.OperationCode.ValueKind();
+
+      if (kind.MaybeType())
+      {
+        ITypeReference/*?*/ typeReference = value as ITypeReference;
+        if (typeReference != null)
+        {
+          this.Traverse(typeReference);
+          return;
         }
+      }
+
+      if (kind.MaybeField())
+      {
+        IFieldReference/*?*/ fieldReference = value as IFieldReference;
+        if (fieldReference != null)
+        {
+          this.Traverse(fieldReference);
+          return;
+        }
+      }
+
+      if (kind.MaybeMethod())
+      {
+        IMethodReference/*?*/ methodReference = value as IMethodReference;
+        if (methodReference != null)
+        {
+          this.Traverse(methodReference);
+        }
+      }
+
+      if (kind.MaybeParameter())
+      {
+         var parameter = value as IParameterDefinition;
+         if (parameter != null)
+         {
+           this.Traverse(parameter);
+         }
+      }
+
+      if (kind.MaybeLocal())
+      {
+         var local = value as ILocalDefinition;
+         if (local != null)
+         {
+           this.Traverse(local);
+         }
       }
     }
 

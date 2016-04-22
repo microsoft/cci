@@ -17,13 +17,17 @@ namespace Microsoft.Cci.Pdb {
     internal Guid doctype;
     internal Guid language;
     internal Guid vendor;
+    internal Guid checksumAlgorithm;
+    internal byte[] checksum;
 
-    internal PdbSource(/*uint index, */string name, Guid doctype, Guid language, Guid vendor) {
+    internal PdbSource(/*uint index, */string name, Guid doctype, Guid language, Guid vendor, Guid checksumAlgorithm, byte[] checksum) {
       //this.index = index;
       this.name = name;
       this.doctype = doctype;
       this.language = language;
       this.vendor = vendor;
+      this.checksumAlgorithm = checksumAlgorithm;
+      this.checksum = checksum;
     }
   }
 }

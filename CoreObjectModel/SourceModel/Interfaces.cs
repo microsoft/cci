@@ -774,6 +774,16 @@ namespace Microsoft.Cci {
     Guid LanguageVendor { get; }
 
     /// <summary>
+    /// A Guid that identifies the checksum algorithm used. Typically used by a debugger to find a matching source file.
+    /// </summary>
+    Guid ChecksumAlgorithm { get; }
+
+    /// <summary>
+    /// The checksum value for this source document. Typically used by a debugger to find a matching source file.
+    /// </summary>
+    byte[] Checksum { get; }
+
+    /// <summary>
     /// A source location corresponding to the entire document.
     /// </summary>
     IPrimarySourceLocation PrimarySourceLocation { get; }
@@ -818,6 +828,14 @@ namespace Microsoft.Cci {
 
     public Guid LanguageVendor {
       get { throw new NotImplementedException(); }
+    }
+
+    public Guid ChecksumAlgorithm {
+        get { throw new NotImplementedException(); }
+    }
+
+    public byte[] Checksum {
+        get { throw new NotImplementedException(); }
     }
 
     public IPrimarySourceLocation PrimarySourceLocation {

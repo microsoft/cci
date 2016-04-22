@@ -156,8 +156,7 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     IEnumerable<IMetadataExpression> IMetadataCreateArray.Initializers {
       get {
-        if (this.initializers == null) return Enumerable<IMetadataExpression>.Empty;
-        return this.initializers.AsReadOnly(); 
+        return this.initializers.ToReadOnly(); 
       }
     }
 

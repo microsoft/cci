@@ -115,6 +115,28 @@ namespace Microsoft.Cci {
     /// <param name="left">An enumeration of elements. The enumeration may be null, but the elements may not.</param>
     /// <param name="right">An enumeration of elements. The enumeration may be null, but the elements may not.</param>
     public static bool EnumerablesAreEqual<T>(IEnumerable<T/*!*/>/*?*/ left, IEnumerable<T/*!*/>/*?*/ right) {
+      IReadOnlyList<T> list1 = left as IReadOnlyList<T>;
+      
+      if (list1 != null)
+      {
+        IReadOnlyList<T> list2 = right as IReadOnlyList<T>;
+
+        if (list2 != null)
+        {
+            int count = list1.Count;
+
+            if (count == list2.Count)
+            {
+                for (int i = 0; i < count; i++)
+                    if (!list1[i].Equals(list2[i])) return false;
+
+                return true;
+            }
+
+            return false;
+        }
+      }
+        
       if (left == null) return right == null || !right.GetEnumerator().MoveNext();
       IEnumerator<T/*!*/> leftEnum = left.GetEnumerator();
       if (right == null) return !leftEnum.MoveNext();
@@ -125,6 +147,42 @@ namespace Microsoft.Cci {
         if (!leftEnum.Current.Equals(rightEnum.Current)) return false;
       }
       return !rightEnum.MoveNext();
+    }
+    
+    internal static bool ArraysAreEqual<T>(T[] array1, T[] array2) where T: IEquatable<T>
+    {
+        if (array1.Length == array2.Length)
+        {
+            for (int i = 0; i < array1.Length; i++)
+            {
+                if (! array1[i].Equals(array2[i]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Compares two enumerations of elements for equality with optimization for T[] where T: IEquatable{T}, avoiding enumerator and boxing
+    /// </summary>
+    public static bool IEquatableEnumerablesAreEqual<T>(IEnumerable<T> left, IEnumerable<T> right) where T: IEquatable<T>
+    {
+        T[] array1 = left as T[];
+        T[] array2 = right as T[];
+
+        if ((array1 != null) && (array2 != null))
+        {
+            return ArraysAreEqual<T>(array1, array1);
+        }
+        else
+        {
+            return EnumerablesAreEqual(left, right);
+        }
     }
 
     /// <summary>
@@ -137,6 +195,23 @@ namespace Microsoft.Cci {
     /// <param name="comparer">An object that compares two enumeration elements for equality.</param>
     public static bool EnumerablesAreEqual<T>(IEnumerable<T/*!*/>/*?*/ left, IEnumerable<T/*!*/>/*?*/ right, IEqualityComparer<T> comparer) {
       Contract.Requires(comparer != null);
+
+      IReadOnlyList<T> list1 = left as IReadOnlyList<T>;
+      if (list1 != null)
+      {
+          IReadOnlyList<T> list2 = right as IReadOnlyList<T>;
+
+          if (list2 != null)
+          {
+              if (list1.Count != list2.Count) return false;
+
+              for (int i = 0; i < list1.Count; i++)
+                  if (!comparer.Equals(list1[i], list2[i])) return false;
+              
+              return true;
+          }
+      }
+
       if (left == null) return right == null || !right.GetEnumerator().MoveNext();
       IEnumerator<T/*!*/> leftEnum = left.GetEnumerator();
       if (right == null) return !leftEnum.MoveNext();
@@ -182,15 +257,18 @@ namespace Microsoft.Cci {
     /// <param name="array">The array to wrap. May be null.</param>
     public static IEnumerable<T>/*?*/ GetReadonly<T>(T[]/*?*/ array) {
       Contract.Ensures(array == null || Contract.Result<IEnumerable<T>>() != null);
-
+#if DEBUG
       if (array == null) return null;
       if (array.Length == 1) return IteratorHelper.GetSingletonEnumerable(array[0]);
-      return new ReaonlyOnlyArrayWrapper<T>(array);
+      return new ReadonlyArrayWrapper<T>(array);
+#else
+      return array;
+#endif
     }
 
-    sealed class ReaonlyOnlyArrayWrapper<T> : ICollection<T> {
+    sealed class ReadonlyArrayWrapper<T> : ICollection<T> {
 
-      internal ReaonlyOnlyArrayWrapper(T[] array) {
+      internal ReadonlyArrayWrapper(T[] array) {
         Contract.Requires(array != null);
         this.array = array;
       }
@@ -365,6 +443,92 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Optimized copying IEnumerable{T} to List{T}, returning either null or a list with no excess elements
+    /// </summary>
+    public static List<T> CopyToList<T>(IEnumerable<T> en)
+    {
+        if (en == null)
+        {
+            return null;
+        }
+
+        IReadOnlyList<T> list = en as IReadOnlyList<T>;
+
+        if (list != null)
+        {
+            return CopyToList<T>(list);
+        }
+        else
+        {
+            int count = 0;
+
+            IEnumerator<T> enumerator = en.GetEnumerator();
+            
+            while (enumerator.MoveNext())
+            {
+                count ++;
+            }
+
+            return CopyToList<T>(en, count, false);
+        }
+    }
+
+    /// <summary>
+    /// Optimized copying IReadOnlyList{T} to List{T}, returning either null or a list with no excess elements
+    /// </summary>
+    public static List<T> CopyToList<T>(IReadOnlyList<T> list)
+    {
+        int count = list.Count;
+
+        if (count == 0)
+        {
+            return null;
+        }
+
+        List<T> result = new List<T>(count);
+
+        for (int i = 0; i < count; i ++)
+        {
+            result.Add(list[i]);
+        }
+
+        return result;
+    }
+
+    /// <summary />
+    public static List<T> CopyToList<T>(IEnumerable<T> en, int count, bool checkList = true)
+    {
+        if ((en == null) || (count == 0))
+        {
+            return null;
+        }
+
+        if (checkList)
+        {
+            IReadOnlyList<T> list = en as IReadOnlyList<T>;
+
+            if (list != null)
+            {
+                Debug.Assert(count == list.Count);
+
+                return CopyToList<T>(list);
+            }
+        }
+
+        // Allocate the exact size, otherwise for non-collection BCL List<T> will allocate at least 4 elements (List<T>._defaultCapacity) and then 2x afterwards
+        List<T> result = new List<T>(count);
+
+        IEnumerator<T> en2 = en.GetEnumerator();
+
+        while (en2.MoveNext())
+        {
+            result.Add(en2.Current);
+        }
+
+        return result;
+    }
+
+    /// <summary>
     /// True if the given enumerable is null or contains no elements
     /// </summary>
     [Pure]
@@ -397,8 +561,8 @@ namespace Microsoft.Cci {
     public static uint EnumerableCount<T>(IEnumerable<T>/*?*/ enumerable) {
       Contract.Ensures(Contract.Result<uint>() >= 0);
       if (enumerable == null) return 0;
-      var collection = enumerable as ICollection<T>;
-      if (collection != null) return (uint)collection.Count;
+      var list = enumerable as IReadOnlyList<T>;
+      if (list != null) return (uint) list.Count;
       uint result = 0;
       IEnumerator<T> enumerator = enumerable.GetEnumerator();
       while (enumerator.MoveNext()) result++;
@@ -511,8 +675,7 @@ namespace Microsoft.Cci {
       using (IEnumerator<TSecond> e2 = second.GetEnumerator())
         while (e1.MoveNext() && e2.MoveNext())
           action(e1.Current, e2.Current);
-    } 
-
+    }
   }
 
   /// <summary>
@@ -529,7 +692,7 @@ namespace Microsoft.Cci {
       int hashCode = 0;
       for (int i = 0, n = s.Length; i < n; i++) {
         char ch = s[i];
-        ch = Char.ToLower(ch, CultureInfo.InvariantCulture);
+        ch = Char.ToLowerInvariant(ch);
         hashCode = hashCode * 17 + ch;
       }
       return hashCode;
@@ -927,6 +1090,7 @@ namespace Microsoft.Cci {
 
     /// <summary>
     /// The unmanaged element type of the unmanaged array.
+    /// If not present, the value is 0x50 (NATIVE_TYPE_DEFAULT)
     /// </summary>
     System.Runtime.InteropServices.UnmanagedType ElementType {
       get;
@@ -1722,7 +1886,6 @@ namespace Microsoft.Cci {
     /// "Nullable"
     /// </summary>
     IName Nullable { get; }
-
   }
 
   [ContractClassFor(typeof(INameTable))]

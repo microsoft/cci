@@ -2439,7 +2439,7 @@ namespace Microsoft.Cci {
         numberOfCases++;
         if (switchCase.IsDefault) continue;
         object/*?*/ value = switchCase.Expression.Value;
-        switch (System.Convert.GetTypeCode(value)) {
+        switch (value.ConvertGetTypeCode()) {
           case TypeCode.Int32:
             int i = (int)value;
             if (i < 0) result = uint.MaxValue;

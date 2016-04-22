@@ -22,7 +22,7 @@ namespace Microsoft.Cci.MutableCodeModel {
   /// A class that traverses a metadata model in depth first, left to right order,
   /// rewriting each mutable node it visits by updating the node's children with recursivly rewritten nodes.
   /// </summary>
-  public class MetadataRewriter {
+  public class MetadataRewriter : IDisposable {
 
     /// <summary>
     /// A class that traverses a metadata model in depth first, left to right order,
@@ -38,6 +38,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       this.dispatchingVisitor = new Dispatcher() { rewriter = this };
       if (copyAndRewriteImmutableReferences)
         this.shallowCopier = new MetadataShallowCopier(host);
+      this.referenceRewrites = ContainerCache.AcquireRefHashtable(1024);
     }
 
     /// <summary>
@@ -235,14 +236,20 @@ namespace Microsoft.Cci.MutableCodeModel {
       public override void Visit(ISpecializedNestedTypeReference specializedNestedTypeReference) {
         this.result = this.rewriter.Rewrite(specializedNestedTypeReference);
       }
-
-
     }
 
     /// <summary>
     /// A map from reference to rewritten reference. Can be used to avoid rewriting the same reference more than once.
     /// </summary>
-    protected Hashtable<IReference, object> referenceRewrites = new Hashtable<IReference, object>();
+    protected Hashtable<IReference, object> referenceRewrites;
+
+    /// <summary />
+    public void Dispose()
+    {
+        GC.SuppressFinalize(this);
+
+        ContainerCache.ReleaseRefHashtable(ref referenceRewrites);
+    }
 
     /// <summary>
     /// Rewrites the alias for type
@@ -1096,7 +1103,6 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Requires(operation != null);
       Contract.Ensures(Contract.Result<IOperation>() != null);
 
-      if (operation is Dummy) return operation;
       var mutableOperation = operation as Operation;
       if (mutableOperation == null) return operation;
       this.RewriteChildren(mutableOperation);
@@ -2084,7 +2090,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual void RewriteChildren(MarshallingInformation marshallingInformation) {
       Contract.Requires(marshallingInformation != null);
 
-      if (marshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.CustomMarshaler)
+      if (marshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedTypeEx.CustomMarshaler)
         marshallingInformation.CustomMarshaller = this.Rewrite(marshallingInformation.CustomMarshaller);
       if (marshallingInformation.UnmanagedType == System.Runtime.InteropServices.UnmanagedType.SafeArray && 
       (marshallingInformation.SafeArrayElementSubtype == System.Runtime.InteropServices.VarEnum.VT_DISPATCH ||
@@ -2351,27 +2357,59 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual void RewriteChildren(Operation operation) {
       Contract.Requires(operation != null);
 
-      var typeReference = operation.Value as ITypeReference;
-      if (typeReference != null)
-        operation.Value = this.Rewrite(typeReference);
-      else {
-        var fieldReference = operation.Value as IFieldReference;
+      object value = operation.Value;
+
+      if (value == null)
+        return;
+
+      OperationValueKind kind = operation.OperationCode.ValueKind();
+
+      if (kind.MaybeType())
+      {
+        var typeReference = value as ITypeReference;
+        if (typeReference != null)
+        {
+          operation.Value = this.Rewrite(typeReference);
+          return;
+        }
+      }
+
+      if (kind.MaybeField())
+      {
+        var fieldReference = value as IFieldReference;
         if (fieldReference != null)
+        {
           operation.Value = this.Rewrite(fieldReference);
-        else {
-          var methodReference = operation.Value as IMethodReference;
-          if (methodReference != null)
-            operation.Value = this.Rewrite(methodReference);
-          else {
-            var local = operation.Value as ILocalDefinition;
-            if (local != null)
-              operation.Value = this.RewriteReference(local);
-            else {
-              var parameter = operation.Value as IParameterDefinition;
-              if (parameter != null)
-                operation.Value = this.RewriteReference(parameter);
-            }
-          }
+          return;
+        }
+      }
+
+      if (kind.MaybeMethod())
+      {
+        var methodReference = value as IMethodReference;
+        if (methodReference != null)
+        {
+          operation.Value = this.Rewrite(methodReference);
+          return;
+        }
+      }
+
+      if (kind.MaybeLocal())
+      {
+        var local = value as ILocalDefinition;
+        if (local != null)
+        {
+          operation.Value = this.RewriteReference(local);
+          return;
+        }
+      }
+
+      if (kind.MaybeParameter())
+      {
+        var parameter = value as IParameterDefinition;
+        if (parameter != null)
+        {
+          operation.Value = this.RewriteReference(parameter);
         }
       }
     }
@@ -4552,7 +4590,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual MarshallingInformation Visit(MarshallingInformation marshallingInformation) {
       if (this.stopTraversal) return marshallingInformation;
       this.path.Push(marshallingInformation);
-      if (marshallingInformation.UnmanagedType == UnmanagedType.CustomMarshaler)
+      if (marshallingInformation.UnmanagedType == UnmanagedTypeEx.CustomMarshaler)
         marshallingInformation.CustomMarshaller = this.Visit(marshallingInformation.CustomMarshaller);
       if (marshallingInformation.UnmanagedType == UnmanagedType.SafeArray && 
       (marshallingInformation.SafeArrayElementSubtype == VarEnum.VT_DISPATCH || 
@@ -7039,7 +7077,7 @@ namespace Microsoft.Cci.MutableCodeModel {
       if (mutable != null) return this.Mutate(mutable);
       if (this.visitImmutableNodes) {
         this.path.Push(marshallingInformation);
-        if (marshallingInformation.UnmanagedType == UnmanagedType.CustomMarshaler)
+        if (marshallingInformation.UnmanagedType == UnmanagedTypeEx.CustomMarshaler)
           this.Visit(marshallingInformation.CustomMarshaller);
         if (marshallingInformation.UnmanagedType == UnmanagedType.SafeArray &&
         (marshallingInformation.SafeArrayElementSubtype == VarEnum.VT_DISPATCH ||
@@ -7059,7 +7097,7 @@ namespace Microsoft.Cci.MutableCodeModel {
     public virtual MarshallingInformation Mutate(MarshallingInformation marshallingInformation) {
       if (this.stopTraversal) return marshallingInformation;
       this.path.Push(marshallingInformation);
-      if (marshallingInformation.UnmanagedType == UnmanagedType.CustomMarshaler)
+      if (marshallingInformation.UnmanagedType == UnmanagedTypeEx.CustomMarshaler)
         marshallingInformation.CustomMarshaller = this.Visit(marshallingInformation.CustomMarshaller);
       if (marshallingInformation.UnmanagedType == UnmanagedType.SafeArray &&
       (marshallingInformation.SafeArrayElementSubtype == VarEnum.VT_DISPATCH ||

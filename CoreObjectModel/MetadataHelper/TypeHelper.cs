@@ -472,13 +472,15 @@ namespace Microsoft.Cci {
     /// Include the visibility of the member in its name.
     /// </summary>
     Visibility=UseTypeKeywords << 1,
-
   }
 
   /// <summary>
   /// Helper class for computing information from the structure of ITypeDefinition instances.
   /// </summary>
   public static class TypeHelper {
+
+    static TypeNameFormatter s_defaultTypeNameFormatter = new TypeNameFormatter();
+
     /// <summary>
     /// Returns the Base class. If there is no base type it returns null.
     /// </summary>
@@ -715,7 +717,7 @@ namespace Microsoft.Cci {
       if (nestedType != null) return IsOpen(nestedType.ContainingType);
       var genericTypeInstance = typeReference as IGenericTypeInstanceReference;
       if (genericTypeInstance != null) {
-        foreach (var genArg in genericTypeInstance.GenericArguments) {
+        foreach (var genArg in genericTypeInstance.GenericArguments.Adapter()) {
           if (IsOpen(genArg)) return true;
         }
       }
@@ -1136,6 +1138,8 @@ namespace Microsoft.Cci {
       if (genericMethodParameterReference != null) return TypeHelper.GetDefiningUnitReference(genericMethodParameterReference.DefiningMethod.ContainingType);
       IFunctionPointerTypeReference/*?*/ functionPointerTypeReference = typeReference as IFunctionPointerTypeReference;
       if (functionPointerTypeReference != null) return TypeHelper.GetDefiningUnitReference(functionPointerTypeReference.Type);
+      IModifiedTypeReference modifiedTypeReference = typeReference as IModifiedTypeReference;
+      if (modifiedTypeReference != null) return TypeHelper.GetDefiningUnitReference(modifiedTypeReference.UnmodifiedType);
       Contract.Assume(false);
       return Dummy.UnitReference;
     }
@@ -1182,10 +1186,43 @@ namespace Microsoft.Cci {
     /// <param name="declaringType">The type thats declares the field.</param>
     /// <param name="fieldReference">A reference to the field.</param>
     /// <param name="resolveTypes">True if type references should be resolved during signature matching.</param>
-    public static IFieldDefinition GetField(ITypeDefinition declaringType, IFieldReference fieldReference, bool resolveTypes = false) {
+    public static IFieldDefinition GetField(ITypeDefinition declaringType, IFieldReference fieldReference, bool resolveTypes = true) {
       Contract.Requires(declaringType != null);
       Contract.Requires(fieldReference != null);
       Contract.Ensures(Contract.Result<IFieldDefinition>() != null);
+
+      // For specialized fields, if the containing type is the same, and the field has the same unspecialized field
+      // Then they match. (Allow fall through to the older path for cases where a match isn't found, in case the other algorithm
+      // works better. There are no known cases where that happens, but there is insufficient test converage to
+      // be certain.)
+      ISpecializedFieldReference specializedFieldReference = fieldReference as ISpecializedFieldReference;
+      if (specializedFieldReference != null)
+      {
+          if (TypeHelper.TypesAreEquivalent(declaringType, fieldReference.ContainingType, resolveTypes))
+          {
+              foreach (ITypeDefinitionMember member in declaringType.GetMembersNamed(fieldReference.Name, false))
+              {
+                  ISpecializedFieldDefinition/*?*/ specializedField = member as ISpecializedFieldDefinition;
+                  if (specializedField == null) continue;
+                  IFieldReference unspecializedFieldReference = specializedFieldReference.UnspecializedVersion;
+                  IFieldDefinition unspecializedField = specializedField.UnspecializedVersion;
+
+                  bool fieldMatch = false;
+                  if (unspecializedField.InternedKey == unspecializedFieldReference.InternedKey)
+                  {
+                      fieldMatch = true;
+                  }
+                  else if (resolveTypes && unspecializedField.ResolvedField.InternedKey == unspecializedFieldReference.ResolvedField.InternedKey)
+                  {
+                      fieldMatch = true;
+                  }
+                  if (fieldMatch)
+                  {
+                      return specializedField;
+                  }
+              }
+          }
+      }
 
       foreach (ITypeDefinitionMember member in declaringType.GetMembersNamed(fieldReference.Name, false)) {
         IFieldDefinition/*?*/ field = member as IFieldDefinition;
@@ -1267,12 +1304,12 @@ namespace Microsoft.Cci {
     /// <param name="declaringType">The type that declares the method to be returned.</param>
     /// <param name="methodReference">A method reference whose name and signature matches that of the desired result.</param>
     /// <param name="resolveTypes">True if type references should be resolved during signature matching.</param>
-    public static IMethodDefinition GetMethod(ITypeDefinition declaringType, IMethodReference methodReference, bool resolveTypes = false) {
+    public static IMethodDefinition GetMethod(ITypeDefinition declaringType, IMethodReference methodReference, bool resolveTypes = true) {
       Contract.Requires(declaringType != null);
       Contract.Requires(methodReference != null);
       Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
 
-      IMethodDefinition result = TypeHelper.GetMethod(declaringType.GetMembersNamed(methodReference.Name, false), methodReference, resolveTypes);
+      IMethodDefinition result = TypeHelper.GetNamedMethod(declaringType.Methods, methodReference.Name, methodReference, resolveTypes);
       if (result is Dummy) {
         foreach (ITypeDefinitionMember member in declaringType.PrivateHelperMembers) {
           IMethodDefinition/*?*/ meth = member as IMethodDefinition;
@@ -1313,7 +1350,7 @@ namespace Microsoft.Cci {
     /// <param name="members">A list of type members.</param>
     /// <param name="methodSignature">A method whose signature matches that of the desired result.</param>
     /// <param name="resolveTypes">True if type references should be resolved during signature matching.</param>
-    public static IMethodDefinition GetMethod(IEnumerable<ITypeDefinitionMember> members, IMethodReference methodSignature, bool resolveTypes = false) {
+    public static IMethodDefinition GetMethod(IEnumerable<ITypeDefinitionMember> members, IMethodReference methodSignature, bool resolveTypes = true) {
       Contract.Requires(members != null);
       Contract.Requires(Contract.ForAll(members, x => x != null));
       Contract.Requires(methodSignature != null);
@@ -1334,6 +1371,78 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// Find method of matching name and signature
+    /// </summary>
+    public static IMethodDefinition GetNamedMethod(IEnumerable<IMethodDefinition> members, IName name, IMethodReference methodSignature, bool resolveTypes = true)
+    {
+        return GetNamedMethod(members, name, methodSignature, resolveTypes, false);
+    }
+    
+    internal static IMethodDefinition GetNamedMethod(IEnumerable<IMethodDefinition> members, IName name, IMethodReference methodSignature, bool resolveTypes = true, bool requireMatchingSpecialization = false)
+    {
+        Contract.Requires(members != null);
+        Contract.Requires(Contract.ForAll(members, x => x != null));
+        Contract.Requires(methodSignature != null);
+        Contract.Ensures(Contract.Result<IMethodDefinition>() != null);
+
+        foreach (IMethodDefinition method in members)
+        {
+            if (method.Name.UniqueKey == name.UniqueKey)
+            {
+                if (method.GenericParameterCount != methodSignature.GenericParameterCount) continue;
+                if (method.ParameterCount != methodSignature.ParameterCount) continue;
+
+                if (method.InternedKey == methodSignature.InternedKey)
+                {
+                    return method;
+                }
+
+                if (SignaturesMatch(method.IsGeneric ? (Func<ISignature, ISignature, bool, bool>)MemberHelper.GenericMethodSignaturesAreEqual : MemberHelper.SignaturesAreEqual, method, methodSignature, resolveTypes, requireMatchingSpecialization))
+                {
+                    return method;
+                }
+            }
+        }
+
+        return Dummy.MethodDefinition;
+    }
+
+    static bool SignaturesMatch(Func<ISignature, ISignature, bool, bool> matcher, IMethodDefinition method, IMethodReference methodSignature, bool resolveTypes, bool requireMatchingSpecialization)
+    {
+        if (matcher(method, methodSignature, resolveTypes))
+        {
+            if (requireMatchingSpecialization)
+            {
+                // In resolving a reference to a method specialization, it is possible for more than one definition to have a signature that matches the refererence.
+                // This occurs, for example, with "Foo(T arg)" and "Foo(string arg)" when the generic type argument matching T is string.
+                // We must ensure that the unspecialized signatures also match in that case.
+
+                ISpecializedMethodReference specializedSignature = methodSignature as ISpecializedMethodReference;
+                if (specializedSignature != null)
+                {
+                    ISpecializedMethodDefinition specializedMethod = method as ISpecializedMethodDefinition;
+                    if (specializedMethod != null)
+                    {
+                        IMethodReference unspecializedMethod = specializedMethod.UnspecializedVersion;
+                        IMethodReference unspecializedSignature = specializedSignature.UnspecializedVersion;
+
+                        if (unspecializedMethod.InternedKey == unspecializedSignature.InternedKey)
+                        {
+                            return true;
+                        }
+
+                        return matcher(unspecializedMethod, unspecializedSignature, resolveTypes);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Returns a C#-like string that corresponds to the given namespace definition and that conforms to the specified formatting options.
     /// </summary>
     [Pure]
@@ -1341,7 +1450,7 @@ namespace Microsoft.Cci {
       Contract.Requires(namespaceDefinition != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
-      return (new TypeNameFormatter()).GetNamespaceName(namespaceDefinition, formattingOptions);
+      return s_defaultTypeNameFormatter.GetNamespaceName(namespaceDefinition, formattingOptions);
     }
 
     /// <summary>
@@ -1352,7 +1461,7 @@ namespace Microsoft.Cci {
       Contract.Requires(namespaceReference != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
-      return (new TypeNameFormatter()).GetNamespaceName(namespaceReference, formattingOptions);
+      return s_defaultTypeNameFormatter.GetNamespaceName(namespaceReference, formattingOptions);
     }
 
     /// <summary>
@@ -1459,7 +1568,7 @@ namespace Microsoft.Cci {
           if (TypeHelper.TypesAreEquivalent(type, type.PlatformType.SystemDateTime))
             return TypeCode.DateTime;
           if (TypeHelper.TypesAreEquivalent(type, type.PlatformType.SystemDBNull))
-            return TypeCode.DBNull;
+            return (TypeCode)2; //.DBNull;
           if (TypeHelper.TypesAreEquivalent(type, type.PlatformType.SystemDecimal))
             return TypeCode.Decimal;
           return TypeCode.Object;
@@ -1485,7 +1594,7 @@ namespace Microsoft.Cci {
       Contract.Requires(type != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
-      return (new TypeNameFormatter()).GetTypeName(type, formattingOptions);
+      return s_defaultTypeNameFormatter.GetTypeName(type, formattingOptions);
     }
 
     /// <summary>
@@ -1558,7 +1667,7 @@ namespace Microsoft.Cci {
     /// Returns true if two parameters are equivalent.
     /// </summary>
     [Pure]
-    public static bool ParametersAreEquivalent(IParameterTypeInformation param1, IParameterTypeInformation param2, bool resolveTypes = false) {
+    public static bool ParametersAreEquivalent(IParameterTypeInformation param1, IParameterTypeInformation param2, bool resolveTypes = true) {
       Contract.Requires(param1 != null);
       Contract.Requires(param2 != null);
 
@@ -1586,7 +1695,7 @@ namespace Microsoft.Cci {
     /// Returns true if two parameters are equivalent, assuming that the type parameters of generic methods are equivalent if their indices match.
     /// </summary>
     [Pure]
-    public static bool ParametersAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(IParameterTypeInformation param1, IParameterTypeInformation param2, bool resolveTypes = false) {
+    public static bool ParametersAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(IParameterTypeInformation param1, IParameterTypeInformation param2, bool resolveTypes = true) {
       Contract.Requires(param1 != null);
       Contract.Requires(param2 != null);
 
@@ -1615,7 +1724,7 @@ namespace Microsoft.Cci {
     /// Returns true if two parameter lists are equivalent.
     /// </summary>
     [Pure]
-    public static bool ParameterListsAreEquivalent(IEnumerable<IParameterTypeInformation> paramList1, IEnumerable<IParameterTypeInformation> paramList2, bool resolveTypes = false) {
+    public static bool ParameterListsAreEquivalent(IEnumerable<IParameterTypeInformation> paramList1, IEnumerable<IParameterTypeInformation> paramList2, bool resolveTypes = true) {
       Contract.Requires(paramList1 != null);
       Contract.Requires(paramList2 != null);
       Contract.Requires(Contract.ForAll(paramList1, x => x != null));
@@ -1639,7 +1748,7 @@ namespace Microsoft.Cci {
     /// Returns true if two parameter lists are equivalent, assuming that the type parameters of generic methods are equivalent if their indices match.
     /// </summary>
     [Pure]
-    public static bool ParameterListsAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(IEnumerable<IParameterTypeInformation> paramList1, IEnumerable<IParameterTypeInformation> paramList2, bool resolveTypes = false) {
+    public static bool ParameterListsAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(IEnumerable<IParameterTypeInformation> paramList1, IEnumerable<IParameterTypeInformation> paramList2, bool resolveTypes = true) {
       Contract.Requires(paramList1 != null);
       Contract.Requires(Contract.ForAll(paramList1, x => x != null));
       Contract.Requires(paramList2 != null);
@@ -1663,7 +1772,7 @@ namespace Microsoft.Cci {
     /// Returns true if two parameter lists of type IParameterDefinition are equivalent, assuming that the type parameters of generic methods are equivalent if their indices match.
     /// </summary>
     [Pure]
-    public static bool ParameterListsAreEquivalent(IEnumerable<IParameterDefinition> paramList1, IEnumerable<IParameterDefinition> paramList2, bool resolveTypes = false) {
+    public static bool ParameterListsAreEquivalent(IEnumerable<IParameterDefinition> paramList1, IEnumerable<IParameterDefinition> paramList2, bool resolveTypes = true) {
       Contract.Requires(paramList1 != null);
       Contract.Requires(Contract.ForAll(paramList1, x => x != null));
       Contract.Requires(paramList2 != null);
@@ -2107,7 +2216,7 @@ namespace Microsoft.Cci {
     /// Returns true if the given two generic instance types are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
     [Pure]
-    public static bool GenericTypeInstancesAreEquivalent(IGenericTypeInstanceReference/*?*/ genericTypeInstRef1, IGenericTypeInstanceReference/*?*/ genericTypeInstRef2, bool resolveTypes = false) {
+    public static bool GenericTypeInstancesAreEquivalent(IGenericTypeInstanceReference/*?*/ genericTypeInstRef1, IGenericTypeInstanceReference/*?*/ genericTypeInstRef2, bool resolveTypes = true) {
       if (genericTypeInstRef1 == null || genericTypeInstRef2 == null)
         return false;
       if (genericTypeInstRef1 == genericTypeInstRef2)
@@ -2174,7 +2283,7 @@ namespace Microsoft.Cci {
     /// Returns true if the given two pointer types are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
     [Pure]
-    public static bool PointerTypesAreEquivalent(IPointerTypeReference/*?*/ pointerTypeRef1, IPointerTypeReference/*?*/ pointerTypeRef2, bool resolveTypes = false) {
+    public static bool PointerTypesAreEquivalent(IPointerTypeReference/*?*/ pointerTypeRef1, IPointerTypeReference/*?*/ pointerTypeRef2, bool resolveTypes = true) {
       if (pointerTypeRef1 == null || pointerTypeRef2 == null)
         return false;
       if (pointerTypeRef1 == pointerTypeRef2)
@@ -2186,7 +2295,7 @@ namespace Microsoft.Cci {
     /// Returns true if the given two generic type parameters are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
     [Pure]
-    public static bool GenericTypeParametersAreEquivalent(IGenericTypeParameterReference/*?*/ genericTypeParam1, IGenericTypeParameterReference/*?*/ genericTypeParam2, bool resolveTypes = false) {
+    public static bool GenericTypeParametersAreEquivalent(IGenericTypeParameterReference/*?*/ genericTypeParam1, IGenericTypeParameterReference/*?*/ genericTypeParam2, bool resolveTypes = true) {
       if (genericTypeParam1 == null || genericTypeParam2 == null)
         return false;
       if (genericTypeParam1 == genericTypeParam2)
@@ -2212,7 +2321,7 @@ namespace Microsoft.Cci {
     /// Returns true if the given two function pointer types are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
     [Pure]
-    public static bool FunctionPointerTypesAreEquivalent(IFunctionPointerTypeReference/*?*/ functionPointer1, IFunctionPointerTypeReference/*?*/ functionPointer2, bool resolveTypes = false) {
+    public static bool FunctionPointerTypesAreEquivalent(IFunctionPointerTypeReference/*?*/ functionPointer1, IFunctionPointerTypeReference/*?*/ functionPointer2, bool resolveTypes = true) {
       if (functionPointer1 == null || functionPointer2 == null)
         return false;
       if (functionPointer1 == functionPointer2)
@@ -2234,7 +2343,7 @@ namespace Microsoft.Cci {
     /// </summary>
     [Pure]
     public static bool FunctionPointerTypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(
-      IFunctionPointerTypeReference/*?*/ functionPointer1, IFunctionPointerTypeReference/*?*/ functionPointer2, bool resolveTypes = false) {
+      IFunctionPointerTypeReference/*?*/ functionPointer1, IFunctionPointerTypeReference/*?*/ functionPointer2, bool resolveTypes = true) {
       if (functionPointer1 == null || functionPointer2 == null)
         return false;
       if (functionPointer1 == functionPointer2)
@@ -2336,20 +2445,34 @@ namespace Microsoft.Cci {
     /// Returns true if the given two types are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
     [Pure]
-    public static bool TypesAreEquivalent(ITypeReference/*?*/ type1, ITypeReference/*?*/ type2, bool resolveTypes = false) {
-      if (type1 == null || type2 == null) return false;
-      if (type1 == type2) return true;
-      if (type1.InternedKey == type2.InternedKey) return true;
-      if (!resolveTypes) return false;
-      return type1.ResolvedType.InternedKey == type2.ResolvedType.InternedKey;
+    public static bool TypesAreEquivalent(ITypeReference/*?*/ type1, ITypeReference/*?*/ type2, bool resolveTypes = true) {
+      // Manually compare two GenericTypeInstances in case one of them has a type forwarder while the other
+      // points to the real thing
+      // The problem is, GenericTypeInstance doesn't try to resolve all the arguments when calculating
+      // its InternKey, and changing that is perhaps a bit too risky at this point
+      // The less risky fix, is to take advantage of the old function 
+      //   TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch 
+      // and refactor it into TypesAreEquivalent_Relax and skip the methodParamIndex comparison part
+      return TypesAreEquivalent_Relaxed(type1, type2, resolveTypes, /* useMethodParamIndex = */ false);
     }
 
     /// <summary>
-    /// Returns true if the given two types are to be considered equivalent for the purpose of generic method signature matching. This differs from
-    /// TypeHelper.TypesAreEquivalent in that two generic method type parameters are considered equivalent if their parameter list indices are the same.
+    /// Returns true if the given two types are to be considered equivalent for the purpose of signature matching and so on.
     /// </summary>
     [Pure]
-    public static bool TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(ITypeReference/*?*/ type1, ITypeReference/*?*/ type2, bool resolveTypes = false) {
+    internal static bool TypesAreEquivalent(ITypeDefinition/*?*/ type1, ITypeDefinition/*?*/ type2)
+    {
+        if (type1 == null || type2 == null) return false;
+        if (type1 == type2) return true;
+        if (type1.InternedKey == type2.InternedKey) return true;
+
+        // Given two ITypeDefinition as input, we can skip first level type resolving, but may still need it inside
+        return TypesAreEquivalent_Relaxed_Inner(type1, type2, true, /* useMethodParamIndex = */ false);
+    }
+
+    [Pure]
+    private static bool TypesAreEquivalent_Relaxed(ITypeReference/*?*/ type1, ITypeReference/*?*/ type2, bool resolveTypes, bool useMethodParamIndex)
+    {
       if (type1 == null || type2 == null) return false;
       if (type1 == type2) return true;
       if (type1.InternedKey == type2.InternedKey) return true;
@@ -2363,50 +2486,158 @@ namespace Microsoft.Cci {
         if (type1.InternedKey == type2.InternedKey) return true;
       }
 
-      var genMethPar1 = type1 as IGenericMethodParameterReference;
-      var genMethPar2 = type2 as IGenericMethodParameterReference;
-      if (genMethPar1 != null || genMethPar2 != null) {
-        if (genMethPar1 == null || genMethPar2 == null) return false;
-        return genMethPar1.Index == genMethPar2.Index;
+      return TypesAreEquivalent_Relaxed_Inner(type1, type2, resolveTypes, useMethodParamIndex);
+    }
+
+    [Pure]
+    private static bool TypesAreEquivalent_Relaxed_Inner(ITypeReference/*?*/ type1, ITypeReference/*?*/ type2, bool resolveTypes, bool useMethodParamIndex)
+    {
+      //
+      // This function is performance sensitive.  For example, instrumentation indicates that the
+      // .NET Native toolchain often calls this function 10 million times or more during compilation
+      // of a single app.
+      //
+      // The checks below have been added to ensure that a set of common cases (where one or both
+      // ITypeReference objects are instances of a type that never participates in complex
+      // equivalence checks) are handled by a fast path less than 30 instructions in length.
+      //
+      // In the .NET Native toolchain case, ~99% of calls into this function are handled by the fast
+      // path and therefore bypass all of the "is" operations that would otherwise be applied.
+      // This is significant because, in the CLR, each "is" operation walks the type's entire
+      // interface map and therefore often involves more than 40 instructions in common CCI
+      // cases.
+      //
+      // It is critical for each of these checks to follow the "t.GetType() == typeof(T)"
+      // pattern.  This pattern (and only this pattern) allows the CLR JIT to directly compare
+      // MethodTable pointers and therefore avoid the ~30 instruction cost of loading the real
+      // System.Type objects involved in the comparison.  (For reference, JIT32 does this
+      // optimization as part of the GT_EQ / GT_NE handling in Compiler::fgMorphSmpOp.)
+      //
+      // Using .NET 4.5.2 on x86, NGen'ing this code results in the following codegen:
+      //
+      //    [[
+      //      Microsoft_Cci_ni!Microsoft.Cci.TypeHelper.TypesAreEquivalent_Relaxed_Inner:
+      //      699d37c8 55              push    ebp
+      //      699d37c9 8bec            mov     ebp,esp
+      //      699d37cb 57              push    edi
+      //      699d37cc 56              push    esi
+      //      699d37cd 53              push    ebx
+      //      699d37ce 83ec24          sub     esp,24h
+      //      699d37d1 8bf9            mov     edi,ecx
+      //      699d37d3 8bf2            mov     esi,edx
+      //      699d37d5 813fcc4abe69    cmp     dword ptr [edi],offset Microsoft_Cci_ni+0x574acc (69be4acc)
+      //      699d37db 7428            je      TypesAreEquivalent_Relaxed_Inner+0x3d (699d3805)
+      //      699d37dd 813ecc4abe69    cmp     dword ptr [esi],offset Microsoft_Cci_ni+0x574acc (69be4acc)
+      //      699d37e3 7420            je      TypesAreEquivalent_Relaxed_Inner+0x3d (699d3805)
+      //      699d37e5 813f344cbe69    cmp     dword ptr [edi],offset Microsoft_Cci_ni+0x574c34 (69be4c34)
+      //      699d37eb 7418            je      TypesAreEquivalent_Relaxed_Inner+0x3d (699d3805)
+      //      699d37ed 813e344cbe69    cmp     dword ptr [esi],offset Microsoft_Cci_ni+0x574c34 (69be4c34)
+      //      699d37f3 7410            je      TypesAreEquivalent_Relaxed_Inner+0x3d (699d3805)
+      //      699d37f5 813f0ca3be69    cmp     dword ptr [edi],offset Microsoft_Cci_ni+0x57a30c (69bea30c)
+      //      699d37fb 7408            je      TypesAreEquivalent_Relaxed_Inner+0x3d (699d3805)
+      //      699d37fd 813e0ca3be69    cmp     dword ptr [esi],offset Microsoft_Cci_ni+0x57a30c (69bea30c)
+      //      699d3803 7507            jne     TypesAreEquivalent_Relaxed_Inner+0x44 (699d380c)
+      //      699d3805 33c0            xor     eax,eax
+      //      699d3807 e984030000      jmp     TypesAreEquivalent_Relaxed_Inner+0x3c8 (699d3b90)
+      //      699d380c 0fb64508        movzx   eax,byte ptr [ebp+8]
+      //      ...
+      //    ]]
+      //
+      // The checks are manually inlined because this significantly streamlined the generated
+      // code (in experiments with the 4.5.2 x86 JIT).  Specifically, manual inlining saved ~10
+      // instructions compared to other options that were considered (e.g., factoring the six
+      // checks into two calls to a helper function that checks a supplied object against the
+      // three exact types of interest).
+      //
+#if MERGED_DLL
+      if ((type1.GetType() == typeof(Microsoft.Cci.MetadataReader.ObjectModelImplementation.NonGenericNamespaceTypeWithoutPrimitiveType)) ||
+          (type2.GetType() == typeof(Microsoft.Cci.MetadataReader.ObjectModelImplementation.NonGenericNamespaceTypeWithoutPrimitiveType)) ||
+          (type1.GetType() == typeof(Microsoft.Cci.MetadataReader.ObjectModelImplementation.NonGenericNamespaceTypeWithPrimitiveType)) ||
+          (type2.GetType() == typeof(Microsoft.Cci.MetadataReader.ObjectModelImplementation.NonGenericNamespaceTypeWithPrimitiveType)) ||
+          (type1.GetType() == typeof(Microsoft.Cci.MutableCodeModel.NamespaceTypeDefinition)) ||
+          (type2.GetType() == typeof(Microsoft.Cci.MutableCodeModel.NamespaceTypeDefinition))) {
+        return false;
+      }
+#endif
+
+      // If requested, we'll only compare indices for method parameters
+      if (useMethodParamIndex)
+      { 
+        var genMethPar1 = type1 as IGenericMethodParameterReference;
+        var genMethPar2 = type2 as IGenericMethodParameterReference;
+        if (genMethPar1 != null || genMethPar2 != null) {
+          if (genMethPar1 == null || genMethPar2 == null) return false;
+          return genMethPar1.Index == genMethPar2.Index;
+        }
       }
 
       var inst1 = type1 as IGenericTypeInstanceReference;
       var inst2 = type2 as IGenericTypeInstanceReference;
       if (inst1 != null || inst2 != null) {
         if (inst1 == null || inst2 == null) return false;
-        if (!TypeHelper.TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(inst1.GenericType, inst2.GenericType, resolveTypes)) return false;
-        return IteratorHelper.EnumerablesAreEqual<ITypeReference>(inst1.GenericArguments, inst2.GenericArguments,
-          resolveTypes ? RelaxedTypeEquivalenceComparer.resolvingInstance : RelaxedTypeEquivalenceComparer.instance);
+        if (!TypeHelper.TypesAreEquivalent_Relaxed(inst1.GenericType, inst2.GenericType, resolveTypes, useMethodParamIndex)) return false;
+        
+        return IteratorHelper.EnumerablesAreEqual<ITypeReference>(inst1.GenericArguments, inst2.GenericArguments, 
+            RelaxedTypeEquivalenceComparer.GetStaticInstance(resolveTypes, useMethodParamIndex));
+      }
+
+      var specialized1 = type1 as ISpecializedNestedTypeReference;
+      var specialized2 = type2 as ISpecializedNestedTypeReference;
+      if (specialized1 != null || specialized2 != null) {
+          if (specialized1 == null || specialized2 == null) return false;
+          if (!TypesAreEquivalent_Relaxed(specialized1.ContainingType, specialized2.ContainingType, resolveTypes, useMethodParamIndex)) return false;
+          return TypesAreEquivalent_Relaxed(specialized1.UnspecializedVersion, specialized2.UnspecializedVersion, resolveTypes, useMethodParamIndex);
+      }
+
+      var nested1 = type1 as INestedTypeReference;
+      var nested2 = type2 as INestedTypeReference;
+      if (nested1 != null || nested2 != null) {
+        if (nested1 == null || nested2 == null) return false;
+        if (nested1.Name.UniqueKey != nested2.Name.UniqueKey) return false;
+        if (nested1.GenericParameterCount != nested2.GenericParameterCount) return false;
+
+        return TypesAreEquivalent_Relaxed(nested1.ContainingType, nested2.ContainingType, resolveTypes, useMethodParamIndex);
       }
 
       var array1 = type1 as IArrayTypeReference;
       var array2 = type2 as IArrayTypeReference;
       if (array1 != null || array2 != null) {
         if (array1 == null || array2 == null) return false;
-        return TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(array1.ElementType, array2.ElementType, resolveTypes);
+        if (array1.IsVector != array2.IsVector) return false;
+        if (array1.Rank != array2.Rank) return false;
+        return TypesAreEquivalent_Relaxed(array1.ElementType, array2.ElementType, resolveTypes, useMethodParamIndex);
       }
 
       var pointer1 = type1 as IPointerTypeReference;
       var pointer2 = type2 as IPointerTypeReference;
       if (pointer1 != null || pointer2 != null) {
         if (pointer1 == null || pointer2 == null) return false;
-        return TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(pointer1.TargetType, pointer2.TargetType, resolveTypes);
+        return TypesAreEquivalent_Relaxed(pointer1.TargetType, pointer2.TargetType, resolveTypes, useMethodParamIndex);
       }
 
       var mpointer1 = type1 as IManagedPointerTypeReference;
       var mpointer2 = type2 as IManagedPointerTypeReference;
       if (mpointer1 != null || mpointer2 != null) {
         if (mpointer1 == null || mpointer2 == null) return false;
-        return TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(mpointer1.TargetType, mpointer2.TargetType, resolveTypes);
+        return TypesAreEquivalent_Relaxed(mpointer1.TargetType, mpointer2.TargetType, resolveTypes, useMethodParamIndex);
       }
 
       var fpointer1 = type1 as IFunctionPointerTypeReference;
       var fpointer2 = type2 as IFunctionPointerTypeReference;
       if (fpointer1 != null || fpointer2 != null) {
-        return TypeHelper.FunctionPointerTypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(fpointer1, fpointer2, resolveTypes);
+        return TypeHelper.TypesAreEquivalent_Relaxed(fpointer1, fpointer2, resolveTypes, useMethodParamIndex);
       }
 
       return false;
+    }
+
+    /// <summary>
+    /// Returns true if the given two types are to be considered equivalent for the purpose of generic method signature matching. This differs from
+    /// TypeHelper.TypesAreEquivalent in that two generic method type parameters are considered equivalent if their parameter list indices are the same.
+    /// </summary>
+    [Pure]
+    public static bool TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(ITypeReference/*?*/ type1, ITypeReference/*?*/ type2, bool resolveTypes = true) {
+      return TypesAreEquivalent_Relaxed(type1, type2, resolveTypes, /* useMethodParamIndex = */ true);
     }
 
     /// <summary>
@@ -2415,21 +2646,51 @@ namespace Microsoft.Cci {
     /// </summary>
     private class RelaxedTypeEquivalenceComparer : IEqualityComparer<ITypeReference> {
 
-      private RelaxedTypeEquivalenceComparer(bool resolveTypes = false) {
+      private RelaxedTypeEquivalenceComparer(bool resolveTypes = true, bool useMethodParamIndex = true) {
         this.resolveTypes = resolveTypes;
+        this.useMethodParamIndex = useMethodParamIndex;
       }
 
       bool resolveTypes;
+      bool useMethodParamIndex;
 
       /// <summary>
       /// A singleton instance of RelaxedTypeEquivalenceComparer that is safe to use in all contexts.
       /// </summary>
-      internal static RelaxedTypeEquivalenceComparer instance = new RelaxedTypeEquivalenceComparer();
+      internal static RelaxedTypeEquivalenceComparer nonResolvingAndUseMethodParamIndexInstance = new RelaxedTypeEquivalenceComparer(false, true);
 
       /// <summary>
       /// A singleton instance of RelaxedTypeEquivalenceComparer that is safe to use in all contexts.
       /// </summary>
-      internal static RelaxedTypeEquivalenceComparer resolvingInstance = new RelaxedTypeEquivalenceComparer(true);
+      internal static RelaxedTypeEquivalenceComparer nonResolvingInstance = new RelaxedTypeEquivalenceComparer(false, false);
+
+      /// <summary>
+      /// A singleton instance of RelaxedTypeEquivalenceComparer that is safe to use in all contexts.
+      /// </summary>
+      internal static RelaxedTypeEquivalenceComparer resolvingAndUseMethodParamIndexInstance = new RelaxedTypeEquivalenceComparer(true, true);
+      
+      /// <summary>
+      /// A singleton instance of RelaxedTypeEquivalenceComparer that is safe to use in all contexts.
+      /// </summary>
+      internal static RelaxedTypeEquivalenceComparer resolvingInstance = new RelaxedTypeEquivalenceComparer(true, false);
+
+      internal static RelaxedTypeEquivalenceComparer GetStaticInstance(bool resolveTypes, bool useMethodParamIndex)
+      {
+          if (resolveTypes)
+          {
+              if (useMethodParamIndex)
+                  return resolvingAndUseMethodParamIndexInstance;
+              else
+                  return resolvingInstance;
+          }
+          else
+          {
+              if (useMethodParamIndex)
+                  return nonResolvingAndUseMethodParamIndexInstance;
+              else
+                  return nonResolvingInstance;
+          }
+      }
 
       /// <summary>
       /// Determines whether the specified objects are equal.
@@ -2441,7 +2702,7 @@ namespace Microsoft.Cci {
       /// </returns>
       public bool Equals(ITypeReference x, ITypeReference y) {
         if (x == null) return y == null;
-        return TypeHelper.TypesAreEquivalentAssumingGenericMethodParametersAreEquivalentIfTheirIndicesMatch(x, y, this.resolveTypes);
+        return TypeHelper.TypesAreEquivalent_Relaxed(x, y, this.resolveTypes, useMethodParamIndex);
       }
 
       /// <summary>
@@ -2462,7 +2723,7 @@ namespace Microsoft.Cci {
     /// Type1 derives from type2 if the latter is a direct or indirect base class.
     /// </summary>
     [Pure]
-    public static bool Type1DerivesFromOrIsTheSameAsType2(ITypeDefinition type1, ITypeReference type2, bool resolveTypes = false) {
+    public static bool Type1DerivesFromOrIsTheSameAsType2(ITypeDefinition type1, ITypeReference type2, bool resolveTypes = true) {
       Contract.Requires(type1 != null);
       Contract.Requires(type2 != null);
 
@@ -2474,7 +2735,7 @@ namespace Microsoft.Cci {
     /// Type1 derives from type2 if the latter is a direct or indirect base class.
     /// </summary>
     [Pure]
-    public static bool Type1DerivesFromType2(ITypeDefinition type1, ITypeReference type2, bool resolveTypes = false) {
+    public static bool Type1DerivesFromType2(ITypeDefinition type1, ITypeReference type2, bool resolveTypes = true) {
       Contract.Requires(type1 != null);
       Contract.Requires(type2 != null);
 
@@ -2490,7 +2751,7 @@ namespace Microsoft.Cci {
     /// that derives from the given interface.
     /// </summary>
     [Pure]
-    public static bool Type1ImplementsType2(ITypeDefinition type1, ITypeReference type2, bool resolveTypes = false) {
+    public static bool Type1ImplementsType2(ITypeDefinition type1, ITypeReference type2, bool resolveTypes = true) {
       Contract.Requires(type1 != null);
       Contract.Requires(type2 != null);
 
@@ -2508,7 +2769,7 @@ namespace Microsoft.Cci {
     /// Returns true if Type1 is CovariantWith Type2 as per CLR.
     /// </summary>
     [Pure]
-    public static bool Type1IsCovariantWithType2(ITypeDefinition type1, ITypeReference type2, bool resolveTypes = false) {
+    public static bool Type1IsCovariantWithType2(ITypeDefinition type1, ITypeReference type2, bool resolveTypes = true) {
       Contract.Requires(type1 != null);
       Contract.Requires(type2 != null);
 
@@ -2523,7 +2784,7 @@ namespace Microsoft.Cci {
     /// Returns true if a CLR supplied implicit reference conversion is available to convert a value of the given source type to a corresponding value of the given target type.
     /// </summary>
     [Pure]
-    public static bool TypesAreAssignmentCompatible(ITypeDefinition sourceType, ITypeDefinition targetType, bool resolveTypes = false) {
+    public static bool TypesAreAssignmentCompatible(ITypeDefinition sourceType, ITypeDefinition targetType, bool resolveTypes = true) {
       Contract.Requires(sourceType != null);
       Contract.Requires(targetType != null);
 
@@ -2556,12 +2817,102 @@ namespace Microsoft.Cci {
 
   }
 
+#if MERGED_DLL
   /// <summary>
-  /// A collection of methods that format types as strings. The methods are virtual and reference each other. 
-  /// By default, types are formatting according to C# conventions. However, by overriding one or more of the
-  /// methods, the formatting can be customized for other languages.
+  /// A collection of methods that serialize types into the full assembly-qualified format
+  /// that would be used if they were referenced in a "typeof(X)" custom attribute argument
+  /// (i.e., an IMetadataTypeOf object) and then written by the PeWriter.
   /// </summary>
-  public class TypeNameFormatter {
+  public static class AssemblyQualifiedTypeNameSerializer {
+
+    /// <summary>
+    /// Computes the assembly-qualified type name that would be generated if the supplied type
+    /// reference appeared in a "typeof(X)" custom attribute argument (i.e., an IMetadataTypeOf
+    /// object) that was written out by the PeWriter.
+    /// </summary>
+    public static string GetSerializedTypeReference(ITypeReference typeReference) {
+      return PeWriter.GetSerializedAssemblyQualifiedTypeName(typeReference);
+    }
+  }
+
+
+    /// <summary>
+    /// A class capable of deserializing type references from the full assembly-qualified string
+    /// format that is used to encode type references into custom attribute blobs (i.e., when
+    /// "typeof(X)" custom attribute arguments are used).
+    /// </summary>
+    public class AssemblyQualifiedTypeNameDeserializer {
+
+    /// <summary>
+    /// Tries to build a deserializer capable of converting assembly-qualified type names into
+    /// corresponding type reference objects.
+    ///
+    /// All type references objects must be "owned" by a particular assembly, so the caller is
+    /// required to supply the assembly that should become the owner of any type reference
+    /// objects generated by the deserializer.
+    ///
+    /// The core type name parsing and reference resolution logic is implemented entirely in
+    /// terms of the metadata reader object model. If the supplied assembly is not a metadata
+    /// reader assembly (i.e., is not an "immutable" assembly), then it cannot be used to drive
+    /// deserialization and this function will return null.
+    /// </summary>
+    public static AssemblyQualifiedTypeNameDeserializer TryBuild(IAssembly assemblyToUseAsDeserializationContext) {
+      var metadataReaderAssembly = assemblyToUseAsDeserializationContext as Microsoft.Cci.MetadataReader.ObjectModelImplementation.Assembly;
+      return (metadataReaderAssembly == null) ? null : new AssemblyQualifiedTypeNameDeserializer(metadataReaderAssembly);
+    }
+
+    private readonly Microsoft.Cci.MetadataReader.ObjectModelImplementation.TypeNameDeserializer deserializer;
+
+    private AssemblyQualifiedTypeNameDeserializer(Microsoft.Cci.MetadataReader.ObjectModelImplementation.Assembly metadataReaderAssembly) {
+      this.deserializer = new Microsoft.Cci.MetadataReader.ObjectModelImplementation.TypeNameDeserializer(
+        fileToUseAsDeserializationContext: metadataReaderAssembly.PEFileToObjectModel
+      );
+    }
+
+    /// <summary>
+    /// Tries to build a type reference object which represents the supplied assembly-qualified
+    /// serialized type name. The serialized type name format is required to match the format
+    /// used by the CLR when interacting with type references serialized into custom attribute
+    /// blobs. In particular, this function generally supports any serialized name generated by
+    /// the core CCI name serialization logic (which includes all names generated by the
+    /// AssemblyQualifiedTypeNameSerializer).
+    ///
+    /// If the serialized name is well formed, this function returns a type reference object
+    /// that generally supports all of the operations that can be applied to "normal" type
+    /// reference objects built based on TypeRef table rows. Otherwise, this function returns
+    /// null or returns an instance of Dummy.
+    /// </summary>
+    public ITypeReference TryGetDeserializedTypeReference(string serializedTypeName) {
+      return this.deserializer.TryGetDeserializedTypeReference(serializedTypeName);
+    }
+  }
+#endif
+
+    /// <summary>
+    /// A collection of methods that format types as strings. The methods are virtual and reference each other. 
+    /// By default, types are formatting according to C# conventions. However, by overriding one or more of the
+    /// methods, the formatting can be customized for other languages.
+    /// </summary>
+    public class TypeNameFormatter {
+
+    /// <summary>
+    /// Allowing filtering or changing names, e.g. removing prefix/suffix
+    /// </summary>
+    public virtual string FilterName(string name, ref int startPos, ref int length)
+    {
+        // Return original string in default implementation
+        return name;
+    }
+
+    private string FilterName(string name)
+    {
+        int pos = 0;
+        int length = name.Length;
+
+        name = FilterName(name, ref pos, ref length);
+
+        return name.Substring(pos, length);
+    }
 
     /// <summary>
     /// Returns the given type name unless genericParameterCount is greater than zero and NameFormattingOptions.TypeParameters has been specified and the
@@ -2580,7 +2931,7 @@ namespace Microsoft.Cci {
       string delim = ((formattingOptions & NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter) == 0) ? ", " : ",";
       if ((formattingOptions & NameFormattingOptions.TypeParameters) != 0 && (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) == 0 && genericParameterCount > 0 && !(type.ResolvedType is Dummy)) {
         StringBuilder sb = new StringBuilder(typeName);
-        sb.Append("<");
+        sb.Append('<');
         if ((formattingOptions & NameFormattingOptions.EmptyTypeParameterList) == 0) {
           bool first = true;
           foreach (var parameter in type.ResolvedType.GenericParameters) {
@@ -2590,7 +2941,7 @@ namespace Microsoft.Cci {
         } else {
           sb.Append(',', genericParameterCount - 1);
         }
-        sb.Append(">");
+        sb.Append('>');
         if ((formattingOptions & NameFormattingOptions.TypeConstraints) != 0) {
           foreach (var parameter in type.ResolvedType.GenericParameters) {
             if (!parameter.MustBeReferenceType && !parameter.MustBeValueType && !parameter.MustHaveDefaultConstructor && IteratorHelper.EnumerableIsEmpty(parameter.Constraints)) continue;
@@ -2612,9 +2963,81 @@ namespace Microsoft.Cci {
         }
         typeName = sb.ToString();
       } else if ((formattingOptions & NameFormattingOptions.UseGenericTypeNameSuffix) != 0 && genericParameterCount > 0) {
-        typeName = typeName + "`" + genericParameterCount;
+          if (type is INamedTypeReference && ((INamedTypeReference)type).MangleName) {
+              typeName = typeName + "`" + genericParameterCount;
+          }
       }
       return typeName;
+    }
+
+    /// <summary>
+    /// Returns the given type name unless genericParameterCount is greater than zero and NameFormattingOptions.TypeParameters has been specified and the
+    /// type can be resolved. In the latter case, return the type name augmented with the type parameters 
+    /// (or, if NameFormatting.UseGenericTypeNameSuffix has been specified, the type name is agumented with `n where n is the number of parameters).
+    /// </summary>
+    /// <param name="sb">Destination.</param>
+    /// <param name="type">A reference to a named type.</param>
+    /// <param name="genericParameterCount">The number of generic parameters the type has.</param>
+    /// <param name="formattingOptions">A set of flags that specify how the type name is to be formatted.</param>
+    void AppendGenericParametersIfNeeded(StringBuilder sb, ITypeReference type, ushort genericParameterCount, NameFormattingOptions formattingOptions)
+    {
+        Contract.Requires(type != null);
+
+        string delim = ((formattingOptions & NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter) == 0) ? ", " : ",";
+        
+        if ((formattingOptions & NameFormattingOptions.TypeParameters) != 0 && (formattingOptions & NameFormattingOptions.FormattingForDocumentationId) == 0 && genericParameterCount > 0 && !(type.ResolvedType is Dummy))
+        {
+            sb.Append('<');
+            
+            if ((formattingOptions & NameFormattingOptions.EmptyTypeParameterList) == 0)
+            {
+                bool first = true;
+                foreach (var parameter in type.ResolvedType.GenericParameters)
+                {
+                    if (first) first = false; else sb.Append(delim);
+                    sb.Append(this.GetTypeName(parameter, formattingOptions));
+                }
+            }
+            else
+            {
+                sb.Append(',', genericParameterCount - 1);
+            }
+            
+            sb.Append('>');
+            
+            if ((formattingOptions & NameFormattingOptions.TypeConstraints) != 0)
+            {
+                foreach (var parameter in type.ResolvedType.GenericParameters)
+                {
+                    if (!parameter.MustBeReferenceType && !parameter.MustBeValueType && !parameter.MustHaveDefaultConstructor && IteratorHelper.EnumerableIsEmpty(parameter.Constraints)) continue;
+                    sb.Append(" where ");
+                    sb.Append(parameter.Name.Value);
+                    sb.Append(" : ");
+                    bool first = true;
+                    if (parameter.MustBeReferenceType) { sb.Append("class"); first = false; }
+                    if (parameter.MustBeValueType) { sb.Append("struct"); first = false; }
+                    
+                    foreach (var constraint in parameter.Constraints)
+                    {
+                        if (first) first = false; else sb.Append(delim);
+                        sb.Append(this.GetTypeName(constraint, NameFormattingOptions.None));
+                    }
+                    
+                    if (parameter.MustHaveDefaultConstructor)
+                    {
+                        if (!first) { sb.Append(delim); }
+                        sb.Append("new ()");
+                    }
+                }
+            }
+        }
+        else if ((formattingOptions & NameFormattingOptions.UseGenericTypeNameSuffix) != 0 && genericParameterCount > 0)
+        {
+            if (type is INamedTypeReference && ((INamedTypeReference)type).MangleName) {
+                sb.Append("`");
+                sb.FastAppend(genericParameterCount);
+            }
+        }
     }
 
     /// <summary>
@@ -2625,16 +3048,16 @@ namespace Microsoft.Cci {
       Contract.Requires(arrayType != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
-      StringBuilder sb = new StringBuilder();
+      StringBuilder sb = StringBuilderCache.Acquire();
       ITypeReference elementType = arrayType.ElementType;
       IArrayTypeReference elementAsArray = elementType as IArrayTypeReference;
       while (elementAsArray != null) {
         elementType = elementAsArray.ElementType;
         elementAsArray = elementType as IArrayTypeReference;
       }
-      sb.Append(this.GetTypeName(elementType, formattingOptions));
+      AppendTypeName(sb, elementType, formattingOptions);
       this.AppendArrayDimensions(arrayType, sb, formattingOptions);
-      return sb.ToString();
+      return StringBuilderCache.GetStringAndRelease(sb);
     }
 
     /// <summary>
@@ -2650,27 +3073,27 @@ namespace Microsoft.Cci {
       if (formattingForDocumentationId && elementArrayType != null) { //Append the outer dimensions of the array first
         this.AppendArrayDimensions(elementArrayType, sb, formattingOptions);
       }
-      sb.Append("[");
+      sb.Append('[');
       if (!arrayType.IsVector) {
         if (formattingForDocumentationId) {
           bool first = true;
           IEnumerator<int> lowerBounds = arrayType.LowerBounds.GetEnumerator();
           IEnumerator<ulong> sizes = arrayType.Sizes.GetEnumerator();
           for (int i = 0; i < arrayType.Rank; i++) {
-            if (!first) sb.Append(","); first = false;
+            if (!first) sb.Append(','); first = false;
             if (lowerBounds.MoveNext()) {
               sb.Append(lowerBounds.Current);
-              sb.Append(":");
+              sb.Append(':');
               if (sizes.MoveNext()) sb.Append(sizes.Current);
             } else {
-              if (sizes.MoveNext()) sb.Append("0:" + sizes.Current);
+              if (sizes.MoveNext()) sb.Append("0:").Append(sizes.Current);
             }
           }
         } else {
           sb.Append(',', (int)arrayType.Rank-1);
         }
       }
-      sb.Append("]");
+      sb.Append(']');
       if (!formattingForDocumentationId && elementArrayType != null) { //Append the inner dimensions of the array first
         this.AppendArrayDimensions(elementArrayType, sb, formattingOptions);
       }
@@ -2781,8 +3204,48 @@ namespace Microsoft.Cci {
       Contract.Requires(genericTypeParameter != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
-      if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) return "`" + genericTypeParameter.Index;
+      if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) return "`" + GetGenericParameterIndex(genericTypeParameter);
       return genericTypeParameter.Name.Value;
+    }
+
+    /// <summary>
+    /// Returns the index in the type parameter list for the parameter taking into account the parent types
+    /// Note: This information is stripped when reading the metadata (see Microsoft.Cci.MetadataReader.ObjectModelImplementation.SignatureGenericTypeParameter)
+    /// </summary>
+    private ushort GetGenericParameterIndex(IGenericTypeParameterReference parameter)
+    {
+        // we need to exclude the parent's generic type argument count from the computation.
+        // the index in the parent type is stored in parameter.Index.
+        ushort genericParameterIndex = (ushort)(ComputeGenericTypeParameterCount(parameter.DefiningType) - GetGenericParameterCount(parameter.DefiningType) + parameter.Index) ;
+
+        return genericParameterIndex;
+    }
+
+    /// <summary>
+    /// Recursively computes the count of generic type parameters on a given ITypeReference type.
+    /// </summary>
+    private ushort ComputeGenericTypeParameterCount(ITypeReference type)
+    {
+        ushort genericParamCount = GetGenericParameterCount(type);
+        INestedTypeReference nestedTypeRef = type as INestedTypeReference;
+        if (nestedTypeRef != null)
+        {
+            return (ushort)(genericParamCount + ComputeGenericTypeParameterCount(nestedTypeRef.ContainingType));
+        }
+        return genericParamCount;
+    }
+
+    /// <summary>
+    /// Returns the generic type parameter count for a type.
+    /// </summary>
+    private ushort GetGenericParameterCount(ITypeReference type)
+    {
+        INamedTypeReference namedTypedRef = type as INamedTypeReference;
+        if (namedTypedRef != null)
+        {
+            return namedTypedRef.GenericParameterCount;
+        }
+        return 0;
     }
 
     /// <summary>
@@ -2815,6 +3278,62 @@ namespace Microsoft.Cci {
       return sb.ToString();
     }
 
+    StringBuilder AppendNamespaceName(StringBuilder sb, IUnitNamespaceReference unitNamespace, NameFormattingOptions formattingOptions)
+    {
+        Contract.Requires(unitNamespace != null);
+        
+        INestedUnitNamespaceReference/*?*/ nestedUnitNamespace = unitNamespace as INestedUnitNamespaceReference;
+
+        if (nestedUnitNamespace != null)
+        {
+            if (nestedUnitNamespace.ContainingUnitNamespace is IRootUnitNamespaceReference || (formattingOptions & NameFormattingOptions.OmitContainingNamespace) != 0)
+            {
+                if ((formattingOptions & NameFormattingOptions.UseGlobalPrefix) != 0)
+                    sb.Append("global::");
+            }
+            else
+                AppendNamespaceName(sb, nestedUnitNamespace.ContainingUnitNamespace, formattingOptions).Append('.');
+
+            int    startPos = 0;
+            string nsName   = nestedUnitNamespace.Name.Value;
+            int    length   = nsName.Length;
+
+            nsName = FilterName(nsName, ref startPos, ref length);
+
+            sb.Append(nsName, startPos, length);
+        }
+
+        return sb;
+    }
+
+    StringBuilder AppendNamespaceTypeName(StringBuilder sb, INamespaceTypeReference nsType, NameFormattingOptions formattingOptions)
+    {
+        if ((formattingOptions & NameFormattingOptions.Visibility) != 0)
+            sb.Append(nsType.ResolvedType.IsPublic ? "public " : "internal ");
+
+        if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0)
+            sb.Append("T:");
+        else if ((formattingOptions & NameFormattingOptions.MemberKind) != 0)
+            sb.Append(this.GetTypeKind(nsType)).Append(' ');
+
+        if ((formattingOptions & NameFormattingOptions.OmitContainingNamespace) == 0 && !(nsType.ContainingUnitNamespace is IRootUnitNamespaceReference))
+            AppendNamespaceName(sb, nsType.ContainingUnitNamespace, formattingOptions).Append('.');
+
+        var tname = FilterName(nsType.Name.Value);
+
+        if ((formattingOptions & NameFormattingOptions.EscapeKeyword) != 0) tname = this.EscapeKeyword(tname);
+
+        if ((formattingOptions & NameFormattingOptions.SupressAttributeSuffix) != 0 &&
+            AttributeHelper.IsAttributeType(nsType.ResolvedType) & tname.EndsWith("Attribute", StringComparison.Ordinal))
+            sb.Append(tname, 0, tname.Length - 9);
+        else
+            sb.Append(tname);
+
+        AppendGenericParametersIfNeeded(sb, nsType, nsType.GenericParameterCount, formattingOptions);
+      
+        return sb;
+    }
+
     /// <summary>
     /// Returns a C#-like string that corresponds to the given type definition and that conforms to the specified formatting options.
     /// </summary>
@@ -2823,21 +3342,11 @@ namespace Microsoft.Cci {
       Contract.Requires(nsType != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
-      var tname = nsType.Name.Value;
-      if ((formattingOptions & NameFormattingOptions.EscapeKeyword) != 0) tname = this.EscapeKeyword(tname);
-      if ((formattingOptions & NameFormattingOptions.SupressAttributeSuffix) != 0 &&
-      AttributeHelper.IsAttributeType(nsType.ResolvedType) & tname.EndsWith("Attribute", StringComparison.Ordinal))
-        tname = tname.Substring(0, tname.Length-9);
-      tname = this.AddGenericParametersIfNeeded(nsType, nsType.GenericParameterCount, formattingOptions, tname);
-      if ((formattingOptions & NameFormattingOptions.OmitContainingNamespace) == 0 && !(nsType.ContainingUnitNamespace is IRootUnitNamespaceReference))
-        tname = this.GetNamespaceName(nsType.ContainingUnitNamespace, formattingOptions) + "." + tname;
-      if ((formattingOptions & NameFormattingOptions.DocumentationIdMemberKind) != 0)
-        tname = "T:" + tname;
-      else if ((formattingOptions & NameFormattingOptions.MemberKind) != 0)
-        tname = this.GetTypeKind(nsType) + " " + tname;
-      if ((formattingOptions & NameFormattingOptions.Visibility) != 0)
-        tname = (nsType.ResolvedType.IsPublic ? "public " : "internal ") + tname;
-      return tname;
+      StringBuilder sb = StringBuilderCache.Acquire();
+
+      AppendNamespaceTypeName(sb, nsType, formattingOptions);
+
+      return StringBuilderCache.GetStringAndRelease(sb);
     }
 
     /// <summary>
@@ -2869,17 +3378,45 @@ namespace Microsoft.Cci {
       Contract.Requires(unitNamespace != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
-      INestedUnitNamespaceReference/*?*/ nestedUnitNamespace = unitNamespace as INestedUnitNamespaceReference;
-      if (nestedUnitNamespace != null) {
-        if (nestedUnitNamespace.ContainingUnitNamespace is IRootUnitNamespaceReference || (formattingOptions & NameFormattingOptions.OmitContainingNamespace) != 0) {
-          if ((formattingOptions & NameFormattingOptions.UseGlobalPrefix) != 0)
-            return "global::"+nestedUnitNamespace.Name.Value;
-          else
-            return nestedUnitNamespace.Name.Value;
-        } else
-          return this.GetNamespaceName(nestedUnitNamespace.ContainingUnitNamespace, formattingOptions) + "." + nestedUnitNamespace.Name.Value;
-      }
-      return string.Empty;
+      StringBuilder sb = StringBuilderCache.Acquire();
+
+      AppendNamespaceName(sb, unitNamespace, formattingOptions);
+
+      return StringBuilderCache.GetStringAndRelease(sb);
+    }
+
+    /// <summary />
+    protected StringBuilder AppendNestedTypeName(StringBuilder sb, INestedTypeReference nestedType, NameFormattingOptions formattingOptions)
+    {
+        Contract.Requires(nestedType != null);
+        Contract.Ensures(Contract.Result<StringBuilder>() != null);
+
+        if ((formattingOptions & NameFormattingOptions.Visibility) != 0)
+            sb.Append(this.GetVisibility(nestedType.ResolvedType)).Append(' ');
+
+        if ((formattingOptions & NameFormattingOptions.MemberKind) != 0)
+            sb.Append(this.GetTypeKind(nestedType)).Append(' ');
+        
+        if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0)
+        {
+            char delim = ((formattingOptions & NameFormattingOptions.UseReflectionStyleForNestedTypeNames) == 0) ? '.' : '+';
+            
+            this.AppendTypeName(sb, nestedType.ContainingType, formattingOptions & ~(NameFormattingOptions.MemberKind | NameFormattingOptions.Visibility | NameFormattingOptions.TypeConstraints));;
+            sb.Append(delim);
+        }
+        
+        var tname = nestedType.Name.Value;
+        if ((formattingOptions & NameFormattingOptions.EscapeKeyword) != 0) tname = this.EscapeKeyword(tname);
+
+        if ((formattingOptions & NameFormattingOptions.SupressAttributeSuffix) != 0 &&
+        AttributeHelper.IsAttributeType(nestedType.ResolvedType) & tname.EndsWith("Attribute", StringComparison.Ordinal))
+            sb.Append(tname, 0, tname.Length - 9);
+        else
+            sb.Append(tname);
+
+        AppendGenericParametersIfNeeded(sb, nestedType, nestedType.GenericParameterCount, formattingOptions);
+        
+        return sb;
     }
 
     /// <summary>
@@ -2890,21 +3427,11 @@ namespace Microsoft.Cci {
       Contract.Requires(nestedType != null);
       Contract.Ensures(Contract.Result<string>() != null);
 
-      var tname = nestedType.Name.Value;
-      if ((formattingOptions & NameFormattingOptions.EscapeKeyword) != 0) tname = this.EscapeKeyword(tname);
-      if ((formattingOptions & NameFormattingOptions.SupressAttributeSuffix) != 0 &&
-      AttributeHelper.IsAttributeType(nestedType.ResolvedType) & tname.EndsWith("Attribute", StringComparison.Ordinal))
-        tname = tname.Substring(0, tname.Length-9);
-      tname = this.AddGenericParametersIfNeeded(nestedType, nestedType.GenericParameterCount, formattingOptions, tname);
-      if ((formattingOptions & NameFormattingOptions.OmitContainingType) == 0) {
-        string delim = ((formattingOptions & NameFormattingOptions.UseReflectionStyleForNestedTypeNames) == 0) ? "." : "+";
-        tname = this.GetTypeName(nestedType.ContainingType, formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.Visibility|NameFormattingOptions.TypeConstraints)) + delim + tname;
-      }
-      if ((formattingOptions & NameFormattingOptions.MemberKind) != 0)
-        tname = this.GetTypeKind(nestedType) + " " + tname;
-      if ((formattingOptions & NameFormattingOptions.Visibility) != 0)
-        tname = this.GetVisibility(nestedType.ResolvedType) + " " + tname;
-      return tname;
+      StringBuilder sb = StringBuilderCache.Acquire();
+
+      AppendNestedTypeName(sb, nestedType, formattingOptions);
+      
+      return StringBuilderCache.GetStringAndRelease(sb);
     }
 
     /// <summary>
@@ -2917,16 +3444,9 @@ namespace Microsoft.Cci {
 
       return this.GetTypeName(pointerType.TargetType, formattingOptions) + "*";
     }
-
-    /// <summary>
-    /// Returns a C#-like string that corresponds to the given type definition and that conforms to the specified formatting options.
-    /// </summary>
-    [Pure]
-    public virtual string GetTypeName(ITypeReference type, NameFormattingOptions formattingOptions) {
-      Contract.Requires(type != null);
-      Contract.Ensures(Contract.Result<string>() != null);
-
-      if (type is Dummy) return "Microsoft.Cci.DummyTypeReference";
+    
+    private string CheckIfKeyword(ITypeReference type, NameFormattingOptions formattingOptions)
+    {
       if ((formattingOptions & NameFormattingOptions.UseTypeKeywords) != 0) {
         switch (type.TypeCode) {
           case PrimitiveTypeCode.Boolean: return "bool";
@@ -2944,31 +3464,78 @@ namespace Microsoft.Cci {
           case PrimitiveTypeCode.UInt8: return "byte";
           case PrimitiveTypeCode.Void: return "void";
           case PrimitiveTypeCode.NotPrimitive:
-            if (TypeHelper.TypesAreEquivalent(type, type.PlatformType.SystemDecimal)) return "decimal";
-            if (TypeHelper.TypesAreEquivalent(type, type.PlatformType.SystemObject)) return "object";
+            if (TypeHelper.TypesAreEquivalent(type, type.PlatformType.SystemDecimal, resolveTypes:false)) return "decimal";
+            if (TypeHelper.TypesAreEquivalent(type, type.PlatformType.SystemObject, resolveTypes:false)) return "object";
             break;
         }
       }
+      return null;
+    }
+
+    /// <summary />
+    public virtual StringBuilder AppendTypeName(StringBuilder sb, ITypeReference type, NameFormattingOptions formattingOptions)
+    {
+      string keyword = CheckIfKeyword(type, formattingOptions);
+      if (keyword != null)
+      {
+        sb.Append(keyword);
+        return sb;
+      }
+
+      INestedTypeReference/*?*/ ntTypeDef = type as INestedTypeReference;
+      if (ntTypeDef != null) return AppendNestedTypeName(sb, ntTypeDef, formattingOptions);
+
+      INamespaceTypeReference/*?*/ nsTypeDef = type as INamespaceTypeReference;
+      if (nsTypeDef != null) return AppendNamespaceTypeName(sb, nsTypeDef, formattingOptions);
+
+      sb.Append(GetTypeName(type, formattingOptions));
+
+      return sb;
+    }
+    
+    /// <summary>
+    /// Returns a C#-like string that corresponds to the given type definition and that conforms to the specified formatting options.
+    /// </summary>
+    [Pure]
+    public virtual string GetTypeName(ITypeReference type, NameFormattingOptions formattingOptions) {
+      Contract.Requires(type != null);
+      Contract.Ensures(Contract.Result<string>() != null);
+
+      if (type is Dummy) return "Microsoft.Cci.DummyTypeReference";
+      
+      string keyword = CheckIfKeyword(type, formattingOptions);
+      if (keyword != null) return keyword;
+
       IArrayTypeReference/*?*/ arrayType = type as IArrayTypeReference;
       if (arrayType != null) return this.GetArrayTypeName(arrayType, formattingOptions);
+
       IFunctionPointerTypeReference/*?*/ functionPointerType = type as IFunctionPointerTypeReference;
       if (functionPointerType != null) return this.GetFunctionPointerTypeName(functionPointerType, formattingOptions);
+
       IGenericTypeParameterReference/*?*/ genericTypeParam = type as IGenericTypeParameterReference;
       if (genericTypeParam != null) return this.GetGenericTypeParameterName(genericTypeParam, formattingOptions);
+
       IGenericMethodParameterReference/*?*/ genericMethodParam = type as IGenericMethodParameterReference;
       if (genericMethodParam != null) return this.GetGenericMethodParameterName(genericMethodParam, formattingOptions);
+
       IGenericTypeInstanceReference/*?*/ genericInstance = type as IGenericTypeInstanceReference;
       if (genericInstance != null) return this.GetGenericTypeInstanceName(genericInstance, formattingOptions);
+
       INestedTypeReference/*?*/ ntTypeDef = type as INestedTypeReference;
       if (ntTypeDef != null) return this.GetNestedTypeName(ntTypeDef, formattingOptions);
+
       INamespaceTypeReference/*?*/ nsTypeDef = type as INamespaceTypeReference;
       if (nsTypeDef != null) return this.GetNamespaceTypeName(nsTypeDef, formattingOptions);
+
       IPointerTypeReference/*?*/ pointerType = type as IPointerTypeReference;
       if (pointerType != null) return this.GetPointerTypeName(pointerType, formattingOptions);
+
       IManagedPointerTypeReference/*?*/ managedPointerType = type as IManagedPointerTypeReference;
       if (managedPointerType != null) return this.GetManagedPointerTypeName(managedPointerType, formattingOptions);
+
       IModifiedTypeReference/*?*/ modifiedType = type as IModifiedTypeReference;
       if (modifiedType != null) return this.GetModifiedTypeName(modifiedType, formattingOptions);
+
       if (type.ResolvedType != type && !(type.ResolvedType is Dummy)) return this.GetTypeName(type.ResolvedType, formattingOptions);
       return "unknown type: "+type.GetType().ToString();
     }
@@ -3046,16 +3613,21 @@ namespace Microsoft.Cci {
       if ((formattingOptions & NameFormattingOptions.OmitTypeArguments) == 0) {
         // Don't include the type parameters if we are to include the type arguments
         // If formatting for a documentation id, don't use generic type name suffixes.
-        StringBuilder sb = new StringBuilder(this.GetTypeName(genericType, formattingOptions & ~(NameFormattingOptions.TypeParameters | ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0 ? NameFormattingOptions.UseGenericTypeNameSuffix : NameFormattingOptions.None))));
-        if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) sb.Append("{"); else sb.Append("<");
+
+        StringBuilder sb = StringBuilderCache.Acquire();
+
+        AppendTypeName(sb, genericType, formattingOptions & ~(NameFormattingOptions.TypeParameters | ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0 ? NameFormattingOptions.UseGenericTypeNameSuffix : NameFormattingOptions.None)));
+
+        if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) sb.Append('{'); else sb.Append('<');
         bool first = true;
         string delim = ((formattingOptions & NameFormattingOptions.OmitWhiteSpaceAfterListDelimiter) == 0) ? ", " : ",";
         foreach (ITypeReference argument in genericTypeInstance.GenericArguments) {
           if (first) first = false; else sb.Append(delim);
-          sb.Append(this.GetTypeName(argument, formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind)));
+          AppendTypeName(sb, argument, formattingOptions & ~(NameFormattingOptions.MemberKind|NameFormattingOptions.DocumentationIdMemberKind));
         }
-        if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) sb.Append("}"); else sb.Append(">");
-        return sb.ToString();
+        if ((formattingOptions & NameFormattingOptions.FormattingForDocumentationId) != 0) sb.Append('}'); else sb.Append('>');
+        
+        return StringBuilderCache.GetStringAndRelease(sb);
       }
       //If type arguments are not wanted, then type parameters are not going to be welcome either.
       return this.GetTypeName(genericType, formattingOptions&~NameFormattingOptions.TypeParameters);

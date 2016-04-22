@@ -56,8 +56,10 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     class CodeDispatcher : MetadataDispatcher, ICodeVisitor {
 
-      internal object result;
-      internal CodeShallowCopier copier;
+#pragma warning disable 109 // 'new' is not always required, but when compiling into one dll the internal fields of base are in fact hidden.
+      internal new object result;
+      internal new CodeShallowCopier copier;
+#pragma warning restore 109
 
       #region ICodeVisitor Members
 
@@ -1507,8 +1509,10 @@ namespace Microsoft.Cci.MutableCodeModel {
 
     class CodeDispatcher : MetadataDispatcher, ICodeVisitor {
 
-      internal object result;
-      internal CodeDeepCopier copier;
+#pragma warning disable 109 // 'new' is not always required, but when compiling into one dll the internal fields of base are in fact hidden.
+      internal new object result;
+      internal new CodeDeepCopier copier;
+#pragma warning restore 109
 
       #region ICodeVisitor Members
 

@@ -283,7 +283,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     IEnumerable<IMetadataNamedArgument> ICustomAttribute.NamedArguments {
-      get { return IteratorHelper.GetReadonly(this.NamedArguments)??Enumerable<IMetadataNamedArgument>.Empty; }
+      get { return IteratorHelper.  GetReadonly(this.NamedArguments)??Enumerable<IMetadataNamedArgument>.Empty; }
     }
 
     ushort ICustomAttribute.NumberOfNamedArguments {
@@ -404,6 +404,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         containingNamespace = module.UnitNamespaceRoot;
       else
         containingNamespace = this.ParentNamespaceName.Resolve(module);
+      if (containingNamespace == null) return null;
       foreach (var member in containingNamespace.GetMembersNamed(this.Name, false)) {
         var ns = member as IUnitNamespace;
         if (ns != null) return ns;
@@ -418,6 +419,39 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
   internal abstract class TypeName {
 
+    /// <param name="peFileToObjectModel">
+    /// Supplies the "owning file" associated with the current type name resolution operation.
+    /// Every top-level resolution operation conceptually happens in the context of a single
+    /// "owning" file. This file is recorded as the owner of all type reference objects
+    /// generated during resolution. The owning file is stable throughout resolution and is
+    /// therefore forwarded without modification whenever an outer resolution operation invokes
+    /// an inner resolution operation (e.g., when generic instantiation resolution invokes
+    /// resolution of a specific type argument).
+    ///
+    /// The owning file is generally set to whichever file physically contains the serialized
+    /// text block that was parsed in order to generate the current TypeName instance.
+    /// </param>
+    /// <param name="module">
+    /// Supplies a reference to the module that should be used if the GetAsTypeReference
+    /// implementation needs to know which module is "targeted" by the reference being loaded.
+    /// For example, the value of this parameter dictates the module context used during the
+    /// TypeDef table lookup that occurs when a NamespaceTypeName is resolved to an
+    /// ITypeDefinition.
+    ///
+    /// Once specified by the top-level caller, this argument can change at the following points
+    /// in the GetAsTypeReference call tree:
+    ///   o AssemblyQualifiedTypeName::GetAsTypeReference steers the "module" argument to reflect
+    ///     the fact that the targeted module has been overridden by whatever explicit assembly
+    ///     qualifier that was found in the serialized type name.
+    ///   o GenericTypeName::GetAsTypeReference steers the "module" argument to ensure that it
+    ///     matches the "peFileToObjectModel" argument. This has the effect of "escaping" from any
+    ///     explicit assembly qualifier that applied to the current generic type, ensuring that type
+    ///     arguments are resolved against the stable root context that applies to the entire
+    ///     outermost serialized type name production that is being parsed.
+    ///   o If a generated type reference is redirected by the host, NamespaceTypeName::GetAsNominalType
+    ///     steers the "module" argument to ensure that it targets whichever module is targeted by
+    ///     the redirected type reference.
+    /// </param>
     internal abstract ITypeReference/*?*/ GetAsTypeReference(
       PEFileToObjectModel peFileToObjectModel,
       IMetadataReaderModuleReference module
@@ -429,7 +463,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
 
     internal abstract uint GenericParameterCount { get; }
 
-    internal abstract IMetadataReaderNamedTypeReference/*?*/ GetAsNomimalType(
+    internal abstract INamedTypeReference/*?*/ GetAsNomimalType(
       PEFileToObjectModel peFileToObjectModel,
       IMetadataReaderModuleReference module
     );
@@ -440,7 +474,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       return this.GetAsNomimalType(peFileToObjectModel, module);
     }
 
-    internal IMetadataReaderNamedTypeReference GetAsNamedTypeReference(
+    internal INamedTypeReference GetAsNamedTypeReference(
       PEFileToObjectModel peFileToObjectModel, IMetadataReaderModuleReference module
     ) {
       return this.GetAsNomimalType(peFileToObjectModel, module);
@@ -468,36 +502,25 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         this.unmanagledTypeName = name;
     }
 
-    private NamespaceTypeName(INameTable nameTable, NamespaceName/*?*/ namespaceName, IName name, IName unmangledTypeName) {
-      this.NamespaceName = namespaceName;
-      this.Name = name;
-      this.unmanagledTypeName = unmangledTypeName;
-    }
-
     internal override uint GenericParameterCount {
       get { return this.genericParameterCount; }
     }
 
-    internal override IMetadataReaderNamedTypeReference/*?*/ GetAsNomimalType(
+    internal override INamedTypeReference/*?*/ GetAsNomimalType(
       PEFileToObjectModel peFileToObjectModel,
       IMetadataReaderModuleReference module
     ) {
       var typeRef = new NamespaceTypeNameTypeReference(module, this, peFileToObjectModel);
       var redirectedTypeRef = peFileToObjectModel.ModuleReader.metadataReaderHost.Redirect(peFileToObjectModel.Module, typeRef) as INamespaceTypeReference;
       if (redirectedTypeRef != typeRef && redirectedTypeRef != null) {
-        var namespaceName = this.GetNamespaceName(peFileToObjectModel.NameTable, redirectedTypeRef.ContainingUnitNamespace as INestedUnitNamespaceReference);
-        var mangledName = redirectedTypeRef.Name;
-        if (redirectedTypeRef.GenericParameterCount > 0)
-          mangledName = peFileToObjectModel.NameTable.GetNameFor(redirectedTypeRef.Name.Value+"`"+redirectedTypeRef.GenericParameterCount);
-        var redirectedNamespaceTypeName = new NamespaceTypeName(peFileToObjectModel.NameTable, namespaceName, mangledName, redirectedTypeRef.Name);
-        return new NamespaceTypeNameTypeReference(module, redirectedNamespaceTypeName, peFileToObjectModel);
+        return redirectedTypeRef;
       }
       return typeRef;
     }
 
-    private NamespaceName/*?*/ GetNamespaceName(INameTable nameTable, INestedUnitNamespaceReference/*?*/ nestedUnitNamespaceReference) {
+    private static NamespaceName/*?*/ GetNamespaceName(INameTable nameTable, INestedUnitNamespaceReference/*?*/ nestedUnitNamespaceReference) {
       if (nestedUnitNamespaceReference == null) return null;
-      var parentNamespaceName = this.GetNamespaceName(nameTable, nestedUnitNamespaceReference.ContainingUnitNamespace as INestedUnitNamespaceReference);
+      var parentNamespaceName = GetNamespaceName(nameTable, nestedUnitNamespaceReference.ContainingUnitNamespace as INestedUnitNamespaceReference);
       return new NamespaceName(nameTable, parentNamespaceName, nestedUnitNamespaceReference.Name);
     }
 
@@ -567,7 +590,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.genericParameterCount; }
     }
 
-    internal override IMetadataReaderNamedTypeReference/*?*/ GetAsNomimalType(
+    internal override INamedTypeReference/*?*/ GetAsNomimalType(
       PEFileToObjectModel peFileToObjectModel,
       IMetadataReaderModuleReference module
     ) {
@@ -612,8 +635,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       int len = this.GenericArguments.Count;
       var nestedType = nominalType as INestedTypeReference;
       if (nestedType != null) {
-        var parentTemplate = this.GetSpecializedTypeReference(peFileToObjectModel, (INamedTypeReference)nestedType.ContainingType, out argumentUsed, mostNested: false);
-        if (parentTemplate != nestedType.ContainingType)
+        var containingType = (INamedTypeReference)nestedType.ContainingType; // store to a local to prevent re-evaluation
+        var parentTemplate = this.GetSpecializedTypeReference(peFileToObjectModel, containingType, out argumentUsed, mostNested: false);
+        if (parentTemplate != containingType)
           nominalType = new SpecializedNestedTypeReference(nestedType, parentTemplate, peFileToObjectModel.InternFactory);
       }
       var argsToUse = mostNested ? len-argumentUsed : nominalType.GenericParameterCount;
@@ -622,7 +646,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       for (int i = 0; i < argsToUse; ++i)
         genericArgumentsReferences[i] = this.GenericArguments[i+argumentUsed].GetAsTypeReference(peFileToObjectModel, peFileToObjectModel.Module)??Dummy.TypeReference;
       argumentUsed += argsToUse;
-      return new GenericTypeInstanceReference(nominalType, IteratorHelper.GetReadonly(genericArgumentsReferences), peFileToObjectModel.InternFactory);
+      return GenericTypeInstanceReference.GetOrMake(nominalType, IteratorHelper.GetReadonly(genericArgumentsReferences), peFileToObjectModel.InternFactory);
     }
 
   }
@@ -705,7 +729,9 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       }
       if (module.ContainingAssembly.AssemblyIdentity.Equals(this.AssemblyIdentity))
         return this.TypeName.GetAsTypeReference(peFileToObjectModel, module);
-      AssemblyFlags flags = this.Retargetable ? AssemblyFlags.Retargetable : (AssemblyFlags)0;
+      AssemblyFlags flags = (AssemblyFlags)0;
+      if (this.Retargetable) flags |= AssemblyFlags.Retargetable;
+      if (this.AssemblyIdentity.ContainsForeignTypes) flags |= AssemblyFlags.ContainsForeignTypes;
       return this.TypeName.GetAsTypeReference(peFileToObjectModel, new AssemblyReference(peFileToObjectModel, 0, this.AssemblyIdentity, flags));
     }
 
@@ -749,6 +775,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     readonly IName PublicKeyToken;
     readonly IName Culture;
     readonly IName neutral;
+    readonly IName ContentType;
+    readonly IName WindowsRuntime;
     int CurrentIndex;
     TypeNameTokenKind CurrentTypeNameTokenKind;
     IName CurrentIdentifierInfo;
@@ -776,17 +804,25 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
     static bool IsEndofIdentifier(
       char c,
+      bool honorPunctuation,
       bool assemblyName
     ) {
-      if (c == '[' || c == ']' || c == '*' || c == '+' || c == ',' || c == '&' || c == ' ' || char.IsWhiteSpace(c)) {
+      if (c == '[' || c == ']' || c == '*' || c == ',' || c == '&' || c == ' ' || char.IsWhiteSpace(c)) {
         return true;
+      }
+      if (c == '+') {
+        return honorPunctuation;
       }
       if (assemblyName) {
         if (c == '=')
           return true;
       } else {
-        if (c == '.')
-          return true;
+        if (c == '.') {
+          // '.' characters are embedded in type names synthesized for classes created for async methods.
+          // The method name appears in the class name, which makes ".ctor" (and maybe "..ctor"?) possible
+          // to find within class names. The method name is nested within '<' and '>' characters.
+          return honorPunctuation;
+        }
       }
       return false;
     }
@@ -905,11 +941,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
           goto default;
         default: {
             int currIndex = this.CurrentIndex;
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = StringBuilderCache.Acquire();
             string name = this.TypeName;
+            int arrowNesting = 0;
             while (currIndex < this.Length) {
               char c = name[currIndex];
-              if (TypeNameParser.IsEndofIdentifier(c, assemblyName))
+              if (TypeNameParser.IsEndofIdentifier(c, arrowNesting <= 0, assemblyName))
                 break;
               if (c == '\\') {
                 currIndex++;
@@ -922,10 +959,17 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
               } else {
                 sb.Append(c);
                 currIndex++;
+                if (c == '<') {
+                  // In naming stuff synthesized for async, the C# compiler encloses name text that can contain punctuation like '.' and '+' characters in '<' and '>'.
+                  arrowNesting++;
+                }
+                else if (c == '>') {
+                  arrowNesting--;
+                }
               }
             }
             this.CurrentIndex = currIndex;
-            this.CurrentIdentifierInfo = this.NameTable.GetNameFor(sb.ToString());
+            this.CurrentIdentifierInfo = this.NameTable.GetNameFor(StringBuilderCache.GetStringAndRelease(sb));
             this.CurrentTypeNameTokenKind = TypeNameTokenKind.Identifier;
             break;
           }
@@ -949,6 +993,8 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.PublicKeyToken = nameTable.GetNameFor("PublicKeyToken");
       this.Culture = nameTable.GetNameFor("Culture");
       this.neutral = nameTable.GetNameFor("neutral");
+      this.ContentType = nameTable.GetNameFor("ContentType");
+      this.WindowsRuntime = nameTable.GetNameFor("WindowsRuntime");
       this.CurrentIdentifierInfo = nameTable.EmptyName;
       this.NextToken(false);
     }
@@ -1082,6 +1128,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       byte[] publicKeyToken = TypeCache.EmptyByteArray;
       bool cultureRead = false;
       bool retargetableRead = false;
+      bool containsForeignTypes = false;
       IName culture = this.NameTable.EmptyName;
       while (this.CurrentTypeNameTokenKind == TypeNameTokenKind.Comma) {
         this.NextToken(true);
@@ -1119,6 +1166,12 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
           if (!this.ScanYesNo(out retargetable))
             return null;
           retargetableRead = true;
+        } else if (infoIdent.UniqueKeyIgnoringCase == this.ContentType.UniqueKeyIgnoringCase) {
+            this.NextToken(true);
+            if (this.CurrentIdentifierInfo.UniqueKeyIgnoringCase == this.WindowsRuntime.UniqueKeyIgnoringCase)
+            {
+                containsForeignTypes = true;
+            }
         } else {
           //  TODO: Error: Identifier in assembly name.
           while (this.CurrentTypeNameTokenKind != TypeNameTokenKind.Comma && this.CurrentTypeNameTokenKind != TypeNameTokenKind.CloseBracket && this.CurrentTypeNameTokenKind != TypeNameTokenKind.EOS) {
@@ -1128,7 +1181,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
         this.NextToken(true);
       }
       //  TODO: PublicKey also is possible...
-      return new AssemblyIdentity(assemblyName, culture.Value, version, publicKeyToken, string.Empty);
+      return new AssemblyIdentity(assemblyName, culture.Value, version, publicKeyToken, string.Empty, containsForeignTypes);
     }
     TypeName/*?*/ ParseTypeNameWithPossibleAssemblyName() {
       TypeName/*?*/ tn = this.ParseFullName();
@@ -1149,6 +1202,19 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       if (tn == null || this.CurrentTypeNameTokenKind != TypeNameTokenKind.EOS)
         return null;
       return tn;
+    }
+  }
+
+  internal class TypeNameDeserializer {
+    private readonly PEFileToObjectModel fileToUseAsDeserializationContext;
+    internal TypeNameDeserializer(PEFileToObjectModel fileToUseAsDeserializationContext) {
+      this.fileToUseAsDeserializationContext = fileToUseAsDeserializationContext;
+    }
+    internal ITypeReference TryGetDeserializedTypeReference(string serializedTypeName) {
+      PEFileToObjectModel deserializationContext = this.fileToUseAsDeserializationContext;
+      TypeNameParser typeNameParser = new TypeNameParser(deserializationContext.NameTable, serializedTypeName);
+      TypeName typeName = typeNameParser.ParseTypeName();
+      return (typeName == null) ? null : typeName.GetAsTypeReference(deserializationContext, deserializationContext.ContainingAssembly);
     }
   }
 }

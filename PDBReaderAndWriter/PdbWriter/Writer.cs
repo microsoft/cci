@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Cci;
 using System.Diagnostics.Contracts;
+using System.Runtime.InteropServices;
 
 //^ using Microsoft.Contracts;
 
@@ -42,17 +43,7 @@ namespace Microsoft.Cci {
 
     private void Close() {
       if (this.symWriter != null)
-      {
-        try
-        {
-          this.symWriter.Close();
-        }
-        catch
-        {
-          // TODO: warn about failed pdb write. 
-        }
-      }
-       
+        this.symWriter.Close();
     }
 
     public void CloseMethod(uint offset) {
@@ -162,19 +153,24 @@ namespace Microsoft.Cci {
     private ISymUnmanagedDocumentWriter GetDocumentWriterFor(IPrimarySourceDocument document) {
       Contract.Requires(document != null);
       Contract.Requires(document != SourceDummy.PrimarySourceDocument);
-      
+
+      string filename = document.Location;
       ISymUnmanagedDocumentWriter writer;
-      if (!this.documentMap.TryGetValue(document, out writer)) {
+      if (!this.documentMap.TryGetValue(filename, out writer)) {
         Guid language = document.Language;
         Guid vendor = document.LanguageVendor;
         Guid type = document.DocumentType;
-        writer = this.SymWriter.DefineDocument(document.Location, ref language, ref vendor, ref type);
-        this.documentMap.Add(document, writer);
+
+        writer = this.SymWriter.DefineDocument(filename, ref language, ref vendor, ref type);
+        if (document.Checksum != null)
+          writer.SetCheckSum(document.ChecksumAlgorithm, (uint)document.Checksum.Length, document.Checksum);
+
+        this.documentMap.Add(filename, writer);
       }
       return writer;
     }
 
-    Dictionary<IPrimarySourceDocument, ISymUnmanagedDocumentWriter> documentMap = new Dictionary<IPrimarySourceDocument, ISymUnmanagedDocumentWriter>();
+    Dictionary<string, ISymUnmanagedDocumentWriter> documentMap = new Dictionary<string, ISymUnmanagedDocumentWriter>();
 
     public unsafe PeDebugDirectory GetDebugDirectory() {
       ImageDebugDirectory debugDir = new ImageDebugDirectory();
@@ -211,10 +207,20 @@ namespace Microsoft.Cci {
       this.SymWriter.SetUserEntryPoint(entryMethodToken);
     }
 
+    const uint CLSCTX_INPROC_SERVER = 1;
+    static Guid CLSID_CorSymWriter_SxS = new Guid("0AE2DEB0-F901-478B-BB9F-881EE8066788");
+    static Guid IID_ISymUnmanagedWriter2 = new Guid("0B97726E-9E6D-4f05-9A26-424022093CAA");
+
+    [DllImport("ole32.dll", PreserveSig = false)]
+    [return: MarshalAs(UnmanagedType.Interface)] 
+    static extern object CoCreateInstance(ref Guid rclsid, IntPtr pUnkOuter, uint dwClsContext, ref Guid riid);
+
     public void SetMetadataEmitter(object metadataEmitter) {
-      Type t = Type.GetTypeFromProgID("CorSymWriter_SxS", false);
-      if (t != null) {
-        this.symWriter = (ISymUnmanagedWriter2)Activator.CreateInstance(t);
+      object symWriterObject = CoCreateInstance(
+          ref CLSID_CorSymWriter_SxS, IntPtr.Zero, CLSCTX_INPROC_SERVER, ref IID_ISymUnmanagedWriter2);
+
+      if (symWriterObject != null) {
+        this.symWriter = (ISymUnmanagedWriter2)symWriterObject;
         this.symWriter.Initialize(metadataEmitter, this.fileName, null, true);
         if (this.emitTokenSourceInfo)
           this.symWriter5 = this.symWriter as ISymUnmanagedWriter5;

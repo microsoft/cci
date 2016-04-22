@@ -216,6 +216,7 @@ namespace Microsoft.Cci {
           Assembly/*?*/ assembly = peFileToObjectModel.Module as Assembly;
           //^ assert assembly != null;
           this.LoadedModule(assembly);
+          CciEventSource.Log.ModuleOpened(assembly, assemblyIdentity, binaryDocument.Length);
           this.OpenMemberModules(binaryDocument, assembly);
           return assembly;
         } catch (MetadataReaderException) {
@@ -265,6 +266,7 @@ namespace Microsoft.Cci {
         try {
           PEFileToObjectModel peFileToObjectModel = new PEFileToObjectModel(this, peFileReader, moduleIdentity, null, this.metadataReaderHost.PointerSize);
           this.LoadedModule(peFileToObjectModel.Module);
+          CciEventSource.Log.ModuleOpened(peFileToObjectModel.Module, moduleIdentity, binaryDocument.Length);
           Assembly/*?*/ assembly = peFileToObjectModel.Module as Assembly;
           if (assembly != null) {
             this.OpenMemberModules(binaryDocument, assembly);
@@ -346,6 +348,7 @@ namespace Microsoft.Cci {
         try {
           PEFileToObjectModel peFileToObjectModel = new PEFileToObjectModel(this, peFileReader, moduleIdentity, null, this.metadataReaderHost.PointerSize);
           this.LoadedModule(peFileToObjectModel.Module);
+          CciEventSource.Log.ModuleOpened(peFileToObjectModel.Module, moduleIdentity, binaryDocument.Length);
           return peFileToObjectModel.Module;
         } catch (MetadataReaderException) {
           //  Error...
@@ -435,7 +438,7 @@ namespace Microsoft.Cci {
           publicKeyTokenArray = UnitHelper.ComputePublicKeyToken(publicKeyArray);
         }
       }
-      return new AssemblyIdentity(assemblyName, cultureName, version, publicKeyTokenArray, peFileReader.BinaryDocumentMemoryBlock.BinaryDocument.Location);
+      return new AssemblyIdentity(assemblyName, cultureName, version, publicKeyTokenArray, peFileReader.BinaryDocumentMemoryBlock.BinaryDocument.Location, assemblyRow.Flags.HasFlag(MetadataReader.PEFileFlags.AssemblyFlags.ContainsForeignTypes));
     }
 
     /// <summary>

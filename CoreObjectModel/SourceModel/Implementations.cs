@@ -141,8 +141,12 @@ namespace Microsoft.Cci {
     /// The events are raised on different thread.
     /// </summary>
     public void ReportEdits(EditEventArgs editEventArguments) {
+#if !COREFX_SUBSET
       if (this.Edits != null)
         ThreadPool.QueueUserWorkItem(this.ReportEditsUsingDifferentThread, editEventArguments);
+#else
+      throw new NotImplementedException();
+#endif
     }
 
     /// <summary>
@@ -162,8 +166,12 @@ namespace Microsoft.Cci {
     /// The events are raised on different thread.
     /// </summary>
     public void ReportSymbolTableEdits(EditEventArgs editEventArguments) {
+#if !COREFX_SUBSET
       if (this.SymbolTableEdits != null)
         ThreadPool.QueueUserWorkItem(this.ReportSymbolTableEditsUsingDifferentThread, editEventArguments);
+#else
+      throw new NotImplementedException();
+#endif
     }
 
     /// <summary>
@@ -325,7 +333,7 @@ namespace Microsoft.Cci {
       try {
         localizedString = rm.GetString(this.messageKey);
       } catch (System.Resources.MissingManifestResourceException) {
-#if !COMPACTFX
+#if !COMPACTFX && !COREFX_SUBSET
       } catch (System.Resources.MissingSatelliteAssemblyException) {
 #endif
       }
@@ -1379,6 +1387,20 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
+    /// A Guid that identifies the checksum algorithm used. Typically used by a debugger to find a matching source file.
+    /// </summary>
+    public abstract Guid ChecksumAlgorithm {
+        get;
+    }
+
+    /// <summary>
+    /// The checksum value for this source document. Typically used by a debugger to find a matching source file.
+    /// </summary>
+    public abstract byte[] Checksum {
+        get;
+    }
+
+    /// <summary>
     /// The length of the source string.
     /// </summary>
     public override int Length {
@@ -2014,6 +2036,20 @@ namespace Microsoft.Cci {
     /// </summary>
     public Guid LanguageVendor {
       get { return this.WrappedDocument.LanguageVendor; }
+    }
+
+    /// <summary>
+    /// A Guid that identifies the checksum algorithm used. Typically used by a debugger to find a matching source file.
+    /// </summary>
+    public Guid ChecksumAlgorithm {
+        get { return this.WrappedDocument.ChecksumAlgorithm; }
+    }
+
+    /// <summary>
+    /// The checksum value for this source document. Typically used by a debugger to find a matching source file.
+    /// </summary>
+    public byte[] Checksum {
+        get { return this.WrappedDocument.Checksum; }
     }
 
     #endregion

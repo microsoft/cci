@@ -122,6 +122,14 @@ namespace Microsoft.Cci {
       get { return Guid.Empty; }
     }
 
+    Guid IPrimarySourceDocument.ChecksumAlgorithm {
+        get { return Guid.Empty; }
+    }
+
+    byte[] IPrimarySourceDocument.Checksum {
+        get { return null; }
+    }
+
     IPrimarySourceLocation IPrimarySourceDocument.PrimarySourceLocation {
       get { return SourceDummy.PrimarySourceLocation; }
     }
