@@ -1,10 +1,5 @@
-// ==++==
-// 
-//   Copyright (c) Microsoft Corporation.  All rights reserved.
-// 
-// ==--==
-// Warning: Automatically generated file. DO NOT EDIT
-// Generated at Tuesday, October 09, 2007 9:54:09 AM
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
 [assembly: AssemblyVersion("0.0.0.2")]
