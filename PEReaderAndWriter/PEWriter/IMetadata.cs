@@ -4,7 +4,6 @@
 #if !COMPACTFX
 using System;
 using System.Runtime.InteropServices;
-using System.Security;
 using System.Text;
 
 //^ using Microsoft.Contracts;
@@ -160,8 +159,7 @@ namespace Microsoft.Cci.PeWriterInternal {
   }
 
   //The emit interface is only needed because the unmanaged pdb writer does a QueryInterface for it and fails if the wrapper does not implement it.
-  //None of its methods are called.
-  [SuppressUnmanagedCodeSecurity]
+  //None of its methods are called.  
   internal class MetadataWrapper : IMetaDataEmit, IMetaDataImport {
     PeWriter writer;
 
