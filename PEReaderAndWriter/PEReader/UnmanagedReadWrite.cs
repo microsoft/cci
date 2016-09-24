@@ -930,57 +930,41 @@ namespace Microsoft.Cci.UtilityDataStructures {
       }
       return (OperationCode)result;
     }
-
-    private string NewStringFromASCIIBytes(byte* pBytes, int byteCount) {
+        internal string ReadASCIIWithSize(int byteCount)
+        {
+            if (checked(this.CurrentPointer - this.Buffer + byteCount) > this.Length)
+                throw new ArgumentOutOfRangeException();
 #if HOST_CORERT
-      // @TODO: Switch to .NET 4.6 API: Encoding.ASCII.GetString(pBytes, byteCount);
-      byte[] byteArray = new byte[byteCount];
-      for (int i = 0; i < byteCount; i++)
-          byteArray[i] = pBytes[i];
-
-      return Encoding.ASCII.GetString(byteArray);
+          byte* pb = this.CurrentPointer;
+          char[] buffer = new char[byteCount];
+          int j = 0;
+          fixed (char* uBuffer = buffer) {
+            char* iterBuffer = uBuffer;
+            char* endBuffer = uBuffer + byteCount;
+            while (iterBuffer < endBuffer) {
+              byte b = *pb++;
+              if (b == 0)
+                break;
+              *iterBuffer++ = (char)b;
+              j++;
+            }
+          }
+          this.CurrentPointer += byteCount;
+          return new String(buffer, 0, j);
 #else
-      return new string((sbyte*)pBytes, 0, byteCount, Encoding.ASCII);
+            sbyte* pStart = (sbyte*)this.CurrentPointer;
+            sbyte* pEnd = pStart + byteCount;
+            sbyte* pIter = pStart;
+            while (*pIter != '\0' && pIter < pEnd)
+                pIter++;
+            int cbString = (int)(pIter - pStart);
+            string retStr = new string(pStart, 0, cbString, Encoding.ASCII);
+            this.CurrentPointer += byteCount;
+            return retStr;
 #endif
-    }
-
-    internal string ReadASCIIWithSize(
-      int byteCount
-    ) {
-      if (checked(this.CurrentPointer - this.Buffer + byteCount) > this.Length)
-        throw new ArgumentOutOfRangeException();
-#if !COMPACTFX && !__MonoCS__
-      sbyte* pStart = (sbyte*)this.CurrentPointer;
-      sbyte* pEnd = pStart + byteCount;
-      sbyte* pIter = pStart;
-      while (*pIter != '\0' && pIter < pEnd)
-        pIter++;
-
-      int cbString = (int)(pIter - pStart);
-      string retStr = NewStringFromASCIIBytes((byte*)pStart, cbString);
-      this.CurrentPointer += byteCount;
-      return retStr;
-#else
-      byte* pb = this.CurrentPointer;
-      char[] buffer = new char[byteCount];
-      int j = 0;
-      fixed (char* uBuffer = buffer) {
-        char* iterBuffer = uBuffer;
-        char* endBuffer = uBuffer + byteCount;
-        while (iterBuffer < endBuffer) {
-          byte b = *pb++;
-          if (b == 0)
-            break;
-          *iterBuffer++ = (char)b;
-          j++;
         }
-      }
-      this.CurrentPointer += byteCount;
-      return new String(buffer, 0, j);
-#endif
-    }
 
-    internal string ReadUTF8WithSize(
+        internal string ReadUTF8WithSize(
       int byteCount
     ) {
       if (checked(this.CurrentPointer - this.Buffer + byteCount) > this.Length)

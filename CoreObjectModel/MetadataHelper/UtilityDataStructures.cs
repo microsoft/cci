@@ -8,6 +8,8 @@ using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci.UtilityDataStructures {
 
+public delegate TOutput Converter<in TInput, out TOutput>(TInput input);
+
 #pragma warning disable 1591
   public static class HashHelper {
     public static uint HashInt1(uint key) {
@@ -3736,8 +3738,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
 
   /// <summary>
   /// Functional lists. null represents the empty list.
-  /// </summary>
-  [Serializable]
+  /// </summary>  
   public class FList<T>
   {
 
