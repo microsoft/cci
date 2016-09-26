@@ -1,6 +1,5 @@
 ﻿# ILMerge
 
-## IMPORTANT
 ILMerge is a utility that merges multiple .NET assemblies into a single assembly.
 It is freely available for use and is available as a [NuGet package](https://www.nuget.org/packages/ilmerge).
 
