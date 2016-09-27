@@ -8,6 +8,13 @@ using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci.UtilityDataStructures {
 
+/// <summary>
+/// Delegate used by FList.Map to convert elements of the list from one type to another.
+/// </summary>
+/// <typeparam name="TInput">Domain of the function represented by this delegate.</typeparam>
+/// <typeparam name="TOutput">Range of the function represented by this delegate.</typeparam>
+/// <param name="input">The value of the input list to be converted to the type of the output list.</param>
+/// <returns></returns>
 public delegate TOutput Converter<in TInput, out TOutput>(TInput input);
 
 #pragma warning disable 1591
