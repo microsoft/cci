@@ -5066,8 +5066,8 @@ namespace Microsoft.Cci.PeWriterInternal {
     }
 #else
     public bool Equals(byte[] x, byte[] y) {
-      long n = x.LongLength;
-      if (n != y.LongLength) return false;
+      long n = x.Length;
+      if (n != y.Length) return false;
       for (long i = 0; i < n; i++) {
         if (x[i] != y[i]) return false;
       }
@@ -5076,7 +5076,7 @@ namespace Microsoft.Cci.PeWriterInternal {
 
     public int GetHashCode(byte[] x) {
       int hcode = 1;
-      for (long i = 0, n = x.LongLength; i < n; i++)
+      for (long i = 0, n = x.Length; i < n; i++)
         hcode = hcode * 17 + x[i];
       return hcode;
     }

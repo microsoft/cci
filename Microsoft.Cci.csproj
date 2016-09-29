@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
-  <Import Project="..\dir.settings.targets"  Condition="Exists('..\dir.settings.targets')" />
+  <Import Project="..\dir.settings.targets" Condition="Exists('..\dir.settings.targets')" />
   <PropertyGroup>
     <!-- Make sure building in VS get chk by default -->
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -15,7 +15,11 @@
     <NoWarn>$(NoWarn);649</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug_GitHub|AnyCPU' ">
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkIdentifier>.NETStandard</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v1.3</TargetFrameworkVersion>
+    <DefineConstants>$(DefineConstants);NO_STRING_CTOR_FROM_PTR_AND_ENCODING</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <NoWarn>$(NoWarn);618</NoWarn>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -25,7 +29,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release_GitHub|AnyCPU' ">
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkIdentifier>.NETStandard</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v1.3</TargetFrameworkVersion>
+    <DefineConstants>$(DefineConstants);NO_STRING_CTOR_FROM_PTR_AND_ENCODING</DefineConstants>
+    <NoWarn>$(NoWarn);618</NoWarn>
+    <NoStdLib>true</NoStdLib>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -41,7 +49,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|amd64' ">
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -49,8 +57,16 @@
   <Import Project=".\Microsoft.Cci.Sources.targets" />
   <Import Project="..\dir.targets" Condition="Exists('..\dir.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" Condition="!Exists('..\dir.targets')" />
+  <PropertyGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETStandard'">
+    <!-- Workaround to let us target .NETStandard on downlevel VS. Prevents errors about missing targeting pack. -->
+    <_TargetFrameworkDirectories>$(MSBuildThisFileDirectory)</_TargetFrameworkDirectories>
+    <_FullFrameworkReferenceAssemblyPaths>$(MSBuildThisFileDirectory)</_FullFrameworkReferenceAssemblyPaths>
+  </PropertyGroup>
   <ItemGroup>
     <!-- We want the sources to show up nicely in VS-->
     <VSSources Include="@(Compile)" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="project.json" />
   </ItemGroup>
 </Project>

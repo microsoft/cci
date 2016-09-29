@@ -61,7 +61,7 @@ namespace Microsoft.Cci {
       Contract.Requires(metadataHost != null);
       Contract.Ensures(Contract.Result<AssemblyIdentity>() != null);
 
-      string culture = assemblyName.CultureInfo == null || assemblyName.CultureInfo == System.Globalization.CultureInfo.InvariantCulture ? "neutral" : assemblyName.CultureInfo.ToString();
+      string culture = String.IsNullOrEmpty(assemblyName.CultureName) ? "neutral" : assemblyName.CultureName;
       string name = assemblyName.Name;
       if (name == null) name = string.Empty;
       Version version = assemblyName.Version;
