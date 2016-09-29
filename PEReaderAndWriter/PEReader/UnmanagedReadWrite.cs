@@ -934,7 +934,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
         {
             if (checked(this.CurrentPointer - this.Buffer + byteCount) > this.Length)
                 throw new ArgumentOutOfRangeException();
-#if HOST_CORERT
+#if HOST_CORERT || NO_STRING_CTOR_FROM_PTR_AND_ENCODING
           byte* pb = this.CurrentPointer;
           char[] buffer = new char[byteCount];
           int j = 0;
