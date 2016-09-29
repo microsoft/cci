@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{82A1456C-03C6-43CF-A268-5D16B48644C6}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <OutputPath>bin</OutputPath>	
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <AssemblyName>Microsoft.Cci</AssemblyName>    
+    <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v1.0</TargetFrameworkVersion>
+    <BaseNuGetRuntimeIdentifier>win7</BaseNuGetRuntimeIdentifier>
+    <NoStdLib>true</NoStdLib>
+    <NoWarn>$(NoWarn);1701</NoWarn>
+    <FileAlignment>512</FileAlignment>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>TRACE;LITTLEENDIAN;COREFX_SUBSET;MERGED_DLL</DefineConstants>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <ExternalReferencePath>$(MSBuildThisFileDirectory)..\..\..\ExternalAPIs\NetFx\netstandard</ExternalReferencePath>	
+  </PropertyGroup>  
+  
+  <ItemGroup>   
+    <ReferencePath Include="$(ExternalReferencePath)\Microsoft.CSharp.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\Microsoft.VisualBasic.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\Microsoft.Win32.Primitives.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.AppContext.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Buffers.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Collections.Concurrent.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Collections.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Collections.Immutable.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Collections.NonGeneric.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.ComponentModel.Annotations.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.ComponentModel.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.ComponentModel.Primitives.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.ComponentModel.TypeConverter.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Console.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Diagnostics.Contracts.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Diagnostics.Debug.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Diagnostics.DiagnosticSource.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Diagnostics.Process.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Diagnostics.Tools.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Diagnostics.Tracing.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Dynamic.Runtime.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Globalization.Calendars.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Globalization.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Globalization.Extensions.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.IO.Compression.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.IO.Compression.ZipFile.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.IO.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.IO.FileSystem.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.IO.FileSystem.Primitives.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.IO.FileSystem.Watcher.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.IO.MemoryMappedFiles.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.IO.UnmanagedMemoryStream.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Linq.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Linq.Expressions.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Linq.Parallel.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Linq.Queryable.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Net.Http.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Net.NameResolution.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Net.Primitives.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Net.Requests.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Net.Security.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Net.Sockets.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Net.WebHeaderCollection.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Numerics.Vectors.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.ObjectModel.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Reflection.DispatchProxy.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Reflection.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Reflection.Extensions.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Reflection.Metadata.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Reflection.Primitives.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Reflection.TypeExtensions.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Resources.Reader.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Resources.ResourceManager.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Runtime.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Runtime.Extensions.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Runtime.Handles.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Runtime.InteropServices.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Runtime.InteropServices.RuntimeInformation.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Runtime.Numerics.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Security.Cryptography.Algorithms.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Security.Cryptography.Encoding.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Security.Cryptography.Primitives.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Security.Cryptography.X509Certificates.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Security.Principal.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Text.Encoding.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Text.Encoding.Extensions.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Text.RegularExpressions.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Threading.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Threading.Tasks.Dataflow.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Threading.Tasks.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Threading.Tasks.Extensions.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Threading.Tasks.Parallel.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Threading.Thread.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Threading.ThreadPool.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Threading.Timer.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Xml.ReaderWriter.dll"/>
+    <ReferencePath Include="$(ExternalReferencePath)\System.Xml.XDocument.dll"/>
+  </ItemGroup>
+
+
+  <Import Project=".\Microsoft.Cci.Sources.targets" />
+  <Import Project="$(_NTROOT)\Tools\Microsoft.DevDiv.Managed.Compiler.props" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
+  <PropertyGroup>   
+    <_TargetFrameworkDirectories>$(MSBuildThisFileDirectory)</_TargetFrameworkDirectories>
+    <_FullFrameworkReferenceAssemblyPaths>$(MSBuildThisFileDirectory)</_FullFrameworkReferenceAssemblyPaths>
+    <AutoUnifyAssemblyReferences>true</AutoUnifyAssemblyReferences>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+</Project>
