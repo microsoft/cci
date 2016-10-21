@@ -16,7 +16,7 @@
     <NoWarn>$(NoWarn);1701</NoWarn>
     <FileAlignment>512</FileAlignment>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DefineConstants>TRACE;LITTLEENDIAN;COREFX_SUBSET;MERGED_DLL</DefineConstants>
+    <DefineConstants>TRACE;LITTLEENDIAN;COREFX_SUBSET;MERGED_DLL;__MonoCS__</DefineConstants>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <ExternalReferencePath>$(MSBuildThisFileDirectory)..\..\..\ExternalAPIs\NetFx\netstandard</ExternalReferencePath>	
   </PropertyGroup>  
