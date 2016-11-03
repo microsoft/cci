@@ -259,7 +259,7 @@ namespace Microsoft.Cci {
 #endif
     }
 
-    sealed class ReadonlyArrayWrapper<T> : ICollection<T> {
+    sealed class ReadonlyArrayWrapper<T> : ICollection<T>, IReadOnlyList<T> {
 
       internal ReadonlyArrayWrapper(T[] array) {
         Contract.Requires(array != null);
@@ -361,7 +361,11 @@ namespace Microsoft.Cci {
         get { return true; }
       }
 
-      public bool Remove(T item) {
+        public T this[int index] {
+            get { return array[index]; }
+        }
+
+        public bool Remove(T item) {
         throw new InvalidOperationException();
       }
 
