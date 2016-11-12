@@ -251,7 +251,7 @@ namespace Microsoft.Cci.MetadataReader {
     }
 
     /// <summary>
-    /// Return the flag whether we should perform projection. ILHostEnvironment uses that in its Redirect method.
+    /// Return the flag whether we should perform projection.
     /// </summary>
     protected bool ProjectToCLRTypes
     {
