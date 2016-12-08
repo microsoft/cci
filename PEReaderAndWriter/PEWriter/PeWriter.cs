@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Text;
+using Microsoft.Cci.MetadataReader.PEFileFlags;
 using Microsoft.Cci.UtilityDataStructures;
 
 namespace Microsoft.Cci {
@@ -4148,7 +4149,7 @@ namespace Microsoft.Cci {
     }
 
     private void SerializeSignature(ISignature signature, ushort genericParameterCount, IEnumerable<IParameterTypeInformation> extraArgumentTypes, BinaryWriter writer) {
-      byte header = (byte)signature.CallingConvention;
+      byte header = (byte)((byte)signature.CallingConvention & SignatureHeader.SignatureHeaderMask);
       if (signature is IPropertyDefinition) header |= 0x08;
       writer.WriteByte(header);
       if (genericParameterCount > 0) writer.WriteCompressedUInt(genericParameterCount);
