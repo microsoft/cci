@@ -884,7 +884,7 @@ namespace Microsoft.Cci.Immutable {
   /// <summary>
   /// A collection of references to types from the core platform, such as System.Object and System.String.
   /// </summary>
-  public class PlatformType : IPlatformType {
+  public class PlatformType : IPlatformType2 {
 
     /// <summary>
     /// An object that provides a standard abstraction over the applications that host components that provide or consume objects from the metadata model.
@@ -1176,6 +1176,34 @@ namespace Microsoft.Cci.Immutable {
       }
     }
     INamespaceTypeReference/*?*/ systemCollectionsGenericIList;
+
+    /// <summary>
+    /// System.Collections.Generic.IReadOnlyList
+    /// </summary>
+    public INamespaceTypeReference SystemCollectionsGenericIReadOnlyList
+    {
+      get {
+        if (this.systemCollectionsGenericIReadOnlyList == null) {
+          this.systemCollectionsGenericIReadOnlyList = this.CreateReference(this.CoreAssemblyRef, 1, "System", "Collections", "Generic", "IReadOnlyList");
+        }
+        return this.systemCollectionsGenericIReadOnlyList;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemCollectionsGenericIReadOnlyList;
+
+    /// <summary>
+    /// System.Collections.Generic.IReadOnlyCollection
+    /// </summary>
+    public INamespaceTypeReference SystemCollectionsGenericIReadOnlyCollection
+    {
+      get {
+        if (this.systemCollectionsGenericIReadOnlyCollection == null) {
+          this.systemCollectionsGenericIReadOnlyCollection = this.CreateReference(this.CoreAssemblyRef, 1, "System", "Collections", "Generic", "IReadOnlyCollection");
+        }
+        return this.systemCollectionsGenericIReadOnlyCollection;
+      }
+    }
+    INamespaceTypeReference/*?*/ systemCollectionsGenericIReadOnlyCollection;
 
     /// <summary>
     /// System.Collections.ICollection
