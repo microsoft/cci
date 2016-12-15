@@ -4047,6 +4047,23 @@ namespace Microsoft.Cci.Immutable {
         interfaces.Add(new GenericTypeInstanceReference(this.PlatformType.SystemCollectionsGenericIList, argTypes, this.InternFactory));
         interfaces.Add(new GenericTypeInstanceReference(this.PlatformType.SystemCollectionsGenericICollection, argTypes, this.InternFactory));
         interfaces.Add(new GenericTypeInstanceReference(this.PlatformType.SystemCollectionsGenericIEnumerable, argTypes, this.InternFactory));
+        if (version.Major >= 4)
+        {
+          if(this.PlatformType is IPlatformType2)
+          {
+            INamedTypeReference systemCollectionsGenericIReadOnlyList = ((IPlatformType2)this.PlatformType).SystemCollectionsGenericIReadOnlyList;
+            if (!(systemCollectionsGenericIReadOnlyList.ResolvedType is Dummy))
+            {
+              interfaces.Add(new GenericTypeInstanceReference(systemCollectionsGenericIReadOnlyList, argTypes, this.InternFactory));
+            }
+
+            INamedTypeReference systemCollectionsGenericIReadOnlyCollection = ((IPlatformType2)this.PlatformType).SystemCollectionsGenericIReadOnlyCollection;
+            if (!(systemCollectionsGenericIReadOnlyCollection.ResolvedType is Dummy))
+            {
+              interfaces.Add(new GenericTypeInstanceReference(systemCollectionsGenericIReadOnlyCollection, argTypes, this.InternFactory));
+            }
+          }
+        }
       }
       return interfaces.AsReadOnly();
     }

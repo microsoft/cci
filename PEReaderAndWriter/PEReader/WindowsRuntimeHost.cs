@@ -1005,19 +1005,6 @@ namespace Microsoft.Cci.MetadataReader {
     INamespaceTypeReference/*?*/ systemCollectionsGenericIReadOnlyDictionary;
 
     /// <summary>
-    /// System.Collections.Generic.ReadOnlyList
-    /// </summary>
-    public INamespaceTypeReference SystemCollectionsGenericIReadOnlyList {
-      get {
-        if (this.systemCollectionsGenericIReadOnlyList == null) {
-          this.systemCollectionsGenericIReadOnlyList = this.CreateReference(this.SystemRuntime, 1, "System", "Collections", "Generic", "IReadOnlyList");
-        }
-        return this.systemCollectionsGenericIReadOnlyList;
-      }
-    }
-    INamespaceTypeReference/*?*/ systemCollectionsGenericIReadOnlyList;
-
-    /// <summary>
     /// System.Collections.Specialized.INotifyCollectionChanged
     /// </summary>
     public INamespaceTypeReference SystemCollectionsSpecializedINotifyCollectionChanged {
