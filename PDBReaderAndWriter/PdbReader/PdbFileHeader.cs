@@ -3,10 +3,18 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Microsoft.Cci.Pdb {
   internal class PdbFileHeader {
+    private readonly byte[] windowsPdbMagic = new byte[32] {
+                  0x4D, 0x69, 0x63, 0x72, 0x6F, 0x73, 0x6F, 0x66, // "Microsof"
+                  0x74, 0x20, 0x43, 0x2F, 0x43, 0x2B, 0x2B, 0x20, // "t C/C++ "
+                  0x4D, 0x53, 0x46, 0x20, 0x37, 0x2E, 0x30, 0x30, // "MSF 7.00"
+                  0x0D, 0x0A, 0x1A, 0x44, 0x53, 0x00, 0x00, 0x00  // "^^^DS^^^"
+    };
+
     //internal PdbFileHeader(int pageSize) {
     //  this.magic = new byte[32] {
     //            0x4D, 0x69, 0x63, 0x72, 0x6F, 0x73, 0x6F, 0x66, // "Microsof"
@@ -29,6 +37,11 @@ namespace Microsoft.Cci.Pdb {
       bits.ReadInt32(out this.pagesUsed);         //  40..43
       bits.ReadInt32(out this.directorySize);     //  44..47
       bits.ReadInt32(out this.zero);              //  48..51
+
+      if (!this.magic.SequenceEqual(windowsPdbMagic))
+      {
+        throw new PdbException("The PDB file is not recognized as a Windows PDB file");
+      }
 
       int directoryPages = ((((directorySize + pageSize - 1) / pageSize) * 4) + pageSize - 1) / pageSize;
       this.directoryRoot = new int[directoryPages];
