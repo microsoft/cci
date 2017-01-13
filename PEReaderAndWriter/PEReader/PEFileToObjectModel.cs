@@ -2165,6 +2165,21 @@ namespace Microsoft.Cci.MetadataReader {
       }
     }
 
+    // Change method name from "System.IDisposable.Close" into "System.IDisposable.Dispose"
+    private void FixUpNameForIClosableCloseMethod(ITypeReference typeReference, ref IName methodName)
+    {
+      IWindowsRuntimeMetadataReaderHost host = this.ModuleReader.metadataReaderHost as IWindowsRuntimeMetadataReaderHost;
+      if (host != null && host.ProjectToCLRTypes)
+      {
+        string typeName = TypeHelper.GetTypeName(typeReference);
+        // Any WinRT type implementing IClosable.Close will get their IClosable typeref redirected to IDisposable, 
+        // and becomes IDIsposable.Close, which is incorrect. We need to rename it to Dispose to be consistent.
+        if (typeName == "System.IDisposable" && methodName.Value == "Close") {
+          methodName = NameTable.GetNameFor("Dispose");
+        }
+      }
+    }
+
     EventDefinition CreateEvent(
       uint eventDefRowId,
       TypeBase parentModuleType
@@ -3103,6 +3118,7 @@ namespace Microsoft.Cci.MetadataReader {
             }
             return specializedMethod;
           } else {
+            FixUpNameForIClosableCloseMethod(parentTypeReference, ref name);
             retModuleMemberReference = new MethodReference(this, memberRefRowId, parentTypeReference, name, firstByte);
           }
         } else {
