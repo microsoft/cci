@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Text;
+using Microsoft.Cci.MetadataReader.PEFileFlags;
 using Microsoft.Cci.UtilityDataStructures;
 
 namespace Microsoft.Cci {
@@ -152,6 +153,17 @@ namespace Microsoft.Cci {
       0x6d, 0x6f, 0x64, 0x65, 0x2e, 0x0d, 0x0d, 0x0a,
       0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     };
+
+    /// <summary>
+    /// The number of bytes to align sections of CLR metadata (Strings/Blobs/...) to.
+    /// </summary>
+    private const uint metadataSectionAlignment = 4;
+
+    /// <summary>
+    /// The maximum size of the metadata section (Strings/Blobs/...) for which
+    /// 2 byte indices can be used.
+    /// </summary>
+    private const uint metadataSectionMaxSizeFor2ByteIndex = (ushort)0xFFFF;
 
     /// <summary>
     /// Wraps a virtual string table index.
@@ -1891,9 +1903,9 @@ namespace Microsoft.Cci {
 
     private void SerializeMetadata() {
       this.SerializeMetadataTables();
-      this.stringWriter.Align(4);
-      this.userStringWriter.Align(4);
-      this.blobWriter.Align(4);
+      this.stringWriter.Align(metadataSectionAlignment);
+      this.userStringWriter.Align(metadataSectionAlignment);
+      this.blobWriter.Align(metadataSectionAlignment);
       BinaryWriter writer = new BinaryWriter(this.metadataHeaderStream);
       this.SerializeGeneralMetadataHeader(writer);
       this.offsetToFieldRvaTable += writer.BaseStream.Position;
@@ -1945,7 +1957,8 @@ namespace Microsoft.Cci {
     }
 
     private void ComputeColumnSizes() {
-      if (this.blobWriter.BaseStream.Length > ushort.MaxValue)
+      // The blob section is going to be aligned before writing it out, so we need to compare its aligned size.
+      if (Aligned(this.blobWriter.BaseStream.Length, metadataSectionAlignment) > metadataSectionMaxSizeFor2ByteIndex)
         this.blobIndexSize = 4;
       if (this.IndexDoesNotFit(16-3, TableIndices.Method, TableIndices.MemberRef))
         this.customAttributeTypeCodedIndexSize = 4;
@@ -1986,10 +1999,8 @@ namespace Microsoft.Cci {
         this.propertyDefIndexSize = 4;
       if (this.IndexDoesNotFit(16-2, TableIndices.Module, TableIndices.ModuleRef, TableIndices.AssemblyRef, TableIndices.TypeRef))
         this.resolutionScopeCodedIndexSize = 4;
-      // We need 4-byte string indices when the top addressable offset within the stringWriter.BaseStream
-      // exceeds 0xFFFF, the highest value representable by a 2-byte unsigned. This means that the Length
-      // of the BaseStream must be strictly greater than 0x10000 = ushort.MaxValue + 1.
-      if (this.stringWriter.BaseStream.Length > ushort.MaxValue + 1)
+      // The string section is going to be aligned before writing it out, so we need to compare its aligned size.
+      if (Aligned(this.stringWriter.BaseStream.Length, metadataSectionAlignment) > metadataSectionMaxSizeFor2ByteIndex)
         this.stringIndexSize = 4;
       if (this.IndexDoesNotFit(16, TableIndices.TypeDef))
         this.typeDefIndexSize = 4;
@@ -4148,7 +4159,7 @@ namespace Microsoft.Cci {
     }
 
     private void SerializeSignature(ISignature signature, ushort genericParameterCount, IEnumerable<IParameterTypeInformation> extraArgumentTypes, BinaryWriter writer) {
-      byte header = (byte)signature.CallingConvention;
+      byte header = (byte)((byte)signature.CallingConvention & SignatureHeader.SignatureHeaderMask);
       if (signature is IPropertyDefinition) header |= 0x08;
       writer.WriteByte(header);
       if (genericParameterCount > 0) writer.WriteCompressedUInt(genericParameterCount);
@@ -4902,7 +4913,6 @@ namespace Microsoft.Cci {
           this.peStream.WriteByte(b);
       }
     }
-
 
     #region ITokenProvider Members
 

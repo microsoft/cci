@@ -4307,6 +4307,23 @@ namespace Microsoft.Cci {
   }
 
   /// <summary>
+  /// An extra collection of references to types from the core platform, such as System.Collections.Generic.IReadOnlyList and System.Collections.Generic.IReadOnlyCollection
+  /// System.Collections.Generic.IReadOnlyList and System.Collections.Generic.IReadOnlyCollection doesn't always exists in every profile
+  /// </summary>
+  public interface IPlatformType2 : IPlatformType
+  {
+    /// <summary>
+    /// System.Collections.Generic.IReadOnlyList
+    /// </summary>
+    INamespaceTypeReference SystemCollectionsGenericIReadOnlyList { get; }
+
+    /// <summary>
+    /// System.Collections.Generic.IReadOnlyCollection
+    /// </summary>
+    INamespaceTypeReference SystemCollectionsGenericIReadOnlyCollection { get; }
+  }
+
+  /// <summary>
   /// This interface models the metadata representation of a pointer to a location in unmanaged memory.
   /// </summary>
   public interface IPointerType : IPointerTypeReference, ITypeDefinition {

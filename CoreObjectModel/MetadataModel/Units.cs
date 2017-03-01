@@ -683,6 +683,10 @@ namespace Microsoft.Cci {
     /// </summary>
     Thumb = 0x01c2,
     /// <summary>
+    /// ARM Thumb-2 Little-Endian
+    /// </summary>
+    ARMThumb2 = 0x01c4,
+    /// <summary>
     /// AM33
     /// </summary>
     AM33 = 0x01d3,

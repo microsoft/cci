@@ -761,6 +761,8 @@ namespace Microsoft.Cci.MetadataReader.PEFileFlags {
     internal const byte HasThis = 0x20;
     internal const byte ExplicitThis = 0x40;
     internal const byte Generic = 0x10;
+    
+    internal const byte SignatureHeaderMask = 0x7F;
 
     internal static bool IsMethodSignature(
       byte signatureHeader
