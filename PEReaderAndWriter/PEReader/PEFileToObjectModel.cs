@@ -1788,10 +1788,8 @@ namespace Microsoft.Cci.MetadataReader {
       }
     }
 
-    internal IEnumerable<ITypeMemberReference> GetStructuralMemberReferences()
-    {
-        for (uint i = 1; i <= this.PEFileReader.MemberRefTable.NumberOfRows; i++)
-        {
+    internal IEnumerable<ITypeMemberReference> GetStructuralMemberReferences() {
+        for (uint i = 1; i <= this.PEFileReader.MemberRefTable.NumberOfRows; i++) {
             MemberRefRow mrr = this.PEFileReader.MemberRefTable[i];
             if ((mrr.Class & TokenTypeIds.TokenTypeMask) != TokenTypeIds.TypeSpec) continue;
             var mr = this.GetModuleMemberReferenceAtRow(this.Module, i);
@@ -1803,6 +1801,14 @@ namespace Microsoft.Cci.MetadataReader {
       for (uint i = 1; i <= this.PEFileReader.TypeRefTable.NumberOfRows; i++) {
         var tr = this.GetTypeRefReferenceAtRow(i);
         if (tr != null) yield return tr; //could be null if the module is malformed (which happens with some obfuscators).
+      }
+    }
+    
+    internal IEnumerable<IMethodReference> GetMethodSpecReferences() {
+      for(uint i =1; i <= this.PEFileReader.MethodSpecTable.NumberOfRows; i++) {
+        MethodSpecRow msr = this.PEFileReader.MethodSpecTable[i];
+        var mr = this.GetMethodSpecAtRow(this.Module, i);
+        if (mr != null) yield return mr;
       }
     }
 
