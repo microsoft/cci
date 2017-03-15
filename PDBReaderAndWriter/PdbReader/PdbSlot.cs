@@ -12,6 +12,14 @@ namespace Microsoft.Cci.Pdb {
     //internal uint segment;
     //internal uint address;
 
+    internal PdbSlot(uint slot, uint typeToken, string name, ushort flags)
+    {
+      this.slot = slot;
+      this.typeToken = typeToken;
+      this.name = name;
+      this.flags = flags;
+    }
+
     internal PdbSlot(BitAccess bits) {
       AttrSlotSym slot;
 

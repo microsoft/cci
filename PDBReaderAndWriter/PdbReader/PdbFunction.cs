@@ -255,15 +255,7 @@ namespace Microsoft.Cci.Pdb {
               if (oem.idOem == msilMetaData) {
                 string name = bits.ReadString();
                 if (name == "MD2") {
-                  byte version;
-                  bits.ReadUInt8(out version);
-                  if (version == 4) {
-                    byte count;
-                    bits.ReadUInt8(out count);
-                    bits.Align(4);
-                    while (count-- > 0)
-                      this.ReadCustomMetadata(bits);
-                  }
+                  ReadMD2CustomMetadata(bits);
                 } else if (name == "asyncMethodInfo") {
                   this.synchronizationInformation = new PdbSynchronizationInformation(bits);
                 }
@@ -330,6 +322,19 @@ namespace Microsoft.Cci.Pdb {
 
       if (erec != (ushort)SYM.S_END) {
         throw new PdbDebugException("Missing S_END");
+      }
+    }
+
+    internal void ReadMD2CustomMetadata(BitAccess bits)
+    {
+      byte version;
+      bits.ReadUInt8(out version);
+      if (version == 4) {
+        byte count;
+        bits.ReadUInt8(out count);
+        bits.Align(4);
+        while (count-- > 0)
+          this.ReadCustomMetadata(bits);
       }
     }
 
@@ -476,6 +481,26 @@ namespace Microsoft.Cci.Pdb {
       this.moveNextMethod = Dummy.MethodDefinition;
     }
 
+    internal PdbSynchronizationInformation(
+      int moveNextMethodToken,
+      int kickoffMethodToken,
+      int catchHandlerOffset,
+      int[] yieldOffsets,
+      int[] resumeOffsets)
+    {
+      this.kickoffMethodToken = (uint)kickoffMethodToken;
+      this.generatedCatchHandlerIlOffset = (uint)catchHandlerOffset;
+      this.synchronizationPoints = new PdbSynchronizationPoint[yieldOffsets.Length];
+      for (uint i = 0; i < synchronizationPoints.Length; i++) {
+        this.synchronizationPoints[i] = new PdbSynchronizationPoint(
+          synchronizeOffset: (uint)yieldOffsets[i],
+          continuationMethodToken: (uint)moveNextMethodToken,
+          continuationOffset: (uint)resumeOffsets[i]);
+      }
+      this.asyncMethod = Dummy.MethodDefinition;
+      this.moveNextMethod = Dummy.MethodDefinition;
+    }
+
     public IMethodDefinition AsyncMethod {
       get { return this.asyncMethod; }
     }
@@ -503,6 +528,16 @@ namespace Microsoft.Cci.Pdb {
       bits.ReadUInt32(out this.synchronizeOffset);
       bits.ReadUInt32(out this.continuationMethodToken);
       bits.ReadUInt32(out this.continuationOffset);
+    }
+
+    internal PdbSynchronizationPoint(
+      uint synchronizeOffset,
+      uint continuationMethodToken,
+      uint continuationOffset)
+    {
+      this.synchronizeOffset = synchronizeOffset;
+      this.continuationMethodToken = continuationMethodToken;
+      this.continuationOffset = continuationOffset;
     }
 
     public uint SynchronizeOffset {
