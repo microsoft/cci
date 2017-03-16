@@ -12,6 +12,11 @@ namespace Microsoft.Cci.Pdb {
       this.buffer = new byte[capacity];
     }
 
+    internal BitAccess(byte[] buffer) {
+      this.buffer = buffer;
+      offset = 0;
+    }
+
     internal byte[] Buffer {
       get { return buffer; }
     }

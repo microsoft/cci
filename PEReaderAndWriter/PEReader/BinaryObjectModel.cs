@@ -370,15 +370,6 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       this.ModuleIdentity = moduleIdentity;
     }
 
-    /// <summary>
-    /// This will return the members on types defined in the typespec table
-    /// </summary>
-    /// <returns></returns>
-    public IEnumerable<ITypeMemberReference> GetConstructedTypeInstanceMembers()
-    {
-        return this.PEFileToObjectModel.GetStructuralMemberReferences();
-    }
-
     public override void Dispatch(IMetadataVisitor visitor) {
       visitor.Visit(this);
     }
@@ -687,6 +678,18 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     #endregion
+
+    /// <summary>
+    /// This will return the members on types defined in the typespec table
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerable<ITypeMemberReference> GetConstructedTypeInstanceMembers() {
+      return this.PEFileToObjectModel.GetStructuralMemberReferences();
+    }
+
+    public IEnumerable<IMethodReference> GetMethodSpecs() {
+       return this.PEFileToObjectModel.GetMethodSpecReferences();
+    }
   }
 
   internal sealed class Assembly : Module, IAssembly, IMetadataReaderModuleReference {
