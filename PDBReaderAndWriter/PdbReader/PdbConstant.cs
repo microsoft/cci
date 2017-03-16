@@ -11,6 +11,12 @@ namespace Microsoft.Cci.Pdb {
     internal uint token;
     internal object value;
 
+    internal PdbConstant(string name, uint token, object value) {
+      this.name = name;
+      this.token = token;
+      this.value = value;
+    }
+
     internal PdbConstant(BitAccess bits) {
       bits.ReadUInt32(out this.token);
       byte tag1;
