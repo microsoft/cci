@@ -9,13 +9,22 @@ namespace Microsoft.Cci.MetadataReader.Extensions
 {
     public static class ModuleExtensions
     {
-        public static IEnumerable<ITypeMemberReference> GetConstructedTypeInstanceMembers(this IModule module)
-        {
+        public static IEnumerable<ITypeMemberReference> GetConstructedTypeInstanceMembers(
+          this IModule module
+        ) {
             if (!(module is Module))
-                throw new NotSupportedException("An IModule created using PEReader is required.");
-
+              throw new NotSupportedException("An IModule created using PEReader is required.");
             var readerModule = module as Module;
             return readerModule.GetConstructedTypeInstanceMembers();
+        }
+
+        public static IEnumerable<IMethodReference> GetMethodSpecs(
+          this IModule module
+        ) {
+          if (!(module is Module))
+            throw new NotSupportedException("An IModule created using PEReader is required.");
+          var readerModule = module as Module;
+          return readerModule.GetMethodSpecs();
         }
     }
 }
