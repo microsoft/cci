@@ -116,6 +116,7 @@
     <Compile Include="PdbException.cs" />
     <Compile Include="PdbFile.cs" />
     <Compile Include="PdbFileHeader.cs" />
+    <Compile Include="PdbFormatProvider.cs" />
     <Compile Include="PdbFunction.cs" />
     <Compile Include="PdbLine.cs" />
     <Compile Include="PdbLines.cs" />

@@ -89,6 +89,7 @@
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbException.cs" />
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbFile.cs" />
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbFileHeader.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbFormatProvider.cs" />
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbFunction.cs" />
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbLine.cs" />
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbLines.cs" />
