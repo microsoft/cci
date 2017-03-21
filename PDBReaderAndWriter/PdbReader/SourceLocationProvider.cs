@@ -18,42 +18,51 @@ namespace Microsoft.Cci {
   /// </summary>
   public class PdbReader : ISourceLocationProvider, ILocalScopeProvider, IDisposable {
 
-    Stream pdbStream;
     IMetadataHost host;
     Dictionary<uint, PdbFunction> pdbFunctionMap = new Dictionary<uint, PdbFunction>();
     List<StreamReader> sourceFilesOpenedByReader = new List<StreamReader>();
     Dictionary<uint, PdbTokenLine> tokenToSourceMapping;
     string sourceServerData;
     bool loadSource;
-    int age;
-    Guid guid;
+    string debugInformationVersion;
 
     /// <summary>
     /// Allocates an object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. 
     /// For example, a PDB reader that maps offsets in an IL stream to source locations.
     /// </summary>
-    public PdbReader(Stream pdbStream, IMetadataHost host, bool loadSource) {
+    public PdbReader(IModule module, Stream pdbStream, IMetadataHost host, bool loadSource) {
       Contract.Requires(pdbStream != null);
       Contract.Requires(host != null);
 
       this.loadSource = loadSource;
-      this.pdbStream = pdbStream;
       this.host = host;
-      foreach (PdbFunction pdbFunction in PdbFile.LoadFunctions(pdbStream, out this.tokenToSourceMapping, out this.sourceServerData, out age, out guid))
+
+      IEnumerable<PdbFunction> functions = PdbFormatProvider.LoadFunctions(
+        module,
+        pdbStream,
+        out this.tokenToSourceMapping,
+        out this.sourceServerData,
+        out this.debugInformationVersion);
+
+      foreach (PdbFunction pdbFunction in functions)
         this.pdbFunctionMap[pdbFunction.token] = pdbFunction;
     }
 
     /// <summary>
-    /// Allocates an object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. 
+    /// Allocates an object that can map some kinds of ILocation objects to IPrimarySourceLocation objects.
     /// For example, a PDB reader that maps offsets in an IL stream to source locations.
     /// </summary>
+    public PdbReader(Stream pdbStream, IMetadataHost host, bool loadSource)
+      : this(module: null, pdbStream: pdbStream, host: host, loadSource: loadSource)
+    {
+    }
+
     public PdbReader(Stream pdbStream, IMetadataHost host) : this(pdbStream, host, true)
     {
     }
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
-      Contract.Invariant(this.pdbStream != null);
       Contract.Invariant(this.host != null);
       Contract.Invariant(this.pdbFunctionMap != null);
       Contract.Invariant(this.sourceFilesOpenedByReader != null);
@@ -579,16 +588,14 @@ namespace Microsoft.Cci {
     }
 
     ///<summary>
-    /// Returns the PDB signature and age as a concatenated string. This can be compared with
+    /// Returns the encoded PDB version info. This can be compared with
     /// IModule.DebugInformationVersion to verify whether a PDB is valid for a given assembly.
     ///</summary>
     public string DebugInformationVersion
     {
       get
       {
-        var guidHex = guid.ToString("N");
-        string ageHex = age.ToString("X");
-        return guidHex + ageHex;
+        return this.debugInformationVersion;
       }
     }
   }
