@@ -2059,7 +2059,7 @@ namespace Microsoft.Cci.MetadataReader {
               //Since we have already loaded the assembly that is supposed to hold this type, we may as well try and resolve it.
               PEFileToObjectModel assemblyPEFileToObjectModel = internalAssembly.PEFileToObjectModel;
               var type = assemblyPEFileToObjectModel.ResolveNamespaceTypeDefinition(namespaceName, mangledTypeName);
-              if (type != null) return type;
+              if (type != null && !(type is Dummy)) return type;
               //The other assembly (internalAssembly) does not have a namespace type def for this reference.
               //Perhaps it has an alias that forwards to somewhere else... Not very likely happen in practice, I would hope.
               ExportedTypeAliasBase/*?*/ aliasType = assemblyPEFileToObjectModel.TryToResolveAsNamespaceTypeAlias(namespaceName, mangledTypeName);
