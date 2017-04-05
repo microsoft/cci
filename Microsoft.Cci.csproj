@@ -13,7 +13,7 @@
     <DefineConstants>TRACE;LITTLEENDIAN;COREFX_SUBSET;MERGED_DLL</DefineConstants>
     <SignAssembly>true</SignAssembly>
     <NoWarn>$(NoWarn);649</NoWarn>
-</PropertyGroup>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug_GitHub|AnyCPU' ">
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <DebugSymbols>true</DebugSymbols>
@@ -23,7 +23,6 @@
     <DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <UseInternalPortablePdbPaths>false</UseInternalPortablePdbPaths>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release_GitHub|AnyCPU' ">
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
@@ -32,7 +31,6 @@
     <OutputPath>bin\Release\</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <UseInternalPortablePdbPaths>false</UseInternalPortablePdbPaths>
   </PropertyGroup>
   <!-- Default configurations to help VS understand the options -->
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
@@ -43,33 +41,10 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|amd64' ">
   </PropertyGroup>
-  <PropertyGroup Condition="'$(UseInternalPortablePdbPaths)' != 'false'">
-    <PortablePdbConverterPath>$(MSBuildThisFileDirectory)..\..\..\ExternalAPIs\PortablePDB</PortablePdbConverterPath>
-    <SupportAssemblyPath>$(MSBuildThisFileDirectory)..\..\..\InternalAPIs\pntoolchain\nuget</SupportAssemblyPath>
-    <AssemblySearchPaths>$(AssemblySearchPaths);$(SupportAssemblyPath)</AssemblySearchPaths>
-    <AssemblySearchPaths>$(AssemblySearchPaths);$(PortablePdbConverterPath)</AssemblySearchPaths>
-    <AssemblySearchPaths>$(AssemblySearchPaths);$(MSBuildThisFileDirectory)..\..\..\ExternalAPIs\NetFX\.NETFramework\v4.5\Facades</AssemblySearchPaths>
-    <DefineConstants>ENABLE_PORTABLE_PDB;$(DefineConstants)</DefineConstants>
-    <EnablePortablePdb>true</EnablePortablePdb>
-  </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(EnablePortablePdb)' == 'true'">
-    <Reference Include="System.Collections.Immutable" />
-    <Reference Include="System.IO" />
-    <Reference Include="System.Reflection.Metadata" />
-    <Reference Include="System.Runtime" />
-    <Reference Include="Microsoft.DiaSymReader.Converter" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(EnablePortablePdb)' == 'true'">
-    <Content Include="$(PortablePdbConverterPath)\Microsoft.DiaSymReader.Converter.dll" />
-    <Content Include="$(PortablePdbConverterPath)\System.ValueTuple.dll" />
-    <Content Include="$(SupportAssemblyPath)\System.Immutable.Collections.dll" />
-    <Content Include="$(SupportAssemblyPath)\System.Reflection.Metadata.dll" />
-    <Content Include="$(SupportAssemblyPath)\Microsoft.DiaSymReader.dll" />
   </ItemGroup>
   <Import Project=".\Microsoft.Cci.Sources.targets" />
   <Import Project="..\dir.targets" Condition="Exists('..\dir.targets')" />
