@@ -39,18 +39,18 @@
     <CodeContractsAssemblyMode>0</CodeContractsAssemblyMode>
     <AssemblyOriginatorKeyFile>..\..\Common\InterimKey.snk</AssemblyOriginatorKeyFile>
     <TargetFrameworkProfile />
+    <NoWarn>1591;649</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;LITTLEENDIAN</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>bin\Debug\Microsoft.Cci.PeWriter.XML</DocumentationFile>
-    <NoWarn>1591</NoWarn>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeContractsEnableRuntimeChecking>True</CodeContractsEnableRuntimeChecking>
     <CodeContractsRuntimeOnlyPublicSurface>False</CodeContractsRuntimeOnlyPublicSurface>
@@ -91,7 +91,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;LITTLEENDIAN</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -107,6 +107,8 @@
     <Compile Include="..\..\common\include\PortingHelpers.cs" />
     <Compile Include="..\..\common\include\CciEventSource.cs" />
     <Compile Include="..\..\common\include\DietCollection.cs" />
+    <Compile Include="..\PEReader\PEFileStructures.cs" />
+    <Compile Include="..\PEReader\UnmanagedReadWrite.cs" />
     <Compile Include="BinaryWriter.cs" />
     <Compile Include="IMetadata.cs" />
     <Compile Include="MemoryStream.cs" />
