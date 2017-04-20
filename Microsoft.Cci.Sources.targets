@@ -103,6 +103,7 @@
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbWriter\ISymbolWriter.cs" />
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbWriter\Writer.cs" />
 
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\AliasForTypeExtensions.cs" />
     <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\Attributes.cs" />
     <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\BinaryObjectModel.cs" />
     <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\CoreTypes.cs" />
