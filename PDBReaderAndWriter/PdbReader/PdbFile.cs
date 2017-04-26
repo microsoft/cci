@@ -347,8 +347,10 @@ namespace Microsoft.Cci.Pdb {
       bits.Position = end;
     }
 
-    internal static PdbFunction[] LoadFunctions(Stream read, out Dictionary<uint, PdbTokenLine> tokenToSourceMapping, out string sourceServerData, out int age, out Guid guid) {
-      tokenToSourceMapping = new Dictionary<uint, PdbTokenLine>();
+    internal static PdbInfo LoadFunctions(Stream read) {
+      PdbInfo pdbInfo = new PdbInfo();
+      
+      pdbInfo.TokenToSourceMapping = new Dictionary<uint, PdbTokenLine>();
       BitAccess bits = new BitAccess(64 * 1024);
       PdbFileHeader head = new PdbFileHeader(read, bits);
       PdbReader reader = new PdbReader(read, head.pageSize);
@@ -358,7 +360,7 @@ namespace Microsoft.Cci.Pdb {
       Dictionary<string, PdbSource> sourceCache = new Dictionary<string, PdbSource>();
 
       dir.streams[1].Read(reader, bits);
-      Dictionary<string, int> nameIndex = LoadNameIndex(bits, out age, out guid);
+      Dictionary<string, int> nameIndex = LoadNameIndex(bits, out pdbInfo.Age, out pdbInfo.Guid);
       int nameStream;
       if (!nameIndex.TryGetValue("/NAMES", out nameStream)) {
         throw new PdbException("Could not find the '/NAMES' stream: the PDB file may be a public symbol file instead of a private symbol file");
@@ -368,12 +370,12 @@ namespace Microsoft.Cci.Pdb {
 
       int srcsrvStream;
       if (!nameIndex.TryGetValue("SRCSRV", out srcsrvStream))
-        sourceServerData = string.Empty;
+        pdbInfo.SourceServerData = string.Empty;
       else {
         DataStream dataStream = dir.streams[srcsrvStream];
         byte[] bytes = new byte[dataStream.contentSize];
         dataStream.Read(reader, bits);
-        sourceServerData = bits.ReadBString(bytes.Length);
+        pdbInfo.SourceServerData = bits.ReadBString(bytes.Length);
       }
 
       dir.streams[3].Read(reader, bits);
@@ -387,7 +389,7 @@ namespace Microsoft.Cci.Pdb {
           if (module.stream > 0) {
             dir.streams[module.stream].Read(reader, bits);
             if (module.moduleName == "TokenSourceLineInfo") {
-              LoadTokenToSourceInfo(bits, module, names, dir, nameIndex, reader, tokenToSourceMapping, sourceCache);
+              LoadTokenToSourceInfo(bits, module, names, dir, nameIndex, reader, pdbInfo.TokenToSourceMapping, sourceCache);
               continue;
             }
             LoadFuncsFromDbiModule(bits, module, names, funcList, true, dir, nameIndex, reader, sourceCache);
@@ -411,7 +413,8 @@ namespace Microsoft.Cci.Pdb {
       //
       Array.Sort(funcs, PdbFunction.byAddressAndToken);
       //Array.Sort(funcs, PdbFunction.byToken);
-      return funcs;
+      pdbInfo.Functions = funcs;
+      return pdbInfo;
     }
 
     private static void LoadTokenToSourceInfo(BitAccess bits, DbiModuleInfo module, IntHashTable names, MsfDirectory dir,

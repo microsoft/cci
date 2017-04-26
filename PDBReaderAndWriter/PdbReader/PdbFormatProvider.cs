@@ -6,14 +6,13 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-#if ENABLE_PORTABLE_PDB
+using System.Text;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 
 using Microsoft.DiaSymReader.PortablePdb;
 using Microsoft.DiaSymReader.Tools;
-#endif
 
 namespace Microsoft.Cci.Pdb {
   /// <summary>
@@ -25,71 +24,64 @@ namespace Microsoft.Cci.Pdb {
     /// Detect whether a given stream contains portable or Windows PDB format data
     /// and deserialize CCI PDB information from the given format.
     /// </summary>
-    /// <param name="module">IL module (needed only for portable PDB's)</param>
-    /// <param name="pdbInputStream">PDB stream to read</param>
-    /// <param name="tokenToSourceMapping">Output mapping from function tokens to line numbers</param>
-    /// <param name="sourceServerData">Source server data (currently supported for Windows PDB only)</param>
-    /// <param name="debugInformationVersion">Debug info version (currently supported for Windows PDB only)</param>
-    public static IEnumerable<PdbFunction> LoadFunctions(
-      IModule module,
-      Stream pdbInputStream,
-      out Dictionary<uint, PdbTokenLine> tokenToSourceMapping,
-      out string sourceServerData,
-      out string debugInformationVersion)
+    /// <param name="peFilePath">Path to IL PE module (needed only for portable PDB's)</param>
+    /// <param name="standalonePdbPath">Path to standalone Windows PDB (not used for portable PDBs)</param>
+    public static PdbInfo TryLoadFunctions(
+      string peFilePath,
+      string standalonePdbPath)
     {
-#if ENABLE_PORTABLE_PDB
-      if (!PdbConverter.IsPortable(pdbInputStream))
-#endif // ENABLE_PORTABLE_PDB
+      if (!string.IsNullOrEmpty(peFilePath))
       {
-        int age;
-        Guid guid;
-
-        // Load CCI data from Windows PDB
-        IEnumerable<PdbFunction> result = PdbFile.LoadFunctions(
-          pdbInputStream,
-          out tokenToSourceMapping,
-          out sourceServerData,
-          out age,
-          out guid);
-
-        var guidHex = guid.ToString("N");
-        string ageHex = age.ToString("X");
-
-        debugInformationVersion = guidHex + ageHex;
-
-        return result;
-      }
-
-#if ENABLE_PORTABLE_PDB
-      if (module == null)
-      {
-        // Portable PDB without PE reader is unusable, let's pretend there's no PDB at all
-        tokenToSourceMapping = new Dictionary<uint, PdbTokenLine>();
-        sourceServerData = null;
-        debugInformationVersion = null;
-        return new PdbFunction[] {};
-      }
-
-      // Load portable PDB
-      PdbWriterForCci cciWriter = new PdbWriterForCci();
-
-      using (Stream peStream = new FileStream(module.Location, FileMode.Open, FileAccess.Read))
-      using (PEReader peReader = new PEReader(peStream))
-      {
-        PdbConverter.ConvertPortableToWindows<int>(peReader, pdbInputStream, cciWriter);
+        using (Stream peStream = new FileStream(peFilePath, FileMode.Open, FileAccess.Read))
+        using (PEReader peReader = new PEReader(peStream))
+        {
+          MetadataReaderProvider pdbReaderProvider;
+          string pdbPath;
+          if (peReader.TryOpenAssociatedPortablePdb(peFilePath, File.OpenRead, out pdbReaderProvider, out pdbPath))
+          {
+            using (pdbReaderProvider)
+            {
+              // Load associated portable PDB
+              PdbWriterForCci cciWriter = new PdbWriterForCci();
   
-        tokenToSourceMapping = cciWriter.TokenToSourceMapping;
-        debugInformationVersion = module.DebugInformationVersion;
+              new PdbConverter().ConvertPortableToWindows<int>(
+                peReader,
+                pdbReaderProvider.GetMetadataReader(),
+                cciWriter,
+                PdbConversionOptions.SuppressSourceLinkConversion);
   
-        // TODO - not yet implemented attributes for portable PDB's
-        sourceServerData = null;
-
-        return cciWriter.Functions;
+              PdbInfo pdbInfo = new PdbInfo()
+              {
+                Functions = cciWriter.Functions,
+                TokenToSourceMapping = cciWriter.TokenToSourceMapping,
+                Age = cciWriter.Age,
+                Guid = cciWriter.Guid,
+                // Ignored for portable PDBs to avoid bringing in a dependency on Newtonsoft.Json
+                SourceServerData = null
+              };
+  
+              return pdbInfo;
+            }
+          }
+        }
       }
-#endif // ENABLE_PORTABLE_PDB
+
+      if (File.Exists(standalonePdbPath))
+      {
+        using (FileStream pdbInputStream = new FileStream(standalonePdbPath, FileMode.Open, FileAccess.Read))
+        {
+          if (!PdbConverter.IsPortable(pdbInputStream))
+          {
+            // Load CCI data from Windows PDB
+            return PdbFile.LoadFunctions(pdbInputStream);
+          }
+        }
+      }
+
+      // Non-existent Windows PDB or mismatched portable PDB
+      return null;
     }
 
-#if ENABLE_PORTABLE_PDB
     /// <summary>
     /// The basic idea of the portable PDB conversion is that we let the converter run
     /// and use this PdbWriterForCci class to construct the CCI-expected data structures.
@@ -105,6 +97,16 @@ namespace Microsoft.Cci.Pdb {
       /// Map from method tokens to source location linked lists.
       /// </summary>
       public Dictionary<uint, PdbTokenLine> TokenToSourceMapping { get; private set; }
+
+      /// <summary>
+      /// Encoded age information for the portable PDB.
+      /// </summary>
+      public int Age { get; private set; }
+
+      /// <summary>
+      /// Encoded GUID information for the portable PDB.
+      /// </summary>
+      public Guid Guid { get; private set; }
 
       /// <summary>
       /// List of previously defined PdbSource documents
@@ -397,7 +399,23 @@ namespace Microsoft.Cci.Pdb {
       {
         // NO-OP for CCI
       }
-      
+
+      public override void UpdateSignature(Guid guid, uint stamp, int age)
+      {
+        Guid = guid;
+        Age = age;
+      }
+
+      public override void SetSourceServerData(byte[] sourceServerData)
+      {
+        // NO-OP for CCI
+      }
+
+      public override void SetSourceLinkData(byte[] sourceLinkData)
+      {
+        // NO-OP for CCI
+      }
+
       /// <summary>
       /// Helper class used to compose a hierarchical tree of method scopes.
       /// At method level, we maintain a stack of these builders. Whenever we Open
@@ -502,6 +520,5 @@ namespace Microsoft.Cci.Pdb {
         }
       }
     }
-#endif // ENABLE_PORTABLE_PDB
   }
 }
