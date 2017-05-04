@@ -116,8 +116,9 @@
     <Compile Include="PdbException.cs" />
     <Compile Include="PdbFile.cs" />
     <Compile Include="PdbFileHeader.cs" />
-    <Compile Include="PdbFormatProvider.cs" />
+    <Compile Include="PdbFormatProvider.cs" Condition="'$(EnablePortablePdb)' == 'true'" />
     <Compile Include="PdbFunction.cs" />
+    <Compile Include="PdbInfo.cs" />
     <Compile Include="PdbLine.cs" />
     <Compile Include="PdbLines.cs" />
     <Compile Include="PdbReader.cs" />

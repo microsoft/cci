@@ -1996,7 +1996,7 @@ namespace Microsoft.Cci.MetadataReader {
     /// <summary>
     /// Returns a reference to the type that the given alias stands for. For example, if alias is a type forwarder, return a reference to the forwarded type (in another assembly).
     /// </summary>
-    internal INamedTypeReference/*?*/ GetReferenceToAliasedType(ExportedTypeAliasBase alias) {
+    internal INamedTypeReference/*?*/ GetReferenceToAliasedType(ExportedTypeAliasBase alias, bool disableTypeResolution) {
       Assembly/*?*/ thisAssembly = this.Module as Assembly;
       if (thisAssembly == null) return null;
       uint exportedTypeRowId = alias.ExportedTypeRowId;
@@ -2013,16 +2013,24 @@ namespace Microsoft.Cci.MetadataReader {
             if (fileRef == null) return null;
             var module = thisAssembly.FindMemberModuleNamed(fileRef.Name) as Module;
             if (module == null) return null;
-            var foundType = module.PEFileToObjectModel.ResolveNamespaceTypeDefinition(namespaceName, mangledTypeName);
-            if (foundType == null) return null;
-            return foundType;
+            if (disableTypeResolution)
+            {
+              string fullTypeName = mangledTypeName.Value;
+              if (namespaceName.Value.Length > 0) fullTypeName = namespaceName.Value + "." + fullTypeName;
+              var parser = new TypeNameParser(module.PEFileToObjectModel.NameTable, fullTypeName);
+              return parser.ParseTypeName().GetAsTypeReference(module.PEFileToObjectModel, module) as INamedTypeReference;
+            }
+            else
+            {
+              return module.PEFileToObjectModel.ResolveNamespaceTypeDefinition(namespaceName, mangledTypeName);
+            }
           }
         case TokenTypeIds.ExportedType: {
             ExportedTypeAliasBase/*?*/ parentExportedType = this.GetExportedTypeAtRowWorker(rowId);
             if (parentExportedType == null) return null;
-            var parentModuleType = this.GetReferenceToAliasedType(parentExportedType);
+            var parentModuleType = this.GetReferenceToAliasedType(parentExportedType, disableTypeResolution);
             if (parentModuleType == null) return null;
-            ITypeDefinition parentType = parentModuleType.ResolvedType;
+            ITypeDefinition parentType = disableTypeResolution ? Dummy.TypeDefinition : parentModuleType.ResolvedType;
             if (!(parentType is Dummy)) {
               foreach (ITypeDefinitionMember tdm in parentModuleType.ResolvedType.GetMembersNamed(unmangledTypeName, false)) {
                 var modTypeRef = tdm as IMetadataReaderNamedTypeReference;
@@ -2055,15 +2063,15 @@ namespace Microsoft.Cci.MetadataReader {
             AssemblyReference/*?*/ assemRef = this.GetAssemblyReferenceAt(rowId);
             if (assemRef == null) return null;
             var internalAssembly = assemRef.ResolvedAssembly as Assembly;
-            if (internalAssembly != null) {
+            if (internalAssembly != null && !disableTypeResolution) {
               //Since we have already loaded the assembly that is supposed to hold this type, we may as well try and resolve it.
               PEFileToObjectModel assemblyPEFileToObjectModel = internalAssembly.PEFileToObjectModel;
               var type = assemblyPEFileToObjectModel.ResolveNamespaceTypeDefinition(namespaceName, mangledTypeName);
-              if (type != null) return type;
+              if (type != null && !(type is Dummy)) return type;
               //The other assembly (internalAssembly) does not have a namespace type def for this reference.
               //Perhaps it has an alias that forwards to somewhere else... Not very likely happen in practice, I would hope.
               ExportedTypeAliasBase/*?*/ aliasType = assemblyPEFileToObjectModel.TryToResolveAsNamespaceTypeAlias(namespaceName, mangledTypeName);
-              if (aliasType != null && aliasType != alias) return assemblyPEFileToObjectModel.GetReferenceToAliasedType(aliasType);
+              if (aliasType != null && aliasType != alias) return assemblyPEFileToObjectModel.GetReferenceToAliasedType(aliasType, disableTypeResolution);
               //Although we can resolve the target assembly, we can neither resolve the aliased type, nor find a secondary alias.
               //This is mighty strange. Probably the host has fluffed assembly resolution and internalAssembly isn't really the
               //assembly we are looking for. We now have to give up and simply return an unresolved reference.

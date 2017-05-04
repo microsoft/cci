@@ -8,9 +8,10 @@ using System.Diagnostics.Contracts;
 
 namespace Microsoft.Cci.UtilityDataStructures {
 
-public delegate TOutput Converter<in TInput, out TOutput>(TInput input);
-
 #pragma warning disable 1591
+
+  public delegate TOutput Converter<in TInput, out TOutput>(TInput input);
+
   public static class HashHelper {
     public static uint HashInt1(uint key) {
       unchecked {

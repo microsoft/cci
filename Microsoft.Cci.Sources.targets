@@ -89,8 +89,9 @@
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbException.cs" />
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbFile.cs" />
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbFileHeader.cs" />
-    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbFormatProvider.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbFormatProvider.cs" Condition="'$(EnablePortablePdb)' == 'true'" />
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbFunction.cs" />
+    <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbInfo.cs" />
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbLine.cs" />
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbLines.cs" />
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbReader\PdbReader.cs" />
@@ -103,6 +104,7 @@
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbWriter\ISymbolWriter.cs" />
     <Compile Include="$(CciSrc)\PdbReaderAndWriter\PdbWriter\Writer.cs" />
 
+    <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\AliasForTypeExtensions.cs" />
     <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\Attributes.cs" />
     <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\BinaryObjectModel.cs" />
     <Compile Include="$(CciSrc)\PEReaderAndWriter\PEReader\CoreTypes.cs" />
