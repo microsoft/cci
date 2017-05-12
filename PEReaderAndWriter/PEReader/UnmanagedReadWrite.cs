@@ -622,6 +622,7 @@ namespace Microsoft.Cci.UtilityDataStructures {
           if ((ch32 & 0xFFFF0000) == 0)
             ch = (char)ch32;
           else { //break up into UTF16 surrogate pair
+            ch32 -= 0x10000;
             sb.Append((char)((ch32 >> 10) | 0xD800));
             ch = (char)((ch32 & 0x3FF) | 0xDC00);
           }
@@ -1004,15 +1005,13 @@ namespace Microsoft.Cci.UtilityDataStructures {
           if ((ch32 & 0xFFFF0000) == 0)
             ch = (char)ch32;
           else { //break up into UTF16 surrogate pair
+            ch32 -= 0x10000;
             buffer.Append((char)((ch32 >> 10) | 0xD800));
             ch = (char)((ch32 & 0x3FF) | 0xDC00);
           }
         }
         buffer.Append(ch);
       }
-      int j = buffer.Length;
-      while (j > 0 && buffer[j - 1] == (char)0) j--;
-      buffer.Length = j;
       this.CurrentPointer += byteCount;
       return StringBuilderCache.GetStringAndRelease(buffer);
     }

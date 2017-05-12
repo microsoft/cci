@@ -15,14 +15,19 @@ namespace Microsoft.Cci.Pdb {
     internal uint offset;
     internal uint length;
 
-    internal PdbScope(uint address, uint length, PdbSlot[] slots, PdbConstant[] constants, string[] usedNamespaces) {
+    internal PdbScope(uint address, uint offset, uint length, PdbSlot[] slots, PdbConstant[] constants, string[] usedNamespaces) {
       this.constants = constants;
       this.slots = slots;
       this.scopes = ArrayT<PdbScope>.Empty;
       this.usedNamespaces = usedNamespaces;
       this.address = address;
-      this.offset = 0;
+      this.offset = offset;
       this.length = length;
+    }
+
+    internal PdbScope(uint address, uint length, PdbSlot[] slots, PdbConstant[] constants, string[] usedNamespaces)
+      : this(address, 0, length, slots, constants, usedNamespaces)
+    {
     }
 
     internal PdbScope(uint funcOffset, BlockSym32 block, BitAccess bits, out uint typind) {

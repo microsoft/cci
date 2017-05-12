@@ -3621,11 +3621,19 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
           lock (GlobalLock.LockingObject) {
             if (this.aliasTypeReference == null) { //if it is a Dummy, it can't be resolved.
               this.aliasTypeReference = Dummy.NamedTypeReference; //guard against circular alias chains
-              this.aliasTypeReference = this.PEFileToObjectModel.GetReferenceToAliasedType(this)??Dummy.NamedTypeReference;
+              this.aliasTypeReference = this.PEFileToObjectModel.GetReferenceToAliasedType(this, disableTypeResolution: false)??Dummy.NamedTypeReference;
             }
           }
         }
         return this.aliasTypeReference;
+      }
+    }
+
+    internal INamedTypeReference UnresolvedAliasedTypeReference
+    {
+      get
+      {
+        return this.PEFileToObjectModel.GetReferenceToAliasedType(this, disableTypeResolution: true) ?? Dummy.NamedTypeReference;
       }
     }
 

@@ -18,46 +18,66 @@ namespace Microsoft.Cci {
   /// </summary>
   public class PdbReader : ISourceLocationProvider, ILocalScopeProvider, IDisposable {
 
-    Stream pdbStream;
     IMetadataHost host;
     Dictionary<uint, PdbFunction> pdbFunctionMap = new Dictionary<uint, PdbFunction>();
     List<StreamReader> sourceFilesOpenedByReader = new List<StreamReader>();
-    Dictionary<uint, PdbTokenLine> tokenToSourceMapping;
-    string sourceServerData;
+    PdbInfo pdbInfo;
     bool loadSource;
-    int age;
-    Guid guid;
 
     /// <summary>
-    /// Allocates an object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. 
+    /// True when a valid PDB has been successfully opened.
+    /// </summary>
+    public bool IsValid { get { return pdbInfo != null; } }
+
+#if ENABLE_PORTABLE_PDB
+    /// <summary>
+    /// Tries to open either an associated portable PDB (embedded or standalone) for a given PE module
+    /// or legacy Windows PDB on a given path. When the PDB hasn't been found, IsValid gets set to false.
+    /// </summary>
+    public PdbReader(string peFilePath, string standalonePdbPath, IMetadataHost host, bool loadSource) {
+      Contract.Requires(host != null);
+
+      this.loadSource = loadSource;
+      this.host = host;
+
+      pdbInfo = PdbFormatProvider.TryLoadFunctions(peFilePath, standalonePdbPath);
+
+      if (pdbInfo != null)
+      {
+        foreach (PdbFunction pdbFunction in pdbInfo.Functions)
+          this.pdbFunctionMap[pdbFunction.token] = pdbFunction;
+      }
+    }
+#endif
+
+    /// <summary>
+    /// Allocates an object that can map some kinds of ILocation objects to IPrimarySourceLocation objects.
     /// For example, a PDB reader that maps offsets in an IL stream to source locations.
     /// </summary>
-    public PdbReader(Stream pdbStream, IMetadataHost host, bool loadSource) {
+    public PdbReader(Stream pdbStream, IMetadataHost host, bool loadSource)
+    {
       Contract.Requires(pdbStream != null);
       Contract.Requires(host != null);
 
       this.loadSource = loadSource;
-      this.pdbStream = pdbStream;
       this.host = host;
-      foreach (PdbFunction pdbFunction in PdbFile.LoadFunctions(pdbStream, out this.tokenToSourceMapping, out this.sourceServerData, out age, out guid))
+
+      pdbInfo = PdbFile.LoadFunctions(pdbStream);
+
+      foreach (PdbFunction pdbFunction in pdbInfo.Functions)
         this.pdbFunctionMap[pdbFunction.token] = pdbFunction;
     }
 
-    /// <summary>
-    /// Allocates an object that can map some kinds of ILocation objects to IPrimarySourceLocation objects. 
-    /// For example, a PDB reader that maps offsets in an IL stream to source locations.
-    /// </summary>
     public PdbReader(Stream pdbStream, IMetadataHost host) : this(pdbStream, host, true)
     {
     }
 
     [ContractInvariantMethod]
     private void ObjectInvariant() {
-      Contract.Invariant(this.pdbStream != null);
       Contract.Invariant(this.host != null);
       Contract.Invariant(this.pdbFunctionMap != null);
       Contract.Invariant(this.sourceFilesOpenedByReader != null);
-      Contract.Invariant(this.sourceServerData != null);
+      Contract.Invariant(this.pdbInfo.SourceServerData != null);
     }
 
 
@@ -117,7 +137,7 @@ namespace Microsoft.Cci {
           var mdLocation = location as IMetadataLocation;
           if (mdLocation != null) {
             PdbTokenLine lineInfo;
-            if (!this.tokenToSourceMapping.TryGetValue(mdLocation.Definition.TokenValue, out lineInfo)) yield break;
+            if (!this.pdbInfo.TokenToSourceMapping.TryGetValue(mdLocation.Definition.TokenValue, out lineInfo)) yield break;
             PdbSourceDocument psDoc = this.GetPrimarySourceDocumentFor(lineInfo.sourceFile);
             yield return new PdbSourceLineLocation(psDoc, (int)lineInfo.line, (int)lineInfo.column, (int)lineInfo.endLine, (int)lineInfo.endColumn);
           }
@@ -157,7 +177,7 @@ namespace Microsoft.Cci {
           var mdLocation = location as IMetadataLocation;
           if (mdLocation != null) {
             PdbTokenLine lineInfo;
-            if (this.tokenToSourceMapping.TryGetValue(mdLocation.Definition.TokenValue, out lineInfo))
+            if (this.pdbInfo.TokenToSourceMapping.TryGetValue(mdLocation.Definition.TokenValue, out lineInfo))
             {
                 List<IPrimarySourceLocation> locations = null;
                 do
@@ -227,7 +247,7 @@ namespace Microsoft.Cci {
     /// <returns></returns>
     public IEnumerable<IPrimarySourceLocation> GetPrimarySourceLocationsForToken(uint token) {
       PdbTokenLine lineInfo;
-      if (!this.tokenToSourceMapping.TryGetValue(token, out lineInfo)) yield break;
+      if (!this.pdbInfo.TokenToSourceMapping.TryGetValue(token, out lineInfo)) yield break;
       PdbSourceDocument psDoc = this.GetPrimarySourceDocumentFor(lineInfo.sourceFile);
       yield return new PdbSourceLineLocation(psDoc, (int)lineInfo.line, (int)lineInfo.column, (int)lineInfo.endLine, (int)lineInfo.endColumn);
     }
@@ -574,7 +594,7 @@ namespace Microsoft.Cci {
     public string SourceServerData {
       get {
         Contract.Ensures(Contract.Result<string>() != null);
-        return this.sourceServerData;
+        return this.pdbInfo.SourceServerData;
       }
     }
 
@@ -586,8 +606,8 @@ namespace Microsoft.Cci {
     {
       get
       {
-        var guidHex = guid.ToString("N");
-        string ageHex = age.ToString("X");
+        var guidHex = this.pdbInfo.Guid.ToString("N");
+        string ageHex = this.pdbInfo.Age.ToString("X");
         return guidHex + ageHex;
       }
     }

@@ -127,10 +127,12 @@
     <Compile Include="..\..\common\include\PortingHelpers.cs" />
     <Compile Include="..\..\common\include\DietCollection.cs" />
     <Compile Include="..\..\common\include\CciEventSource.cs" />
+    <Compile Include="AliasForTypeExtensions.cs" />
     <Compile Include="Attributes.cs" />
     <Compile Include="BinaryObjectModel.cs" />
     <Compile Include="ILReader.cs" />
     <Compile Include="Errors.cs" />
+    <Compile Include="ModuleExtensions.cs" />
     <Compile Include="ModuleReadWriteFactory.cs" />
     <Compile Include="CoreTypes.cs" />
     <Compile Include="Types.cs" />
