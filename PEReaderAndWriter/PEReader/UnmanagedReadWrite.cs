@@ -1012,9 +1012,6 @@ namespace Microsoft.Cci.UtilityDataStructures {
         }
         buffer.Append(ch);
       }
-      int j = buffer.Length;
-      while (j > 0 && buffer[j - 1] == (char)0) j--;
-      buffer.Length = j;
       this.CurrentPointer += byteCount;
       return StringBuilderCache.GetStringAndRelease(buffer);
     }
