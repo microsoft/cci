@@ -3306,9 +3306,9 @@ namespace Microsoft.Cci.MutableCodeModel {
       Contract.Requires(!(assembly is Dummy));
       Contract.Ensures(Contract.Result<Assembly>() != null);
 
-      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(assembly); //Does not traverse the types
-      foreach (var type in assembly.GetAllTypes())
-        this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(type);
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(assembly); // Traverses the types, except for the <Module> type
+      var moduleType = new List<INamedTypeDefinition>(assembly.GetAllTypes())[0];
+      this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(moduleType);
       foreach (var module in assembly.MemberModules) {
         foreach (var mtype in module.GetAllTypes())
           this.TraverseAndPopulateDefinitionCacheWithCopies.Traverse(mtype);
