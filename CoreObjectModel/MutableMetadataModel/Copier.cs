@@ -2404,7 +2404,17 @@ namespace Microsoft.Cci.MutableCodeModel {
         if (nestedTypeReference is Dummy) return nestedTypeReference;
         object copy;
         if (keepAsDefinition && this.DefinitionCache.TryGetValue(nestedTypeReference, out copy)) return (INestedTypeReference)copy;
-        if (this.ReferenceCache.TryGetValue(nestedTypeReference, out copy)) return (NestedTypeReference)copy;
+        if (this.ReferenceCache.TryGetValue(nestedTypeReference, out copy))
+        {
+            NestedTypeReference cachedCopy = (NestedTypeReference)copy;
+            // There are cases where the IsValueType flag changes on the same object reference
+            // and if that happens it means we have a reference that requires that bit and
+            // so we need to update our cached value to reflect that
+            // See PEFileToObjectModel.GetTypeRefReferenceAtRow for reference at:
+            // Line: if (mustBeStruct && typeRefReference != null) typeRefReference.isValueType = true;
+            if (nestedTypeReference.IsValueType) cachedCopy.IsValueType = true;
+            return cachedCopy;
+        }
         var mutableCopy = this.shallowCopier.Copy(nestedTypeReference);
         this.ReferenceCache.Add(nestedTypeReference, mutableCopy);
         this.Substitute(mutableCopy);
