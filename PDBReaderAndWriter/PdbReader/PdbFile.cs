@@ -9,6 +9,12 @@ using System.IO;
 namespace Microsoft.Cci.Pdb {
 
   internal class PdbFile {
+
+    /// <summary>
+    /// GUID of the Basic source language.
+    /// </summary>
+    private static readonly Guid BasicLanguageGuid = new Guid(974311608, -15764, 4560, 180, 66, 0, 160, 36, 74, 29, 210);
+
     private PdbFile()   // This class can't be instantiated.
     {
     }
@@ -220,6 +226,11 @@ namespace Microsoft.Cci.Pdb {
                 bits.ReadUInt32(out file.linsiz);   // Size of payload.
 
                 PdbSource src = (PdbSource)checks[(int)file.index];
+                if (src.language.Equals(BasicLanguageGuid))
+                {
+                  func.AdjustVisualBasicScopes();
+                }
+
                 PdbLines tmp = new PdbLines(src, file.count);
                 func.lines[block++] = tmp;
                 PdbLine[] lines = tmp.lines;

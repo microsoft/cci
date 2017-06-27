@@ -38,6 +38,13 @@ namespace Microsoft.Cci.Pdb {
     internal List<ILocalScope>/*?*/ iteratorScopes;
     internal PdbSynchronizationInformation/*?*/ synchronizationInformation;
 
+    /// <summary>
+    /// Flag saying whether the method has been identified as a product of VB compilation using
+    /// the legacy Windows PDB symbol format, in which case scope ends need to be shifted by 1
+    /// due to different semantics of scope limits in VB and C# compilers.
+    /// </summary>
+    private bool visualBasicScopesAdjusted = false;
+
     private static string StripNamespace(string module) {
       int li = module.LastIndexOf('.');
       if (li > 0) {
@@ -46,6 +53,36 @@ namespace Microsoft.Cci.Pdb {
       return module;
     }
 
+    /// <summary>
+    /// When the Windows PDB reader identifies a PdbFunction as having 'Basic' as its source language,
+    /// it calls this method which adjusts all scopes by adding 1 to their lengths to compensate
+    /// for different behavior of VB vs. the C# compiler w.r.t. emission of scope info.
+    /// </summary>
+    internal void AdjustVisualBasicScopes()
+    {
+      if (!visualBasicScopesAdjusted)
+      {
+        visualBasicScopesAdjusted = true;
+
+        // Don't adjust root scope as that one is correct
+        foreach (PdbScope scope in scopes)
+        {
+          AdjustVisualBasicScopes(scope.scopes);
+        }
+      }
+    }
+
+    /// <summary>
+    /// Recursively update the entire scope tree by adding 1 to the length of each scope.
+    /// </summary>
+    private void AdjustVisualBasicScopes(PdbScope[] scopes)
+    {
+      foreach (PdbScope scope in scopes)
+      {
+        scope.length++;
+        AdjustVisualBasicScopes(scope.scopes);
+      }
+    }
 
     internal static PdbFunction[] LoadManagedFunctions(/*string module,*/
                                                        BitAccess bits, uint limit,
