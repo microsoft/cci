@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+extern alias DiaSymReaderPdbConverter;
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -11,8 +13,8 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 
-using Microsoft.DiaSymReader.PortablePdb;
-using Microsoft.DiaSymReader.Tools;
+using DiaSymReaderPdbConverter::Microsoft.DiaSymReader.PortablePdb;
+using DiaSymReaderPdbConverter::Microsoft.DiaSymReader.Tools;
 
 namespace Microsoft.Cci.Pdb {
   /// <summary>
@@ -86,7 +88,7 @@ namespace Microsoft.Cci.Pdb {
     /// The basic idea of the portable PDB conversion is that we let the converter run
     /// and use this PdbWriterForCci class to construct the CCI-expected data structures.
     /// </summary>
-    class PdbWriterForCci : Microsoft.DiaSymReader.PdbWriter<int>
+    class PdbWriterForCci : DiaSymReaderPdbConverter::Microsoft.DiaSymReader.PdbWriter<int>
     {
       /// <summary>
       /// List of functions exposed by the PDB.
