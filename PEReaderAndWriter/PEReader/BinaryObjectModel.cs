@@ -492,7 +492,7 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
     }
 
     bool IModule.Requires32bits {
-      get { return (this.Cor20Flags & (COR20Flags.Bit32Required|COR20Flags.Prefers32bits)) == COR20Flags.Bit32Required; }
+      get { return (this.Cor20Flags & COR20Flags.Bit32Required) == COR20Flags.Bit32Required; }
     }
 
     bool IModule.Requires64bits {
