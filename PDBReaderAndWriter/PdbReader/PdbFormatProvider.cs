@@ -46,7 +46,7 @@ namespace Microsoft.Cci.Pdb {
               // Load associated portable PDB
               PdbWriterForCci cciWriter = new PdbWriterForCci();
   
-              new PdbConverter().ConvertPortableToWindows(
+              new PdbConverter().ConvertPortableToWindows<int>(
                 peReader,
                 pdbReaderProvider.GetMetadataReader(),
                 cciWriter,
@@ -88,7 +88,7 @@ namespace Microsoft.Cci.Pdb {
     /// The basic idea of the portable PDB conversion is that we let the converter run
     /// and use this PdbWriterForCci class to construct the CCI-expected data structures.
     /// </summary>
-    class PdbWriterForCci : Microsoft.DiaSymReader.SymUnmanagedWriter
+    class PdbWriterForCci : DiaSymReaderPdbConverter::Microsoft.DiaSymReader.PdbWriter<int>
     {
       /// <summary>
       /// List of functions exposed by the PDB.
@@ -160,7 +160,7 @@ namespace Microsoft.Cci.Pdb {
       /// Define an indexed document to be subsequently referred to by sequence points.
       /// </summary>
       /// <returns>Document index that the converter will subsequently pass to DefineSequencePoints</returns>
-      public override int DefineDocument(string name, Guid language, Guid vendor, Guid type, Guid algorithmId, byte[] checksum, byte[] source)
+      public override int DefineDocument(string name, Guid language, Guid vendor, Guid type, Guid algorithmId, byte[] checksum)
       {
         int documentIndex = _sourceDocuments.Count;
         _sourceDocuments.Add(new PdbSource(
@@ -334,7 +334,7 @@ namespace Microsoft.Cci.Pdb {
       /// <param name="name">Variable name</param>
       /// <param name="attributes">Variable properties</param>
       /// <param name="localSignatureToken">Signature token representing the variable type</param>
-      public override void DefineLocalVariable(int index, string name, int attributes, int localSignatureToken)
+      public override void DefineLocalVariable(int index, string name, LocalVariableAttributes attributes, int localSignatureToken)
       {
         Contract.Assert(_currentScope != null);
 
@@ -353,7 +353,7 @@ namespace Microsoft.Cci.Pdb {
       /// <param name="name">Constant name</param>
       /// <param name="value">Constant value</param>
       /// <param name="constantSignatureToken">Signature token representing the constant type</param>
-      public override bool DefineLocalConstant(string name, object value, int constantSignatureToken)
+      public override void DefineLocalConstant(string name, object value, int constantSignatureToken)
       {
         Contract.Assert(_currentScope != null);
 
@@ -365,11 +365,7 @@ namespace Microsoft.Cci.Pdb {
             value: value);
   
           _currentScope.AddConstant(pdbConstant);
-  
-          return true;
         }
-  
-        return false;
       }
 
       /// <summary>
@@ -418,77 +414,6 @@ namespace Microsoft.Cci.Pdb {
       }
 
       public override void SetSourceLinkData(byte[] sourceLinkData)
-      {
-        // NO-OP for CCI
-      }
-
-      public override void Dispose()
-      {
-        // NO-OP for CCI
-      }
-
-      /// <summary>
-      /// Gets the current PDB signature.
-      /// </summary>
-      public override void GetSignature(out Guid guid, out uint stamp, out int age)
-      {
-        guid = Guid;
-        age = Age;
-        stamp = 0;
-      }
-
-      /// <summary>
-      /// Gets the raw data blobs that comprise the written PDB content so far.
-      /// </summary>
-      public override IEnumerable<ArraySegment<byte>> GetUnderlyingData()
-      {
-        // NO-OP for CCI
-        return null;
-      }
-
-      public override int DocumentTableCapacity
-      {
-        get => _sourceDocuments.Capacity;
-
-        set
-        {
-          if (value > _sourceDocuments.Count)
-          {
-            _sourceDocuments.Capacity = value;
-          }
-        }
-      }
-
-      /// <summary>
-      /// Opens a map of tokens to source spans.
-      /// </summary>
-      public override void OpenTokensToSourceSpansMap()
-      {
-        // NO-OP for CCI
-      }
-
-      /// <summary>
-      /// Maps specified token to a source span.
-      /// </summary>
-      public override void MapTokenToSourceSpan(int token, int documentIndex, int startLine, int startColumn, int endLine, int endColumn)
-      {
-        // NO-OP for CCI
-      }
-
-      /// <summary>
-      /// Closes map of tokens to source spans previously opened using <see cref="M:Microsoft.DiaSymReader.SymUnmanagedWriter.OpenTokensToSourceSpansMap" />.
-      /// </summary>
-      public override void CloseTokensToSourceSpansMap()
-      {
-        // NO-OP for CCI
-      }
-
-      /// <summary>
-      /// Writes the PDB data to specified stream. Once called no more changes to the data can be made using this writer.
-      /// May be called multiple times. Always writes the same data. 
-      /// </summary>
-      /// <param name="stream">Stream to write PDB data to.</param>
-      public override void WriteTo(Stream stream)
       {
         // NO-OP for CCI
       }
