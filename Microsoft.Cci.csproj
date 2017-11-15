@@ -62,6 +62,7 @@
     <Reference Include="System.IO" />
     <Reference Include="System.Reflection.Metadata" />
     <Reference Include="System.Runtime" />
+    <ReferencePath Include="$(SupportAssemblyPath)\Microsoft.DiaSymReader.dll" />
     <Reference Include="Microsoft.DiaSymReader.Converter">
       <Aliases>DiaSymReaderPdbConverter</Aliases>
     </Reference>
