@@ -1002,7 +1002,7 @@ namespace Microsoft.Cci {
       if (this.module.Requires32bits) result |= 2;
       if (this.module.StrongNameSigned) result |= 8;
       if (this.module.TrackDebugData) result |= 0x10000;
-      if (this.module.Prefers32bits) result |= 0x20000;
+      if (this.module.Prefers32bits) result |= 0x20002;
       return result;
     }
 

@@ -152,6 +152,7 @@ namespace Microsoft.Cci.MetadataReader.PEFileFlags {
     Bit32Required = 0x00000002,
     ILLibrary = 0x00000004,
     StrongNameSigned = 0x00000008,
+    NativeEntryPoint = 0x00000010,
     TrackDebugData = 0x00010000,
     Prefers32bits = 0x00020000,
   }

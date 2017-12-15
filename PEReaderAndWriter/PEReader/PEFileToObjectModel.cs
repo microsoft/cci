@@ -914,8 +914,8 @@ namespace Microsoft.Cci.MetadataReader {
 
     internal IMethodReference GetEntryPointMethod() {
       //  TODO: Do we ever want to take care of Native methods?
-      //if ((this.PEFileReader.COR20Header.COR20Flags & COR20Flags.Prefers32bits) != 0)
-      //  return Dummy.MethodReference;
+      if ((this.PEFileReader.COR20Header.COR20Flags & COR20Flags.NativeEntryPoint) != 0)
+         return Dummy.MethodReference;
       uint tokenType = this.PEFileReader.COR20Header.EntryPointTokenOrRVA & TokenTypeIds.TokenTypeMask;
       if (tokenType == TokenTypeIds.File) {
         Assembly/*?*/ assem = this.Module as Assembly;
