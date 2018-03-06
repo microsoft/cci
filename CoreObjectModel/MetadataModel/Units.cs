@@ -743,6 +743,10 @@ namespace Microsoft.Cci {
     /// </summary>
     M32R = 0x9041,
     /// <summary>
+    /// ARM64 Little-Endian
+    /// </summary>
+    ARM64 = 0xAA64,
+    /// <summary>
     /// CEE
     /// </summary>
     CEE = 0xC0EE,
