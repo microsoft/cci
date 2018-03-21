@@ -435,6 +435,10 @@ namespace Microsoft.Cci.MetadataReader.ObjectModelImplementation {
       get { return this.PEFileToObjectModel.PEFileReader.FileAlignment; }
     }
 
+    COR20Flags IModule.COR20Flags { 
+      get { return this.Cor20Flags; }
+    }
+
     bool IModule.ILOnly {
       get { return (this.Cor20Flags & COR20Flags.ILOnly) == COR20Flags.ILOnly; }
     }

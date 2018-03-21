@@ -147,7 +147,7 @@ namespace Microsoft.Cci.MetadataReader.PEFileFlags {
     MemWrite = 0x80000000,        // Section is writeable.
   }
 
-  internal enum COR20Flags : uint {
+  public enum COR20Flags : uint {
     ILOnly = 0x00000001,
     Bit32Required = 0x00000002,
     ILLibrary = 0x00000004,
