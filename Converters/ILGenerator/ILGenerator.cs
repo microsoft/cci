@@ -324,7 +324,7 @@ namespace Microsoft.Cci {
     [ContractVerification(false)]
     public void Emit(OperationCode opcode, object value) {
       // For the following one-byte opcodes, the reader supplies a value to make it easier for clients.
-      // But that messes up the dispatch in the succeeding switch statement.
+      // But that messes up the dispatch in the succeeding switch statement on the value.
       switch (opcode) {
         case OperationCode.Ldc_I4_0:
         case OperationCode.Ldc_I4_1:
@@ -337,6 +337,18 @@ namespace Microsoft.Cci {
         case OperationCode.Ldc_I4_8:
         case OperationCode.Ldc_I4_M1:
           this.Emit(opcode);
+          return;
+      }
+      // For the following opcodes, the reader supplies a value that could be null if it is arg0.
+      // But that messes up the dispatch in the succeeding switch statement on the value.
+      switch (opcode) {
+        case OperationCode.Ldarg_S:
+        case OperationCode.Ldarga_S:
+        case OperationCode.Starg_S:
+        case OperationCode.Ldarg:
+        case OperationCode.Ldarga:
+        case OperationCode.Starg:
+          this.Emit(opcode, (IParameterDefinition)value);
           return;
       }
       switch (value.ConvertGetTypeCode()) {
