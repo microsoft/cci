@@ -360,7 +360,7 @@ namespace Microsoft.Cci.Pdb {
 
     internal static PdbInfo LoadFunctions(Stream read) {
       PdbInfo pdbInfo = new PdbInfo();
-      
+
       pdbInfo.TokenToSourceMapping = new Dictionary<uint, PdbTokenLine>();
       BitAccess bits = new BitAccess(64 * 1024);
       PdbFileHeader head = new PdbFileHeader(read, bits);
@@ -387,6 +387,14 @@ namespace Microsoft.Cci.Pdb {
         byte[] bytes = new byte[dataStream.contentSize];
         dataStream.Read(reader, bits);
         pdbInfo.SourceServerData = bits.ReadBString(bytes.Length);
+      }
+
+      int sourceLinkStream;
+      if (nameIndex.TryGetValue("SOURCELINK", out sourceLinkStream)) {
+        DataStream dataStream = dir.streams[sourceLinkStream];
+        pdbInfo.SourceLinkData = new byte[dataStream.contentSize];
+        dataStream.Read(reader, bits);
+        bits.ReadBytes(pdbInfo.SourceLinkData);
       }
 
       dir.streams[3].Read(reader, bits);

@@ -45,13 +45,13 @@ namespace Microsoft.Cci.Pdb {
             {
               // Load associated portable PDB
               PdbWriterForCci cciWriter = new PdbWriterForCci();
-  
+
               new PdbConverter().ConvertPortableToWindows(
                 peReader,
                 pdbReaderProvider.GetMetadataReader(),
                 cciWriter,
                 PdbConversionOptions.SuppressSourceLinkConversion);
-  
+
               PdbInfo pdbInfo = new PdbInfo()
               {
                 Functions = cciWriter.Functions,
@@ -59,9 +59,10 @@ namespace Microsoft.Cci.Pdb {
                 Age = cciWriter.Age,
                 Guid = cciWriter.Guid,
                 // Ignored for portable PDBs to avoid bringing in a dependency on Newtonsoft.Json
-                SourceServerData = null
+                SourceServerData = null,
+                SourceLinkData = cciWriter.SourceLinkData
               };
-  
+
               return pdbInfo;
             }
           }
@@ -109,6 +110,11 @@ namespace Microsoft.Cci.Pdb {
       /// Encoded GUID information for the portable PDB.
       /// </summary>
       public Guid Guid { get; private set; }
+
+      /// <summary>
+      /// Raw source link data
+      /// </summary>
+      public byte[] SourceLinkData { get; private set; }
 
       /// <summary>
       /// List of previously defined PdbSource documents
@@ -269,7 +275,7 @@ namespace Microsoft.Cci.Pdb {
       public override void CloseMethod()
       {
         Contract.Assert(_currentMethod != null);
-        
+
         List<PdbLines> documentLineSets = new List<PdbLines>();
         foreach (KeyValuePair<int, List<PdbLine>> tokenLinePair in _linesForCurrentMethod)
         {
@@ -363,12 +369,12 @@ namespace Microsoft.Cci.Pdb {
             name: name,
             token: (uint)constantSignatureToken,
             value: value);
-  
+
           _currentScope.AddConstant(pdbConstant);
-  
+
           return true;
         }
-  
+
         return false;
       }
 
@@ -419,7 +425,7 @@ namespace Microsoft.Cci.Pdb {
 
       public override void SetSourceLinkData(byte[] sourceLinkData)
       {
-        // NO-OP for CCI
+        SourceLinkData = sourceLinkData;
       }
 
       public override void Dispose()
@@ -485,7 +491,7 @@ namespace Microsoft.Cci.Pdb {
 
       /// <summary>
       /// Writes the PDB data to specified stream. Once called no more changes to the data can be made using this writer.
-      /// May be called multiple times. Always writes the same data. 
+      /// May be called multiple times. Always writes the same data.
       /// </summary>
       /// <param name="stream">Stream to write PDB data to.</param>
       public override void WriteTo(Stream stream)
@@ -507,27 +513,27 @@ namespace Microsoft.Cci.Pdb {
         /// Starting IL offset for the scope gets initialized in the constructor.
         /// </summary>
         private readonly uint _startOffset;
-        
+
         /// <summary>
         /// Lazily constructed list of child scopes.
         /// </summary>
         private List<PdbScope> _childScopes;
-        
+
         /// <summary>
         /// Lazily constructed list of per-scope constants.
         /// </summary>
         private List<PdbConstant> _constants;
-        
+
         /// <summary>
         /// Lazily constructed list of 'using' namespaces within the scope.
         /// </summary>
         private List<string> _usedNamespaces;
-        
+
         /// <summary>
         /// Lazily constructed list of slots (local variables).
         /// </summary>
         private List<PdbSlot> _slots;
-        
+
         /// <summary>
         /// Constructor stores the starting IL offset for the scope.
         /// </summary>
@@ -538,7 +544,7 @@ namespace Microsoft.Cci.Pdb {
           _constants = new List<PdbConstant>();
           _slots = new List<PdbSlot>();
         }
-        
+
         /// <summary>
         /// Finalize construction of the PdbScope and return the complete PdbScope object.
         /// </summary>
@@ -555,7 +561,7 @@ namespace Microsoft.Cci.Pdb {
           scope.scopes = _childScopes.ToArray();
           return scope;
         }
-        
+
         /// <summary>
         /// Add a scope to the list of immediate child scopes of this scope.
         /// </summary>
@@ -564,7 +570,7 @@ namespace Microsoft.Cci.Pdb {
         {
           _childScopes.Add(childScope);
         }
-        
+
         /// <summary>
         /// Add a slot (local variable) to the list of slots for this scope.
         /// </summary>
@@ -573,7 +579,7 @@ namespace Microsoft.Cci.Pdb {
         {
           _slots.Add(slot);
         }
-        
+
         /// <summary>
         /// Add a constant to the list of constants available within this scope.
         /// </summary>
@@ -582,7 +588,7 @@ namespace Microsoft.Cci.Pdb {
         {
           _constants.Add(pdbConstant);
         }
-        
+
         /// <summary>
         /// Add a used namespace to the list of namespaces used by this scope.
         /// </summary>
