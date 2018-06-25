@@ -16,7 +16,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An object that can map offsets in an IL stream to source locations and block scopes.
   /// </summary>
-  public class PdbReader : ISourceLocationProvider, ILocalScopeProvider, IDisposable {
+  public class PdbReader : ISourceLocationProvider, ILocalScopeProvider, ISourceLinkProvider, IDisposable {
 
     IMetadataHost host;
     Dictionary<uint, PdbFunction> pdbFunctionMap = new Dictionary<uint, PdbFunction>();
@@ -119,6 +119,10 @@ namespace Microsoft.Cci {
         .Select(file => file.name)
         .Where(fileName => fileName != null)
         .Distinct();
+    }
+
+    public IEnumerable<byte> GetSourceLinkData() {
+      return pdbInfo.SourceLinkData;
     }
 
     /// <summary>

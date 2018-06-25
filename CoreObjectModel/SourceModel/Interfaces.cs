@@ -1541,6 +1541,31 @@ namespace Microsoft.Cci {
   #endregion
 
   /// <summary>
+  /// An object that can retrieve the source link information embedded in a PDB file.
+  /// For example, a PDB reader that can read the source link information
+  /// </summary>
+  [ContractClass(typeof(ISourceLinkProviderContract))]
+  public interface ISourceLinkProvider {
+    /// <summary>
+    /// Return the source link data as a byte array or null if there is no source link information embedded
+    /// </summary>
+    IEnumerable<byte> GetSourceLinkData();
+  }
+
+  #region ISourceLinkProvider contract binding
+  [ContractClassFor(typeof(ISourceLinkProvider))]
+  abstract class ISourceLinkProviderContract : ISourceLinkProvider {
+    #region ISourceLinkProvider Members
+
+    public IEnumerable<byte> GetSourceLinkData() {
+      throw new NotImplementedException();
+    }
+
+    #endregion
+  }
+  #endregion
+
+  /// <summary>
   /// A range of CLR IL operations that comprise a lexical scope, specified as an IL offset and a length.
   /// </summary>
   [ContractClass(typeof(ILocalScopeContract))]
