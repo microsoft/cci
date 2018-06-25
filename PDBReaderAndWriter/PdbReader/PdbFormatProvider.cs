@@ -58,6 +58,7 @@ namespace Microsoft.Cci.Pdb {
                 Guid = cciWriter.Guid,
                 // Ignored for portable PDBs to avoid bringing in a dependency on Newtonsoft.Json
                 SourceServerData = null
+                SourceLinkData = cciWriter.SourceLinkData
               };
   
               return pdbInfo;
@@ -107,6 +108,11 @@ namespace Microsoft.Cci.Pdb {
       /// Encoded GUID information for the portable PDB.
       /// </summary>
       public Guid Guid { get; private set; }
+
+      /// <summary>
+      /// Raw source link data
+      /// </summary>
+      public byte[] SourceLinkData { get; private set; }
 
       /// <summary>
       /// List of previously defined PdbSource documents
@@ -413,7 +419,7 @@ namespace Microsoft.Cci.Pdb {
 
       public override void SetSourceLinkData(byte[] sourceLinkData)
       {
-        // NO-OP for CCI
+        SourceLinkData = sourceLinkData;
       }
 
       /// <summary>

@@ -36,5 +36,10 @@ namespace Microsoft.Cci {
     /// GUID of the PDB file is used to match the PDB against the PE binary.
     /// </summary>
     public Guid Guid;
+
+    /// <summary>
+    /// Source link data information.
+    /// </summary>
+    public byte[] SourceLinkData;
   }
 }

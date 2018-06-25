@@ -378,6 +378,14 @@ namespace Microsoft.Cci.Pdb {
         pdbInfo.SourceServerData = bits.ReadBString(bytes.Length);
       }
 
+      int sourceLinkStream;
+      if (nameIndex.TryGetValue("SOURCELINK", out sourceLinkStream)) {
+        DataStream dataStream = dir.streams[sourceLinkStream];
+        pdbInfo.SourceLinkData = new byte[dataStream.contentSize];
+        dataStream.Read(reader, bits);
+        bits.ReadBytes(pdbInfo.SourceLinkData);
+      }
+
       dir.streams[3].Read(reader, bits);
       LoadDbiStream(bits, out modules, out header, true);
 
