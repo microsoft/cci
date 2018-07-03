@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Diagnostics.Contracts;
+using Microsoft.Cci.MetadataReader.PEFileFlags;
 
 namespace Microsoft.Cci {
 
@@ -981,6 +982,10 @@ namespace Microsoft.Cci {
 
     public uint FileAlignment {
       get { return 0; }
+    }
+
+    public COR20Flags COR20Flags {
+      get { return default(COR20Flags); }
     }
 
     public bool ILOnly {
@@ -3083,6 +3088,10 @@ namespace Microsoft.Cci {
 
     public uint FileAlignment {
       get { return 0; }
+    }
+
+    public COR20Flags COR20Flags {
+      get { return default(COR20Flags); }
     }
 
     public bool ILOnly {

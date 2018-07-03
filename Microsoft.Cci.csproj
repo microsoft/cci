@@ -70,7 +70,10 @@
     <Reference Include="System.IO" />
     <Reference Include="System.Reflection.Metadata" />
     <Reference Include="System.Runtime" />
-    <Reference Include="Microsoft.DiaSymReader.Converter" />
+    <ReferencePath Include="$(SupportAssemblyPath)\Microsoft.DiaSymReader.dll" />
+    <Reference Include="Microsoft.DiaSymReader.Converter">
+      <Aliases>DiaSymReaderPdbConverter</Aliases>
+    </Reference>
   </ItemGroup>
   <ItemGroup Condition="'$(EnablePortablePdb)' == 'true'">
     <Content Include="$(PortablePdbConverterPath)\Microsoft.DiaSymReader.Converter.dll" />

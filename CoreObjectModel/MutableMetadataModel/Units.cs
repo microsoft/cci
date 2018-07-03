@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Cci.MetadataReader.PEFileFlags;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -765,6 +766,7 @@ namespace Microsoft.Cci.MutableCodeModel {
         this.genericMethodInstances = new List<IGenericMethodInstanceReference>(genericMethodInstances);
       else
         this.genericMethodInstances = null;
+      this.cor20Flags = module.COR20Flags;
       this.ilOnly = module.ILOnly;
       this.strongNameSigned = module.StrongNameSigned;
       this.prefers32bits = module.Prefers32bits;
@@ -936,6 +938,12 @@ namespace Microsoft.Cci.MutableCodeModel {
       set { this.genericMethodInstances = value; }
     }
     List<IGenericMethodInstanceReference>/*?*/ genericMethodInstances;
+
+    public COR20Flags COR20Flags {
+      get { return this.cor20Flags; }
+      set { this.cor20Flags = value; }
+    }
+    COR20Flags cor20Flags;
 
     /// <summary>
     /// True if the module contains only IL and is processor independent.

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Text;
 using System.Globalization;
+using Microsoft.Cci.MetadataReader.PEFileFlags;
 
 namespace Microsoft.Cci {
   /// <summary>
@@ -212,6 +213,10 @@ namespace Microsoft.Cci {
 
     public IEnumerable<ITypeMemberReference> GetTypeMemberReferences() {
       throw new NotImplementedException();
+    }
+
+    public COR20Flags COR20Flags {
+      get { throw new NotImplementedException(); }
     }
 
     public bool ILOnly {
@@ -743,6 +748,10 @@ namespace Microsoft.Cci {
     /// </summary>
     M32R = 0x9041,
     /// <summary>
+    /// ARM64 Little-Endian
+    /// </summary>
+    ARM64 = 0xAA64,
+    /// <summary>
     /// CEE
     /// </summary>
     CEE = 0xC0EE,
@@ -844,6 +853,11 @@ namespace Microsoft.Cci {
     IEnumerable<ITypeMemberReference> GetTypeMemberReferences();
 
     /// <summary>
+    /// Gets the set of COR flags applied to the module.
+    /// </summary>
+    COR20Flags COR20Flags { get; }
+
+    /// <summary>
     /// True if the module contains only IL and is processor independent.
     /// </summary>
     bool ILOnly { get; }
@@ -902,7 +916,7 @@ namespace Microsoft.Cci {
     /// <summary>
     /// A globally unique persistent identifier for this module.
     /// </summary>
-    System.Guid PersistentIdentifier { get; }
+    System.Guid PersistentIdentifier { get; }    
 
     /// <summary>
     /// If set, the module is platform independent but prefers to be loaded in a 32-bit process for performance reasons.
@@ -1087,6 +1101,10 @@ namespace Microsoft.Cci {
     public IEnumerable<ITypeMemberReference> GetTypeMemberReferences() {
       Contract.Ensures(Contract.Result<IEnumerable<ITypeMemberReference>>() != null);
       throw new NotImplementedException();
+    }
+
+    public COR20Flags COR20Flags {
+      get { throw new NotImplementedException(); }
     }
 
     public bool ILOnly {

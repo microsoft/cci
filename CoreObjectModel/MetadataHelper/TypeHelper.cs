@@ -2269,6 +2269,13 @@ namespace Microsoft.Cci {
       foreach (ITypeReference baseClass in type.BaseClasses) {
         if (TypeHelper.TypesAreEquivalent(baseClass, type.PlatformType.SystemAttribute, true)) return true;
       }
+
+      // If the type isn't directly derived from Attribute, its parent may be
+      foreach (ITypeReference baseClass in type.BaseClasses) { 
+        ITypeDefinition baseDef = baseClass.ResolvedType;
+        if (baseDef != null && IsAttributeType(baseDef)) return true;
+      }
+
       return false;
     }
 
