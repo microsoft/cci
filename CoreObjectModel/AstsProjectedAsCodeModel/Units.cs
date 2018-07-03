@@ -534,6 +534,10 @@ namespace Microsoft.Cci.Ast {
     }
     IEnumerable<INamedTypeDefinition>/*?*/ allTypes;
 
+    COR20Flags IModule.COR20Flags {
+      get { throw new NotImplementedException(); }
+    }
+
     /// <summary>
     /// True if the module contains only IL and is processor independent.
     /// </summary>

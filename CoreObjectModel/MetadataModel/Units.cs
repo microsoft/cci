@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Text;
 using System.Globalization;
-using Microsoft.Cci.MetadataReader.PEFileFlags;
 
 namespace Microsoft.Cci {
   /// <summary>
@@ -38,6 +37,18 @@ namespace Microsoft.Cci {
     /// </summary>
     UnmanagedDynamicallyLinkedLibrary
   }
+
+#pragma warning disable 1591 // missing doc comments
+  public enum COR20Flags : uint {
+    ILOnly = 0x00000001,
+    Bit32Required = 0x00000002,
+    ILLibrary = 0x00000004,
+    StrongNameSigned = 0x00000008,
+    NativeEntryPoint = 0x00000010,
+    TrackDebugData = 0x00010000,
+    Prefers32bits = 0x00020000,
+  }
+#pragma warning restore
 
   /// <summary>
   /// Represents a .NET assembly.

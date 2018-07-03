@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Diagnostics.Contracts;
-using Microsoft.Cci.MetadataReader.PEFileFlags;
 
 namespace Microsoft.Cci {
 
