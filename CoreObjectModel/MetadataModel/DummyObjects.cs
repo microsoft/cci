@@ -983,6 +983,10 @@ namespace Microsoft.Cci {
       get { return 0; }
     }
 
+    public COR20Flags COR20Flags {
+      get { return default(COR20Flags); }
+    }
+
     public bool ILOnly {
       get { return false; }
     }
@@ -3083,6 +3087,10 @@ namespace Microsoft.Cci {
 
     public uint FileAlignment {
       get { return 0; }
+    }
+
+    public COR20Flags COR20Flags {
+      get { return default(COR20Flags); }
     }
 
     public bool ILOnly {

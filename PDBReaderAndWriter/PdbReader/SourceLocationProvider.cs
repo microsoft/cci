@@ -16,7 +16,7 @@ namespace Microsoft.Cci {
   /// <summary>
   /// An object that can map offsets in an IL stream to source locations and block scopes.
   /// </summary>
-  public class PdbReader : ISourceLocationProvider, ILocalScopeProvider, IDisposable {
+  public class PdbReader : ISourceLocationProvider, ILocalScopeProvider, ISourceLinkProvider, IDisposable {
 
     IMetadataHost host;
     Dictionary<uint, PdbFunction> pdbFunctionMap = new Dictionary<uint, PdbFunction>();
@@ -119,6 +119,10 @@ namespace Microsoft.Cci {
         .Select(file => file.name)
         .Where(fileName => fileName != null)
         .Distinct();
+    }
+
+    public IEnumerable<byte> GetSourceLinkData() {
+      return pdbInfo.SourceLinkData;
     }
 
     /// <summary>
@@ -274,7 +278,7 @@ namespace Microsoft.Cci {
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="localDefinition"></param>
     /// <param name="isCompilerGenerated"></param>
@@ -416,7 +420,7 @@ namespace Microsoft.Cci {
       if (pdbLocalScope == null) yield break;
       foreach (PdbSlot slot in pdbLocalScope.pdbScope.slots) {
         if ((slot.flags & 1) != 0) continue;
-        if (slot.slot == 0 && slot.name.StartsWith("$VB")) 
+        if (slot.slot == 0 && slot.name.StartsWith("$VB"))
           yield return new PdbLocalVariable(slot, this.host, pdbLocalScope.methodBody.MethodDefinition);
         uint index = 0;
         foreach (ILocalDefinition localDefinition in pdbLocalScope.methodBody.LocalVariables) {
@@ -727,7 +731,7 @@ namespace Microsoft.Cci.Pdb {
   internal sealed class PdbSourceDocument : PrimarySourceDocument {
 
     /// <summary>
-    /// Allocates an object that represents a source document, such as file, which is parsed according to the rules of a particular langauge, 
+    /// Allocates an object that represents a source document, such as file, which is parsed according to the rules of a particular langauge,
     /// such as C#, to produce an object model.
     /// </summary>
     /// <param name="name">The name of the document. Used to identify the document in user interaction.</param>
@@ -739,7 +743,7 @@ namespace Microsoft.Cci.Pdb {
     }
 
     /// <summary>
-    /// Allocates an object that represents a source document, such as file, which is parsed according to the rules of a particular langauge, 
+    /// Allocates an object that represents a source document, such as file, which is parsed according to the rules of a particular langauge,
     /// such as C#, to produce an object model.
     /// </summary>
     /// <param name="name">The name of the document. Used to identify the document in user interaction.</param>

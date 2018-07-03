@@ -383,6 +383,10 @@ namespace Microsoft.Cci.ReflectionImporter {
       throw new NotImplementedException();
     }
 
+    public COR20Flags COR20Flags {
+      get { throw new NotImplementedException(); }
+    }
+
     public bool ILOnly {
       get { throw new NotImplementedException(); }
     }

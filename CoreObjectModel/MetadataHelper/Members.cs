@@ -3220,14 +3220,14 @@ namespace Microsoft.Cci.Immutable {
     /// True if the return value is passed by reference (using a managed pointer).
     /// </summary>
     public bool ReturnValueIsByRef {
-      get { return this.UnspecializedVersion.AcceptsExtraArguments; }
+      get { return this.UnspecializedVersion.ReturnValueIsByRef; }
     }
 
     /// <summary>
     /// True if the return value has one or more custom modifiers associated with it.
     /// </summary>
     public bool ReturnValueIsModified {
-      get { return this.UnspecializedVersion.AcceptsExtraArguments; }
+      get { return this.UnspecializedVersion.ReturnValueIsModified; }
     }
 
     /// <summary>
