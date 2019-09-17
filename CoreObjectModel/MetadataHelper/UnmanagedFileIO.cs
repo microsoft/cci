@@ -343,16 +343,12 @@ namespace Microsoft.Cci {
       }
 
       // Symbolic links show up with size 0 in FileInfo, so if we see that case, let's dig deeper
-      if (length == 0)
+      if (length == 0&& fileInfo.Attributes.HasFlag(FileAttributes.ReparsePoint))
       {
-        FileAttributes fileAttributes = File.GetAttributes(fullFilePath);
-        if (fileAttributes.HasFlag(FileAttributes.ReparsePoint))
+        // Yes, it's a link, so open the file (which will resolve the link) and get the stream length.
+        using (Stream stream = File.OpenRead(fullFilePath))
         {
-          // Yes, it's a link, so open the file (which will resolve the link) and get the stream length.
-          using (Stream stream = File.OpenRead(fullFilePath))
-          {
-            length = (uint)stream.Length;
-          }
+          length = (uint)stream.Length;
         }
       }
 
