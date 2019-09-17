@@ -341,6 +341,21 @@ namespace Microsoft.Cci {
         //TODO: error if file too large
         length = (uint)fileInfo.Length;
       }
+
+      // Symbolic links show up with size 0 in FileInfo, so if we see that case, let's dig deeper
+      if (length == 0)
+      {
+        FileAttributes fileAttributes = File.GetAttributes(fullFilePath);
+        if (fileAttributes.HasFlag(FileAttributes.ReparsePoint))
+        {
+          // Yes, it's a link, so open the file (which will resolve the link) and get the stream length.
+          using (Stream stream = File.OpenRead(fullFilePath))
+          {
+            length = (uint)stream.Length;
+          }
+        }
+      }
+
       return new BinaryDocument(fullFilePath, name, length);
     }
   }
